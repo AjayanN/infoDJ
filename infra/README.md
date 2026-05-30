@@ -4,7 +4,7 @@ This folder wires the documented three-service architecture for local developmen
 
 Services:
 
-- `gateway`: public entrypoint on port `8080`
+- `gateway`: Kong API gateway public entrypoint on port `8080`
 - `ingestion`: current Django ingestion service on port `8001`
 - `ingestion-daily`: one-shot daily ingestion job profile
 - `main-backend`: placeholder main Django backend on port `8100`
@@ -41,3 +41,8 @@ GET /health
 /admin/*         -> main backend admin
 ```
 
+Kong Admin API is exposed locally on:
+
+```text
+http://localhost:8002
+```

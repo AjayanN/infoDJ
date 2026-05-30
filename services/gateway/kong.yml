@@ -1,0 +1,61 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+  - name: gateway-health
+    url: http://127.0.0.1
+    routes:
+      - name: gateway-health
+        paths:
+          - /health
+        strip_path: false
+        plugins:
+          - name: request-termination
+            config:
+              status_code: 200
+              content_type: application/json
+              body: '{"status":"ok","service":"infodj-gateway"}'
+
+  - name: main-backend
+    url: http://main-backend:8100
+    routes:
+      - name: main-api
+        paths:
+          - /api/app
+        strip_path: false
+      - name: main-admin
+        paths:
+          - /admin
+        strip_path: false
+
+  - name: ingestion
+    url: http://ingestion:8001
+    routes:
+      - name: ingestion-api
+        paths:
+          - /api/ingestion
+        strip_path: true
+
+plugins:
+  - name: cors
+    config:
+      origins:
+        - http://localhost:4200
+        - http://localhost:8080
+      methods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      headers:
+        - Accept
+        - Authorization
+        - Content-Type
+        - X-Requested-With
+      exposed_headers:
+        - X-Request-Id
+      credentials: true
+      max_age: 3600
+

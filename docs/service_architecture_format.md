@@ -7,7 +7,7 @@ This is the target service format for moving InfoDJ from one Django MVP into a t
 | Service | Name | Purpose | Runtime | Owns data? | Public? |
 | --- | --- | --- | --- | --- | --- |
 | 1 | `infodj-ingestion` | Daily source collection, extraction, curation candidates, strategic turns | Django management commands + Celery-ready Django app | Yes, curated ingestion DB | Internal |
-| 2 | `infodj-gateway` | API gateway, auth boundary, routing, rate limiting, observability | Nginx/Traefik/Kong first, FastAPI later if needed | No | Public |
+| 2 | `infodj-gateway` | API gateway, auth boundary, routing, rate limiting, observability | Kong Gateway in DB-less mode | No | Public |
 | 3 | `infodj-main` | Angular admin/product UI and product backend | Angular + Django backend | Owns users/workflows; reads ingestion data through APIs | Public through gateway |
 
 ## Repository Format
@@ -26,7 +26,7 @@ InfoDJ/
       ingestion.env.example
       gateway.env.example
       main.env.example
-    nginx/
+    gateway/
     postgres/
   docs/
     service_architecture_format.md
@@ -100,16 +100,22 @@ POST /internal/jobs/company/{slug}/refresh
 Recommended first implementation:
 
 ```text
-Traefik or Nginx
+Kong Gateway in DB-less mode
 ```
 
 Gateway responsibilities:
 
-- TLS termination.
+- TLS termination when deployed behind real certificates.
 - Route requests to internal services.
 - Rate limit public APIs.
 - Add auth middleware or forward auth to main service.
 - Keep ingestion service private.
+
+Current gateway config:
+
+```text
+services/gateway/kong.yml
+```
 
 Initial route map:
 
@@ -214,9 +220,10 @@ Target local services:
 ```yaml
 services:
   gateway:
-    image: traefik:v3
+    build: ./services/gateway
     ports:
-      - "8080:80"
+      - "8080:8000"
+      - "8002:8001"
 
   ingestion:
     build: ./services/ingestion
@@ -273,8 +280,10 @@ SEC_USER_AGENT=InfoDJ/0.1 business-event-research contact@example.com
 Gateway:
 
 ```text
-MAIN_BACKEND_URL=http://main-backend:8100
-INGESTION_URL=http://ingestion:8001
+KONG_DATABASE=off
+KONG_DECLARATIVE_CONFIG=/usr/local/kong/declarative/kong.yml
+KONG_PROXY_LISTEN=0.0.0.0:8000
+KONG_ADMIN_LISTEN=0.0.0.0:8001
 ```
 
 Main service:

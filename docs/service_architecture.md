@@ -51,9 +51,9 @@ Responsibilities:
 
 Recommended implementation:
 
-- Start with a lightweight gateway such as Nginx, Kong, Traefik, or a small FastAPI gateway.
-- Route `/ingestion/*` to this service.
-- Route `/admin-api/*` or `/app-api/*` to the main service.
+- Use Kong Gateway in DB-less mode for the first implementation.
+- Route `/api/ingestion/*` to the ingestion service.
+- Route `/api/app/*` and `/admin/*` to the main service backend.
 
 ## 3. Main Product Service
 

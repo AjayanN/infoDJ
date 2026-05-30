@@ -3,10 +3,8 @@ services:
     build:
       context: ../services/gateway
     ports:
-      - "8080:80"
-    environment:
-      MAIN_BACKEND_URL: http://main-backend:8100
-      INGESTION_URL: http://ingestion:8001
+      - "8080:8000"
+      - "8002:8001"
     depends_on:
       - ingestion
       - main-backend

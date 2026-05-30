@@ -6,7 +6,7 @@ all info on business and what changed
 ```text
 services/
   ingestion/   Django ingestion and curation service
-  gateway/     Nginx API gateway scaffold
+  gateway/     Kong API gateway scaffold
   main/        Angular + Django product service scaffold
 ```
 
