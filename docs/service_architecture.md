@@ -2,6 +2,9 @@
 
 InfoDJ should be split into three services.
 
+For the concrete service/repo/port/API/deployment format, see
+`docs/service_architecture_format.md`.
+
 ## 1. Ingestion and Curation Service
 
 This repository is the ingestion and curation service.
@@ -94,4 +97,3 @@ Current implementation:
 - `daily_company_update` calls `ingest_sector_companies` with `daily_idempotent=True`.
 - `ingest_sector_companies` skips a source when `ingestion_ingestionjob` already has a `SUCCEEDED` row for that company, source, and current date.
 - Event extraction can safely rerun because rule events are rebuilt from available source documents and cached extractions.
-
