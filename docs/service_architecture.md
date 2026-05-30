@@ -7,7 +7,7 @@ For the concrete service/repo/port/API/deployment format, see
 
 ## 1. Ingestion and Curation Service
 
-This repository is the ingestion and curation service.
+The ingestion and curation service lives under `services/ingestion`.
 
 Responsibilities:
 
@@ -21,7 +21,7 @@ Responsibilities:
 Primary daily entrypoint:
 
 ```bash
-.venv/bin/python manage.py daily_company_update
+.venv/bin/python services/ingestion/manage.py daily_company_update
 ```
 
 The daily job is idempotent by company, source, and date. If a successful job already exists today for a company/source pair, that source step is skipped.
@@ -29,9 +29,9 @@ The daily job is idempotent by company, source, and date. If a successful job al
 Useful options:
 
 ```bash
-.venv/bin/python manage.py daily_company_update --limit 20 --sec-limit 30 --wikipedia-limit 10
-.venv/bin/python manage.py daily_company_update --skip-gdelt
-.venv/bin/python manage.py daily_company_update --skip-event-extraction
+.venv/bin/python services/ingestion/manage.py daily_company_update --limit 20 --sec-limit 30 --wikipedia-limit 10
+.venv/bin/python services/ingestion/manage.py daily_company_update --skip-gdelt
+.venv/bin/python services/ingestion/manage.py daily_company_update --skip-event-extraction
 ```
 
 For production scheduling, run this from cron, systemd timer, Kubernetes CronJob, or Celery Beat.

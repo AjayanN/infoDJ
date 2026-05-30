@@ -47,7 +47,7 @@ For the next phase, monorepo is simpler because service wiring, Docker Compose, 
 Current location:
 
 ```text
-/home/famei/InfoDJ
+/home/famei/InfoDJ/services/ingestion
 ```
 
 Primary responsibilities:
@@ -62,7 +62,7 @@ Primary responsibilities:
 Primary command:
 
 ```bash
-.venv/bin/python manage.py daily_company_update
+.venv/bin/python services/ingestion/manage.py daily_company_update
 ```
 
 Daily idempotency rule:
@@ -78,9 +78,9 @@ created_at::date = today
 Important commands:
 
 ```bash
-.venv/bin/python manage.py ingest_sector_companies --limit 20 --sec-limit 80 --wikipedia-limit 25 --full-history
-.venv/bin/python manage.py extract_sector_events --limit 20 --forms 10-K --filing-limit 8 --reuse-extractions
-.venv/bin/python manage.py daily_company_update --limit 20 --skip-gdelt
+.venv/bin/python services/ingestion/manage.py ingest_sector_companies --limit 20 --sec-limit 80 --wikipedia-limit 25 --full-history
+.venv/bin/python services/ingestion/manage.py extract_sector_events --limit 20 --forms 10-K --filing-limit 8 --reuse-extractions
+.venv/bin/python services/ingestion/manage.py daily_company_update --limit 20 --skip-gdelt
 ```
 
 Internal API routes to expose later:
@@ -336,4 +336,3 @@ GET  /api/ingestion/jobs/{id}
 4. Create `infodj-main` with Angular frontend and Django backend.
 5. Build the admin review table around `curation_businessevent`.
 6. Add stable event fingerprints before letting users approve/publish rows.
-

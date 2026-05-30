@@ -62,7 +62,7 @@ Current machine status:
 - Local user `the_dj` exists.
 - Local schema `infodj` exists.
 - Django migrations have been applied to PostgreSQL.
-- A gitignored local `.env` file provides the development database URL.
+- A gitignored local `services/ingestion/.env` file provides the development database URL.
 
 ## PostgreSQL Setup
 
@@ -112,22 +112,24 @@ Recommended structure:
 
 ```text
 InfoDJ/
-  manage.py
-  requirements.txt
-  .env.example
-  config/
-    __init__.py
-    settings.py
-    urls.py
-    celery.py
-  apps/
-    companies/
-      models.py
-      admin.py
-      services.py
+  services/
     ingestion/
-      models.py
-      admin.py
+      manage.py
+      requirements.txt
+      .env.example
+      config/
+        __init__.py
+        settings.py
+        urls.py
+        celery.py
+      apps/
+        companies/
+          models.py
+          admin.py
+          services.py
+        ingestion/
+          models.py
+          admin.py
       tasks.py
       services/
         wikidata_client.py

@@ -76,7 +76,7 @@ Tasks:
 - [x] Confirm `origin` points to the intended GitHub repository.
 - [x] Keep secrets out of committed files.
 - [x] Add `.gitignore` for Python, Django, virtualenv, local DB files, logs, and `.env`.
-- [x] Add `.env.example` with placeholder values only.
+- [x] Add `services/ingestion/.env.example` with placeholder values only.
 - [x] Keep `implementation.md` and this todo file tracked.
 
 Acceptance:
@@ -93,7 +93,7 @@ Owner: Agent 1
 Tasks:
 
 - [x] Create Python virtual environment instructions.
-- [x] Add `requirements.txt`.
+- [x] Add `services/ingestion/requirements.txt`.
 - [x] Install/add baseline dependencies:
   - Django
   - psycopg
@@ -104,7 +104,7 @@ Tasks:
   - trafilatura
   - readability-lxml
   - beautifulsoup4
-- [x] Create Django project under the repo root.
+- [x] Create Django ingestion project under `services/ingestion`.
 - [x] Create apps:
   - `companies`
   - `ingestion`
@@ -121,7 +121,7 @@ Tasks:
 
 Acceptance:
 
-- `python manage.py check` passes when dependencies are installed.
+- `python services/ingestion/manage.py check` passes when dependencies are installed.
 - Django admin route exists.
 - Project can later connect to database `business` as user `the_dj`.
 
