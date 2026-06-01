@@ -240,6 +240,15 @@ services:
       - postgres
       - redis
 
+  ingestion-scheduler:
+    build: ./services/ingestion
+    command: .venv/bin/python manage.py scheduled_daily_update --at 02:00 --timezone UTC --limit 20
+    env_file: ./infra/env/ingestion.env
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+
   main-backend:
     build: ./services/main/backend
     env_file: ./infra/env/main.env
@@ -258,7 +267,7 @@ services:
     image: redis:7
 ```
 
-For production, replace `ingestion-daily` with one of:
+For the Docker Compose deployment, keep `ingestion-scheduler` running with the core services. For larger production deployments, replace it with one of:
 
 - Kubernetes CronJob
 - systemd timer

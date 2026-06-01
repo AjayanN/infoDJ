@@ -24,6 +24,12 @@ Primary daily entrypoint:
 .venv/bin/python services/ingestion/manage.py daily_company_update
 ```
 
+Long-running scheduler entrypoint:
+
+```bash
+.venv/bin/python services/ingestion/manage.py scheduled_daily_update --at 02:00 --timezone UTC --limit 20
+```
+
 The daily job is idempotent by company, source, and date. If a successful job already exists today for a company/source pair, that source step is skipped.
 
 Useful options:
@@ -34,7 +40,7 @@ Useful options:
 .venv/bin/python services/ingestion/manage.py daily_company_update --skip-event-extraction
 ```
 
-For production scheduling, run this from cron, systemd timer, Kubernetes CronJob, or Celery Beat.
+For the Docker Compose server deployment, run the `ingestion-scheduler` service. For larger production deployments, the same command can be moved to Kubernetes CronJob, systemd timer, cron, or Celery Beat.
 
 ## 2. API Gateway
 
@@ -97,3 +103,4 @@ Current implementation:
 - `daily_company_update` calls `ingest_sector_companies` with `daily_idempotent=True`.
 - `ingest_sector_companies` skips a source when `ingestion_ingestionjob` already has a `SUCCEEDED` row for that company, source, and current date.
 - Event extraction can safely rerun because rule events are rebuilt from available source documents and cached extractions.
+- `scheduled_daily_update` is the persistent scheduler process used by Docker Compose. It wakes up every day at the configured time and calls `daily_company_update`.

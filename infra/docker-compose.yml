@@ -33,6 +33,17 @@ services:
       - postgres
       - redis
 
+  ingestion-scheduler:
+    build:
+      context: ../services/ingestion
+    command: .venv/bin/python manage.py scheduled_daily_update --at 02:00 --timezone UTC --limit 20
+    env_file:
+      - ./env/ingestion.env
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+
   main-backend:
     build:
       context: ../services/main/backend

@@ -7,6 +7,7 @@ Services:
 - `gateway`: Kong API gateway public entrypoint on port `8080`
 - `ingestion`: current Django ingestion service on port `8001`
 - `ingestion-daily`: one-shot daily ingestion job profile
+- `ingestion-scheduler`: long-running daily ingestion scheduler
 - `main-backend`: placeholder main Django backend on port `8100`
 - `main-frontend`: placeholder Angular frontend on port `4200`
 - `postgres`: PostgreSQL 16
@@ -26,10 +27,22 @@ Run core services:
 docker compose -f infra/docker-compose.yml up gateway ingestion main-backend postgres redis
 ```
 
+Run core services with the daily scheduler:
+
+```bash
+docker compose -f infra/docker-compose.yml up gateway ingestion ingestion-scheduler main-backend postgres redis
+```
+
 Run the daily ingestion job:
 
 ```bash
 docker compose -f infra/docker-compose.yml --profile jobs run --rm ingestion-daily
+```
+
+The scheduler runs this command every day at 02:00 UTC:
+
+```bash
+.venv/bin/python manage.py scheduled_daily_update --at 02:00 --timezone UTC --limit 20
 ```
 
 Gateway routes:
