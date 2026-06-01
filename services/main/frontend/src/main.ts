@@ -1,3 +1,5 @@
+import 'zone.js';
+
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
