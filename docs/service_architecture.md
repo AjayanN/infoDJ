@@ -33,7 +33,7 @@ Long-running scheduler entrypoint:
 Docker Compose runs the ingestion API and scheduler in one container:
 
 ```bash
-.venv/bin/python services/ingestion/manage.py run_ingestion_api_with_scheduler --host 0.0.0.0 --port 8001 --scheduler-at 02:00 --scheduler-timezone UTC --limit 20
+.venv/bin/python services/ingestion/manage.py run_ingestion_api_with_scheduler --host 0.0.0.0 --port 8001 --scheduler-at 02:00 --scheduler-timezone UTC --limit 20 --include-gdelt
 ```
 
 The daily job is idempotent by company, source, and date. If a successful job already exists today for a company/source pair, that source step is skipped.

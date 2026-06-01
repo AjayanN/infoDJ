@@ -37,7 +37,7 @@ docker compose -f infra/docker-compose.yml --profile jobs run --rm ingestion-dai
 The scheduler runs this command every day at 02:00 UTC:
 
 ```bash
-.venv/bin/python manage.py run_ingestion_api_with_scheduler --host 0.0.0.0 --port 8001 --scheduler-at 02:00 --scheduler-timezone UTC --limit 20
+.venv/bin/python manage.py run_ingestion_api_with_scheduler --host 0.0.0.0 --port 8001 --scheduler-at 02:00 --scheduler-timezone UTC --limit 20 --include-gdelt
 ```
 
 Gateway routes:
