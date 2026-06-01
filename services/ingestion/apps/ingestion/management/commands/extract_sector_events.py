@@ -15,6 +15,8 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--company", default="")
         parser.add_argument("--limit", type=int, default=20)
+        parser.add_argument("--offset", type=int, default=0)
+        parser.add_argument("--batch-size", type=int, default=0)
         parser.add_argument("--forms", default="10-K")
         parser.add_argument("--filing-limit", type=int, default=30)
         parser.add_argument("--skip-existing", action="store_true")
@@ -29,7 +31,9 @@ class Command(BaseCommand):
             "failed": 0,
         }
 
-        seeds = CROSS_SECTOR_COMPANIES[: options["limit"]]
+        seeds = CROSS_SECTOR_COMPANIES[options["offset"] : options["limit"]]
+        if options["batch_size"]:
+            seeds = seeds[: options["batch_size"]]
         if options["company"]:
             wanted_slug = slugify(options["company"])
             seeds = tuple(seed for seed in seeds if slugify(seed.name) == wanted_slug)

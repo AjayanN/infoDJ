@@ -17,7 +17,9 @@ class Command(BaseCommand):
         parser.add_argument("--scheduler-at", default="02:00")
         parser.add_argument("--scheduler-timezone", default="UTC")
         parser.add_argument("--limit", type=int, default=20)
+        parser.add_argument("--batch-size", type=int, default=10)
         parser.add_argument("--include-gdelt", action="store_true")
+        parser.add_argument("--split-batches", action="store_true")
 
     def handle(self, *args, **options):
         scheduler_command = [
@@ -30,9 +32,13 @@ class Command(BaseCommand):
             options["scheduler_timezone"],
             "--limit",
             str(options["limit"]),
+            "--batch-size",
+            str(options["batch_size"]),
         ]
         if options["include_gdelt"]:
             scheduler_command.append("--include-gdelt")
+        if options["split_batches"]:
+            scheduler_command.append("--split-batches")
 
         api_command = [
             sys.executable,
@@ -48,7 +54,7 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.SUCCESS(
                 "Started ingestion API and scheduler in one container "
-                f"(scheduler daily at {options['scheduler_at']} {options['scheduler_timezone']})."
+                f"(scheduler timezone={options['scheduler_timezone']})."
             )
         )
 

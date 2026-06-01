@@ -19,6 +19,8 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("--limit", type=int, default=20)
+        parser.add_argument("--offset", type=int, default=0)
+        parser.add_argument("--batch-size", type=int, default=0)
         parser.add_argument("--skip-wikidata", action="store_true")
         parser.add_argument("--skip-sec", action="store_true")
         parser.add_argument("--skip-wikipedia", action="store_true")
@@ -29,9 +31,12 @@ class Command(BaseCommand):
         parser.add_argument("--gdelt-query-limit", type=int, default=3)
         parser.add_argument("--full-history", action="store_true")
         parser.add_argument("--daily-idempotent", action="store_true")
+        parser.add_argument("--retry-failed-only", action="store_true")
 
     def handle(self, *args, **options):
-        seeds = CROSS_SECTOR_COMPANIES[: options["limit"]]
+        seeds = CROSS_SECTOR_COMPANIES[options["offset"] : options["limit"]]
+        if options["batch_size"]:
+            seeds = seeds[: options["batch_size"]]
         totals = {
             "companies": 0,
             "wikidata_ok": 0,
@@ -122,6 +127,17 @@ class Command(BaseCommand):
         if not options["daily_idempotent"]:
             return False
         today = timezone.localdate()
+        latest_job = (
+            IngestionJob.objects.filter(
+                company=company,
+                source=source,
+                created_at__date=today,
+            )
+            .order_by("-created_at")
+            .first()
+        )
+        if options["retry_failed_only"]:
+            return latest_job is None or latest_job.status != "FAILED"
         return IngestionJob.objects.filter(
             company=company,
             source=source,
