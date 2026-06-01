@@ -191,14 +191,17 @@ class SubscriptionApiTests(TestCase):
         self.assertEqual(response.data["razorpay"]["order_id"], "order_test123")
         self.assertEqual(response.data["razorpay"]["key_id"], "rzp_test_key")
         self.user.profile.refresh_from_db()
-        self.assertEqual(self.user.profile.subscription_status, SubscriptionStatus.PENDING_PAYMENT)
+        self.assertEqual(self.user.profile.subscription_tier, SubscriptionTier.FREE)
+        self.assertEqual(self.user.profile.subscription_status, SubscriptionStatus.FREE)
+        self.assertEqual(self.user.profile.pending_subscription_tier, SubscriptionTier.PRO)
         self.assertEqual(self.user.profile.razorpay_order_id, "order_test123")
 
     @override_settings(RAZORPAY_KEY_SECRET="secret")
     def test_verify_payment_rejects_invalid_signature(self):
         profile = self.user.profile
-        profile.subscription_tier = SubscriptionTier.PRO
-        profile.subscription_status = SubscriptionStatus.PENDING_PAYMENT
+        profile.subscription_tier = SubscriptionTier.FREE
+        profile.subscription_status = SubscriptionStatus.FREE
+        profile.pending_subscription_tier = SubscriptionTier.PRO
         profile.razorpay_order_id = "order_test123"
         profile.save()
 
@@ -215,4 +218,35 @@ class SubscriptionApiTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data["error"], "invalid payment signature")
         profile.refresh_from_db()
-        self.assertEqual(profile.subscription_status, SubscriptionStatus.PENDING_PAYMENT)
+        self.assertEqual(profile.subscription_tier, SubscriptionTier.FREE)
+        self.assertEqual(profile.subscription_status, SubscriptionStatus.FREE)
+        self.assertEqual(profile.pending_subscription_tier, SubscriptionTier.PRO)
+
+    @override_settings(RAZORPAY_KEY_SECRET="secret")
+    def test_verify_payment_promotes_pending_tier_only_after_signature_passes(self):
+        profile = self.user.profile
+        profile.subscription_tier = SubscriptionTier.FREE
+        profile.subscription_status = SubscriptionStatus.FREE
+        profile.pending_subscription_tier = SubscriptionTier.PRO
+        profile.razorpay_order_id = "order_test123"
+        profile.save()
+        signature = "8645d0ec07e3574862b139c4524ea5518ba0e49ad552ec84b14c897c727100c6"
+
+        response = self.client.post(
+            "/api/app/subscription/verify-payment",
+            {
+                "razorpay_order_id": "order_test123",
+                "razorpay_payment_id": "pay_test123",
+                "razorpay_signature": signature,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        profile.refresh_from_db()
+        self.assertEqual(profile.subscription_tier, SubscriptionTier.PRO)
+        self.assertEqual(profile.subscription_status, SubscriptionStatus.ACTIVE)
+        self.assertEqual(profile.pending_subscription_tier, "")
+        change = SubscriptionChangeLog.objects.filter(reason="razorpay_payment_verified").get()
+        self.assertEqual(change.old_tier, SubscriptionTier.FREE)
+        self.assertEqual(change.new_tier, SubscriptionTier.PRO)

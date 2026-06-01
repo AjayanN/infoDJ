@@ -52,7 +52,7 @@ CHECKOUT_STATUS="$(
 )"
 case "${CHECKOUT_STATUS}" in
   201)
-    python3 -c 'import json,sys; data=json.load(open("/tmp/infodj_checkout.json")); assert data["razorpay"]["order_id"]; print("checkout ok")'
+    python3 -c 'import json,sys; data=json.load(open("/tmp/infodj_checkout.json")); assert data["razorpay"]["order_id"]; assert data["subscription"]["tier"] == "FREE"; assert data["subscription"]["pending_tier"] == "PRO"; print("checkout ok: tier remains FREE until payment verification")'
     ;;
   503)
     python3 -c 'import json; data=json.load(open("/tmp/infodj_checkout.json")); assert "Razorpay credentials" in data["error"]; print("checkout skipped: credentials not configured")'

@@ -41,6 +41,12 @@ class UserProfile(models.Model):
         default=SubscriptionStatus.FREE,
         db_index=True,
     )
+    pending_subscription_tier = models.CharField(
+        max_length=32,
+        choices=SubscriptionTier.choices,
+        blank=True,
+        db_index=True,
+    )
     razorpay_order_id = models.CharField(max_length=128, blank=True)
     razorpay_payment_id = models.CharField(max_length=128, blank=True)
     razorpay_subscription_id = models.CharField(max_length=128, blank=True)

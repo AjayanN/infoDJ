@@ -222,10 +222,10 @@ def subscription_checkout(request):
     except Exception as exc:
         return Response({"error": "razorpay order creation failed", "detail": str(exc)}, status=502)
 
-    profile.subscription_tier = requested_tier
-    profile.subscription_status = SubscriptionStatus.PENDING_PAYMENT
+    profile.pending_subscription_tier = requested_tier
     profile.razorpay_order_id = order.id
-    profile.save()
+    profile.razorpay_payment_id = ""
+    profile.save(update_fields=["pending_subscription_tier", "razorpay_order_id", "razorpay_payment_id", "updated_at"])
     log_subscription_change(
         user=request.user,
         old_tier=old_tier,
@@ -275,13 +275,36 @@ def subscription_verify_payment(request):
     if not is_valid:
         return Response({"error": "invalid payment signature"}, status=400)
 
+    pending_tier = profile.pending_subscription_tier
+    if not pending_tier:
+        latest_checkout = SubscriptionChangeLog.objects.filter(
+            user=request.user,
+            provider="RAZORPAY",
+            provider_order_id=order_id,
+            reason="razorpay_checkout_created",
+        ).order_by("-created_at", "-id").first()
+        pending_tier = latest_checkout.new_tier if latest_checkout else ""
+    if pending_tier not in TIER_PRICES_INR:
+        return Response({"error": "no pending paid subscription tier found for this order"}, status=400)
+
+    old_tier = profile.subscription_tier
     old_status = profile.subscription_status
+    profile.subscription_tier = pending_tier
     profile.subscription_status = SubscriptionStatus.ACTIVE
+    profile.pending_subscription_tier = ""
     profile.razorpay_payment_id = payment_id
-    profile.save()
+    profile.save(
+        update_fields=[
+            "subscription_tier",
+            "subscription_status",
+            "pending_subscription_tier",
+            "razorpay_payment_id",
+            "updated_at",
+        ]
+    )
     log_subscription_change(
         user=request.user,
-        old_tier=profile.subscription_tier,
+        old_tier=old_tier,
         new_tier=profile.subscription_tier,
         old_status=old_status,
         new_status=SubscriptionStatus.ACTIVE,
@@ -350,6 +373,7 @@ def serialize_subscription(profile: UserProfile) -> dict:
     return {
         "tier": profile.subscription_tier,
         "status": profile.subscription_status,
+        "pending_tier": profile.pending_subscription_tier,
         "razorpay_order_id": profile.razorpay_order_id,
         "razorpay_payment_id": profile.razorpay_payment_id,
         "razorpay_subscription_id": profile.razorpay_subscription_id,

@@ -53,6 +53,7 @@ const routes: Routes = [
 type Subscription = {
   tier: string;
   status: string;
+  pending_tier: string;
   razorpay_order_id: string;
   razorpay_payment_id: string;
   razorpay_subscription_id: string;
@@ -208,6 +209,10 @@ type HistoryRow = {
               <div class="metric">
                 <span>Status</span>
                 <strong>{{ user.subscription.status }}</strong>
+              </div>
+              <div class="metric" *ngIf="user.subscription.pending_tier">
+                <span>Pending tier</span>
+                <strong>{{ user.subscription.pending_tier }}</strong>
               </div>
             </div>
           </section>
@@ -508,7 +513,7 @@ class AppComponent {
             amount: order.amount,
             currency: order.currency,
             name: 'InfoDJ',
-            description: `${user.subscription.tier} subscription`,
+            description: `${user.subscription.pending_tier || user.subscription.tier} subscription`,
             order_id: order.order_id,
             prefill: {
               name: user.username,
