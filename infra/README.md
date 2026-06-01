@@ -2,6 +2,12 @@
 
 This folder wires the documented three-service architecture for local development.
 
+For server sizing, Loki growth expectations, and migration notes, see:
+
+```text
+docs/infra_migration.md
+```
+
 Services:
 
 - `gateway`: Kong API gateway public entrypoint on port `8080`

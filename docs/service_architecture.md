@@ -5,6 +5,8 @@ InfoDJ should be split into three services.
 For the concrete service/repo/port/API/deployment format, see
 `docs/service_architecture_format.md`.
 
+For server sizing and infra migration notes, see `docs/infra_migration.md`.
+
 ## 1. Ingestion and Curation Service
 
 The ingestion and curation service lives under `services/ingestion`.
