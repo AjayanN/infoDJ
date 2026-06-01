@@ -1,13 +1,20 @@
 import 'zone.js';
 
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
+import { HttpClientModule } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideRouter, Routes } from '@angular/router';
 
-import { environment } from './environments/environment';
+import {
+  CurrentUser,
+  HistoryRow,
+  InfoDjApiService,
+  RazorpayCheckoutResponse,
+  RazorpayOrder,
+  Subscription
+} from './app/services/infodj-api.service';
 
 declare global {
   interface Window {
@@ -16,12 +23,6 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-
-type RazorpayCheckoutResponse = {
-  razorpay_order_id: string;
-  razorpay_payment_id: string;
-  razorpay_signature: string;
-};
 
 type RazorpayCheckoutOptions = {
   key: string;
@@ -50,45 +51,6 @@ const routes: Routes = [
   { path: 'strategic-turns', loadChildren: () => import('./app/strategic-turns/routes').then((m) => m.STRATEGIC_TURN_ROUTES) }
 ];
 
-type Subscription = {
-  tier: string;
-  status: string;
-  pending_tier: string;
-  razorpay_order_id: string;
-  razorpay_payment_id: string;
-  razorpay_subscription_id: string;
-};
-
-type UserProfile = {
-  display_name: string;
-  company_name: string;
-  role: string;
-  email_updates_enabled: boolean;
-  product_updates_enabled: boolean;
-  research_digest_enabled: boolean;
-};
-
-type CurrentUser = {
-  id: number;
-  username: string;
-  email: string;
-  profile: UserProfile;
-  subscription: Subscription;
-};
-
-type HistoryRow = {
-  id: number;
-  old_tier: string;
-  new_tier: string;
-  old_status: string;
-  new_status: string;
-  reason: string;
-  provider: string;
-  provider_order_id: string;
-  provider_payment_id: string;
-  created_at: string;
-};
-
 @Component({
   selector: 'infodj-root',
   standalone: true,
@@ -96,14 +58,13 @@ type HistoryRow = {
   templateUrl: './app.component.html'
 })
 class AppComponent {
-  private readonly http = inject(HttpClient);
-  private readonly apiBaseUrl = environment.apiBaseUrl;
+  private readonly api = inject(InfoDjApiService);
 
   authView = signal<AuthView>('login');
   token = signal(localStorage.getItem('infodj_token') || '');
   currentUser = signal<CurrentUser | null>(null);
   history = signal<HistoryRow[]>([]);
-  checkoutOrder = signal<{ key_id: string; order_id: string; amount: number; currency: string } | null>(null);
+  checkoutOrder = signal<RazorpayOrder | null>(null);
   healthStatus = signal('');
   message = signal('');
   error = signal('');
@@ -151,11 +112,7 @@ class AppComponent {
 
   signup(): void {
     this.withRequest(() =>
-      this.http.post<{ token: string; user: CurrentUser }>(`${this.apiBaseUrl}/auth/signup`, {
-        username: this.username,
-        email: this.email,
-        password: this.password
-      }).subscribe({
+      this.api.signup(this.username, this.email, this.password).subscribe({
         next: (response) => this.acceptSession(response.token, response.user, 'Account created.'),
         error: (response) => this.showError(response)
       })
@@ -164,10 +121,7 @@ class AppComponent {
 
   login(): void {
     this.withRequest(() =>
-      this.http.post<{ token: string; user: CurrentUser }>(`${this.apiBaseUrl}/auth/login`, {
-        username: this.username,
-        password: this.password
-      }).subscribe({
+      this.api.login(this.username, this.password).subscribe({
         next: (response) => this.acceptSession(response.token, response.user, 'Logged in.'),
         error: (response) => this.showError(response)
       })
@@ -176,7 +130,7 @@ class AppComponent {
 
   startGoogleLogin(): void {
     this.withRequest(() =>
-      this.http.get<{ auth_url: string }>(`${this.apiBaseUrl}/auth/google/url`).subscribe({
+      this.api.getGoogleAuthUrl().subscribe({
         next: (response) => {
           window.location.href = response.auth_url;
         },
@@ -187,9 +141,7 @@ class AppComponent {
 
   requestPasswordReset(): void {
     this.withRequest(() =>
-      this.http.post<{ status: string }>(`${this.apiBaseUrl}/auth/password-reset/request`, {
-        email: this.email
-      }).subscribe({
+      this.api.requestPasswordReset(this.email).subscribe({
         next: () => {
           this.message.set('If the email exists, a reset link has been sent.');
           this.error.set('');
@@ -201,11 +153,7 @@ class AppComponent {
 
   confirmPasswordReset(): void {
     this.withRequest(() =>
-      this.http.post<{ status: string }>(`${this.apiBaseUrl}/auth/password-reset/confirm`, {
-        uid: this.resetUid,
-        token: this.resetToken,
-        password: this.password
-      }).subscribe({
+      this.api.confirmPasswordReset(this.resetUid, this.resetToken, this.password).subscribe({
         next: () => {
           this.password = '';
           this.authView.set('login');
@@ -218,14 +166,14 @@ class AppComponent {
   }
 
   logout(): void {
-    this.http.post(`${this.apiBaseUrl}/auth/logout`, {}, { headers: this.authHeaders() }).subscribe({
+    this.api.logout(this.token()).subscribe({
       next: () => this.clearSession('Logged out.'),
       error: () => this.clearSession('Logged out.')
     });
   }
 
   loadHealth(): void {
-    this.http.get<{ service: string; status: string }>(`${this.apiBaseUrl}/health`).subscribe({
+    this.api.health().subscribe({
       next: (response) => {
         this.healthStatus.set(`${response.service}: ${response.status}`);
         this.error.set('');
@@ -235,7 +183,7 @@ class AppComponent {
   }
 
   loadMe(): void {
-    this.http.get<{ user: CurrentUser }>(`${this.apiBaseUrl}/auth/me`, { headers: this.authHeaders() }).subscribe({
+    this.api.me(this.token()).subscribe({
       next: (response) => {
         this.currentUser.set(response.user);
         this.error.set('');
@@ -245,7 +193,7 @@ class AppComponent {
   }
 
   loadHistory(): void {
-    this.http.get<{ history: HistoryRow[] }>(`${this.apiBaseUrl}/subscription/history`, { headers: this.authHeaders() }).subscribe({
+    this.api.subscriptionHistory(this.token()).subscribe({
       next: (response) => this.history.set(response.history),
       error: (response) => this.showError(response)
     });
@@ -253,11 +201,7 @@ class AppComponent {
 
   changeTier(tier: string): void {
     this.withRequest(() =>
-      this.http.post<{ subscription: Subscription }>(
-        `${this.apiBaseUrl}/subscription/change`,
-        { tier, reason: 'frontend_plan_change' },
-        { headers: this.authHeaders() }
-      ).subscribe({
+      this.api.changeTier(this.token(), tier, 'frontend_plan_change').subscribe({
         next: (response) => {
           this.patchSubscription(response.subscription);
           this.message.set(`Subscription changed to ${response.subscription.tier}.`);
@@ -270,11 +214,7 @@ class AppComponent {
 
   checkout(tier: string): void {
     this.withRequest(() =>
-      this.http.post<{ razorpay: { key_id: string; order_id: string; amount: number; currency: string }; subscription: Subscription }>(
-        `${this.apiBaseUrl}/subscription/checkout`,
-        { tier },
-        { headers: this.authHeaders() }
-      ).subscribe({
+      this.api.checkout(this.token(), tier).subscribe({
         next: (response) => {
           this.checkoutOrder.set(response.razorpay);
           this.patchSubscription(response.subscription);
@@ -287,7 +227,7 @@ class AppComponent {
     );
   }
 
-  openRazorpayCheckout(order: { key_id: string; order_id: string; amount: number; currency: string }): void {
+  openRazorpayCheckout(order: RazorpayOrder): void {
     const user = this.currentUser();
     if (!user) {
       this.error.set('Login is required before checkout.');
@@ -333,11 +273,7 @@ class AppComponent {
 
   verifyPayment(payment: RazorpayCheckoutResponse): void {
     this.withRequest(() =>
-      this.http.post<{ subscription: Subscription }>(
-        `${this.apiBaseUrl}/subscription/verify-payment`,
-        payment,
-        { headers: this.authHeaders() }
-      ).subscribe({
+      this.api.verifyPayment(this.token(), payment).subscribe({
         next: (response) => {
           this.patchSubscription(response.subscription);
           this.checkoutOrder.set(null);
@@ -396,10 +332,6 @@ class AppComponent {
     if (user) {
       this.currentUser.set({ ...user, subscription });
     }
-  }
-
-  private authHeaders(): HttpHeaders {
-    return new HttpHeaders({ Authorization: `Token ${this.token()}` });
   }
 
   private withRequest(start: () => void): void {
