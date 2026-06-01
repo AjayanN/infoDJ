@@ -19,6 +19,30 @@ curl -sS "${BASE_URL}/auth/me" \
   -H "Authorization: Token ${TOKEN}" \
   | python3 -c 'import json,sys; data=json.load(sys.stdin); assert data["user"]["subscription"]["tier"] == "FREE"; print("me ok")'
 
+echo "Checking password reset request"
+curl -sS -X POST "${BASE_URL}/auth/password-reset/request" \
+  -H "Content-Type: application/json" \
+  -d "{\"email\":\"${EMAIL}\"}" \
+  | python3 -c 'import json,sys; data=json.load(sys.stdin); assert data["status"] == "ok"; print("password reset request ok")'
+
+echo "Checking Google OAuth URL endpoint"
+GOOGLE_STATUS="$(
+  curl -sS -o /tmp/infodj_google_url.json -w "%{http_code}" "${BASE_URL}/auth/google/url"
+)"
+case "${GOOGLE_STATUS}" in
+  200)
+    python3 -c 'import json; data=json.load(open("/tmp/infodj_google_url.json")); assert data["auth_url"].startswith("https://accounts.google.com/"); print("google url ok")'
+    ;;
+  503)
+    python3 -c 'import json; data=json.load(open("/tmp/infodj_google_url.json")); assert "Google OAuth credentials" in data["error"]; print("google url skipped: credentials not configured")'
+    ;;
+  *)
+    cat /tmp/infodj_google_url.json
+    echo "unexpected google url status ${GOOGLE_STATUS}" >&2
+    exit 1
+    ;;
+esac
+
 echo "Attempting Razorpay checkout"
 CHECKOUT_STATUS="$(
   curl -sS -o /tmp/infodj_checkout.json -w "%{http_code}" -X POST "${BASE_URL}/subscription/checkout" \

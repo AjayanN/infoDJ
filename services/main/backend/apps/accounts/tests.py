@@ -3,7 +3,11 @@ from __future__ import annotations
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
+from django.core import mail
 from django.test import TestCase, override_settings
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
@@ -51,6 +55,82 @@ class AccountAuthApiTests(TestCase):
         me_response = self.client.get("/api/app/auth/me")
         self.assertEqual(me_response.status_code, 200)
         self.assertEqual(me_response.data["user"]["email"], user.email)
+
+
+class PasswordResetApiTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = get_user_model().objects.create_user(
+            username="resetme",
+            email="resetme@example.com",
+            password="OldPass123!",
+        )
+
+    @override_settings(
+        EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+        FRONTEND_BASE_URL="http://localhost:4200",
+    )
+    def test_password_reset_request_sends_email_for_existing_user(self):
+        response = self.client.post(
+            "/api/app/auth/password-reset/request",
+            {"email": "resetme@example.com"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status"], "ok")
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("/reset-password?", mail.outbox[0].body)
+
+    def test_password_reset_confirm_changes_password_and_invalidates_tokens(self):
+        Token.objects.create(user=self.user)
+        uid = urlsafe_base64_encode(force_bytes(self.user.pk))
+        token = default_token_generator.make_token(self.user)
+
+        response = self.client.post(
+            "/api/app/auth/password-reset/confirm",
+            {"uid": uid, "token": token, "password": "NewPass123!"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("NewPass123!"))
+        self.assertEqual(Token.objects.filter(user=self.user).count(), 0)
+
+
+class GoogleOAuthApiTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+    @override_settings(GOOGLE_OAUTH_CLIENT_ID="", GOOGLE_OAUTH_CLIENT_SECRET="")
+    def test_google_auth_url_requires_configuration(self):
+        response = self.client.get("/api/app/auth/google/url")
+
+        self.assertEqual(response.status_code, 503)
+        self.assertIn("Google OAuth credentials", response.data["error"])
+
+    @override_settings(
+        GOOGLE_OAUTH_CLIENT_ID="client-id",
+        GOOGLE_OAUTH_CLIENT_SECRET="client-secret",
+        GOOGLE_OAUTH_REDIRECT_URI="http://localhost:8080/api/app/auth/google/callback",
+        FRONTEND_BASE_URL="http://localhost:4200",
+    )
+    @patch("apps.accounts.api.exchange_google_code_for_profile")
+    def test_google_callback_creates_user_and_redirects_with_token(self, exchange_profile):
+        exchange_profile.return_value = {
+            "email": "googleuser@example.com",
+            "name": "Google User",
+            "given_name": "Google",
+            "family_name": "User",
+        }
+
+        response = self.client.get("/api/app/auth/google/callback?code=test-code")
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("http://localhost:4200/auth/callback?token=", response["Location"])
+        user = get_user_model().objects.get(email="googleuser@example.com")
+        self.assertEqual(user.profile.display_name, "Google User")
 
 
 class SubscriptionApiTests(TestCase):

@@ -1,6 +1,14 @@
 from __future__ import annotations
 
+from urllib.parse import urlencode
+
+from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from django.shortcuts import redirect
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
@@ -14,9 +22,12 @@ from apps.accounts.models import (
     UserProfile,
 )
 from apps.accounts.services import (
+    GoogleOAuthConfigurationError,
     RazorpayClient,
     RazorpayConfigurationError,
     TIER_PRICES_INR,
+    build_google_oauth_url,
+    exchange_google_code_for_profile,
     verify_razorpay_payment_signature,
 )
 
@@ -59,6 +70,93 @@ def login(request):
     profile = ensure_profile(user)
     token, _created = Token.objects.get_or_create(user=user)
     return Response({"token": token.key, "user": serialize_user(user, profile)})
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def password_reset_request(request):
+    email = (request.data.get("email") or "").strip()
+    if email:
+        user = User.objects.filter(email__iexact=email).first()
+        if user:
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            reset_url = f"{settings.FRONTEND_BASE_URL.rstrip('/')}/reset-password?{urlencode({'uid': uid, 'token': token})}"
+            send_mail(
+                subject="Reset your InfoDJ password",
+                message=(
+                    "Use this link to reset your InfoDJ password:\n\n"
+                    f"{reset_url}\n\n"
+                    "If you did not request this, you can ignore this email."
+                ),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+    return Response({"status": "ok"})
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def password_reset_confirm(request):
+    uid = request.data.get("uid") or ""
+    token = request.data.get("token") or ""
+    password = request.data.get("password") or ""
+    if not uid or not token or not password:
+        return Response({"error": "uid, token, and password are required"}, status=400)
+    try:
+        user_id = force_str(urlsafe_base64_decode(uid))
+        user = User.objects.get(pk=user_id)
+    except Exception:
+        return Response({"error": "invalid password reset link"}, status=400)
+    if not default_token_generator.check_token(user, token):
+        return Response({"error": "invalid password reset link"}, status=400)
+    user.set_password(password)
+    user.save(update_fields=["password"])
+    Token.objects.filter(user=user).delete()
+    return Response({"status": "password_updated"})
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def google_auth_url(request):
+    try:
+        return Response({"auth_url": build_google_oauth_url()})
+    except GoogleOAuthConfigurationError as exc:
+        return Response({"error": str(exc)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def google_callback(request):
+    code = request.query_params.get("code") or ""
+    if not code:
+        return Response({"error": "Google authorization code is required"}, status=400)
+    try:
+        google_profile = exchange_google_code_for_profile(code)
+    except GoogleOAuthConfigurationError as exc:
+        return Response({"error": str(exc)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+    except Exception as exc:
+        return Response({"error": "Google login failed", "detail": str(exc)}, status=502)
+
+    email = google_profile["email"].strip().lower()
+    user = User.objects.filter(email__iexact=email).first()
+    if user is None:
+        username = unique_username_from_email(email)
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=None,
+            first_name=google_profile.get("given_name", ""),
+            last_name=google_profile.get("family_name", ""),
+        )
+    profile = ensure_profile(user)
+    if google_profile.get("name") and not profile.display_name:
+        profile.display_name = google_profile["name"][:255]
+        profile.save(update_fields=["display_name"])
+    token, _created = Token.objects.get_or_create(user=user)
+    redirect_url = f"{settings.FRONTEND_BASE_URL.rstrip('/')}/auth/callback?{urlencode({'token': token.key})}"
+    return redirect(redirect_url)
 
 
 @api_view(["POST"])
@@ -219,6 +317,16 @@ def subscription_history(request):
 def ensure_profile(user) -> UserProfile:
     profile, _created = UserProfile.objects.get_or_create(user=user)
     return profile
+
+
+def unique_username_from_email(email: str) -> str:
+    base = email.split("@", 1)[0].replace(".", "_").replace("+", "_") or "google_user"
+    candidate = base[:140]
+    suffix = 1
+    while User.objects.filter(username=candidate).exists():
+        suffix += 1
+        candidate = f"{base[:130]}_{suffix}"
+    return candidate
 
 
 def serialize_user(user, profile: UserProfile) -> dict:
