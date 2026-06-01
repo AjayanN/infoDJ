@@ -94,6 +94,37 @@ Recommended implementation:
 - Django backend initially, because Django Admin and ORM are already useful.
 - Transition specific high-throughput API surfaces to FastAPI later if needed.
 
+## 4. Log Search Service
+
+The log search service provides a Splunk-like search surface for container logs.
+
+Recommended implementation for the current Docker Compose deployment:
+
+- Grafana Loki as the log store.
+- Promtail as the Docker log collector.
+- Grafana as the query/search UI.
+
+Local endpoints:
+
+```text
+Grafana: http://localhost:3000
+Loki API: http://localhost:3100
+```
+
+Default Grafana login for local/dev:
+
+```text
+admin / admin
+```
+
+Useful LogQL searches:
+
+```text
+{service="ingestion"}
+{service="gateway"}
+{service="main-backend"}
+```
+
 ## Data Boundary
 
 PostgreSQL remains the system of record for curated data:

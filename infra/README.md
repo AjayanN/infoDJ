@@ -11,6 +11,9 @@ Services:
 - `main-frontend`: placeholder Angular frontend on port `4200`
 - `postgres`: PostgreSQL 16
 - `redis`: Redis 7
+- `logging-loki`: searchable log store on port `3100`
+- `logging-promtail`: Docker log collector
+- `logging-grafana`: log search UI on port `3000`
 
 Before running, create env files from examples:
 
@@ -24,6 +27,12 @@ Run core services:
 
 ```bash
 docker compose -f infra/docker-compose.yml up gateway ingestion main-backend postgres redis
+```
+
+Run core services with log search:
+
+```bash
+docker compose -f infra/docker-compose.yml up gateway ingestion main-backend postgres redis logging-loki logging-promtail logging-grafana
 ```
 
 The `ingestion` service starts both the API and the daily scheduler. The scheduler runs every day at 02:00 UTC.
@@ -61,4 +70,26 @@ Kong Admin API is exposed locally on:
 
 ```text
 http://localhost:8002
+```
+
+Log search is exposed locally on:
+
+```text
+http://localhost:3000
+```
+
+Default Grafana login:
+
+```text
+admin / admin
+```
+
+Useful LogQL searches:
+
+```text
+{service="ingestion"}
+{service="gateway"}
+{service="main-backend"}
+{service="postgres"}
+{service="redis"}
 ```

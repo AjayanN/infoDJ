@@ -257,6 +257,22 @@ services:
 
   redis:
     image: redis:7
+
+  logging-loki:
+    image: grafana/loki:3.2.1
+    ports:
+      - "3100:3100"
+
+  logging-promtail:
+    image: grafana/promtail:3.2.1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+
+  logging-grafana:
+    image: grafana/grafana:11.2.2
+    ports:
+      - "3000:3000"
 ```
 
 For the Docker Compose deployment, the `ingestion` service runs both the API and scheduler. For larger production deployments, the scheduler can be split into one of:
