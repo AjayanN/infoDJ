@@ -9,6 +9,38 @@ import { provideRouter, Routes } from '@angular/router';
 
 import { environment } from './environments/environment';
 
+declare global {
+  interface Window {
+    Razorpay?: new (options: RazorpayCheckoutOptions) => { open: () => void };
+  }
+}
+
+type RazorpayCheckoutResponse = {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+};
+
+type RazorpayCheckoutOptions = {
+  key: string;
+  amount: number;
+  currency: string;
+  name: string;
+  description: string;
+  order_id: string;
+  prefill: {
+    name: string;
+    email: string;
+  };
+  theme: {
+    color: string;
+  };
+  handler: (response: RazorpayCheckoutResponse) => void;
+  modal: {
+    ondismiss: () => void;
+  };
+};
+
 const routes: Routes = [
   { path: 'admin', loadChildren: () => import('./app/admin/routes').then((m) => m.ADMIN_ROUTES) },
   { path: 'companies', loadChildren: () => import('./app/companies/routes').then((m) => m.COMPANY_ROUTES) },
@@ -175,10 +207,13 @@ type HistoryRow = {
               <div><dt>Amount</dt><dd>{{ order.amount / 100 | number:'1.0-0' }} {{ order.currency }}</dd></div>
               <div><dt>Key ID</dt><dd>{{ order.key_id }}</dd></div>
             </dl>
-            <p>
-              The backend created this order. The next frontend step will mount Razorpay Checkout and submit
-              payment details back to the verification endpoint.
-            </p>
+            <div class="checkout-actions">
+              <button type="button" class="primary-button" (click)="openRazorpayCheckout(order)" [disabled]="loading()">
+                Pay with Razorpay
+              </button>
+              <button type="button" class="ghost-button" (click)="checkoutOrder.set(null)">Dismiss</button>
+            </div>
+            <p>The backend created this order. Continue to Razorpay to complete payment and verify it server-side.</p>
           </div>
         </section>
 
@@ -359,6 +394,69 @@ class AppComponent {
           this.patchSubscription(response.subscription);
           this.message.set('Razorpay order created.');
           this.loadHistory();
+          this.openRazorpayCheckout(response.razorpay);
+        },
+        error: (response) => this.showError(response)
+      })
+    );
+  }
+
+  openRazorpayCheckout(order: { key_id: string; order_id: string; amount: number; currency: string }): void {
+    const user = this.currentUser();
+    if (!user) {
+      this.error.set('Login is required before checkout.');
+      return;
+    }
+    this.withRequest(() => {
+      this.loadRazorpayScript()
+        .then(() => {
+          if (!window.Razorpay) {
+            throw new Error('Razorpay Checkout did not load.');
+          }
+          const checkout = new window.Razorpay({
+            key: order.key_id,
+            amount: order.amount,
+            currency: order.currency,
+            name: 'InfoDJ',
+            description: `${user.subscription.tier} subscription`,
+            order_id: order.order_id,
+            prefill: {
+              name: user.username,
+              email: user.email
+            },
+            theme: {
+              color: '#0b6bcb'
+            },
+            handler: (response) => this.verifyPayment(response),
+            modal: {
+              ondismiss: () => {
+                this.loading.set(false);
+                this.message.set('Checkout closed before payment completion.');
+              }
+            }
+          });
+          this.loading.set(false);
+          checkout.open();
+        })
+        .catch((error: Error) => {
+          this.loading.set(false);
+          this.error.set(error.message || 'Unable to load Razorpay Checkout.');
+        });
+    });
+  }
+
+  verifyPayment(payment: RazorpayCheckoutResponse): void {
+    this.withRequest(() =>
+      this.http.post<{ subscription: Subscription }>(
+        `${this.apiBaseUrl}/subscription/verify-payment`,
+        payment,
+        { headers: this.authHeaders() }
+      ).subscribe({
+        next: (response) => {
+          this.patchSubscription(response.subscription);
+          this.checkoutOrder.set(null);
+          this.message.set('Payment verified. Subscription is active.');
+          this.loadHistory();
         },
         error: (response) => this.showError(response)
       })
@@ -397,6 +495,28 @@ class AppComponent {
     this.loading.set(false);
     this.message.set('');
     this.error.set(response.error?.error || response.error?.detail || response.message || 'Request failed.');
+  }
+
+  private loadRazorpayScript(): Promise<void> {
+    if (window.Razorpay) {
+      return Promise.resolve();
+    }
+    const existing = document.querySelector<HTMLScriptElement>('script[data-razorpay-checkout]');
+    if (existing) {
+      return new Promise((resolve, reject) => {
+        existing.addEventListener('load', () => resolve(), { once: true });
+        existing.addEventListener('error', () => reject(new Error('Unable to load Razorpay Checkout.')), { once: true });
+      });
+    }
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.dataset['razorpayCheckout'] = 'true';
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('Unable to load Razorpay Checkout.'));
+      document.body.appendChild(script);
+    });
   }
 }
 
