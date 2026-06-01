@@ -1,68 +1,105 @@
 <ng-container *ngIf="!token(); else authenticatedApp">
-  <main class="auth-page">
-    <section class="auth-card">
+  <a class="skip-link" href="#auth-content">Skip to authentication form</a>
+  <main id="auth-content" class="auth-page" tabindex="-1">
+    <section class="auth-card" aria-labelledby="auth-title" [attr.aria-busy]="loading()">
       <div class="auth-brand">
         <p class="eyebrow">InfoDJ Admin</p>
-        <h1>{{ authTitle() }}</h1>
-        <p>Use an account to access the admin workspace, subscription controls, and company intelligence screens.</p>
+        <h1 id="auth-title">{{ authTitle() }}</h1>
+        <p id="auth-description">Use an account to access the admin workspace, subscription controls, and company intelligence screens.</p>
       </div>
 
-      <section class="status-strip compact" *ngIf="message() || error()">
-        <div class="status-card ok" *ngIf="message()">{{ message() }}</div>
-        <div class="status-card error" *ngIf="error()">{{ error() }}</div>
+      <section class="status-strip compact" *ngIf="message() || error()" aria-label="Authentication status">
+        <div class="status-card ok" *ngIf="message()" role="status" aria-live="polite">{{ message() }}</div>
+        <div class="status-card error" *ngIf="error()" role="alert">{{ error() }}</div>
       </section>
 
-      <div class="segmented auth-tabs" *ngIf="authView() !== 'reset'">
-        <button type="button" [class.active]="authView() === 'login'" (click)="setAuthView('login')">Login</button>
-        <button type="button" [class.active]="authView() === 'signup'" (click)="setAuthView('signup')">Signup</button>
+      <div class="segmented auth-tabs" *ngIf="authView() !== 'reset'" role="tablist" aria-label="Authentication mode">
+        <button
+          id="login-tab"
+          type="button"
+          role="tab"
+          aria-controls="login-panel"
+          [attr.aria-selected]="authView() === 'login'"
+          [class.active]="authView() === 'login'"
+          (click)="setAuthView('login')"
+        >
+          Login
+        </button>
+        <button
+          id="signup-tab"
+          type="button"
+          role="tab"
+          aria-controls="signup-panel"
+          [attr.aria-selected]="authView() === 'signup'"
+          [class.active]="authView() === 'signup'"
+          (click)="setAuthView('signup')"
+        >
+          Signup
+        </button>
       </div>
 
-      <form class="form-grid" *ngIf="authView() === 'login'" (ngSubmit)="login()">
-        <label>
+      <form
+        id="login-panel"
+        class="form-grid"
+        *ngIf="authView() === 'login'"
+        role="tabpanel"
+        aria-labelledby="login-tab"
+        aria-describedby="auth-description"
+        (ngSubmit)="login()"
+      >
+        <label for="login-username">
           Username
-          <input name="username" [(ngModel)]="username" autocomplete="username" required />
+          <input id="login-username" name="username" [(ngModel)]="username" autocomplete="username" required />
         </label>
-        <label>
+        <label for="login-password">
           Password
-          <input name="password" [(ngModel)]="password" autocomplete="current-password" type="password" required />
+          <input id="login-password" name="password" [(ngModel)]="password" autocomplete="current-password" type="password" required />
         </label>
-        <button type="submit" class="primary-button" [disabled]="loading()">Login</button>
-        <button type="button" class="ghost-button full-width" (click)="startGoogleLogin()" [disabled]="loading()">Continue with Google</button>
+        <button type="submit" class="primary-button" [disabled]="loading()" [attr.aria-disabled]="loading()">Login</button>
+        <button type="button" class="ghost-button full-width" (click)="startGoogleLogin()" [disabled]="loading()" [attr.aria-disabled]="loading()">Continue with Google</button>
         <button type="button" class="link-button" (click)="setAuthView('forgot')">Forgot password?</button>
       </form>
 
-      <form class="form-grid" *ngIf="authView() === 'signup'" (ngSubmit)="signup()">
-        <label>
+      <form
+        id="signup-panel"
+        class="form-grid"
+        *ngIf="authView() === 'signup'"
+        role="tabpanel"
+        aria-labelledby="signup-tab"
+        aria-describedby="auth-description"
+        (ngSubmit)="signup()"
+      >
+        <label for="signup-username">
           Username
-          <input name="signup_username" [(ngModel)]="username" autocomplete="username" required />
+          <input id="signup-username" name="signup_username" [(ngModel)]="username" autocomplete="username" required />
         </label>
-        <label>
+        <label for="signup-email">
           Email
-          <input name="signup_email" [(ngModel)]="email" autocomplete="email" type="email" required />
+          <input id="signup-email" name="signup_email" [(ngModel)]="email" autocomplete="email" type="email" required />
         </label>
-        <label>
+        <label for="signup-password">
           Password
-          <input name="signup_password" [(ngModel)]="password" autocomplete="new-password" type="password" required />
+          <input id="signup-password" name="signup_password" [(ngModel)]="password" autocomplete="new-password" type="password" required minlength="8" />
         </label>
-        <button type="submit" class="primary-button" [disabled]="loading()">Create account</button>
-        <button type="button" class="ghost-button full-width" (click)="startGoogleLogin()" [disabled]="loading()">Continue with Google</button>
+        <button type="submit" class="primary-button" [disabled]="loading()" [attr.aria-disabled]="loading()">Create account</button>
+        <button type="button" class="ghost-button full-width" (click)="startGoogleLogin()" [disabled]="loading()" [attr.aria-disabled]="loading()">Continue with Google</button>
       </form>
 
-      <form class="form-grid" *ngIf="authView() === 'forgot'" (ngSubmit)="requestPasswordReset()">
-        <label>
+      <form class="form-grid" *ngIf="authView() === 'forgot'" aria-labelledby="auth-title" (ngSubmit)="requestPasswordReset()">
+        <label for="reset-email">
           Account email
-          <input name="reset_email" [(ngModel)]="email" autocomplete="email" type="email" required />
+          <input id="reset-email" name="reset_email" [(ngModel)]="email" autocomplete="email" type="email" required />
         </label>
-        <button type="submit" class="primary-button" [disabled]="loading()">Send reset link</button>
+        <button type="submit" class="primary-button" [disabled]="loading()" [attr.aria-disabled]="loading()">Send reset link</button>
         <button type="button" class="link-button" (click)="setAuthView('login')">Back to login</button>
       </form>
 
-      <form class="form-grid" *ngIf="authView() === 'reset'" (ngSubmit)="confirmPasswordReset()">
-        <label>
+      <form class="form-grid" *ngIf="authView() === 'reset'" aria-labelledby="auth-title" (ngSubmit)="confirmPasswordReset()">
+        <label for="new-password">
           New password
-          <input name="new_password" [(ngModel)]="password" autocomplete="new-password" type="password" required />
+          <input id="new-password" name="new_password" [(ngModel)]="password" autocomplete="new-password" type="password" required minlength="8" />
         </label>
-        <button type="submit" class="primary-button" [disabled]="loading()">Update password</button>
+        <button type="submit" class="primary-button" [disabled]="loading()" [attr.aria-disabled]="loading()">Update password</button>
       </form>
     </section>
   </main>
@@ -70,69 +107,70 @@
 
 <ng-template #authenticatedApp>
   <div class="app-shell">
+    <a class="skip-link" href="#main-content">Skip to main content</a>
     <header class="topbar">
       <div>
         <p class="eyebrow">InfoDJ Admin</p>
-        <h1>Account and Subscription</h1>
+        <h1 id="page-title">Account and Subscription</h1>
       </div>
       <nav class="top-actions" aria-label="Primary">
-        <button type="button" class="ghost-button" (click)="loadHealth()">Check API</button>
-        <button type="button" class="ghost-button" (click)="loadMe()">Refresh Account</button>
+        <button type="button" class="ghost-button" (click)="loadHealth()" [disabled]="loading()" [attr.aria-disabled]="loading()">Check API</button>
+        <button type="button" class="ghost-button" (click)="loadMe()" [disabled]="loading()" [attr.aria-disabled]="loading()">Refresh Account</button>
         <button type="button" class="danger-button" (click)="logout()">Logout</button>
       </nav>
     </header>
 
-    <section class="status-strip" *ngIf="message() || error() || healthStatus()">
-      <div class="status-card ok" *ngIf="healthStatus()">{{ healthStatus() }}</div>
-      <div class="status-card ok" *ngIf="message()">{{ message() }}</div>
-      <div class="status-card error" *ngIf="error()">{{ error() }}</div>
+    <section class="status-strip" *ngIf="message() || error() || healthStatus()" aria-label="Application status">
+      <div class="status-card ok" *ngIf="healthStatus()" role="status" aria-live="polite">{{ healthStatus() }}</div>
+      <div class="status-card ok" *ngIf="message()" role="status" aria-live="polite">{{ message() }}</div>
+      <div class="status-card error" *ngIf="error()" role="alert">{{ error() }}</div>
     </section>
 
-    <main class="workspace authenticated-workspace">
-      <section class="panel account-panel">
+    <main id="main-content" class="workspace authenticated-workspace" tabindex="-1" aria-labelledby="page-title" [attr.aria-busy]="loading()">
+      <section class="panel account-panel" aria-labelledby="account-heading">
         <div class="panel-header">
           <div>
             <p class="section-kicker">Profile</p>
-            <h2>Current account</h2>
+            <h2 id="account-heading">Current account</h2>
           </div>
         </div>
 
-        <div class="account-grid" *ngIf="currentUser() as user">
+        <dl class="account-grid" *ngIf="currentUser() as user">
           <div class="metric">
-            <span>User</span>
-            <strong>{{ user.username }}</strong>
+            <dt>User</dt>
+            <dd>{{ user.username }}</dd>
           </div>
           <div class="metric">
-            <span>Email</span>
-            <strong>{{ user.email }}</strong>
+            <dt>Email</dt>
+            <dd>{{ user.email }}</dd>
           </div>
           <div class="metric">
-            <span>Tier</span>
-            <strong>{{ user.subscription.tier }}</strong>
+            <dt>Tier</dt>
+            <dd>{{ user.subscription.tier }}</dd>
           </div>
           <div class="metric">
-            <span>Status</span>
-            <strong>{{ user.subscription.status }}</strong>
+            <dt>Status</dt>
+            <dd>{{ user.subscription.status }}</dd>
           </div>
           <div class="metric" *ngIf="user.subscription.pending_tier">
-            <span>Pending tier</span>
-            <strong>{{ user.subscription.pending_tier }}</strong>
+            <dt>Pending tier</dt>
+            <dd>{{ user.subscription.pending_tier }}</dd>
           </div>
-        </div>
+        </dl>
       </section>
 
-      <section class="panel subscription-panel">
+      <section class="panel subscription-panel" aria-labelledby="subscription-heading">
         <div class="panel-header">
           <div>
             <p class="section-kicker">Subscription</p>
-            <h2>Plan controls</h2>
+            <h2 id="subscription-heading">Plan controls</h2>
           </div>
         </div>
 
-        <div class="tier-grid">
+        <div class="tier-grid" aria-label="Available subscription plans">
           <article class="tier-card" *ngFor="let tier of tiers">
             <div>
-              <h3>{{ tier.name }}</h3>
+              <h3 [id]="'tier-' + tier.id">{{ tier.name }}</h3>
               <p>{{ tier.description }}</p>
             </div>
             <div class="tier-price">{{ tier.price }}</div>
@@ -140,6 +178,9 @@
               type="button"
               class="primary-button"
               [disabled]="loading()"
+              [attr.aria-disabled]="loading()"
+              [attr.aria-describedby]="'tier-' + tier.id"
+              [attr.aria-label]="tier.paid ? 'Start Razorpay checkout for ' + tier.name + ' plan' : 'Use the free subscription tier'"
               (click)="tier.paid ? checkout(tier.id) : changeTier(tier.id)"
             >
               {{ tier.paid ? 'Start checkout' : 'Use free tier' }}
@@ -147,15 +188,15 @@
           </article>
         </div>
 
-        <div class="checkout-box" *ngIf="checkoutOrder() as order">
-          <h3>Razorpay checkout order</h3>
+        <div class="checkout-box" *ngIf="checkoutOrder() as order" role="region" aria-labelledby="checkout-heading">
+          <h3 id="checkout-heading">Razorpay checkout order</h3>
           <dl>
             <div><dt>Order ID</dt><dd>{{ order.order_id }}</dd></div>
             <div><dt>Amount</dt><dd>{{ order.amount / 100 | number:'1.0-0' }} {{ order.currency }}</dd></div>
             <div><dt>Key ID</dt><dd>{{ order.key_id }}</dd></div>
           </dl>
           <div class="checkout-actions">
-            <button type="button" class="primary-button" (click)="openRazorpayCheckout(order)" [disabled]="loading()">
+            <button type="button" class="primary-button" (click)="openRazorpayCheckout(order)" [disabled]="loading()" [attr.aria-disabled]="loading()">
               Pay with Razorpay
             </button>
             <button type="button" class="ghost-button" (click)="checkoutOrder.set(null)">Dismiss</button>
@@ -164,27 +205,28 @@
         </div>
       </section>
 
-      <section class="panel history-panel">
+      <section class="panel history-panel" aria-labelledby="history-heading">
         <div class="panel-header">
           <div>
             <p class="section-kicker">Audit</p>
-            <h2>Subscription history</h2>
+            <h2 id="history-heading">Subscription history</h2>
           </div>
-          <button type="button" class="ghost-button" (click)="loadHistory()">Reload</button>
+          <button type="button" class="ghost-button" (click)="loadHistory()" [disabled]="loading()" [attr.aria-disabled]="loading()">Reload</button>
         </div>
 
-        <div class="empty-state" *ngIf="history().length === 0">
+        <div class="empty-state" *ngIf="history().length === 0" role="status" aria-live="polite">
           No subscription changes loaded.
         </div>
 
         <table *ngIf="history().length > 0">
+          <caption class="visually-hidden">Subscription change history for the current account</caption>
           <thead>
             <tr>
-              <th>When</th>
-              <th>Provider</th>
-              <th>Tier</th>
-              <th>Status</th>
-              <th>Reason</th>
+              <th scope="col">When</th>
+              <th scope="col">Provider</th>
+              <th scope="col">Tier</th>
+              <th scope="col">Status</th>
+              <th scope="col">Reason</th>
             </tr>
           </thead>
           <tbody>

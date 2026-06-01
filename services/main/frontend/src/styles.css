@@ -23,6 +23,35 @@ body {
   color: var(--ink);
 }
 
+.skip-link {
+  background: var(--accent);
+  border-radius: 0 0 6px 0;
+  color: #ffffff;
+  font-weight: 800;
+  left: 0;
+  padding: 10px 14px;
+  position: fixed;
+  top: 0;
+  transform: translateY(-120%);
+  z-index: 1000;
+}
+
+.skip-link:focus {
+  outline: 3px solid #ffffff;
+  outline-offset: 2px;
+  transform: translateY(0);
+}
+
+.visually-hidden {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
 .app-shell {
   min-height: 100vh;
 }
@@ -113,6 +142,14 @@ button {
   font: inherit;
 }
 
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+[tabindex="-1"]:focus-visible {
+  outline: 3px solid rgba(11, 107, 203, 0.48);
+  outline-offset: 3px;
+}
+
 button:disabled {
   cursor: not-allowed;
   opacity: 0.58;
@@ -166,6 +203,10 @@ button:disabled {
 .segmented button.active {
   background: #ffffff;
   box-shadow: 0 1px 3px rgba(24, 33, 47, 0.18);
+}
+
+.segmented button[aria-selected="true"] {
+  color: var(--accent-dark);
 }
 
 .status-strip {
@@ -279,7 +320,7 @@ input:focus {
   padding: 14px;
 }
 
-.metric span {
+.metric dt {
   color: var(--muted);
   display: block;
   font-size: 12px;
@@ -288,7 +329,9 @@ input:focus {
   text-transform: uppercase;
 }
 
-.metric strong {
+.metric dd {
+  font-weight: 800;
+  margin: 0;
   overflow-wrap: anywhere;
 }
 
@@ -327,24 +370,24 @@ input:focus {
   margin-top: 16px;
 }
 
-dl {
+.checkout-box dl {
   display: grid;
   gap: 8px;
   margin: 14px 0 0;
 }
 
-dl div {
+.checkout-box dl div {
   display: grid;
   gap: 8px;
   grid-template-columns: 120px minmax(0, 1fr);
 }
 
-dt {
+.checkout-box dt {
   color: var(--muted);
   font-weight: 700;
 }
 
-dd {
+.checkout-box dd {
   margin: 0;
   overflow-wrap: anywhere;
 }
@@ -414,7 +457,7 @@ th {
     flex-direction: column;
   }
 
-  dl div {
+  .checkout-box dl div {
     grid-template-columns: 1fr;
   }
 
