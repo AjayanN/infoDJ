@@ -227,6 +227,7 @@ services:
 
   ingestion:
     build: ./services/ingestion
+    command: .venv/bin/python manage.py run_ingestion_api_with_scheduler --host 0.0.0.0 --port 8001 --scheduler-at 02:00 --scheduler-timezone UTC --limit 20
     env_file: ./infra/env/ingestion.env
     depends_on:
       - postgres
@@ -236,15 +237,6 @@ services:
     build: ./services/ingestion
     command: .venv/bin/python manage.py daily_company_update --limit 20 --skip-gdelt
     env_file: ./infra/env/ingestion.env
-    depends_on:
-      - postgres
-      - redis
-
-  ingestion-scheduler:
-    build: ./services/ingestion
-    command: .venv/bin/python manage.py scheduled_daily_update --at 02:00 --timezone UTC --limit 20
-    env_file: ./infra/env/ingestion.env
-    restart: unless-stopped
     depends_on:
       - postgres
       - redis
@@ -267,7 +259,7 @@ services:
     image: redis:7
 ```
 
-For the Docker Compose deployment, keep `ingestion-scheduler` running with the core services. For larger production deployments, replace it with one of:
+For the Docker Compose deployment, the `ingestion` service runs both the API and scheduler. For larger production deployments, the scheduler can be split into one of:
 
 - Kubernetes CronJob
 - systemd timer
