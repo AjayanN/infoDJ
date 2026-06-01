@@ -1,0 +1,208 @@
+<ng-container *ngIf="!token(); else authenticatedApp">
+  <main class="auth-page">
+    <section class="auth-card">
+      <div class="auth-brand">
+        <p class="eyebrow">InfoDJ Admin</p>
+        <h1>{{ authTitle() }}</h1>
+        <p>Use an account to access the admin workspace, subscription controls, and company intelligence screens.</p>
+      </div>
+
+      <section class="status-strip compact" *ngIf="message() || error()">
+        <div class="status-card ok" *ngIf="message()">{{ message() }}</div>
+        <div class="status-card error" *ngIf="error()">{{ error() }}</div>
+      </section>
+
+      <div class="segmented auth-tabs" *ngIf="authView() !== 'reset'">
+        <button type="button" [class.active]="authView() === 'login'" (click)="setAuthView('login')">Login</button>
+        <button type="button" [class.active]="authView() === 'signup'" (click)="setAuthView('signup')">Signup</button>
+      </div>
+
+      <form class="form-grid" *ngIf="authView() === 'login'" (ngSubmit)="login()">
+        <label>
+          Username
+          <input name="username" [(ngModel)]="username" autocomplete="username" required />
+        </label>
+        <label>
+          Password
+          <input name="password" [(ngModel)]="password" autocomplete="current-password" type="password" required />
+        </label>
+        <button type="submit" class="primary-button" [disabled]="loading()">Login</button>
+        <button type="button" class="ghost-button full-width" (click)="startGoogleLogin()" [disabled]="loading()">Continue with Google</button>
+        <button type="button" class="link-button" (click)="setAuthView('forgot')">Forgot password?</button>
+      </form>
+
+      <form class="form-grid" *ngIf="authView() === 'signup'" (ngSubmit)="signup()">
+        <label>
+          Username
+          <input name="signup_username" [(ngModel)]="username" autocomplete="username" required />
+        </label>
+        <label>
+          Email
+          <input name="signup_email" [(ngModel)]="email" autocomplete="email" type="email" required />
+        </label>
+        <label>
+          Password
+          <input name="signup_password" [(ngModel)]="password" autocomplete="new-password" type="password" required />
+        </label>
+        <button type="submit" class="primary-button" [disabled]="loading()">Create account</button>
+        <button type="button" class="ghost-button full-width" (click)="startGoogleLogin()" [disabled]="loading()">Continue with Google</button>
+      </form>
+
+      <form class="form-grid" *ngIf="authView() === 'forgot'" (ngSubmit)="requestPasswordReset()">
+        <label>
+          Account email
+          <input name="reset_email" [(ngModel)]="email" autocomplete="email" type="email" required />
+        </label>
+        <button type="submit" class="primary-button" [disabled]="loading()">Send reset link</button>
+        <button type="button" class="link-button" (click)="setAuthView('login')">Back to login</button>
+      </form>
+
+      <form class="form-grid" *ngIf="authView() === 'reset'" (ngSubmit)="confirmPasswordReset()">
+        <label>
+          New password
+          <input name="new_password" [(ngModel)]="password" autocomplete="new-password" type="password" required />
+        </label>
+        <button type="submit" class="primary-button" [disabled]="loading()">Update password</button>
+      </form>
+    </section>
+  </main>
+</ng-container>
+
+<ng-template #authenticatedApp>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">InfoDJ Admin</p>
+        <h1>Account and Subscription</h1>
+      </div>
+      <nav class="top-actions" aria-label="Primary">
+        <button type="button" class="ghost-button" (click)="loadHealth()">Check API</button>
+        <button type="button" class="ghost-button" (click)="loadMe()">Refresh Account</button>
+        <button type="button" class="danger-button" (click)="logout()">Logout</button>
+      </nav>
+    </header>
+
+    <section class="status-strip" *ngIf="message() || error() || healthStatus()">
+      <div class="status-card ok" *ngIf="healthStatus()">{{ healthStatus() }}</div>
+      <div class="status-card ok" *ngIf="message()">{{ message() }}</div>
+      <div class="status-card error" *ngIf="error()">{{ error() }}</div>
+    </section>
+
+    <main class="workspace authenticated-workspace">
+      <section class="panel account-panel">
+        <div class="panel-header">
+          <div>
+            <p class="section-kicker">Profile</p>
+            <h2>Current account</h2>
+          </div>
+        </div>
+
+        <div class="account-grid" *ngIf="currentUser() as user">
+          <div class="metric">
+            <span>User</span>
+            <strong>{{ user.username }}</strong>
+          </div>
+          <div class="metric">
+            <span>Email</span>
+            <strong>{{ user.email }}</strong>
+          </div>
+          <div class="metric">
+            <span>Tier</span>
+            <strong>{{ user.subscription.tier }}</strong>
+          </div>
+          <div class="metric">
+            <span>Status</span>
+            <strong>{{ user.subscription.status }}</strong>
+          </div>
+          <div class="metric" *ngIf="user.subscription.pending_tier">
+            <span>Pending tier</span>
+            <strong>{{ user.subscription.pending_tier }}</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel subscription-panel">
+        <div class="panel-header">
+          <div>
+            <p class="section-kicker">Subscription</p>
+            <h2>Plan controls</h2>
+          </div>
+        </div>
+
+        <div class="tier-grid">
+          <article class="tier-card" *ngFor="let tier of tiers">
+            <div>
+              <h3>{{ tier.name }}</h3>
+              <p>{{ tier.description }}</p>
+            </div>
+            <div class="tier-price">{{ tier.price }}</div>
+            <button
+              type="button"
+              class="primary-button"
+              [disabled]="loading()"
+              (click)="tier.paid ? checkout(tier.id) : changeTier(tier.id)"
+            >
+              {{ tier.paid ? 'Start checkout' : 'Use free tier' }}
+            </button>
+          </article>
+        </div>
+
+        <div class="checkout-box" *ngIf="checkoutOrder() as order">
+          <h3>Razorpay checkout order</h3>
+          <dl>
+            <div><dt>Order ID</dt><dd>{{ order.order_id }}</dd></div>
+            <div><dt>Amount</dt><dd>{{ order.amount / 100 | number:'1.0-0' }} {{ order.currency }}</dd></div>
+            <div><dt>Key ID</dt><dd>{{ order.key_id }}</dd></div>
+          </dl>
+          <div class="checkout-actions">
+            <button type="button" class="primary-button" (click)="openRazorpayCheckout(order)" [disabled]="loading()">
+              Pay with Razorpay
+            </button>
+            <button type="button" class="ghost-button" (click)="checkoutOrder.set(null)">Dismiss</button>
+          </div>
+          <p>Continue to Razorpay to complete payment and verify it server-side.</p>
+        </div>
+      </section>
+
+      <section class="panel history-panel">
+        <div class="panel-header">
+          <div>
+            <p class="section-kicker">Audit</p>
+            <h2>Subscription history</h2>
+          </div>
+          <button type="button" class="ghost-button" (click)="loadHistory()">Reload</button>
+        </div>
+
+        <div class="empty-state" *ngIf="history().length === 0">
+          No subscription changes loaded.
+        </div>
+
+        <table *ngIf="history().length > 0">
+          <thead>
+            <tr>
+              <th>When</th>
+              <th>Provider</th>
+              <th>Tier</th>
+              <th>Status</th>
+              <th>Reason</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of history()">
+              <td>{{ row.created_at | date:'medium' }}</td>
+              <td>{{ row.provider }}</td>
+              <td>{{ row.old_tier }} -> {{ row.new_tier }}</td>
+              <td>{{ row.old_status }} -> {{ row.new_status }}</td>
+              <td>{{ row.reason }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>InfoDJ Sprint 1</span>
+      <span>Main backend APIs only. Razorpay and Google secrets stay server-side.</span>
+    </footer>
+  </div>
+</ng-template>
