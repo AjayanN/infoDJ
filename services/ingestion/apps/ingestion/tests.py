@@ -4,6 +4,7 @@ from django.test import Client, TestCase
 
 from apps.companies.models import Company
 from apps.curation.models import BusinessEvent, StrategicTurn
+from apps.ingestion.services.event_extractor import EventSignal, actual_change_for, find_evidence_sentence
 
 
 class IngestionSearchApiTests(TestCase):
@@ -53,3 +54,57 @@ class IngestionSearchApiTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["suggestions"][0]["slug"], "netflix")
+
+
+class EventClaimTextTests(TestCase):
+    def regulatory_signal(self):
+        return EventSignal(
+            decision_theme="REGULATORY_LEGAL_RISK",
+            event_type="REGULATORY_RESPONSE",
+            lifecycle_stage="MATURITY",
+            decision="Adapt to legal, regulatory, and compliance pressure.",
+            trigger="Legal pressure.",
+            before_state="",
+            after_state="",
+            outcome="",
+            founder_lesson="",
+            keywords=("regulatory", "litigation", "legal proceedings"),
+        )
+
+    def test_regulatory_actual_change_uses_source_specific_action(self):
+        signal = self.regulatory_signal()
+
+        actual_change = actual_change_for(
+            signal,
+            "The company settled litigation with state regulators and agreed to modify its compliance program.",
+            company_name="ExampleCo",
+        )
+
+        self.assertIn("ExampleCo:", actual_change)
+        self.assertIn("settled litigation", actual_change)
+        self.assertNotIn("disclosed legal, regulatory, or compliance pressure", actual_change)
+
+    def test_regulatory_actual_change_marks_risk_when_no_action_is_extracted(self):
+        signal = self.regulatory_signal()
+
+        actual_change = actual_change_for(
+            signal,
+            "The company is subject to laws and regulations in each market where it operates.",
+            company_name="ExampleCo",
+        )
+
+        self.assertIn("no response action was extracted", actual_change)
+        self.assertIn("laws and regulations", actual_change)
+
+    def test_regulatory_evidence_prefers_action_over_heading_fragments(self):
+        signal = self.regulatory_signal()
+        text = (
+            "Government Regulation. "
+            "Legal Proceedings | ||||||| Item 4. "
+            "Regulatory emissions standards require us to continue to make investments as new products and new regulations are introduced."
+        )
+
+        evidence = find_evidence_sentence(text, signal, signal.keywords)
+
+        self.assertIn("require us to continue to make investments", evidence)
+        self.assertNotIn("Legal Proceedings |", evidence)
