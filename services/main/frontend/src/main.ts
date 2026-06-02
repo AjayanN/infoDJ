@@ -1,7 +1,7 @@
 import 'zone.js';
 
 import { CommonModule } from '@angular/common';
-import { HttpClientModule } from '@angular/common/http';
+import { provideHttpClient } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { bootstrapApplication } from '@angular/platform-browser';
@@ -55,7 +55,7 @@ const routes: Routes = [
 @Component({
   selector: 'infodj-root',
   standalone: true,
-  imports: [CommonModule, FormsModule, HttpClientModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './app.component.html'
 })
 class AppComponent {
@@ -438,5 +438,5 @@ class AppComponent {
 }
 
 bootstrapApplication(AppComponent, {
-  providers: [provideRouter(routes)]
+  providers: [provideHttpClient(), provideRouter(routes)]
 }).catch((error) => console.error(error));
