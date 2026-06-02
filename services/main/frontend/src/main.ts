@@ -23,6 +23,7 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
+type AppPage = 'dashboard' | 'profile' | 'subscription';
 
 type RazorpayCheckoutOptions = {
   key: string;
@@ -61,6 +62,8 @@ class AppComponent {
   private readonly api = inject(InfoDjApiService);
 
   authView = signal<AuthView>('login');
+  activePage = signal<AppPage>('dashboard');
+  menuOpen = signal(false);
   token = signal(localStorage.getItem('infodj_token') || '');
   currentUser = signal<CurrentUser | null>(null);
   history = signal<HistoryRow[]>([]);
@@ -75,6 +78,8 @@ class AppComponent {
   password = '';
   resetUid = '';
   resetToken = '';
+  avatarPreview = '';
+  avatarFilename = '';
 
   tiers = [
     { id: 'FREE', name: 'Free', price: '0 INR', paid: false, description: 'Inspect limited company history and account setup.' },
@@ -108,6 +113,40 @@ class AppComponent {
     this.authView.set(view);
     this.message.set('');
     this.error.set('');
+  }
+
+  setActivePage(page: AppPage): void {
+    this.activePage.set(page);
+    this.menuOpen.set(false);
+    this.message.set('');
+    this.error.set('');
+    if (page === 'subscription') {
+      this.loadHistory();
+    }
+  }
+
+  toggleMenu(): void {
+    this.menuOpen.update((open) => !open);
+  }
+
+  pageTitle(): string {
+    if (this.activePage() === 'profile') {
+      return 'Profile';
+    }
+    if (this.activePage() === 'subscription') {
+      return 'Subscription';
+    }
+    return 'Dashboard';
+  }
+
+  pageDescription(): string {
+    if (this.activePage() === 'profile') {
+      return 'Manage account details, avatar preview, and subscription access.';
+    }
+    if (this.activePage() === 'subscription') {
+      return 'Review available tiers, start Razorpay checkout, and audit plan changes.';
+    }
+    return 'A quick operating view for company intelligence, search, and strategic turn analysis.';
   }
 
   signup(): void {
@@ -170,6 +209,27 @@ class AppComponent {
       next: () => this.clearSession('Logged out.'),
       error: () => this.clearSession('Logged out.')
     });
+  }
+
+  chooseAvatar(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) {
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      this.error.set('Choose an image file for the avatar.');
+      return;
+    }
+    this.avatarFilename = file.name;
+    this.error.set('');
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.avatarPreview = typeof reader.result === 'string' ? reader.result : '';
+      this.message.set('Avatar preview updated. Backend upload can be added next.');
+    };
+    reader.onerror = () => this.error.set('Unable to preview the selected avatar.');
+    reader.readAsDataURL(file);
   }
 
   loadHealth(): void {
@@ -313,6 +373,8 @@ class AppComponent {
     this.currentUser.set(user);
     this.message.set(message);
     this.error.set('');
+    this.activePage.set('dashboard');
+    this.menuOpen.set(false);
     this.password = '';
     this.loadHistory();
   }
@@ -324,6 +386,10 @@ class AppComponent {
     this.history.set([]);
     this.checkoutOrder.set(null);
     this.authView.set('login');
+    this.activePage.set('dashboard');
+    this.menuOpen.set(false);
+    this.avatarPreview = '';
+    this.avatarFilename = '';
     this.message.set(message);
   }
 

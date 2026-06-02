@@ -108,143 +108,214 @@
 <ng-template #authenticatedApp>
   <div class="app-shell">
     <a class="skip-link" href="#main-content">Skip to main content</a>
-    <header class="topbar">
-      <div>
+    <aside class="sidebar" [class.open]="menuOpen()" aria-label="Workspace navigation">
+      <div class="sidebar-brand">
         <p class="eyebrow">InfoDJ Admin</p>
-        <h1 id="page-title">Account and Subscription</h1>
+        <strong>Business intelligence</strong>
       </div>
-      <nav class="top-actions" aria-label="Primary">
-        <button type="button" class="ghost-button" (click)="loadHealth()" [disabled]="loading()" [attr.aria-disabled]="loading()">Check API</button>
-        <button type="button" class="ghost-button" (click)="loadMe()" [disabled]="loading()" [attr.aria-disabled]="loading()">Refresh Account</button>
-        <button type="button" class="danger-button" (click)="logout()">Logout</button>
+      <nav class="side-nav" aria-label="Main menu">
+        <button type="button" [class.active]="activePage() === 'dashboard'" [attr.aria-current]="activePage() === 'dashboard' ? 'page' : null" (click)="setActivePage('dashboard')">Dashboard</button>
+        <button type="button" [class.active]="activePage() === 'profile'" [attr.aria-current]="activePage() === 'profile' ? 'page' : null" (click)="setActivePage('profile')">Profile</button>
+        <button type="button" [class.active]="activePage() === 'subscription'" [attr.aria-current]="activePage() === 'subscription' ? 'page' : null" (click)="setActivePage('subscription')">Subscription</button>
       </nav>
-    </header>
+    </aside>
 
-    <section class="status-strip" *ngIf="message() || error() || healthStatus()" aria-label="Application status">
-      <div class="status-card ok" *ngIf="healthStatus()" role="status" aria-live="polite">{{ healthStatus() }}</div>
-      <div class="status-card ok" *ngIf="message()" role="status" aria-live="polite">{{ message() }}</div>
-      <div class="status-card error" *ngIf="error()" role="alert">{{ error() }}</div>
-    </section>
-
-    <main id="main-content" class="workspace authenticated-workspace" tabindex="-1" aria-labelledby="page-title" [attr.aria-busy]="loading()">
-      <section class="panel account-panel" aria-labelledby="account-heading">
-        <div class="panel-header">
+    <div class="shell-main">
+      <header class="topbar">
+        <div class="topbar-title">
+          <button type="button" class="hamburger-button" aria-label="Toggle navigation menu" [attr.aria-expanded]="menuOpen()" (click)="toggleMenu()">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+          </button>
           <div>
-            <p class="section-kicker">Profile</p>
-            <h2 id="account-heading">Current account</h2>
+            <p class="eyebrow">InfoDJ Admin</p>
+            <h1 id="page-title">{{ pageTitle() }}</h1>
+            <p>{{ pageDescription() }}</p>
           </div>
         </div>
+        <nav class="top-actions" aria-label="Account actions">
+          <button type="button" class="ghost-button" (click)="loadHealth()" [disabled]="loading()" [attr.aria-disabled]="loading()">Check API</button>
+          <button type="button" class="ghost-button" (click)="loadMe()" [disabled]="loading()" [attr.aria-disabled]="loading()">Refresh</button>
+          <button type="button" class="danger-button" (click)="logout()">Logout</button>
+        </nav>
+      </header>
 
-        <dl class="account-grid" *ngIf="currentUser() as user">
-          <div class="metric">
-            <dt>User</dt>
-            <dd>{{ user.username }}</dd>
-          </div>
-          <div class="metric">
-            <dt>Email</dt>
-            <dd>{{ user.email }}</dd>
-          </div>
-          <div class="metric">
-            <dt>Tier</dt>
-            <dd>{{ user.subscription.tier }}</dd>
-          </div>
-          <div class="metric">
-            <dt>Status</dt>
-            <dd>{{ user.subscription.status }}</dd>
-          </div>
-          <div class="metric" *ngIf="user.subscription.pending_tier">
-            <dt>Pending tier</dt>
-            <dd>{{ user.subscription.pending_tier }}</dd>
-          </div>
-        </dl>
+      <section class="status-strip" *ngIf="message() || error() || healthStatus()" aria-label="Application status">
+        <div class="status-card ok" *ngIf="healthStatus()" role="status" aria-live="polite">{{ healthStatus() }}</div>
+        <div class="status-card ok" *ngIf="message()" role="status" aria-live="polite">{{ message() }}</div>
+        <div class="status-card error" *ngIf="error()" role="alert">{{ error() }}</div>
       </section>
 
-      <section class="panel subscription-panel" aria-labelledby="subscription-heading">
-        <div class="panel-header">
-          <div>
-            <p class="section-kicker">Subscription</p>
-            <h2 id="subscription-heading">Plan controls</h2>
-          </div>
-        </div>
-
-        <div class="tier-grid" aria-label="Available subscription plans">
-          <article class="tier-card" *ngFor="let tier of tiers">
-            <div>
-              <h3 [id]="'tier-' + tier.id">{{ tier.name }}</h3>
-              <p>{{ tier.description }}</p>
+      <main id="main-content" class="workspace authenticated-workspace" tabindex="-1" aria-labelledby="page-title" [attr.aria-busy]="loading()">
+        <ng-container [ngSwitch]="activePage()">
+          <section *ngSwitchCase="'dashboard'" class="dashboard-grid" aria-labelledby="dashboard-heading">
+            <div class="panel hero-panel">
+              <p class="section-kicker">Workspace</p>
+              <h2 id="dashboard-heading">Company intelligence dashboard</h2>
+              <p>Start from company discovery, review strategic turns, then use profile and subscription controls only when account changes are needed.</p>
             </div>
-            <div class="tier-price">{{ tier.price }}</div>
-            <button
-              type="button"
-              class="primary-button"
-              [disabled]="loading()"
-              [attr.aria-disabled]="loading()"
-              [attr.aria-describedby]="'tier-' + tier.id"
-              [attr.aria-label]="tier.paid ? 'Start Razorpay checkout for ' + tier.name + ' plan' : 'Use the free subscription tier'"
-              (click)="tier.paid ? checkout(tier.id) : changeTier(tier.id)"
-            >
-              {{ tier.paid ? 'Start checkout' : 'Use free tier' }}
-            </button>
-          </article>
-        </div>
 
-        <div class="checkout-box" *ngIf="checkoutOrder() as order" role="region" aria-labelledby="checkout-heading">
-          <h3 id="checkout-heading">Razorpay checkout order</h3>
-          <dl>
-            <div><dt>Order ID</dt><dd>{{ order.order_id }}</dd></div>
-            <div><dt>Amount</dt><dd>{{ order.amount / 100 | number:'1.0-0' }} {{ order.currency }}</dd></div>
-            <div><dt>Key ID</dt><dd>{{ order.key_id }}</dd></div>
-          </dl>
-          <div class="checkout-actions">
-            <button type="button" class="primary-button" (click)="openRazorpayCheckout(order)" [disabled]="loading()" [attr.aria-disabled]="loading()">
-              Pay with Razorpay
-            </button>
-            <button type="button" class="ghost-button" (click)="checkoutOrder.set(null)">Dismiss</button>
-          </div>
-          <p>Continue to Razorpay to complete payment and verify it server-side.</p>
-        </div>
-      </section>
+            <div class="dashboard-cards">
+              <article class="panel dashboard-card">
+                <p class="section-kicker">Search</p>
+                <h3>Global search</h3>
+                <p>Company, category, and English-language event search will sit here once the search API is wired to this shell.</p>
+              </article>
+              <article class="panel dashboard-card">
+                <p class="section-kicker">Classification</p>
+                <h3>Category view</h3>
+                <p>Sector and event-type filters will expose the curated data without entering account settings.</p>
+              </article>
+              <article class="panel dashboard-card">
+                <p class="section-kicker">Recommendations</p>
+                <h3>Stage guidance</h3>
+                <p>Generalized themes and specific company examples will be shown from curated strategic-turn rows.</p>
+              </article>
+            </div>
+          </section>
 
-      <section class="panel history-panel" aria-labelledby="history-heading">
-        <div class="panel-header">
-          <div>
-            <p class="section-kicker">Audit</p>
-            <h2 id="history-heading">Subscription history</h2>
-          </div>
-          <button type="button" class="ghost-button" (click)="loadHistory()" [disabled]="loading()" [attr.aria-disabled]="loading()">Reload</button>
-        </div>
+          <section *ngSwitchCase="'profile'" class="profile-layout" aria-labelledby="profile-heading">
+            <section class="panel profile-card" aria-labelledby="profile-heading">
+              <div class="panel-header">
+                <div>
+                  <p class="section-kicker">Profile</p>
+                  <h2 id="profile-heading">Current account</h2>
+                </div>
+                <button type="button" class="primary-button" (click)="setActivePage('subscription')">Change subscription</button>
+              </div>
 
-        <div class="empty-state" *ngIf="history().length === 0" role="status" aria-live="polite">
-          No subscription changes loaded.
-        </div>
+              <div class="profile-summary" *ngIf="currentUser() as user">
+                <div class="avatar-block">
+                  <div class="avatar-preview" aria-label="Avatar preview">
+                    <img *ngIf="avatarPreview; else avatarInitials" [src]="avatarPreview" alt="Selected profile avatar preview" />
+                    <ng-template #avatarInitials>
+                      <span aria-hidden="true">{{ (user.username || 'ID').slice(0, 2).toUpperCase() }}</span>
+                    </ng-template>
+                  </div>
+                  <label class="file-picker" for="avatar-upload">
+                    Choose avatar image
+                    <input id="avatar-upload" type="file" accept="image/*" (change)="chooseAvatar($event)" />
+                  </label>
+                  <p class="helper-text" aria-live="polite">{{ avatarFilename || 'No avatar image selected.' }}</p>
+                </div>
 
-        <table *ngIf="history().length > 0">
-          <caption class="visually-hidden">Subscription change history for the current account</caption>
-          <thead>
-            <tr>
-              <th scope="col">When</th>
-              <th scope="col">Provider</th>
-              <th scope="col">Tier</th>
-              <th scope="col">Status</th>
-              <th scope="col">Reason</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let row of history()">
-              <td>{{ row.created_at | date:'medium' }}</td>
-              <td>{{ row.provider }}</td>
-              <td>{{ row.old_tier }} -> {{ row.new_tier }}</td>
-              <td>{{ row.old_status }} -> {{ row.new_status }}</td>
-              <td>{{ row.reason }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-    </main>
+                <dl class="account-grid">
+                  <div class="metric">
+                    <dt>User</dt>
+                    <dd>{{ user.username }}</dd>
+                  </div>
+                  <div class="metric">
+                    <dt>Email</dt>
+                    <dd>{{ user.email }}</dd>
+                  </div>
+                  <div class="metric">
+                    <dt>Tier</dt>
+                    <dd>{{ user.subscription.tier }}</dd>
+                  </div>
+                  <div class="metric">
+                    <dt>Status</dt>
+                    <dd>{{ user.subscription.status }}</dd>
+                  </div>
+                  <div class="metric" *ngIf="user.subscription.pending_tier">
+                    <dt>Pending tier</dt>
+                    <dd>{{ user.subscription.pending_tier }}</dd>
+                  </div>
+                </dl>
+              </div>
+            </section>
+          </section>
 
-    <footer class="footer">
-      <span>InfoDJ Sprint 1</span>
-      <span>Main backend APIs only. Razorpay and Google secrets stay server-side.</span>
-    </footer>
+          <ng-container *ngSwitchCase="'subscription'">
+            <section class="panel subscription-panel" aria-labelledby="subscription-heading">
+              <div class="panel-header">
+                <div>
+                  <p class="section-kicker">Subscription</p>
+                  <h2 id="subscription-heading">Plan controls</h2>
+                </div>
+              </div>
+
+              <div class="tier-grid" aria-label="Available subscription plans">
+                <article class="tier-card" *ngFor="let tier of tiers">
+                  <div>
+                    <h3 [id]="'tier-' + tier.id">{{ tier.name }}</h3>
+                    <p>{{ tier.description }}</p>
+                  </div>
+                  <div class="tier-price">{{ tier.price }}</div>
+                  <button
+                    type="button"
+                    class="primary-button"
+                    [disabled]="loading()"
+                    [attr.aria-disabled]="loading()"
+                    [attr.aria-describedby]="'tier-' + tier.id"
+                    [attr.aria-label]="tier.paid ? 'Start Razorpay checkout for ' + tier.name + ' plan' : 'Use the free subscription tier'"
+                    (click)="tier.paid ? checkout(tier.id) : changeTier(tier.id)"
+                  >
+                    {{ tier.paid ? 'Start checkout' : 'Use free tier' }}
+                  </button>
+                </article>
+              </div>
+
+              <div class="checkout-box" *ngIf="checkoutOrder() as order" role="region" aria-labelledby="checkout-heading">
+                <h3 id="checkout-heading">Razorpay checkout order</h3>
+                <dl>
+                  <div><dt>Order ID</dt><dd>{{ order.order_id }}</dd></div>
+                  <div><dt>Amount</dt><dd>{{ order.amount / 100 | number:'1.0-0' }} {{ order.currency }}</dd></div>
+                  <div><dt>Key ID</dt><dd>{{ order.key_id }}</dd></div>
+                </dl>
+                <div class="checkout-actions">
+                  <button type="button" class="primary-button" (click)="openRazorpayCheckout(order)" [disabled]="loading()" [attr.aria-disabled]="loading()">
+                    Pay with Razorpay
+                  </button>
+                  <button type="button" class="ghost-button" (click)="checkoutOrder.set(null)">Dismiss</button>
+                </div>
+                <p>Continue to Razorpay to complete payment and verify it server-side.</p>
+              </div>
+            </section>
+
+            <section class="panel history-panel" aria-labelledby="history-heading">
+              <div class="panel-header">
+                <div>
+                  <p class="section-kicker">Audit</p>
+                  <h2 id="history-heading">Subscription history</h2>
+                </div>
+                <button type="button" class="ghost-button" (click)="loadHistory()" [disabled]="loading()" [attr.aria-disabled]="loading()">Reload</button>
+              </div>
+
+              <div class="empty-state" *ngIf="history().length === 0" role="status" aria-live="polite">
+                No subscription changes loaded.
+              </div>
+
+              <table *ngIf="history().length > 0">
+                <caption class="visually-hidden">Subscription change history for the current account</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">When</th>
+                    <th scope="col">Provider</th>
+                    <th scope="col">Tier</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Reason</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let row of history()">
+                    <td>{{ row.created_at | date:'medium' }}</td>
+                    <td>{{ row.provider }}</td>
+                    <td>{{ row.old_tier }} -> {{ row.new_tier }}</td>
+                    <td>{{ row.old_status }} -> {{ row.new_status }}</td>
+                    <td>{{ row.reason }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </section>
+          </ng-container>
+        </ng-container>
+      </main>
+
+      <footer class="footer">
+        <span>InfoDJ Sprint 1</span>
+        <span>Main backend APIs only. Razorpay and Google secrets stay server-side.</span>
+      </footer>
+    </div>
   </div>
 </ng-template>
