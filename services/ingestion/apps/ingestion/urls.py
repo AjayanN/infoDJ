@@ -6,6 +6,8 @@ from apps.ingestion import api
 urlpatterns = [
     path("health", api.health, name="ingestion-health"),
     path("companies", api.companies, name="ingestion-companies"),
+    path("search", api.search, name="ingestion-search"),
+    path("search/suggest", api.search_suggest, name="ingestion-search-suggest"),
     path("companies/<slug:slug>/events", api.company_events, name="ingestion-company-events"),
     path(
         "companies/<slug:slug>/strategic-turns",
@@ -17,4 +19,3 @@ urlpatterns = [
     path("jobs/daily-update", api.run_daily_update, name="ingestion-daily-update"),
     path("companies/<slug:slug>/refresh", api.refresh_company, name="ingestion-company-refresh"),
 ]
-

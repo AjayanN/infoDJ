@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.postgres",
     "apps.companies.apps.CompaniesConfig",
     "apps.ingestion.apps.IngestionConfig",
     "apps.curation.apps.CurationConfig",

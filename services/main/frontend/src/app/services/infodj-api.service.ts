@@ -71,6 +71,109 @@ export type SubscriptionCheckoutResponse = {
   subscription: Subscription;
 };
 
+export type DashboardCompany = {
+  id?: number;
+  name: string;
+  slug: string;
+  sector: string;
+  country?: string;
+  source_count: number;
+  event_count: number;
+  strategic_turn_count: number;
+};
+
+export type SectorCount = {
+  sector: string;
+  company_count: number;
+  source_count: number;
+  event_count: number;
+  strategic_turn_count: number;
+};
+
+export type IngestionJobSummary = {
+  id: number;
+  company: string | null;
+  company_slug: string | null;
+  job_type: string;
+  source: string;
+  status: string;
+  sources_found: number;
+  sources_inserted: number;
+  duplicates_skipped: number;
+  articles_extracted: number;
+  events_extracted: number;
+  turns_created: number;
+  error_message: string;
+  created_at: string;
+  started_at: string | null;
+  finished_at: string | null;
+};
+
+export type DashboardResponse = {
+  summary: {
+    company_count: number;
+    source_count: number;
+    event_count: number;
+    strategic_turn_count: number;
+    sector_count: number;
+  };
+  sector_counts: SectorCount[];
+  top_companies: DashboardCompany[];
+  latest_jobs: IngestionJobSummary[];
+  ingestion: {
+    available: boolean;
+    companies_error: string;
+    jobs_error: string;
+  };
+};
+
+export type SearchEventResult = {
+  id: number;
+  company: string;
+  company_slug: string;
+  event_date: string | null;
+  event_type: string;
+  decision_theme: string;
+  actual_change: string;
+  source_claim: string;
+  first_filing: string | null;
+  latest_filing: string | null;
+  source_count: number;
+  review_status: string;
+};
+
+export type SearchTurnResult = {
+  id: number;
+  title: string;
+  turn_type: string;
+  start_date: string | null;
+  end_date: string | null;
+  summary: string;
+  decision: string;
+  outcome: string;
+  review_status: string;
+  is_published: boolean;
+  source_count: number;
+};
+
+export type SearchResponse = {
+  query: string;
+  language: string;
+  results: {
+    companies: DashboardCompany[];
+    events: SearchEventResult[];
+    strategic_turns: SearchTurnResult[];
+  };
+};
+
+export type SearchSuggestion = {
+  type: string;
+  label: string;
+  slug: string;
+  sector: string;
+  description: string;
+};
+
 @Injectable({ providedIn: 'root' })
 export class InfoDjApiService {
   private readonly http = inject(HttpClient);
@@ -160,6 +263,32 @@ export class InfoDjApiService {
   deleteAvatar(token: string) {
     return this.http.delete<{ user: CurrentUser }>(`${this.apiBaseUrl}/profile/avatar`, {
       headers: this.authHeaders(token)
+    });
+  }
+
+  dashboard(token: string) {
+    return this.http.get<DashboardResponse>(`${this.apiBaseUrl}/dashboard`, {
+      headers: this.authHeaders(token)
+    });
+  }
+
+  categories(token: string) {
+    return this.http.get<{ categories: SectorCount[] }>(`${this.apiBaseUrl}/categories`, {
+      headers: this.authHeaders(token)
+    });
+  }
+
+  search(token: string, query: string) {
+    return this.http.get<SearchResponse>(`${this.apiBaseUrl}/search`, {
+      headers: this.authHeaders(token),
+      params: { q: query, language: 'en' }
+    });
+  }
+
+  suggest(token: string, query: string) {
+    return this.http.get<{ suggestions: SearchSuggestion[] }>(`${this.apiBaseUrl}/search/suggest`, {
+      headers: this.authHeaders(token),
+      params: { q: query, language: 'en' }
     });
   }
 

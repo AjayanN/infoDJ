@@ -379,6 +379,16 @@ Smoke script:
 scripts/smoke/sprint1_dashboard_search.sh
 ```
 
+Implementation status:
+
+```text
+Branch: feature/sprint1-dashboard-search
+Ingestion endpoints added: /api/ingestion/search and /api/ingestion/search/suggest
+Main backend endpoints added: /api/app/dashboard, /api/app/categories, /api/app/search, /api/app/search/suggest
+Frontend dashboard placeholder replaced with metrics, sectors, top companies, jobs, suggestions, and grouped search results
+Smoke script added: scripts/smoke/sprint1_dashboard_search.sh
+```
+
 ## 5. Bubble-Themed Individual Company Stages
 
 Branch:

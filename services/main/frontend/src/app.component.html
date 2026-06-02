@@ -150,29 +150,188 @@
       <main id="main-content" class="workspace authenticated-workspace" tabindex="-1" aria-labelledby="page-title" [attr.aria-busy]="loading()">
         <ng-container [ngSwitch]="activePage()">
           <section *ngSwitchCase="'dashboard'" class="dashboard-grid" aria-labelledby="dashboard-heading">
-            <div class="panel hero-panel">
-              <p class="section-kicker">Workspace</p>
-              <h2 id="dashboard-heading">Company intelligence dashboard</h2>
-              <p>Start from company discovery, review strategic turns, then use profile and subscription controls only when account changes are needed.</p>
+            <div class="panel dashboard-header-panel">
+              <div>
+                <p class="section-kicker">Workspace</p>
+                <h2 id="dashboard-heading">Company intelligence dashboard</h2>
+                <p>Review curated company coverage, category concentration, ingestion health, and English-language search results.</p>
+              </div>
+              <button type="button" class="ghost-button" (click)="loadDashboard()" [disabled]="dashboardLoading()" [attr.aria-disabled]="dashboardLoading()">Reload dashboard</button>
             </div>
 
-            <div class="dashboard-cards">
-              <article class="panel dashboard-card">
-                <p class="section-kicker">Search</p>
-                <h3>Global search</h3>
-                <p>Company, category, and English-language event search will sit here once the search API is wired to this shell.</p>
-              </article>
-              <article class="panel dashboard-card">
-                <p class="section-kicker">Classification</p>
-                <h3>Category view</h3>
-                <p>Sector and event-type filters will expose the curated data without entering account settings.</p>
-              </article>
-              <article class="panel dashboard-card">
-                <p class="section-kicker">Recommendations</p>
-                <h3>Stage guidance</h3>
-                <p>Generalized themes and specific company examples will be shown from curated strategic-turn rows.</p>
-              </article>
-            </div>
+            <ng-container *ngIf="dashboard() as dash; else dashboardEmpty">
+              <div class="metric-grid" aria-label="Dashboard summary metrics">
+                <div class="metric">
+                  <dt>Companies</dt>
+                  <dd>{{ dash.summary.company_count }}</dd>
+                </div>
+                <div class="metric">
+                  <dt>Sources</dt>
+                  <dd>{{ dash.summary.source_count }}</dd>
+                </div>
+                <div class="metric">
+                  <dt>Events</dt>
+                  <dd>{{ dash.summary.event_count }}</dd>
+                </div>
+                <div class="metric">
+                  <dt>Strategic turns</dt>
+                  <dd>{{ dash.summary.strategic_turn_count }}</dd>
+                </div>
+                <div class="metric">
+                  <dt>Sectors</dt>
+                  <dd>{{ dash.summary.sector_count }}</dd>
+                </div>
+              </div>
+
+              <section class="panel search-panel" aria-labelledby="search-heading">
+                <div class="panel-header">
+                  <div>
+                    <p class="section-kicker">English search</p>
+                    <h2 id="search-heading">Global search</h2>
+                  </div>
+                </div>
+                <form class="search-form" (ngSubmit)="runSearch()">
+                  <label for="global-search">
+                    Search companies, events, and strategic turns
+                    <input
+                      id="global-search"
+                      name="global_search"
+                      [(ngModel)]="searchQuery"
+                      (input)="updateSearchSuggestions()"
+                      autocomplete="off"
+                      placeholder="Netflix advertising, pricing, expansion"
+                    />
+                  </label>
+                  <button type="submit" class="primary-button" [disabled]="searchLoading()" [attr.aria-disabled]="searchLoading()">Search</button>
+                </form>
+
+                <div class="suggestion-row" *ngIf="suggestions().length > 0" aria-label="Search suggestions">
+                  <button type="button" class="suggestion-button" *ngFor="let suggestion of suggestions()" (click)="useSuggestion(suggestion)">
+                    <span>{{ suggestion.label }}</span>
+                    <small>{{ suggestion.sector || suggestion.description }}</small>
+                  </button>
+                </div>
+
+                <div class="search-results" *ngIf="searchResults() as results" aria-live="polite">
+                  <section aria-labelledby="company-results-heading">
+                    <h3 id="company-results-heading">Companies</h3>
+                    <div class="empty-state" *ngIf="results.results.companies.length === 0">No company matches.</div>
+                    <div class="result-list" *ngIf="results.results.companies.length > 0">
+                      <article class="result-row" *ngFor="let company of results.results.companies">
+                        <strong>{{ company.name }}</strong>
+                        <span>{{ company.sector || 'Unclassified' }}</span>
+                        <span>{{ company.event_count || 0 }} events, {{ company.strategic_turn_count || 0 }} turns</span>
+                      </article>
+                    </div>
+                  </section>
+
+                  <section aria-labelledby="event-results-heading">
+                    <h3 id="event-results-heading">Business events</h3>
+                    <div class="empty-state" *ngIf="results.results.events.length === 0">No event matches.</div>
+                    <div class="result-list" *ngIf="results.results.events.length > 0">
+                      <article class="result-row" *ngFor="let event of results.results.events">
+                        <strong>{{ event.company }} · {{ event.event_type }}</strong>
+                        <span>{{ event.event_date || 'No date' }} · {{ event.decision_theme || 'No theme' }}</span>
+                        <p>{{ event.actual_change || event.source_claim }}</p>
+                      </article>
+                    </div>
+                  </section>
+
+                  <section aria-labelledby="turn-results-heading">
+                    <h3 id="turn-results-heading">Strategic turns</h3>
+                    <div class="empty-state" *ngIf="results.results.strategic_turns.length === 0">No strategic turn matches.</div>
+                    <div class="result-list" *ngIf="results.results.strategic_turns.length > 0">
+                      <article class="result-row" *ngFor="let turn of results.results.strategic_turns">
+                        <strong>{{ turn.title }}</strong>
+                        <span>{{ turn.start_date || 'No date' }} · {{ turn.turn_type }}</span>
+                        <p>{{ turn.summary || turn.decision || turn.outcome }}</p>
+                      </article>
+                    </div>
+                  </section>
+                </div>
+              </section>
+
+              <div class="dashboard-two-column">
+                <section class="panel" aria-labelledby="category-heading">
+                  <div class="panel-header">
+                    <div>
+                      <p class="section-kicker">Classification</p>
+                      <h2 id="category-heading">Sectors</h2>
+                    </div>
+                  </div>
+                  <table>
+                    <caption class="visually-hidden">Company coverage grouped by sector</caption>
+                    <thead>
+                      <tr>
+                        <th scope="col">Sector</th>
+                        <th scope="col">Companies</th>
+                        <th scope="col">Events</th>
+                        <th scope="col">Turns</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let sector of dash.sector_counts">
+                        <td>{{ sector.sector }}</td>
+                        <td>{{ sector.company_count }}</td>
+                        <td>{{ sector.event_count }}</td>
+                        <td>{{ sector.strategic_turn_count }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </section>
+
+                <section class="panel" aria-labelledby="top-company-heading">
+                  <div class="panel-header">
+                    <div>
+                      <p class="section-kicker">Coverage</p>
+                      <h2 id="top-company-heading">Top companies</h2>
+                    </div>
+                  </div>
+                  <div class="result-list compact-list">
+                    <article class="result-row" *ngFor="let company of dash.top_companies">
+                      <strong>{{ company.name }}</strong>
+                      <span>{{ company.sector || 'Unclassified' }}</span>
+                      <span>{{ company.source_count }} sources, {{ company.event_count }} events, {{ company.strategic_turn_count }} turns</span>
+                    </article>
+                  </div>
+                </section>
+              </div>
+
+              <section class="panel" aria-labelledby="jobs-heading">
+                <div class="panel-header">
+                  <div>
+                    <p class="section-kicker">Ingestion</p>
+                    <h2 id="jobs-heading">Latest jobs</h2>
+                  </div>
+                </div>
+                <div class="empty-state" *ngIf="dash.latest_jobs.length === 0">No ingestion jobs returned.</div>
+                <table *ngIf="dash.latest_jobs.length > 0">
+                  <caption class="visually-hidden">Latest ingestion jobs</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Created</th>
+                      <th scope="col">Company</th>
+                      <th scope="col">Type</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Events</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let job of dash.latest_jobs">
+                      <td>{{ job.created_at | date:'medium' }}</td>
+                      <td>{{ job.company || 'Global' }}</td>
+                      <td>{{ job.job_type }}</td>
+                      <td>{{ job.status }}</td>
+                      <td>{{ job.events_extracted }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+            </ng-container>
+
+            <ng-template #dashboardEmpty>
+              <div class="panel empty-state">Dashboard data has not loaded yet.</div>
+            </ng-template>
           </section>
 
           <section *ngSwitchCase="'profile'" class="profile-layout" aria-labelledby="profile-heading">

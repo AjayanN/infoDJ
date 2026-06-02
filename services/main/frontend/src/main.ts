@@ -9,10 +9,13 @@ import { provideRouter, Routes } from '@angular/router';
 
 import {
   CurrentUser,
+  DashboardResponse,
   HistoryRow,
   InfoDjApiService,
   RazorpayCheckoutResponse,
   RazorpayOrder,
+  SearchResponse,
+  SearchSuggestion,
   Subscription
 } from './app/services/infodj-api.service';
 
@@ -67,17 +70,23 @@ class AppComponent {
   token = signal(localStorage.getItem('infodj_token') || '');
   currentUser = signal<CurrentUser | null>(null);
   history = signal<HistoryRow[]>([]);
+  dashboard = signal<DashboardResponse | null>(null);
+  searchResults = signal<SearchResponse | null>(null);
+  suggestions = signal<SearchSuggestion[]>([]);
   checkoutOrder = signal<RazorpayOrder | null>(null);
   healthStatus = signal('');
   message = signal('');
   error = signal('');
   loading = signal(false);
+  dashboardLoading = signal(false);
+  searchLoading = signal(false);
 
   username = '';
   email = '';
   password = '';
   resetUid = '';
   resetToken = '';
+  searchQuery = '';
   avatarPreview = '';
   avatarFilename = '';
 
@@ -93,6 +102,7 @@ class AppComponent {
     if (this.token()) {
       this.loadMe();
       this.loadHistory();
+      this.loadDashboard();
     }
   }
 
@@ -122,6 +132,9 @@ class AppComponent {
     this.error.set('');
     if (page === 'subscription') {
       this.loadHistory();
+    }
+    if (page === 'dashboard') {
+      this.loadDashboard();
     }
   }
 
@@ -277,6 +290,64 @@ class AppComponent {
     });
   }
 
+  loadDashboard(): void {
+    if (!this.token()) {
+      return;
+    }
+    this.dashboardLoading.set(true);
+    this.api.dashboard(this.token()).subscribe({
+      next: (response) => {
+        this.dashboard.set(response);
+        this.dashboardLoading.set(false);
+        if (!response.ingestion.available) {
+          this.error.set('Ingestion data is currently unavailable.');
+        }
+      },
+      error: (response) => {
+        this.dashboardLoading.set(false);
+        this.showError(response);
+      }
+    });
+  }
+
+  updateSearchSuggestions(): void {
+    const query = this.searchQuery.trim();
+    if (query.length < 2) {
+      this.suggestions.set([]);
+      return;
+    }
+    this.api.suggest(this.token(), query).subscribe({
+      next: (response) => this.suggestions.set(response.suggestions),
+      error: () => this.suggestions.set([])
+    });
+  }
+
+  runSearch(query = this.searchQuery): void {
+    const normalized = query.trim();
+    if (!normalized) {
+      this.error.set('Enter a search query.');
+      return;
+    }
+    this.searchQuery = normalized;
+    this.searchLoading.set(true);
+    this.suggestions.set([]);
+    this.api.search(this.token(), normalized).subscribe({
+      next: (response) => {
+        this.searchResults.set(response);
+        this.searchLoading.set(false);
+        this.error.set('');
+      },
+      error: (response) => {
+        this.searchLoading.set(false);
+        this.showError(response);
+      }
+    });
+  }
+
+  useSuggestion(suggestion: SearchSuggestion): void {
+    this.runSearch(suggestion.label);
+  }
+
   changeTier(tier: string): void {
     this.withRequest(() =>
       this.api.changeTier(this.token(), tier, 'frontend_plan_change').subscribe({
@@ -395,6 +466,7 @@ class AppComponent {
     this.menuOpen.set(false);
     this.password = '';
     this.loadHistory();
+    this.loadDashboard();
   }
 
   private clearSession(message: string): void {
@@ -402,6 +474,9 @@ class AppComponent {
     this.token.set('');
     this.currentUser.set(null);
     this.history.set([]);
+    this.dashboard.set(null);
+    this.searchResults.set(null);
+    this.suggestions.set([]);
     this.checkoutOrder.set(null);
     this.authView.set('login');
     this.activePage.set('dashboard');

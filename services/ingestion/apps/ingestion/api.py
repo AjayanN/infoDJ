@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector, TrigramSimilarity
 from django.core.management import call_command
-from django.db.models import Count
+from django.db import connection
+from django.db.models import Count, Q
 from django.http import Http404, HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 
@@ -37,6 +39,75 @@ def companies(_request: HttpRequest) -> JsonResponse:
             }
         )
     return JsonResponse({"companies": rows})
+
+
+@require_GET
+def search(request: HttpRequest) -> JsonResponse:
+    query = normalized_query(request)
+    if not query:
+        return JsonResponse({"error": "q is required"}, status=400)
+
+    limit = bounded_limit(request, default=10, maximum=50)
+    company_rows = Company.objects.filter(
+        Q(name__icontains=query)
+        | Q(slug__icontains=query)
+        | Q(industry__icontains=query)
+        | Q(country__icontains=query)
+    ).order_by("name")[:limit]
+    event_rows = search_business_events(query, limit)
+    turn_rows = search_strategic_turns(query, limit)
+
+    return JsonResponse(
+        {
+            "query": query,
+            "language": request.GET.get("language") or "en",
+            "results": {
+                "companies": [serialize_company(company) for company in company_rows],
+                "events": [serialize_business_event(event) for event in event_rows],
+                "strategic_turns": [serialize_strategic_turn(turn, source_count=0) for turn in turn_rows],
+            },
+        }
+    )
+
+
+@require_GET
+def search_suggest(request: HttpRequest) -> JsonResponse:
+    query = normalized_query(request)
+    if not query:
+        return JsonResponse({"error": "q is required"}, status=400)
+
+    limit = bounded_limit(request, default=8, maximum=25)
+    queryset = Company.objects.filter(
+        Q(name__istartswith=query)
+        | Q(slug__istartswith=query)
+        | Q(name__icontains=query)
+        | Q(industry__icontains=query)
+    )
+    if connection.vendor == "postgresql":
+        queryset = (
+            queryset.annotate(similarity=TrigramSimilarity("name", query))
+            .filter(Q(similarity__gte=0.1) | Q(name__istartswith=query) | Q(slug__istartswith=query))
+            .order_by("-similarity", "name")
+        )
+    else:
+        queryset = queryset.order_by("name")
+
+    return JsonResponse(
+        {
+            "query": query,
+            "language": request.GET.get("language") or "en",
+            "suggestions": [
+                {
+                    "type": "company",
+                    "label": company.name,
+                    "slug": company.slug,
+                    "sector": company.industry,
+                    "description": company.country,
+                }
+                for company in queryset[:limit]
+            ],
+        }
+    )
 
 
 @require_GET
@@ -126,6 +197,77 @@ def bounded_limit(request: HttpRequest, *, default: int, maximum: int) -> int:
     return max(1, min(value, maximum))
 
 
+def normalized_query(request: HttpRequest) -> str:
+    return " ".join((request.GET.get("q") or "").strip().split())
+
+
+def search_business_events(query: str, limit: int) -> list[BusinessEvent]:
+    fallback_queryset = (
+        BusinessEvent.objects.select_related("company", "source_document")
+        .exclude(actual_change="")
+        .filter(
+            Q(actual_change__icontains=query)
+            | Q(source_claim__icontains=query)
+            | Q(decision__icontains=query)
+            | Q(outcome__icontains=query)
+            | Q(event_type__icontains=query)
+            | Q(decision_theme__icontains=query)
+            | Q(company__name__icontains=query)
+        )
+    )
+    if connection.vendor != "postgresql":
+        return list(fallback_queryset.order_by("-event_date", "id")[:limit])
+
+    vector = (
+        SearchVector("actual_change", weight="A")
+        + SearchVector("source_claim", weight="B")
+        + SearchVector("decision", weight="B")
+        + SearchVector("outcome", weight="C")
+        + SearchVector("event_type", weight="C")
+        + SearchVector("decision_theme", weight="C")
+        + SearchVector("company__name", weight="A")
+    )
+    search_query = SearchQuery(query, search_type="websearch")
+    return list(
+        BusinessEvent.objects.select_related("company", "source_document")
+        .exclude(actual_change="")
+        .annotate(rank=SearchRank(vector, search_query))
+        .filter(Q(rank__gt=0) | Q(actual_change__icontains=query) | Q(company__name__icontains=query))
+        .order_by("-rank", "-event_date", "id")[:limit]
+    )
+
+
+def search_strategic_turns(query: str, limit: int) -> list[StrategicTurn]:
+    fallback_queryset = StrategicTurn.objects.select_related("company").filter(
+        Q(title__icontains=query)
+        | Q(summary__icontains=query)
+        | Q(decision__icontains=query)
+        | Q(outcome__icontains=query)
+        | Q(founder_lesson__icontains=query)
+        | Q(turn_type__icontains=query)
+        | Q(company__name__icontains=query)
+    )
+    if connection.vendor != "postgresql":
+        return list(fallback_queryset.order_by("-start_date", "id")[:limit])
+
+    vector = (
+        SearchVector("title", weight="A")
+        + SearchVector("summary", weight="A")
+        + SearchVector("decision", weight="B")
+        + SearchVector("outcome", weight="C")
+        + SearchVector("founder_lesson", weight="B")
+        + SearchVector("turn_type", weight="C")
+        + SearchVector("company__name", weight="A")
+    )
+    search_query = SearchQuery(query, search_type="websearch")
+    return list(
+        StrategicTurn.objects.select_related("company")
+        .annotate(rank=SearchRank(vector, search_query))
+        .filter(Q(rank__gt=0) | Q(title__icontains=query) | Q(company__name__icontains=query))
+        .order_by("-rank", "-start_date", "id")[:limit]
+    )
+
+
 def serialize_company(company: Company) -> dict[str, object]:
     return {
         "id": company.id,
@@ -192,4 +334,3 @@ def serialize_job(job: IngestionJob) -> dict[str, object]:
         "started_at": job.started_at.isoformat() if job.started_at else None,
         "finished_at": job.finished_at.isoformat() if job.finished_at else None,
     }
-

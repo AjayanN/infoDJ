@@ -149,6 +149,35 @@ PostgreSQL remains the system of record for curated data:
 
 The main service should read curated data through API endpoints, not by directly mutating ingestion tables.
 
+Sprint 1 dashboard/search boundary:
+
+- Ingestion owns curated-data search because company, event, and strategic-turn tables live there.
+- Main backend exposes the product-facing endpoints under `/api/app/*`.
+- Angular calls only the main backend through Kong.
+
+Current dashboard/search endpoints:
+
+```text
+GET /api/app/dashboard
+GET /api/app/categories
+GET /api/app/search?q=netflix&language=en
+GET /api/app/search/suggest?q=net&language=en
+```
+
+Internal ingestion endpoints:
+
+```text
+GET /api/ingestion/search?q=netflix&language=en
+GET /api/ingestion/search/suggest?q=net&language=en
+```
+
+Search implementation:
+
+- Postgres full-text search is used for business events and strategic turns when running on PostgreSQL.
+- `pg_trgm` is enabled for company suggestions.
+- SQLite/local test fallback uses case-insensitive matching so tests can run without Postgres-specific extensions.
+- Search returns curated English-facing fields and avoids raw article text.
+
 ## Daily Job Rule
 
 The ingestion service should only fetch a source for a company once per day unless forced manually.

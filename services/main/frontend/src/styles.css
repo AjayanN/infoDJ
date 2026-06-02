@@ -362,31 +362,134 @@ button:disabled {
   gap: 18px;
 }
 
-.hero-panel {
+.hero-panel,
+.dashboard-header-panel {
   background: linear-gradient(135deg, #ffffff 0%, #eef5fb 100%);
 }
 
 .hero-panel h2,
+.dashboard-header-panel h2,
 .dashboard-card h3 {
   letter-spacing: 0;
   margin: 0;
 }
 
-.hero-panel h2 {
+.hero-panel h2,
+.dashboard-header-panel h2 {
   font-size: 26px;
 }
 
 .hero-panel p:last-child,
+.dashboard-header-panel p:last-child,
 .dashboard-card p:last-child,
 .helper-text {
   color: var(--muted);
   line-height: 1.5;
 }
 
+.dashboard-header-panel {
+  align-items: center;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+}
+
 .dashboard-cards {
   display: grid;
   gap: 18px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.metric-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.dashboard-two-column {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+}
+
+.search-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.search-form {
+  align-items: end;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.suggestion-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.suggestion-button {
+  background: #eef3f8;
+  border-radius: 6px;
+  color: #22324a;
+  display: grid;
+  gap: 2px;
+  min-height: 44px;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.suggestion-button span {
+  font-weight: 800;
+}
+
+.suggestion-button small {
+  color: var(--muted);
+}
+
+.search-results {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.search-results h3 {
+  font-size: 16px;
+  letter-spacing: 0;
+  margin: 0 0 10px;
+}
+
+.result-list {
+  display: grid;
+  gap: 10px;
+}
+
+.compact-list {
+  max-height: 430px;
+  overflow: auto;
+}
+
+.result-row {
+  background: #f7f9fb;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+}
+
+.result-row strong {
+  overflow-wrap: anywhere;
+}
+
+.result-row span,
+.result-row p {
+  color: var(--muted);
+  line-height: 1.42;
+  margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .panel {
@@ -655,7 +758,19 @@ th {
   }
 
   .dashboard-cards,
+  .dashboard-header-panel,
+  .dashboard-two-column,
+  .metric-grid,
   .profile-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-header-panel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .search-results {
     grid-template-columns: 1fr;
   }
 
@@ -684,6 +799,10 @@ th {
   }
 
   .checkout-box dl div {
+    grid-template-columns: 1fr;
+  }
+
+  .search-form {
     grid-template-columns: 1fr;
   }
 
