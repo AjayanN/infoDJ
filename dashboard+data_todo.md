@@ -48,6 +48,506 @@ Primary dashboards to build as first-class product surfaces:
 9. Strategy Scorecard
 10. Compare Strategic Turns
 
+## Dashboard Backlog
+
+Each dashboard must use real source-backed data only. If required data is missing, the dashboard must show a clear unavailable state and create/record the source gap.
+
+### 1. Company Strategic Intelligence Dashboard
+
+Purpose:
+
+- Make one company page the primary product surface.
+- Show what the company did, why it mattered, what pressure caused it, and what happened after.
+
+Core views:
+
+- strategic timeline
+- event category bands
+- major turn detail panel
+- source evidence panel
+- impact summary
+- similar historical moves
+- source confidence
+
+Required data:
+
+- company metadata
+- curated business events
+- high-quality strategic turns
+- source documents
+- SEC filings
+- Wikipedia/Wikimedia references
+- GDELT/news metadata
+- market prices
+- financial facts
+- peer/index benchmarks
+
+Backend/API work:
+
+- `GET /api/app/companies/{slug}/intelligence`
+- `GET /api/app/companies/{slug}/timeline`
+- `GET /api/app/companies/{slug}/turns/{turn_id}`
+- `GET /api/app/companies/{slug}/source-confidence`
+
+UI work:
+
+- timeline canvas/list
+- event category filters
+- source drawer
+- impact panel
+- unavailable-state panel for missing market/financial data
+
+Quality gate:
+
+- hide generic turns
+- every visible turn must include exact company action and source claim
+- every impact metric must include source/provider/window
+
+### 2. Strategic Turn Impact Dashboard
+
+Purpose:
+
+- Validate market, financial, and operating impact after a strategic move.
+
+Core views:
+
+- event-window stock reaction
+- index-adjusted return
+- sector-adjusted return
+- competitor-adjusted return
+- revenue/margin/free-cash-flow before vs after
+- volume/volatility movement
+
+Required windows:
+
+```text
+T+1 day
+T+7 days
+T+30 days
+T+90 days
+T+1 year
+T+3 years
+T+5 years
+```
+
+Required data:
+
+- event date
+- ticker
+- daily price and volume
+- index/sector benchmark prices
+- peer ticker set
+- SEC companyfacts financials
+
+Backend/API work:
+
+- `GET /api/app/turns/{turn_id}/impact`
+- `POST /api/app/market-prices/backfill`
+- `POST /api/app/financial-facts/backfill`
+
+UI work:
+
+- return-window chart
+- benchmark comparison chart
+- before/after financial table and chart
+- unavailable metric cards with source gap reason
+
+Quality gate:
+
+- never call stock return “strategy success”
+- label it as market reaction only
+- require benchmark-adjusted numbers when possible
+
+### 3. Strategic Pattern Dashboard
+
+Purpose:
+
+- Convert company histories into reusable strategic patterns.
+
+Example patterns:
+
+- Services to SaaS
+- Hardware to software
+- One-product company to platform
+- Marketplace expansion
+- Subscription model shift
+- Freemium to enterprise
+- Founder-led to professional CEO
+- Failed acquisition
+- Successful acquisition
+- Turnaround after layoffs
+- International expansion
+- Cloud migration
+- AI repositioning
+- Regulatory survival
+- Vertical integration
+- Cost-cutting before profitability
+
+Required data:
+
+- normalized strategic turn types
+- event outcomes
+- source-backed pattern labels
+- impact metrics
+- failed/success examples
+
+Backend/API work:
+
+- `GET /api/app/patterns`
+- `GET /api/app/patterns/{slug}`
+- `GET /api/app/patterns/{slug}/companies`
+- `GET /api/app/patterns/{slug}/impact-summary`
+
+UI work:
+
+- pattern cards
+- success/failure split
+- average time-to-impact chart
+- best examples and failed examples
+- source confidence indicators
+
+Quality gate:
+
+- no pattern success rate until enough reviewed events exist
+- show sample size and confidence
+
+### 4. Companies Like Mine Dashboard
+
+Purpose:
+
+- Let users benchmark their situation against similar historical company situations.
+
+Inputs:
+
+- industry
+- company stage
+- revenue range
+- funding stage
+- geography
+- business model
+- crisis type
+- growth problem
+- margin problem
+- product problem
+
+Outputs:
+
+- similar companies
+- similar strategic situations
+- moves they tried
+- what worked
+- what failed
+- warning signs
+
+Required data:
+
+- company metadata
+- lifecycle stage
+- revenue/size facts
+- business model classification
+- event pressure/trigger
+- outcomes and impact metrics
+
+Backend/API work:
+
+- `POST /api/app/benchmarks/companies-like-mine`
+- `GET /api/app/benchmarks/filter-options`
+
+UI work:
+
+- filter form
+- similarity results
+- side-by-side move comparison
+- evidence links
+
+Quality gate:
+
+- similarity score must expose reason fields
+- do not show “similar” without matching dimensions
+
+### 5. Risk Signals Dashboard
+
+Purpose:
+
+- Surface warning signs and show what companies did next.
+
+Risk signals:
+
+- revenue slowdown
+- margin compression
+- rising debt
+- customer concentration
+- founder/CEO exit
+- repeated layoffs
+- acquisition integration issues
+- declining R&D productivity
+- stock underperformance vs sector
+- negative sentiment
+- regulatory pressure
+
+Required data:
+
+- SEC financial facts
+- market prices and sector benchmarks
+- leadership events
+- layoff/restructuring events
+- regulatory/legal events
+- sentiment/news metadata when available
+
+Backend/API work:
+
+- `GET /api/app/risk-signals`
+- `GET /api/app/companies/{slug}/risk-signals`
+- `GET /api/app/risk-signals/{signal}/historical-examples`
+
+UI work:
+
+- risk heatmap
+- signal trend chart
+- “what happened next” examples
+- source confidence panel
+
+Quality gate:
+
+- risk signal must include source and calculation method
+- no sentiment signal unless source supports it
+
+### 6. Source Confidence Dashboard
+
+Purpose:
+
+- Make data trust visible.
+
+Show:
+
+- source count
+- source type split
+- extraction confidence
+- date confidence
+- duplicate detection
+- human review status
+- conflicting source notes
+- missing source gaps
+
+Required data:
+
+- source documents
+- extraction statuses
+- review statuses
+- source types
+- confidence scores
+- source gaps
+
+Backend/API work:
+
+- `GET /api/app/data-quality`
+- `GET /api/app/companies/{slug}/data-quality`
+- `GET /api/app/events/{id}/source-confidence`
+
+UI work:
+
+- source quality dashboard
+- confidence badges
+- gap list
+- review queue links
+
+Quality gate:
+
+- every user-facing event/turn must expose confidence status
+
+### 7. Event Scanner / Latest Strategic Moves Dashboard
+
+Purpose:
+
+- Make the product feel alive with new daily strategic moves.
+
+Sections:
+
+- new acquisitions
+- CEO changes
+- restructuring
+- layoffs
+- new product lines
+- market expansion
+- AI announcements
+- major partnerships
+- spin-offs
+- divestitures
+- regulatory events
+
+Required data:
+
+- daily GDELT/news metadata
+- SEC 8-K/10-Q/10-K updates
+- Wikipedia/Wikimedia changes where useful
+- company press releases where allowed
+
+Backend/API work:
+
+- `GET /api/app/events/latest`
+- `GET /api/app/events/latest?category=ACQUISITION`
+- `GET /api/app/events/{id}/similar-history`
+
+UI work:
+
+- latest moves feed
+- filters by category/sector/date
+- similar historical moves panel
+
+Quality gate:
+
+- latest events must be source-backed and dated
+- speculative news should be marked lower confidence
+
+### 8. Founder / Business Question Dashboard
+
+Purpose:
+
+- Let users start from decision questions, not raw data exploration.
+
+Question groups:
+
+- early founder
+- growth-stage founder
+- investor
+- student/consultant
+- operator/product leader
+
+Example questions:
+
+- What strategic moves helped companies get their first growth spike?
+- When did similar companies pivot?
+- Which companies expanded internationally too early?
+- Which acquisition types usually failed?
+- Which strategic turns created long-term shareholder value?
+
+Required data:
+
+- indexed event/turn facts
+- pattern library
+- company-stage classifications
+- impact metrics
+- confidence and source metadata
+
+Backend/API work:
+
+- `GET /api/app/questions`
+- `POST /api/app/questions/answer`
+- `GET /api/app/questions/{slug}/examples`
+
+UI work:
+
+- question template gallery
+- answer page with evidence
+- comparison examples
+
+Quality gate:
+
+- answers must cite event IDs/source IDs
+- no unsupported recommendations
+
+### 9. Strategy Scorecard Dashboard
+
+Purpose:
+
+- Score each strategic turn across multiple evidence-backed dimensions.
+
+Dimensions:
+
+- market reaction
+- revenue impact
+- margin impact
+- competitive advantage
+- execution risk
+- long-term value
+- confidence
+
+Classifications:
+
+- strong success
+- partial success
+- too early to judge
+- market-positive, business-negative
+- market-negative, business-positive
+- failed strategy
+- defensive necessity
+
+Required data:
+
+- impact windows
+- financial facts
+- peer/sector benchmarks
+- source confidence
+- reviewed outcomes
+
+Backend/API work:
+
+- `GET /api/app/turns/{turn_id}/scorecard`
+- `POST /api/app/turns/{turn_id}/scorecard/rebuild`
+
+UI work:
+
+- radar/bar scorecard
+- evidence panel per score
+- confidence explanation
+
+Quality gate:
+
+- no score without evidence
+- every score must show confidence and reason
+
+### 10. Compare Strategic Turns Dashboard
+
+Purpose:
+
+- Compare two or more strategic moves across timing, context, and results.
+
+Examples:
+
+- Netflix streaming pivot vs Blockbuster response
+- Adobe subscription shift vs Autodesk subscription shift
+- Nvidia CUDA/GPU strategy vs Intel CPU strategy
+- Amazon AWS vs Google Cloud
+- Meta Reality Labs vs Apple Vision Pro
+
+Comparison dimensions:
+
+- timing
+- company stage
+- market condition
+- pressure/trigger
+- initial investor reaction
+- revenue impact
+- margin impact
+- moat creation
+- execution period
+- long-term result
+
+Required data:
+
+- strategic turn records
+- event impact metrics
+- source-backed summaries
+- peer/index benchmarks
+- pattern classification
+
+Backend/API work:
+
+- `POST /api/app/compare/strategic-turns`
+- `GET /api/app/compare/suggest-turns?q=...`
+
+UI work:
+
+- comparison selector
+- side-by-side panels
+- impact charts
+- difference summary
+
+Quality gate:
+
+- do not compare turns without matching minimum data quality
+- show unavailable fields explicitly
+
 ## Data Quality Rules
 
 User-facing strategic turns require:
@@ -263,6 +763,71 @@ Each stage must be idempotent by:
 
 - Score source count, source type, extraction confidence, review status, conflict flags.
 - Show confidence in every user-facing event/turn.
+
+### Phase 6: Company Strategic Intelligence Dashboard
+
+- Build the company intelligence API.
+- Build timeline and event-detail UI.
+- Add source evidence drawer.
+- Add unavailable states for missing market/financial impact.
+- Make this the primary company page.
+
+### Phase 7: Strategic Turn Impact Dashboard
+
+- Add event-window impact APIs.
+- Add stock/index/sector benchmark charts.
+- Add financial before/after charts.
+- Label stock data as market reaction, not strategy success.
+
+### Phase 8: Source Confidence Dashboard
+
+- Build data-quality APIs.
+- Build source confidence dashboard.
+- Add confidence badges to search, timeline, and turn pages.
+- Add source gap queue.
+
+### Phase 9: Event Scanner Dashboard
+
+- Build latest strategic moves API.
+- Add category/sector/date filters.
+- Add similar historical moves panel.
+- Integrate daily GDELT/SEC/Wikipedia source refreshes.
+
+### Phase 10: Strategic Pattern Dashboard
+
+- Add pattern taxonomy.
+- Map strategic turns to patterns.
+- Build pattern pages with examples, risks, impact windows, and confidence.
+
+### Phase 11: Companies Like Mine Dashboard
+
+- Add filter metadata and similarity scoring.
+- Build benchmark query API.
+- Build company/situation comparison UI.
+
+### Phase 12: Risk Signals Dashboard
+
+- Add risk signal models/calculations.
+- Build heatmap and signal timeline.
+- Link each risk signal to historical responses.
+
+### Phase 13: Founder / Business Question Dashboard
+
+- Add question templates.
+- Build evidence-backed answer API.
+- Add role-specific question galleries.
+
+### Phase 14: Strategy Scorecard Dashboard
+
+- Add scorecard model.
+- Add evidence-backed score calculations.
+- Build scorecard visualization and confidence explanations.
+
+### Phase 15: Compare Strategic Turns Dashboard
+
+- Add compare-turns API.
+- Add turn suggestion search.
+- Build side-by-side comparison UI with impact charts.
 
 ## Commands To Maintain
 
