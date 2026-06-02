@@ -96,6 +96,14 @@ Recommended implementation:
 - Django backend initially, because Django Admin and ORM are already useful.
 - Transition specific high-throughput API surfaces to FastAPI later if needed.
 
+Profile images are owned by the main service. The Django backend stores avatar
+file paths on `accounts.UserProfile` and stores the actual files under
+`MEDIA_ROOT`. In local Docker Compose this is `/app/media`, backed by the
+`main_media` Docker volume. Kong routes `/media/*` to `main-backend` so the
+Angular frontend can render saved avatars after login. The main backend should
+set `MEDIA_PUBLIC_BASE_URL` to the public gateway origin, such as
+`http://localhost:8080`, so serialized avatar URLs are browser-accessible.
+
 ## 4. Log Search Service
 
 The log search service provides a Splunk-like search surface for container logs.

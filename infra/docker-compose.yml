@@ -41,6 +41,8 @@ services:
       - ./env/main.env
     ports:
       - "8100:8100"
+    volumes:
+      - main_media:/app/media
     depends_on:
       - postgres
 
@@ -106,3 +108,4 @@ volumes:
   postgres_data:
   loki_data:
   grafana_data:
+  main_media:

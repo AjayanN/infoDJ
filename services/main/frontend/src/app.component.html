@@ -188,16 +188,21 @@
               <div class="profile-summary" *ngIf="currentUser() as user">
                 <div class="avatar-block">
                   <div class="avatar-preview" aria-label="Avatar preview">
-                    <img *ngIf="avatarPreview; else avatarInitials" [src]="avatarPreview" alt="Selected profile avatar preview" />
+                    <img *ngIf="avatarSrc(user); else avatarInitials" [src]="avatarSrc(user)" alt="Selected profile avatar" />
                     <ng-template #avatarInitials>
                       <span aria-hidden="true">{{ (user.username || 'ID').slice(0, 2).toUpperCase() }}</span>
                     </ng-template>
                   </div>
-                  <label class="file-picker" for="avatar-upload">
-                    Choose avatar image
-                    <input id="avatar-upload" type="file" accept="image/*" (change)="chooseAvatar($event)" />
-                  </label>
-                  <p class="helper-text" aria-live="polite">{{ avatarFilename || 'No avatar image selected.' }}</p>
+                  <div class="avatar-actions">
+                    <label class="file-picker" for="avatar-upload">
+                      Choose avatar image
+                      <input id="avatar-upload" type="file" accept="image/png,image/jpeg,image/webp" (change)="chooseAvatar($event)" />
+                    </label>
+                    <button type="button" class="ghost-button avatar-delete-button" (click)="deleteAvatar()" [disabled]="loading() || !user.profile.avatar_url" [attr.aria-disabled]="loading() || !user.profile.avatar_url">
+                      Delete avatar
+                    </button>
+                  </div>
+                  <p class="helper-text" aria-live="polite">{{ avatarFilename || (user.profile.avatar_url ? 'Avatar saved to profile.' : 'No avatar image selected.') }}</p>
                 </div>
 
                 <dl class="account-grid">

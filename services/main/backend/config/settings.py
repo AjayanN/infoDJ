@@ -93,6 +93,9 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+MEDIA_URL = os.getenv("MEDIA_URL", "/media/")
+MEDIA_ROOT = Path(os.getenv("MEDIA_ROOT", BASE_DIR / "media"))
+MEDIA_PUBLIC_BASE_URL = os.getenv("MEDIA_PUBLIC_BASE_URL", "")
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 INGESTION_API_URL = os.getenv("INGESTION_API_URL", "http://gateway/api/ingestion")

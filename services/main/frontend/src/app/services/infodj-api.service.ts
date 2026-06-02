@@ -16,6 +16,7 @@ export type UserProfile = {
   display_name: string;
   company_name: string;
   role: string;
+  avatar_url: string;
   email_updates_enabled: boolean;
   product_updates_enabled: boolean;
   research_digest_enabled: boolean;
@@ -146,6 +147,20 @@ export class InfoDjApiService {
       payment,
       { headers: this.authHeaders(token) }
     );
+  }
+
+  uploadAvatar(token: string, avatar: File) {
+    const body = new FormData();
+    body.append('avatar', avatar);
+    return this.http.post<{ user: CurrentUser }>(`${this.apiBaseUrl}/profile/avatar`, body, {
+      headers: this.authHeaders(token)
+    });
+  }
+
+  deleteAvatar(token: string) {
+    return this.http.delete<{ user: CurrentUser }>(`${this.apiBaseUrl}/profile/avatar`, {
+      headers: this.authHeaders(token)
+    });
   }
 
   private authHeaders(token: string): HttpHeaders {

@@ -9,6 +9,7 @@ class UserProfileAdmin(admin.ModelAdmin):
         "user",
         "subscription_tier",
         "subscription_status",
+        "avatar",
         "email_updates_enabled",
         "updated_at",
     )

@@ -29,6 +29,7 @@ class UserProfile(models.Model):
     display_name = models.CharField(max_length=255, blank=True)
     company_name = models.CharField(max_length=255, blank=True)
     role = models.CharField(max_length=255, blank=True)
+    avatar = models.FileField(upload_to="avatars/%Y/%m/", blank=True)
     subscription_tier = models.CharField(
         max_length=32,
         choices=SubscriptionTier.choices,

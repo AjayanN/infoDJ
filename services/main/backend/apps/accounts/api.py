@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from urllib.parse import urlencode
 
 from django.conf import settings
@@ -33,6 +34,9 @@ from apps.accounts.services import (
 
 
 User = get_user_model()
+MAX_AVATAR_BYTES = 2 * 1024 * 1024
+ALLOWED_AVATAR_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
+ALLOWED_AVATAR_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
 
 
 @api_view(["POST"])
@@ -53,7 +57,7 @@ def signup(request):
     return Response(
         {
             "token": token.key,
-            "user": serialize_user(user, profile),
+            "user": serialize_user(user, profile, request),
         },
         status=status.HTTP_201_CREATED,
     )
@@ -69,7 +73,7 @@ def login(request):
         return Response({"error": "invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
     profile = ensure_profile(user)
     token, _created = Token.objects.get_or_create(user=user)
-    return Response({"token": token.key, "user": serialize_user(user, profile)})
+    return Response({"token": token.key, "user": serialize_user(user, profile, request)})
 
 
 @api_view(["POST"])
@@ -170,7 +174,30 @@ def logout(request):
 @permission_classes([IsAuthenticated])
 def me(request):
     profile = ensure_profile(request.user)
-    return Response({"user": serialize_user(request.user, profile)})
+    return Response({"user": serialize_user(request.user, profile, request)})
+
+
+@api_view(["POST", "DELETE"])
+@permission_classes([IsAuthenticated])
+def profile_avatar(request):
+    profile = ensure_profile(request.user)
+
+    if request.method == "DELETE":
+        delete_avatar_file(profile)
+        return Response({"user": serialize_user(request.user, profile, request)})
+
+    avatar = request.FILES.get("avatar")
+    if avatar is None:
+        return Response({"error": "avatar file is required"}, status=400)
+
+    validation_error = validate_avatar_upload(avatar)
+    if validation_error:
+        return Response({"error": validation_error}, status=400)
+
+    delete_avatar_file(profile, save=False)
+    profile.avatar = avatar
+    profile.save(update_fields=["avatar", "updated_at"])
+    return Response({"user": serialize_user(request.user, profile, request)})
 
 
 @api_view(["GET"])
@@ -352,7 +379,35 @@ def unique_username_from_email(email: str) -> str:
     return candidate
 
 
-def serialize_user(user, profile: UserProfile) -> dict:
+def validate_avatar_upload(avatar) -> str:
+    extension = Path(avatar.name).suffix.lower()
+    content_type = getattr(avatar, "content_type", "")
+    if extension not in ALLOWED_AVATAR_EXTENSIONS:
+        return "avatar must be a jpg, jpeg, png, or webp image"
+    if content_type and content_type not in ALLOWED_AVATAR_CONTENT_TYPES:
+        return "avatar content type must be jpeg, png, or webp"
+    if avatar.size > MAX_AVATAR_BYTES:
+        return "avatar must be 2 MB or smaller"
+    return ""
+
+
+def delete_avatar_file(profile: UserProfile, *, save: bool = True) -> None:
+    if not profile.avatar:
+        return
+    profile.avatar.delete(save=False)
+    profile.avatar = ""
+    if save:
+        profile.save(update_fields=["avatar", "updated_at"])
+
+
+def serialize_user(user, profile: UserProfile, request=None) -> dict:
+    avatar_url = ""
+    if profile.avatar:
+        avatar_url = profile.avatar.url
+        if settings.MEDIA_PUBLIC_BASE_URL:
+            avatar_url = f"{settings.MEDIA_PUBLIC_BASE_URL.rstrip('/')}{avatar_url}"
+        elif request is not None:
+            avatar_url = request.build_absolute_uri(avatar_url)
     return {
         "id": user.id,
         "username": user.username,
@@ -361,6 +416,7 @@ def serialize_user(user, profile: UserProfile) -> dict:
             "display_name": profile.display_name,
             "company_name": profile.company_name,
             "role": profile.role,
+            "avatar_url": avatar_url,
             "email_updates_enabled": profile.email_updates_enabled,
             "product_updates_enabled": profile.product_updates_enabled,
             "research_digest_enabled": profile.research_digest_enabled,

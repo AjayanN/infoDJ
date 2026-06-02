@@ -226,10 +226,28 @@ class AppComponent {
     const reader = new FileReader();
     reader.onload = () => {
       this.avatarPreview = typeof reader.result === 'string' ? reader.result : '';
-      this.message.set('Avatar preview updated. Backend upload can be added next.');
+      this.uploadAvatar(file);
     };
     reader.onerror = () => this.error.set('Unable to preview the selected avatar.');
     reader.readAsDataURL(file);
+  }
+
+  avatarSrc(user: CurrentUser): string {
+    return this.avatarPreview || user.profile.avatar_url || '';
+  }
+
+  deleteAvatar(): void {
+    this.withRequest(() =>
+      this.api.deleteAvatar(this.token()).subscribe({
+        next: (response) => {
+          this.currentUser.set(response.user);
+          this.avatarPreview = '';
+          this.avatarFilename = '';
+          this.message.set('Avatar deleted.');
+        },
+        error: (response) => this.showError(response)
+      })
+    );
   }
 
   loadHealth(): void {
@@ -398,6 +416,20 @@ class AppComponent {
     if (user) {
       this.currentUser.set({ ...user, subscription });
     }
+  }
+
+  private uploadAvatar(file: File): void {
+    this.withRequest(() =>
+      this.api.uploadAvatar(this.token(), file).subscribe({
+        next: (response) => {
+          this.currentUser.set(response.user);
+          this.avatarPreview = '';
+          this.avatarFilename = file.name;
+          this.message.set('Avatar saved.');
+        },
+        error: (response) => this.showError(response)
+      })
+    );
   }
 
   private withRequest(start: () => void): void {

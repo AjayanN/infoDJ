@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import shutil
+import tempfile
+from pathlib import Path
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core import mail
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
@@ -13,6 +17,14 @@ from rest_framework.test import APIClient
 
 from apps.accounts.models import SubscriptionChangeLog, SubscriptionStatus, SubscriptionTier, UserProfile
 from apps.accounts.services import RazorpayOrder
+
+
+TEST_PNG_BYTES = (
+    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01"
+    b"\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde\x00"
+    b"\x00\x00\x0cIDATx\x9cc```\x00\x00\x00\x04\x00\x01"
+    b"\xf6\x178U\x00\x00\x00\x00IEND\xaeB`\x82"
+)
 
 
 class AccountAuthApiTests(TestCase):
@@ -131,6 +143,73 @@ class GoogleOAuthApiTests(TestCase):
         self.assertIn("http://localhost:4200/auth/callback?token=", response["Location"])
         user = get_user_model().objects.get(email="googleuser@example.com")
         self.assertEqual(user.profile.display_name, "Google User")
+
+
+class ProfileAvatarApiTests(TestCase):
+    def setUp(self):
+        self.media_root = tempfile.mkdtemp()
+        self.override = override_settings(MEDIA_ROOT=self.media_root, MEDIA_URL="/media/")
+        self.override.enable()
+        self.client = APIClient()
+        self.user = get_user_model().objects.create_user(
+            username="avataruser",
+            email="avataruser@example.com",
+            password="StrongPass123!",
+        )
+        UserProfile.objects.create(user=self.user)
+        token, _created = Token.objects.get_or_create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+
+    def tearDown(self):
+        self.override.disable()
+        shutil.rmtree(self.media_root, ignore_errors=True)
+
+    def test_avatar_upload_persists_and_me_returns_url(self):
+        response = self.client.post(
+            "/api/app/profile/avatar",
+            {"avatar": SimpleUploadedFile("avatar.png", TEST_PNG_BYTES, content_type="image/png")},
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        avatar_url = response.data["user"]["profile"]["avatar_url"]
+        self.assertIn("/media/avatars/", avatar_url)
+        self.user.profile.refresh_from_db()
+        self.assertTrue(self.user.profile.avatar.name.startswith("avatars/"))
+
+        me_response = self.client.get("/api/app/auth/me")
+        self.assertEqual(me_response.status_code, 200)
+        self.assertEqual(me_response.data["user"]["profile"]["avatar_url"], avatar_url)
+
+    def test_avatar_upload_rejects_non_image_extension(self):
+        response = self.client.post(
+            "/api/app/profile/avatar",
+            {"avatar": SimpleUploadedFile("avatar.txt", b"not an image", content_type="text/plain")},
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("avatar must be", response.data["error"])
+        self.user.profile.refresh_from_db()
+        self.assertFalse(self.user.profile.avatar)
+
+    def test_avatar_delete_clears_profile_and_file(self):
+        upload_response = self.client.post(
+            "/api/app/profile/avatar",
+            {"avatar": SimpleUploadedFile("avatar.png", TEST_PNG_BYTES, content_type="image/png")},
+            format="multipart",
+        )
+        self.assertEqual(upload_response.status_code, 200)
+        self.user.profile.refresh_from_db()
+        saved_path = self.user.profile.avatar.path
+
+        response = self.client.delete("/api/app/profile/avatar")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["user"]["profile"]["avatar_url"], "")
+        self.user.profile.refresh_from_db()
+        self.assertFalse(self.user.profile.avatar)
+        self.assertFalse(Path(saved_path).exists())
 
 
 class SubscriptionApiTests(TestCase):

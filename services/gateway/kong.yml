@@ -27,6 +27,10 @@ services:
         paths:
           - /admin
         strip_path: false
+      - name: main-media
+        paths:
+          - /media
+        strip_path: false
 
   - name: ingestion
     url: http://ingestion:8001
@@ -58,4 +62,3 @@ plugins:
         - X-Request-Id
       credentials: true
       max_age: 3600
-
