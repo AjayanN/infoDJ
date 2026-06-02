@@ -348,6 +348,19 @@ class AppComponent {
     this.runSearch(suggestion.label);
   }
 
+  sectorShare(eventCount: number, dash: DashboardResponse): number {
+    return this.percentOf(eventCount, Math.max(...dash.sector_counts.map((sector) => sector.event_count), 1));
+  }
+
+  companyShare(eventCount: number, dash: DashboardResponse): number {
+    return this.percentOf(eventCount, Math.max(...dash.top_companies.map((company) => company.event_count), 1));
+  }
+
+  coverageShare(value: number, dash: DashboardResponse): number {
+    const total = dash.summary.source_count + dash.summary.event_count + dash.summary.strategic_turn_count;
+    return this.percentOf(value, total || 1);
+  }
+
   changeTier(tier: string): void {
     this.withRequest(() =>
       this.api.changeTier(this.token(), tier, 'frontend_plan_change').subscribe({
@@ -505,6 +518,13 @@ class AppComponent {
         error: (response) => this.showError(response)
       })
     );
+  }
+
+  private percentOf(value: number, total: number): number {
+    if (!total) {
+      return 0;
+    }
+    return Math.max(2, Math.round((value / total) * 100));
   }
 
   private withRequest(start: () => void): void {

@@ -183,6 +183,69 @@
                 </div>
               </div>
 
+              <div class="dashboard-chart-grid">
+                <section class="panel chart-panel" aria-labelledby="sector-chart-heading">
+                  <div class="panel-header">
+                    <div>
+                      <p class="section-kicker">Coverage graph</p>
+                      <h2 id="sector-chart-heading">Events by sector</h2>
+                    </div>
+                  </div>
+                  <div class="bar-chart" aria-label="Event count by sector">
+                    <div class="bar-row" *ngFor="let sector of dash.sector_counts.slice(0, 8)">
+                      <div class="bar-label">
+                        <strong>{{ sector.sector }}</strong>
+                        <span>{{ sector.event_count }} events · {{ sector.company_count }} companies</span>
+                      </div>
+                      <div class="bar-track" aria-hidden="true">
+                        <div class="bar-fill sector-fill" [style.width.%]="sectorShare(sector.event_count, dash)"></div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="panel chart-panel" aria-labelledby="coverage-mix-heading">
+                  <div class="panel-header">
+                    <div>
+                      <p class="section-kicker">Curation mix</p>
+                      <h2 id="coverage-mix-heading">Sources to insights</h2>
+                    </div>
+                  </div>
+                  <div class="stacked-chart" aria-label="Coverage distribution">
+                    <div class="stacked-bar" aria-hidden="true">
+                      <span class="stack-segment sources" [style.width.%]="coverageShare(dash.summary.source_count, dash)"></span>
+                      <span class="stack-segment events" [style.width.%]="coverageShare(dash.summary.event_count, dash)"></span>
+                      <span class="stack-segment turns" [style.width.%]="coverageShare(dash.summary.strategic_turn_count, dash)"></span>
+                    </div>
+                    <dl class="chart-legend">
+                      <div><dt><span class="legend-dot sources"></span>Sources</dt><dd>{{ dash.summary.source_count }}</dd></div>
+                      <div><dt><span class="legend-dot events"></span>Events</dt><dd>{{ dash.summary.event_count }}</dd></div>
+                      <div><dt><span class="legend-dot turns"></span>Strategic turns</dt><dd>{{ dash.summary.strategic_turn_count }}</dd></div>
+                    </dl>
+                  </div>
+                </section>
+
+                <section class="panel chart-panel" aria-labelledby="company-chart-heading">
+                  <div class="panel-header">
+                    <div>
+                      <p class="section-kicker">Company graph</p>
+                      <h2 id="company-chart-heading">Top event coverage</h2>
+                    </div>
+                  </div>
+                  <div class="company-bars" aria-label="Top companies by event count">
+                    <div class="company-bar" *ngFor="let company of dash.top_companies.slice(0, 8)">
+                      <div class="company-bar-top">
+                        <strong>{{ company.name }}</strong>
+                        <span>{{ company.event_count }}</span>
+                      </div>
+                      <div class="bar-track" aria-hidden="true">
+                        <div class="bar-fill company-fill" [style.width.%]="companyShare(company.event_count, dash)"></div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+
               <section class="panel search-panel" aria-labelledby="search-heading">
                 <div class="panel-header">
                   <div>
@@ -238,7 +301,7 @@
                   </section>
 
                   <section aria-labelledby="turn-results-heading">
-                    <h3 id="turn-results-heading">Strategic turns</h3>
+                    <h3 id="turn-results-heading">Strategic turns with specific detail</h3>
                     <div class="empty-state" *ngIf="results.results.strategic_turns.length === 0">No strategic turn matches.</div>
                     <div class="result-list" *ngIf="results.results.strategic_turns.length > 0">
                       <article class="result-row" *ngFor="let turn of results.results.strategic_turns">

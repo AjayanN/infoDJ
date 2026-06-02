@@ -248,7 +248,8 @@ def search_strategic_turns(query: str, limit: int) -> list[StrategicTurn]:
         | Q(company__name__icontains=query)
     )
     if connection.vendor != "postgresql":
-        return list(fallback_queryset.order_by("-start_date", "id")[:limit])
+        candidates = list(fallback_queryset.order_by("-start_date", "id")[: limit * 3])
+        return [turn for turn in candidates if is_specific_strategic_turn(turn)][:limit]
 
     vector = (
         SearchVector("title", weight="A")
@@ -260,12 +261,54 @@ def search_strategic_turns(query: str, limit: int) -> list[StrategicTurn]:
         + SearchVector("company__name", weight="A")
     )
     search_query = SearchQuery(query, search_type="websearch")
-    return list(
+    candidates = list(
         StrategicTurn.objects.select_related("company")
         .annotate(rank=SearchRank(vector, search_query))
         .filter(Q(rank__gt=0) | Q(title__icontains=query) | Q(company__name__icontains=query))
-        .order_by("-rank", "-start_date", "id")[:limit]
+        .order_by("-rank", "-start_date", "id")[: limit * 3]
     )
+    return [turn for turn in candidates if is_specific_strategic_turn(turn)][:limit]
+
+
+def is_specific_strategic_turn(turn: StrategicTurn) -> bool:
+    title = (turn.title or "").strip().lower()
+    summary = (turn.summary or "").strip().lower()
+    decision = (turn.decision or "").strip().lower()
+    outcome = (turn.outcome or "").strip().lower()
+    generic_fragments = (
+        "adapts to regulatory and legal risk",
+        "adapt to legal, regulatory, and compliance pressure",
+        "respond to intensifying competition",
+        "responds to competitive pressure",
+        "scale operations across international markets",
+        "scales international operations",
+    )
+    if any(fragment in title for fragment in generic_fragments):
+        return False
+    if summary and summary == decision:
+        return False
+    if summary in generic_fragments or decision in generic_fragments or outcome in generic_fragments:
+        return False
+    specific_text = " ".join([summary, decision, outcome])
+    specific_markers = (
+        "introduced",
+        "added",
+        "launched",
+        "settled",
+        "paid",
+        "recorded",
+        "acquired",
+        "divested",
+        "expanded",
+        "invested",
+        "implemented",
+        "changed",
+        "restructured",
+        "partnered",
+        "agreed",
+        "entered into",
+    )
+    return any(marker in specific_text for marker in specific_markers)
 
 
 def serialize_company(company: Company) -> dict[str, object]:

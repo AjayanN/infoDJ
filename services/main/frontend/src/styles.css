@@ -412,6 +412,138 @@ button:disabled {
   grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
 }
 
+.dashboard-chart-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1.25fr) minmax(260px, 0.75fr);
+}
+
+.dashboard-chart-grid .chart-panel:first-child {
+  grid-row: span 2;
+}
+
+.chart-panel {
+  min-width: 0;
+}
+
+.bar-chart,
+.company-bars {
+  display: grid;
+  gap: 14px;
+}
+
+.bar-row,
+.company-bar {
+  display: grid;
+  gap: 7px;
+}
+
+.bar-label,
+.company-bar-top {
+  align-items: baseline;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.bar-label strong,
+.company-bar-top strong {
+  overflow-wrap: anywhere;
+}
+
+.bar-label span,
+.company-bar-top span {
+  color: var(--muted);
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.bar-track {
+  background: #e8eef4;
+  border-radius: 999px;
+  height: 12px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+  min-width: 2%;
+}
+
+.sector-fill {
+  background: #0b6bcb;
+}
+
+.company-fill {
+  background: #2f7d5c;
+}
+
+.stacked-chart {
+  display: grid;
+  gap: 18px;
+}
+
+.stacked-bar {
+  background: #e8eef4;
+  border-radius: 999px;
+  display: flex;
+  height: 24px;
+  overflow: hidden;
+}
+
+.stack-segment {
+  display: block;
+  min-width: 2%;
+}
+
+.sources {
+  background: #0b6bcb;
+}
+
+.events {
+  background: #2f7d5c;
+}
+
+.turns {
+  background: #8b5e18;
+}
+
+.chart-legend {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.chart-legend div {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.chart-legend dt {
+  align-items: center;
+  color: #344256;
+  display: flex;
+  font-weight: 800;
+  gap: 8px;
+}
+
+.chart-legend dd {
+  color: var(--muted);
+  font-weight: 900;
+  margin: 0;
+}
+
+.legend-dot {
+  border-radius: 999px;
+  display: inline-block;
+  height: 10px;
+  width: 10px;
+}
+
 .search-panel {
   display: grid;
   gap: 16px;
@@ -759,6 +891,7 @@ th {
 
   .dashboard-cards,
   .dashboard-header-panel,
+  .dashboard-chart-grid,
   .dashboard-two-column,
   .metric-grid,
   .profile-summary {

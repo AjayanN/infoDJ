@@ -33,6 +33,15 @@ class IngestionSearchApiTests(TestCase):
             decision="Introduce an ad-supported plan.",
             outcome="Advertising became a new monetization channel.",
         )
+        StrategicTurn.objects.create(
+            company=self.netflix,
+            title="Netflix adapts to regulatory and legal risk",
+            turn_type="REGULATORY_RESPONSE",
+            start_date="2025-01-27",
+            summary="Adapt to legal, regulatory, and compliance pressure.",
+            decision="Adapt to legal, regulatory, and compliance pressure.",
+            outcome="Compliance, risk management, and market-entry decisions become part of strategy.",
+        )
 
     def test_search_requires_query(self):
         response = self.client.get("/search")
@@ -54,6 +63,13 @@ class IngestionSearchApiTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["suggestions"][0]["slug"], "netflix")
+
+    def test_search_filters_generic_strategic_turn_templates(self):
+        response = self.client.get("/search?q=legal")
+
+        self.assertEqual(response.status_code, 200)
+        titles = [turn["title"] for turn in response.json()["results"]["strategic_turns"]]
+        self.assertNotIn("Netflix adapts to regulatory and legal risk", titles)
 
 
 class EventClaimTextTests(TestCase):
