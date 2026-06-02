@@ -35,7 +35,7 @@ Long-running scheduler entrypoint:
 Docker Compose runs the ingestion API and scheduler in one container:
 
 ```bash
-.venv/bin/python services/ingestion/manage.py run_ingestion_api_with_scheduler --host 0.0.0.0 --port 8001 --scheduler-timezone UTC --limit 20 --batch-size 10 --include-gdelt --split-batches
+.venv/bin/python services/ingestion/manage.py run_ingestion_api_with_scheduler --host 0.0.0.0 --port 8001 --scheduler-timezone UTC --limit 20 --batch-size 10 --include-gdelt --include-market-data --include-financial-facts --include-macro-context --include-quality-scoring --split-batches
 ```
 
 Default Docker Compose scheduler slots:
@@ -54,7 +54,23 @@ Useful options:
 .venv/bin/python services/ingestion/manage.py daily_company_update --limit 20 --sec-limit 30 --wikipedia-limit 10
 .venv/bin/python services/ingestion/manage.py daily_company_update --skip-gdelt
 .venv/bin/python services/ingestion/manage.py daily_company_update --skip-event-extraction
+.venv/bin/python services/ingestion/manage.py daily_company_update --include-market-data --include-financial-facts --include-macro-context --include-quality-scoring
 ```
+
+The dashboard/data implementation plan lives in `dashboard+data_todo.md`.
+
+Data rule:
+
+```text
+No placeholder data. Missing market, financial, macro, or source-confidence data must be marked unavailable until a real source integration fills it.
+```
+
+Planned free source integrations:
+
+- SEC companyfacts/frames for financial metrics.
+- Stooq historical CSV/download data for daily prices and benchmarks.
+- FRED API for macro context when a free API key is configured.
+- GDELT DOC 2.0, Wikipedia/Wikimedia references, SEC filings, and allowed company pages for event discovery.
 
 For the Docker Compose server deployment, the `ingestion` service runs the API and scheduler together to keep the always-on service count low. For larger production deployments, the scheduler can be split into Kubernetes CronJob, systemd timer, cron, Celery Beat, or a separate worker container.
 

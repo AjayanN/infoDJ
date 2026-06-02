@@ -19,6 +19,10 @@ class Command(BaseCommand):
         parser.add_argument("--skip-event-extraction", action="store_true")
         parser.add_argument("--event-filing-limit", type=int, default=8)
         parser.add_argument("--retry-failed-only", action="store_true")
+        parser.add_argument("--include-market-data", action="store_true")
+        parser.add_argument("--include-financial-facts", action="store_true")
+        parser.add_argument("--include-macro-context", action="store_true")
+        parser.add_argument("--include-quality-scoring", action="store_true")
 
     def handle(self, *args, **options):
         ingest_args = {
@@ -39,6 +43,30 @@ class Command(BaseCommand):
         }
         call_command("ingest_sector_companies", **ingest_args)
 
+        if options["include_financial_facts"]:
+            self.stdout.write(
+                self.style.WARNING(
+                    "Financial facts refresh requested but not implemented yet. "
+                    "Next implementation source: SEC companyfacts API."
+                )
+            )
+
+        if options["include_market_data"]:
+            self.stdout.write(
+                self.style.WARNING(
+                    "Market data refresh requested but not implemented yet. "
+                    "Next implementation source: Stooq historical CSV/download data."
+                )
+            )
+
+        if options["include_macro_context"]:
+            self.stdout.write(
+                self.style.WARNING(
+                    "Macro context refresh requested but not implemented yet. "
+                    "Next implementation source: FRED API."
+                )
+            )
+
         if not options["skip_event_extraction"]:
             extraction_offset = 0 if options["retry_failed_only"] else options["offset"]
             extraction_batch_size = 0 if options["retry_failed_only"] else options["batch_size"]
@@ -50,6 +78,14 @@ class Command(BaseCommand):
                 forms="10-K",
                 filing_limit=options["event_filing_limit"],
                 reuse_extractions=True,
+            )
+
+        if options["include_quality_scoring"]:
+            self.stdout.write(
+                self.style.WARNING(
+                    "Data quality scoring requested but not implemented yet. "
+                    "Next implementation: source count/type/review/conflict confidence scoring."
+                )
             )
 
         self.stdout.write(self.style.SUCCESS("Daily company update complete."))

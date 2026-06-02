@@ -315,34 +315,6 @@
               </section>
 
               <div class="dashboard-two-column">
-                <section class="panel" aria-labelledby="category-heading">
-                  <div class="panel-header">
-                    <div>
-                      <p class="section-kicker">Classification</p>
-                      <h2 id="category-heading">Sectors</h2>
-                    </div>
-                  </div>
-                  <table>
-                    <caption class="visually-hidden">Company coverage grouped by sector</caption>
-                    <thead>
-                      <tr>
-                        <th scope="col">Sector</th>
-                        <th scope="col">Companies</th>
-                        <th scope="col">Events</th>
-                        <th scope="col">Turns</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr *ngFor="let sector of dash.sector_counts">
-                        <td>{{ sector.sector }}</td>
-                        <td>{{ sector.company_count }}</td>
-                        <td>{{ sector.event_count }}</td>
-                        <td>{{ sector.strategic_turn_count }}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </section>
-
                 <section class="panel" aria-labelledby="top-company-heading">
                   <div class="panel-header">
                     <div>
