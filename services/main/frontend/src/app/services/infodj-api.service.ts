@@ -109,6 +109,158 @@ export type IngestionJobSummary = {
   finished_at: string | null;
 };
 
+export type SourceGap = {
+  key: string;
+  label?: string;
+  dashboard?: string;
+  reason: string;
+  source: string;
+  next_action: string;
+};
+
+export type DashboardEvent = SearchEventResult & {
+  signal?: string;
+  calculation_method?: string;
+  confidence_score?: number;
+};
+
+export type DashboardTurn = SearchTurnResult & {
+  company?: string;
+  company_slug?: string;
+  confidence_score?: number;
+  score_status?: string;
+  score_reason?: string;
+  market_reaction?: MarketImpactWindow[];
+  financial_facts?: FinancialFactSummary[];
+};
+
+export type PatternSummary = {
+  pattern: string;
+  sample_size: number;
+  avg_confidence: number;
+  confidence_status: string;
+  examples: DashboardTurn[];
+};
+
+export type SourceConfidenceSummary = {
+  events: {
+    total: number;
+    with_date: number;
+    with_source: number;
+    avg_confidence: number;
+  };
+  turns: {
+    total: number;
+    published: number;
+    avg_confidence: number;
+  };
+  source_types: { source_api: string; count: number }[];
+  source_statuses: { status: string; count: number }[];
+  event_reviews: { review_status: string; count: number }[];
+  market_prices?: {
+    total: number;
+    companies: number;
+    latest_price_date: string | null;
+  };
+  financial_facts?: {
+    total: number;
+    companies: number;
+    latest_filed: string | null;
+  };
+};
+
+export type CompanySituation = DashboardCompany & {
+  match_dimensions: string[];
+};
+
+export type CompareExample = {
+  turn_type: string;
+  sample_size: number;
+  turns: DashboardTurn[];
+};
+
+export type MarketImpactWindow = {
+  window: string;
+  days: number;
+  price_date: string;
+  close_price: number;
+  return_pct: number | null;
+};
+
+export type FinancialFactSummary = {
+  id: number;
+  concept: string;
+  label: string;
+  unit: string;
+  fy: number | null;
+  fp: string;
+  filed: string | null;
+  frame: string;
+  value: number;
+};
+
+export type MarketImpact = {
+  event: DashboardEvent;
+  company: string;
+  company_slug: string;
+  ticker: string;
+  event_date: string;
+  base_price: {
+    price_date: string;
+    close_price: number;
+    provider: string;
+  };
+  windows: MarketImpactWindow[];
+  financial_facts: FinancialFactSummary[];
+  quality: {
+    eligible: boolean;
+    status: string;
+    reasons: string[];
+  };
+};
+
+export type DashboardSection<T> = {
+  key: string;
+  status: 'available' | 'unavailable';
+  eligible_count: number;
+  raw_count: number;
+  excluded_count: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+  has_next: boolean;
+  has_previous: boolean;
+  items: T[];
+  source_gaps: SourceGap[];
+  required_data: string[];
+  next_action: string;
+};
+
+export type DashboardSections = {
+  latest_moves?: DashboardSection<DashboardEvent>;
+  strategic_turns?: DashboardSection<DashboardTurn>;
+  patterns?: DashboardSection<PatternSummary>;
+  risk_signals?: DashboardSection<DashboardEvent>;
+  turn_impact?: DashboardSection<MarketImpact>;
+  scorecards?: DashboardSection<DashboardTurn>;
+  compare?: DashboardSection<CompareExample>;
+  company_situations?: DashboardSection<CompanySituation>;
+};
+
+export type DashboardData = {
+  latest_events: DashboardEvent[];
+  latest_turns: DashboardTurn[];
+  patterns: PatternSummary[];
+  risk_signals: DashboardEvent[];
+  turn_impact: MarketImpact[];
+  source_confidence: SourceConfidenceSummary;
+  scorecard_candidates: DashboardTurn[];
+  company_situations: CompanySituation[];
+  compare_examples: CompareExample[];
+  source_gaps: { key: string; reason: string; source: string; next_action: string }[];
+  sections: DashboardSections;
+};
+
 export type DashboardResponse = {
   summary: {
     company_count: number;
@@ -124,7 +276,10 @@ export type DashboardResponse = {
     available: boolean;
     companies_error: string;
     jobs_error: string;
+    dashboard_data_error: string;
   };
+  source_gaps: SourceGap[];
+  dashboards: DashboardData;
 };
 
 export type SearchEventResult = {
@@ -164,6 +319,20 @@ export type SearchResponse = {
     events: SearchEventResult[];
     strategic_turns: SearchTurnResult[];
   };
+  pagination: {
+    companies: PaginationMeta;
+    events: PaginationMeta;
+    strategic_turns: PaginationMeta;
+  };
+};
+
+export type PaginationMeta = {
+  page: number;
+  page_size: number;
+  total: number;
+  total_pages: number;
+  has_next: boolean;
+  has_previous: boolean;
 };
 
 export type SearchSuggestion = {
@@ -266,9 +435,15 @@ export class InfoDjApiService {
     });
   }
 
-  dashboard(token: string) {
+  dashboard(token: string, section = '', page = 1, limit = 12) {
+    const params: Record<string, string> = { limit: String(limit) };
+    if (section) {
+      params['section'] = section;
+      params['page'] = String(page);
+    }
     return this.http.get<DashboardResponse>(`${this.apiBaseUrl}/dashboard`, {
-      headers: this.authHeaders(token)
+      headers: this.authHeaders(token),
+      params
     });
   }
 
@@ -278,10 +453,26 @@ export class InfoDjApiService {
     });
   }
 
-  search(token: string, query: string) {
+  search(
+    token: string,
+    query: string,
+    pages: { company_page: number; event_page: number; turn_page: number } = {
+      company_page: 1,
+      event_page: 1,
+      turn_page: 1
+    },
+    limit = 10
+  ) {
     return this.http.get<SearchResponse>(`${this.apiBaseUrl}/search`, {
       headers: this.authHeaders(token),
-      params: { q: query, language: 'en' }
+      params: {
+        q: query,
+        language: 'en',
+        limit: String(limit),
+        company_page: String(pages.company_page),
+        event_page: String(pages.event_page),
+        turn_page: String(pages.turn_page)
+      }
     });
   }
 

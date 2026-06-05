@@ -9,9 +9,11 @@ import { provideRouter, Routes } from '@angular/router';
 
 import {
   CurrentUser,
+  DashboardSection,
   DashboardResponse,
   HistoryRow,
   InfoDjApiService,
+  PaginationMeta,
   RazorpayCheckoutResponse,
   RazorpayOrder,
   SearchResponse,
@@ -27,6 +29,40 @@ declare global {
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
 type AppPage = 'dashboard' | 'profile' | 'subscription';
+type DashboardViewId =
+  | 'company-intelligence'
+  | 'turn-impact'
+  | 'patterns'
+  | 'companies-like-mine'
+  | 'risk-signals'
+  | 'source-confidence'
+  | 'latest-moves'
+  | 'business-questions'
+  | 'strategy-scorecard'
+  | 'compare-turns';
+
+type DashboardView = {
+  id: DashboardViewId;
+  name: string;
+  shortName: string;
+  status: DashboardAvailability;
+  purpose: string;
+  requiredData: string[];
+  gapSource: string;
+  nextAction: string;
+};
+
+type DashboardAvailability = 'available' | 'unavailable';
+type SearchResultGroup = 'companies' | 'events' | 'strategic_turns';
+type DashboardSectionKey =
+  | 'latest_moves'
+  | 'strategic_turns'
+  | 'patterns'
+  | 'risk_signals'
+  | 'turn_impact'
+  | 'scorecards'
+  | 'compare'
+  | 'company_situations';
 
 type RazorpayCheckoutOptions = {
   key: string;
@@ -66,12 +102,28 @@ class AppComponent {
 
   authView = signal<AuthView>('login');
   activePage = signal<AppPage>('dashboard');
+  dashboardView = signal<DashboardViewId>('company-intelligence');
   menuOpen = signal(false);
   token = signal(localStorage.getItem('infodj_token') || '');
   currentUser = signal<CurrentUser | null>(null);
   history = signal<HistoryRow[]>([]);
   dashboard = signal<DashboardResponse | null>(null);
   searchResults = signal<SearchResponse | null>(null);
+  searchPages = signal<Record<SearchResultGroup, number>>({
+    companies: 1,
+    events: 1,
+    strategic_turns: 1
+  });
+  dashboardPages = signal<Record<DashboardSectionKey, number>>({
+    latest_moves: 1,
+    strategic_turns: 1,
+    patterns: 1,
+    risk_signals: 1,
+    turn_impact: 1,
+    scorecards: 1,
+    compare: 1,
+    company_situations: 1
+  });
   suggestions = signal<SearchSuggestion[]>([]);
   checkoutOrder = signal<RazorpayOrder | null>(null);
   healthStatus = signal('');
@@ -94,6 +146,109 @@ class AppComponent {
     { id: 'FREE', name: 'Free', price: '0 INR', paid: false, description: 'Inspect limited company history and account setup.' },
     { id: 'PRO', name: 'Pro', price: '999 INR', paid: true, description: 'For active operators reviewing strategic turns.' },
     { id: 'ANALYST', name: 'Analyst', price: '2499 INR', paid: true, description: 'For deeper research workflows and broader access.' }
+  ];
+
+  dashboardViews: DashboardView[] = [
+    {
+      id: 'company-intelligence',
+      name: 'Company Strategic Intelligence',
+      shortName: 'Company',
+      status: 'available',
+      purpose: 'Company coverage, sector concentration, source refreshes, and evidence-backed search.',
+      requiredData: ['Companies', 'Source documents', 'Business events', 'Strategic turns', 'Ingestion jobs'],
+      gapSource: 'ingestion.companies',
+      nextAction: 'Use the current dashboard feed and search while company-level timeline APIs are built.'
+    },
+    {
+      id: 'turn-impact',
+      name: 'Strategic Turn Impact',
+      shortName: 'Impact',
+      status: 'unavailable',
+      purpose: 'Market reaction and financial movement after a dated strategic move.',
+      requiredData: ['Event date', 'Ticker', 'Daily prices', 'Peer/index benchmarks', 'SEC companyfacts'],
+      gapSource: 'market-prices + financial-facts',
+      nextAction: 'Add market price and SEC companyfacts ingestion before showing impact windows.'
+    },
+    {
+      id: 'patterns',
+      name: 'Strategic Pattern',
+      shortName: 'Patterns',
+      status: 'available',
+      purpose: 'Reusable strategic patterns with reviewed examples and confidence.',
+      requiredData: ['Reviewed turn types', 'Pattern labels', 'Outcome notes', 'Impact metrics'],
+      gapSource: 'pattern-taxonomy',
+      nextAction: 'Create reviewed pattern taxonomy and connect turns to patterns.'
+    },
+    {
+      id: 'companies-like-mine',
+      name: 'Companies Like Mine',
+      shortName: 'Like Mine',
+      status: 'available',
+      purpose: 'Benchmark a company situation against similar historical situations.',
+      requiredData: ['Industry', 'Stage', 'Revenue range', 'Business model', 'Pressure trigger'],
+      gapSource: 'benchmark-dimensions',
+      nextAction: 'Add benchmark filter metadata and similarity reason fields.'
+    },
+    {
+      id: 'risk-signals',
+      name: 'Risk Signals',
+      shortName: 'Risk',
+      status: 'available',
+      purpose: 'Evidence-backed warning signs and what companies did next.',
+      requiredData: ['Financial facts', 'Market benchmarks', 'Leadership events', 'Layoffs/restructuring', 'Regulatory events'],
+      gapSource: 'risk-signal-calculations',
+      nextAction: 'Add source-backed risk calculations before rendering a heatmap.'
+    },
+    {
+      id: 'source-confidence',
+      name: 'Source Confidence',
+      shortName: 'Confidence',
+      status: 'available',
+      purpose: 'Data trust, source gaps, extraction status, and review status.',
+      requiredData: ['Source types', 'Extraction confidence', 'Date confidence', 'Review status', 'Conflict notes'],
+      gapSource: 'data-quality',
+      nextAction: 'Add data-quality APIs and persisted source gap records.'
+    },
+    {
+      id: 'latest-moves',
+      name: 'Event Scanner',
+      shortName: 'Latest',
+      status: 'available',
+      purpose: 'Latest dated strategic moves from SEC, news metadata, and other source feeds.',
+      requiredData: ['Daily GDELT/news metadata', 'SEC updates', 'Press releases', 'Category labels'],
+      gapSource: 'events.latest',
+      nextAction: 'Add latest events feed with category, sector, and date filters.'
+    },
+    {
+      id: 'business-questions',
+      name: 'Founder / Business Questions',
+      shortName: 'Questions',
+      status: 'available',
+      purpose: 'Evidence-backed answers for founder, operator, investor, and student questions.',
+      requiredData: ['Question templates', 'Indexed event facts', 'Pattern library', 'Cited examples'],
+      gapSource: 'questions.answer',
+      nextAction: 'Add question templates and answer API with event/source citations.'
+    },
+    {
+      id: 'strategy-scorecard',
+      name: 'Strategy Scorecard',
+      shortName: 'Scorecard',
+      status: 'available',
+      purpose: 'Evidence-backed score dimensions for each strategic turn.',
+      requiredData: ['Impact windows', 'Financial facts', 'Benchmarks', 'Reviewed outcomes', 'Confidence reasons'],
+      gapSource: 'turns.scorecard',
+      nextAction: 'Add scorecard model and evidence-backed score rebuild API.'
+    },
+    {
+      id: 'compare-turns',
+      name: 'Compare Strategic Turns',
+      shortName: 'Compare',
+      status: 'available',
+      purpose: 'Side-by-side comparison of strategic moves across timing, context, and results.',
+      requiredData: ['Comparable turns', 'Company stage', 'Market condition', 'Pressure trigger', 'Impact charts'],
+      gapSource: 'compare.strategic-turns',
+      nextAction: 'Add compare-turns API and turn suggestion search.'
+    }
   ];
 
   constructor() {
@@ -140,6 +295,108 @@ class AppComponent {
 
   toggleMenu(): void {
     this.menuOpen.update((open) => !open);
+  }
+
+  setDashboardView(view: DashboardViewId): void {
+    this.dashboardView.set(view);
+    const sectionKey = this.dashboardSectionKey(view);
+    if (sectionKey && this.dashboard()) {
+      this.loadDashboard(sectionKey, this.dashboardPages()[sectionKey]);
+    }
+  }
+
+  activeDashboardView(): DashboardView {
+    return this.dashboardViews.find((view) => view.id === this.dashboardView()) || this.dashboardViews[0];
+  }
+
+  activeDashboardStatus(): DashboardAvailability {
+    return this.dashboardStatus(this.activeDashboardView());
+  }
+
+  dashboardStatus(view: DashboardView): DashboardAvailability {
+    const dash = this.dashboard();
+    if (!dash) {
+      return view.status;
+    }
+    if (view.id === 'company-intelligence') {
+      return dash.ingestion.available && dash.summary.company_count > 0 ? 'available' : 'unavailable';
+    }
+    if (view.id === 'source-confidence') {
+      return dash.dashboards.source_confidence.events.total > 0 || dash.dashboards.source_confidence.turns.total > 0
+        ? 'available'
+        : 'unavailable';
+    }
+    const section = this.dashboardSection(view.id);
+    return section?.status || 'unavailable';
+  }
+
+  dashboardSection(viewId: DashboardViewId): DashboardSection<any> | null {
+    const sections = this.dashboard()?.dashboards.sections;
+    if (!sections) {
+      return null;
+    }
+    const sectionKey = this.dashboardSectionKey(viewId);
+    return sectionKey ? sections[sectionKey] || null : null;
+  }
+
+  dashboardSectionKey(viewId: DashboardViewId): DashboardSectionKey | null {
+    const sectionMap: Record<DashboardViewId, DashboardSectionKey | null> = {
+      'company-intelligence': null,
+      'turn-impact': 'turn_impact',
+      patterns: 'patterns',
+      'companies-like-mine': 'company_situations',
+      'risk-signals': 'risk_signals',
+      'source-confidence': null,
+      'latest-moves': 'latest_moves',
+      'business-questions': 'latest_moves',
+      'strategy-scorecard': 'scorecards',
+      'compare-turns': 'compare'
+    };
+    return sectionMap[viewId];
+  }
+
+  sectionGaps(viewId: DashboardViewId = this.dashboardView()) {
+    const dashboardKey = this.sourceGapDashboardKey(viewId);
+    return this.dashboardSection(viewId)?.source_gaps || this.dashboard()?.source_gaps.filter((gap) => gap.dashboard === dashboardKey) || [];
+  }
+
+  dashboardGapAction(): string {
+    return this.dashboardSection(this.dashboardView())?.next_action || this.activeDashboardView().nextAction;
+  }
+
+  dashboardSectionRange(viewId: DashboardViewId): string {
+    const section = this.dashboardSection(viewId);
+    if (!section || section.eligible_count === 0) {
+      return '0 of 0';
+    }
+    const start = (section.page - 1) * section.page_size + 1;
+    const end = Math.min(section.page * section.page_size, section.eligible_count);
+    return `${start}-${end} of ${section.eligible_count}`;
+  }
+
+  searchRange(meta: PaginationMeta): string {
+    if (!meta || meta.total === 0) {
+      return '0 of 0';
+    }
+    const start = (meta.page - 1) * meta.page_size + 1;
+    const end = Math.min(meta.page * meta.page_size, meta.total);
+    return `${start}-${end} of ${meta.total}`;
+  }
+
+  sourceGapDashboardKey(viewId: DashboardViewId): string {
+    const dashboardMap: Record<DashboardViewId, string> = {
+      'company-intelligence': 'company_intelligence',
+      'turn-impact': 'turn_impact',
+      patterns: 'patterns',
+      'companies-like-mine': 'company_situations',
+      'risk-signals': 'risk_signals',
+      'source-confidence': 'source_confidence',
+      'latest-moves': 'latest_moves',
+      'business-questions': 'business_questions',
+      'strategy-scorecard': 'scorecards',
+      'compare-turns': 'compare'
+    };
+    return dashboardMap[viewId];
   }
 
   pageTitle(): string {
@@ -290,12 +547,12 @@ class AppComponent {
     });
   }
 
-  loadDashboard(): void {
+  loadDashboard(sectionKey: DashboardSectionKey | '' = '', page = 1): void {
     if (!this.token()) {
       return;
     }
     this.dashboardLoading.set(true);
-    this.api.dashboard(this.token()).subscribe({
+    this.api.dashboard(this.token(), sectionKey, page).subscribe({
       next: (response) => {
         this.dashboard.set(response);
         this.dashboardLoading.set(false);
@@ -308,6 +565,15 @@ class AppComponent {
         this.showError(response);
       }
     });
+  }
+
+  setDashboardSectionPage(viewId: DashboardViewId, page: number): void {
+    const sectionKey = this.dashboardSectionKey(viewId);
+    if (!sectionKey || page < 1) {
+      return;
+    }
+    this.dashboardPages.update((pages) => ({ ...pages, [sectionKey]: page }));
+    this.loadDashboard(sectionKey, page);
   }
 
   updateSearchSuggestions(): void {
@@ -331,7 +597,38 @@ class AppComponent {
     this.searchQuery = normalized;
     this.searchLoading.set(true);
     this.suggestions.set([]);
-    this.api.search(this.token(), normalized).subscribe({
+    const pages = { companies: 1, events: 1, strategic_turns: 1 };
+    this.searchPages.set(pages);
+    this.api.search(this.token(), normalized, {
+      company_page: pages.companies,
+      event_page: pages.events,
+      turn_page: pages.strategic_turns
+    }).subscribe({
+      next: (response) => {
+        this.searchResults.set(response);
+        this.searchLoading.set(false);
+        this.error.set('');
+      },
+      error: (response) => {
+        this.searchLoading.set(false);
+        this.showError(response);
+      }
+    });
+  }
+
+  setSearchPage(group: SearchResultGroup, page: number): void {
+    const normalized = this.searchQuery.trim();
+    if (!normalized || page < 1) {
+      return;
+    }
+    const pages = { ...this.searchPages(), [group]: page };
+    this.searchPages.set(pages);
+    this.searchLoading.set(true);
+    this.api.search(this.token(), normalized, {
+      company_page: pages.companies,
+      event_page: pages.events,
+      turn_page: pages.strategic_turns
+    }).subscribe({
       next: (response) => {
         this.searchResults.set(response);
         this.searchLoading.set(false);
@@ -359,6 +656,49 @@ class AppComponent {
   coverageShare(value: number, dash: DashboardResponse): number {
     const total = dash.summary.source_count + dash.summary.event_count + dash.summary.strategic_turn_count;
     return this.percentOf(value, total || 1);
+  }
+
+  impactWindowWidth(returnPct: number | null): number {
+    const value = Math.abs(returnPct || 0);
+    return Math.max(8, Math.min(100, Math.round(value * 6)));
+  }
+
+  impactWindowTone(returnPct: number | null): string {
+    if ((returnPct || 0) < 0) {
+      return 'negative';
+    }
+    if ((returnPct || 0) > 0) {
+      return 'positive';
+    }
+    return 'neutral';
+  }
+
+  impactLinePoints(windows: { days: number; return_pct: number | null }[]): string {
+    return windows
+      .map((_window, index) => `${this.impactLineX(windows, index).toFixed(1)},${this.impactLineY(windows, index).toFixed(1)}`)
+      .join(' ');
+  }
+
+  impactLineX(windows: { days: number; return_pct: number | null }[], index: number): number {
+    const width = 180;
+    const padding = 8;
+    return windows.length === 1 ? width / 2 : padding + (index * (width - padding * 2)) / (windows.length - 1);
+  }
+
+  impactLineY(windows: { return_pct: number | null }[], index: number): number {
+    const values = windows.map((window) => window.return_pct || 0);
+    const min = Math.min(...values, 0);
+    const max = Math.max(...values, 0);
+    const range = max - min || 1;
+    return 8 + ((max - (windows[index]?.return_pct || 0)) / range) * (58 - 16);
+  }
+
+  impactZeroLineY(windows: { return_pct: number | null }[]): number {
+    const values = windows.map((window) => window.return_pct || 0);
+    const min = Math.min(...values, 0);
+    const max = Math.max(...values, 0);
+    const range = max - min || 1;
+    return Math.round(8 + ((max - 0) / range) * (58 - 16));
   }
 
   changeTier(tier: string): void {

@@ -7,6 +7,7 @@ from apps.curation.admin_helpers import (
     source_status_action,
 )
 from apps.ingestion.services.url_utils import apply_source_hashes
+from apps.ingestion.models import FinancialFact, MarketPrice, SourceGap
 
 
 class SourceDocumentAdmin(admin.ModelAdmin):
@@ -122,6 +123,45 @@ class IngestionJobAdmin(admin.ModelAdmin):
     ordering = ("-created_at",)
 
 
+class SourceGapAdmin(admin.ModelAdmin):
+    list_display = (
+        "dashboard",
+        "gap_type",
+        "company",
+        "provider",
+        "status",
+        "updated_at",
+    )
+    list_filter = ("dashboard", "gap_type", "provider", "status", "company", "created_at", "updated_at")
+    search_fields = ("reason", "next_ingestion_task", "provider", "company__name")
+    readonly_fields = ("created_at", "updated_at")
+    autocomplete_fields = ("company",)
+    ordering = ("dashboard", "gap_type", "company")
+
+
+class MarketPriceAdmin(admin.ModelAdmin):
+    list_display = ("company", "ticker", "provider", "price_date", "close_price", "volume", "updated_at")
+    list_filter = ("provider", "ticker", "company", "price_date", "created_at", "updated_at")
+    search_fields = ("company__name", "ticker", "provider")
+    readonly_fields = ("created_at", "updated_at")
+    autocomplete_fields = ("company",)
+    date_hierarchy = "price_date"
+    ordering = ("company", "-price_date")
+
+
+class FinancialFactAdmin(admin.ModelAdmin):
+    list_display = ("company", "concept", "unit", "fy", "fp", "filed", "value", "updated_at")
+    list_filter = ("taxonomy", "concept", "unit", "fy", "fp", "company", "filed", "created_at", "updated_at")
+    search_fields = ("company__name", "concept", "label", "accession_number", "frame")
+    readonly_fields = ("created_at", "updated_at")
+    autocomplete_fields = ("company",)
+    date_hierarchy = "filed"
+    ordering = ("company", "concept", "-fy", "-filed")
+
+
 register_planned_model("ingestion", "SourceDocument", SourceDocumentAdmin)
 register_planned_model("ingestion", "ArticleExtraction", ArticleExtractionAdmin)
 register_planned_model("ingestion", "IngestionJob", IngestionJobAdmin)
+register_planned_model("ingestion", "SourceGap", SourceGapAdmin)
+register_planned_model("ingestion", "MarketPrice", MarketPriceAdmin)
+register_planned_model("ingestion", "FinancialFact", FinancialFactAdmin)

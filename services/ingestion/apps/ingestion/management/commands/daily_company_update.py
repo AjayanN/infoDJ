@@ -44,20 +44,10 @@ class Command(BaseCommand):
         call_command("ingest_sector_companies", **ingest_args)
 
         if options["include_financial_facts"]:
-            self.stdout.write(
-                self.style.WARNING(
-                    "Financial facts refresh requested but not implemented yet. "
-                    "Next implementation source: SEC companyfacts API."
-                )
-            )
+            call_command("ingest_sec_companyfacts", all=True, limit=500)
 
         if options["include_market_data"]:
-            self.stdout.write(
-                self.style.WARNING(
-                    "Market data refresh requested but not implemented yet. "
-                    "Next implementation source: Stooq historical CSV/download data."
-                )
-            )
+            call_command("ingest_market_prices", days=30)
 
         if options["include_macro_context"]:
             self.stdout.write(
