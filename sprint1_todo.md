@@ -22,6 +22,22 @@ RAZORPAY_KEY_ID=rzp_test_...
 RAZORPAY_KEY_SECRET=...
 ```
 
+Google OAuth and Gmail password reset are also environment-configured:
+
+```text
+GOOGLE_OAUTH_CLIENT_ID
+GOOGLE_OAUTH_CLIENT_SECRET
+GOOGLE_OAUTH_REDIRECT_URI
+FRONTEND_BASE_URL
+EMAIL_BACKEND
+EMAIL_HOST
+EMAIL_PORT
+EMAIL_USE_TLS
+EMAIL_HOST_USER
+EMAIL_HOST_PASSWORD
+DEFAULT_FROM_EMAIL
+```
+
 ## Branch Plan
 
 Use one feature branch per major slice:
@@ -82,6 +98,8 @@ Backend scope:
 ```text
 Add token auth
 Add user signup/login/logout/me APIs
+Add Google OAuth login redirect/callback APIs
+Add forgot-password email reset APIs
 Add UserProfile model
 Add subscription tier model/fields
 Add Razorpay subscription/order integration service
@@ -104,6 +122,10 @@ POST /api/app/auth/signup
 POST /api/app/auth/login
 POST /api/app/auth/logout
 GET  /api/app/auth/me
+GET  /api/app/auth/google/url
+GET  /api/app/auth/google/callback
+POST /api/app/auth/password-reset/request
+POST /api/app/auth/password-reset/confirm
 GET  /api/app/subscription
 POST /api/app/subscription/checkout
 POST /api/app/subscription/verify-payment
@@ -136,6 +158,10 @@ Backend tests:
 signup creates user and FREE profile
 login returns token
 me requires token
+password reset request sends an email when configured
+password reset confirm changes the password and invalidates tokens
+Google URL endpoint reports configuration errors clearly
+Google callback creates/logs in user when profile exchange succeeds
 checkout requires token
 verify-payment rejects invalid signature
 subscription change writes audit history
@@ -154,6 +180,8 @@ Smoke script should:
 create user
 login
 call /me
+request password reset
+check Google URL endpoint
 call /subscription
 attempt checkout
 verify invalid payment signature fails
@@ -349,6 +377,16 @@ Smoke script:
 
 ```text
 scripts/smoke/sprint1_dashboard_search.sh
+```
+
+Implementation status:
+
+```text
+Branch: feature/sprint1-dashboard-search
+Ingestion endpoints added: /api/ingestion/search and /api/ingestion/search/suggest
+Main backend endpoints added: /api/app/dashboard, /api/app/categories, /api/app/search, /api/app/search/suggest
+Frontend dashboard placeholder replaced with metrics, sectors, top companies, jobs, suggestions, and grouped search results
+Smoke script added: scripts/smoke/sprint1_dashboard_search.sh
 ```
 
 ## 5. Bubble-Themed Individual Company Stages

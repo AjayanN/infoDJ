@@ -576,6 +576,7 @@ def additional_source_documents_for(event: Any) -> list[Any]:
 def find_evidence_sentence(text: str, signal: EventSignal, keywords: Iterable[str]) -> str:
     sentences = re.split(r"(?<=[.!?])\s+", text)
     keyword_list = [keyword.lower() for keyword in keywords]
+    candidates: list[tuple[int, str]] = []
     for sentence in sentences:
         sentence_clean = " ".join(sentence.split())
         sentence_lower = sentence_clean.lower()
@@ -584,7 +585,14 @@ def find_evidence_sentence(text: str, signal: EventSignal, keywords: Iterable[st
         if is_signal_false_positive(signal, sentence_lower):
             continue
         if any(keyword_matches(sentence_lower, keyword) for keyword in keyword_list):
+            if signal.decision_theme == "REGULATORY_LEGAL_RISK":
+                candidates.append((regulatory_evidence_score(sentence_lower), sentence_clean[:700]))
+                continue
             return sentence_clean[:700]
+    if candidates:
+        candidates.sort(key=lambda item: item[0], reverse=True)
+        if candidates[0][0] > 0:
+            return candidates[0][1]
     return ""
 
 
@@ -615,6 +623,24 @@ def is_signal_false_positive(signal: EventSignal, sentence_lower: str) -> bool:
         return True
 
     if signal.decision_theme == "REGULATORY_LEGAL_RISK":
+        if len(sentence_lower) < 55:
+            return True
+        if sentence_lower.count("|") >= 4:
+            return True
+        if re.fullmatch(r"[\w\s,/&().-]{1,80}", sentence_lower) and sentence_lower.rstrip(".") in {
+            "government regulation",
+            "legal proceedings",
+            "supervision and regulation",
+        }:
+            return True
+        if "table of contents" in sentence_lower:
+            return True
+        if "item 4" in sentence_lower and "legal proceedings" in sentence_lower:
+            return True
+        if "item 406" in sentence_lower or "code of ethics" in sentence_lower:
+            return True
+        if "internal revenue service |" in sentence_lower:
+            return True
         if "general counsel" in sentence_lower:
             return True
         if re.fullmatch(r"legal proceedings\s+\d+\s+item\s+\d+\.?", sentence_lower):
@@ -652,6 +678,59 @@ def is_signal_false_positive(signal: EventSignal, sentence_lower: str) -> bool:
     return False
 
 
+def regulatory_evidence_score(sentence_lower: str) -> int:
+    score = 1
+    action_terms = (
+        "settled",
+        "settlement",
+        "entered into",
+        "agreed to",
+        "resolved",
+        "paid",
+        "recorded",
+        "accrued",
+        "appealed",
+        "responded",
+        "implemented",
+        "modified",
+        "changed",
+        "ceased",
+        "suspended",
+        "received",
+        "filed",
+        "defending",
+        "cooperating",
+        "remediated",
+        "compliance program",
+        "required us to",
+        "require us to",
+        "continue to make investments",
+        "make investments",
+    )
+    risk_terms = (
+        "subject to",
+        "legal proceedings",
+        "litigation",
+        "regulatory",
+        "regulation",
+        "compliance",
+        "governmental",
+        "investigation",
+        "laws and regulations",
+    )
+    score += sum(6 for term in action_terms if term in sentence_lower)
+    score += sum(2 for term in risk_terms if term in sentence_lower)
+    if "risk factors" in sentence_lower:
+        score -= 2
+    if "glossary" in sentence_lower or "abbreviation" in sentence_lower:
+        score -= 6
+    if sentence_lower.count("|"):
+        score -= sentence_lower.count("|") * 3
+    if len(sentence_lower) > 650:
+        score -= 2
+    return score
+
+
 def source_claim_from_evidence(evidence: str) -> str:
     return evidence[:500]
 
@@ -661,9 +740,11 @@ def actual_change_for(signal: EventSignal, source_claim: str, *, company_name: s
         return ""
     claim_lower = source_claim.lower()
 
+    if signal.decision_theme == "REGULATORY_LEGAL_RISK":
+        return regulatory_actual_change(source_claim, company_name=company_name)
+
     generic_changes = {
         "COMPETITIVE_PRESSURE": f"{company_name} disclosed competitive pressure as a strategic constraint.",
-        "REGULATORY_LEGAL_RISK": f"{company_name} disclosed legal, regulatory, or compliance pressure as an operating constraint.",
         "INTERNATIONAL_OPERATIONS": f"{company_name} disclosed international operations as a material growth or risk area.",
         "ACQUISITION_ACTIVITY": f"{company_name} used acquisitions, mergers, or divestitures to reshape its business portfolio.",
         "PARTNERSHIP_ACTIVITY": f"{company_name} used partnerships, alliances, or collaborations to extend capabilities or market access.",
@@ -729,14 +810,58 @@ def actual_change_for(signal: EventSignal, source_claim: str, *, company_name: s
             return f"{company_name}'s content strategy created material content obligations and asset-management pressure."
         return f"{company_name} disclosed content-cost pressure as a strategic operating constraint."
 
-    if signal.decision_theme == "REGULATORY_LEGAL_RISK":
-        if "regulatory action" in claim_lower or "regulation" in claim_lower:
-            return f"{company_name} faced growing regulation around media, internet delivery, and market operations."
-        if "legal proceedings" in claim_lower or "litigation" in claim_lower:
-            return f"{company_name} disclosed legal or litigation risk tied to scaled operations."
-        return f"{company_name}'s scaled business required legal and regulatory adaptation."
-
     return signal.decision
+
+
+def regulatory_actual_change(source_claim: str, *, company_name: str) -> str:
+    claim = source_claim.strip()
+    claim_lower = claim.lower()
+    action_patterns = (
+        "settled",
+        "entered into",
+        "agreed to",
+        "resolved",
+        "paid",
+        "recorded",
+        "accrued",
+        "appealed",
+        "responded",
+        "implemented",
+        "modified",
+        "changed",
+        "ceased",
+        "suspended",
+        "received",
+        "filed",
+        "is defending",
+        "are defending",
+        "defending",
+        "cooperating",
+        "remediated",
+        "compliance program",
+        "required us to",
+        "require us to",
+        "continue to make investments",
+        "make investments",
+    )
+    if any(pattern in claim_lower for pattern in action_patterns):
+        return f"{company_name}: {claim[:420]}"
+
+    risk_patterns = (
+        "subject to",
+        "legal proceedings",
+        "litigation",
+        "regulatory",
+        "regulation",
+        "compliance",
+        "governmental",
+        "investigation",
+        "laws and regulations",
+    )
+    if any(pattern in claim_lower for pattern in risk_patterns):
+        return f"{company_name} disclosed this legal/regulatory risk; no response action was extracted: {claim[:360]}"
+
+    return f"{company_name}: {claim[:420]}"
 
 
 def summarize_events(events: list[Any]) -> str:

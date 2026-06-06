@@ -1,0 +1,853 @@
+<ng-container *ngIf="!token(); else authenticatedApp">
+  <a class="skip-link" href="#auth-content">Skip to authentication form</a>
+  <main id="auth-content" class="auth-page" tabindex="-1">
+    <section class="auth-card" aria-labelledby="auth-title" [attr.aria-busy]="loading()">
+      <div class="auth-brand">
+        <p class="eyebrow">InfoDJ Admin</p>
+        <h1 id="auth-title">{{ authTitle() }}</h1>
+        <p id="auth-description">Use an account to access the admin workspace, subscription controls, and company intelligence screens.</p>
+      </div>
+
+      <section class="status-strip compact" *ngIf="message() || error()" aria-label="Authentication status">
+        <div class="status-card ok" *ngIf="message()" role="status" aria-live="polite">{{ message() }}</div>
+        <div class="status-card error" *ngIf="error()" role="alert">{{ error() }}</div>
+      </section>
+
+      <div class="segmented auth-tabs" *ngIf="authView() !== 'reset'" role="tablist" aria-label="Authentication mode">
+        <button
+          id="login-tab"
+          type="button"
+          role="tab"
+          aria-controls="login-panel"
+          [attr.aria-selected]="authView() === 'login'"
+          [class.active]="authView() === 'login'"
+          (click)="setAuthView('login')"
+        >
+          Login
+        </button>
+        <button
+          id="signup-tab"
+          type="button"
+          role="tab"
+          aria-controls="signup-panel"
+          [attr.aria-selected]="authView() === 'signup'"
+          [class.active]="authView() === 'signup'"
+          (click)="setAuthView('signup')"
+        >
+          Signup
+        </button>
+      </div>
+
+      <form
+        id="login-panel"
+        class="form-grid"
+        *ngIf="authView() === 'login'"
+        role="tabpanel"
+        aria-labelledby="login-tab"
+        aria-describedby="auth-description"
+        (ngSubmit)="login()"
+      >
+        <label for="login-username">
+          Username
+          <input id="login-username" name="username" [(ngModel)]="username" autocomplete="username" required />
+        </label>
+        <label for="login-password">
+          Password
+          <input id="login-password" name="password" [(ngModel)]="password" autocomplete="current-password" type="password" required />
+        </label>
+        <button type="submit" class="primary-button" [disabled]="loading()" [attr.aria-disabled]="loading()">Login</button>
+        <button type="button" class="ghost-button full-width" (click)="startGoogleLogin()" [disabled]="loading()" [attr.aria-disabled]="loading()">Continue with Google</button>
+        <button type="button" class="link-button" (click)="setAuthView('forgot')">Forgot password?</button>
+      </form>
+
+      <form
+        id="signup-panel"
+        class="form-grid"
+        *ngIf="authView() === 'signup'"
+        role="tabpanel"
+        aria-labelledby="signup-tab"
+        aria-describedby="auth-description"
+        (ngSubmit)="signup()"
+      >
+        <label for="signup-username">
+          Username
+          <input id="signup-username" name="signup_username" [(ngModel)]="username" autocomplete="username" required />
+        </label>
+        <label for="signup-email">
+          Email
+          <input id="signup-email" name="signup_email" [(ngModel)]="email" autocomplete="email" type="email" required />
+        </label>
+        <label for="signup-password">
+          Password
+          <input id="signup-password" name="signup_password" [(ngModel)]="password" autocomplete="new-password" type="password" required minlength="8" />
+        </label>
+        <button type="submit" class="primary-button" [disabled]="loading()" [attr.aria-disabled]="loading()">Create account</button>
+        <button type="button" class="ghost-button full-width" (click)="startGoogleLogin()" [disabled]="loading()" [attr.aria-disabled]="loading()">Continue with Google</button>
+      </form>
+
+      <form class="form-grid" *ngIf="authView() === 'forgot'" aria-labelledby="auth-title" (ngSubmit)="requestPasswordReset()">
+        <label for="reset-email">
+          Account email
+          <input id="reset-email" name="reset_email" [(ngModel)]="email" autocomplete="email" type="email" required />
+        </label>
+        <button type="submit" class="primary-button" [disabled]="loading()" [attr.aria-disabled]="loading()">Send reset link</button>
+        <button type="button" class="link-button" (click)="setAuthView('login')">Back to login</button>
+      </form>
+
+      <form class="form-grid" *ngIf="authView() === 'reset'" aria-labelledby="auth-title" (ngSubmit)="confirmPasswordReset()">
+        <label for="new-password">
+          New password
+          <input id="new-password" name="new_password" [(ngModel)]="password" autocomplete="new-password" type="password" required minlength="8" />
+        </label>
+        <button type="submit" class="primary-button" [disabled]="loading()" [attr.aria-disabled]="loading()">Update password</button>
+      </form>
+    </section>
+  </main>
+</ng-container>
+
+<ng-template #authenticatedApp>
+  <div class="app-shell">
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+    <aside class="sidebar" [class.open]="menuOpen()" aria-label="Workspace navigation">
+      <div class="sidebar-brand">
+        <p class="eyebrow">InfoDJ Admin</p>
+        <strong>Business intelligence</strong>
+      </div>
+      <nav class="side-nav" aria-label="Main menu">
+        <button type="button" [class.active]="activePage() === 'dashboard'" [attr.aria-current]="activePage() === 'dashboard' ? 'page' : null" (click)="setActivePage('dashboard')">Dashboard</button>
+        <button type="button" [class.active]="activePage() === 'profile'" [attr.aria-current]="activePage() === 'profile' ? 'page' : null" (click)="setActivePage('profile')">Profile</button>
+        <button type="button" [class.active]="activePage() === 'subscription'" [attr.aria-current]="activePage() === 'subscription' ? 'page' : null" (click)="setActivePage('subscription')">Subscription</button>
+      </nav>
+    </aside>
+
+    <div class="shell-main">
+      <header class="topbar">
+        <div class="topbar-title">
+          <button type="button" class="hamburger-button" aria-label="Toggle navigation menu" [attr.aria-expanded]="menuOpen()" (click)="toggleMenu()">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+          </button>
+          <div>
+            <p class="eyebrow">InfoDJ Admin</p>
+            <h1 id="page-title">{{ pageTitle() }}</h1>
+            <p>{{ pageDescription() }}</p>
+          </div>
+        </div>
+        <nav class="top-actions" aria-label="Account actions">
+          <button type="button" class="ghost-button" (click)="loadHealth()" [disabled]="loading()" [attr.aria-disabled]="loading()">Check API</button>
+          <button type="button" class="ghost-button" (click)="loadMe()" [disabled]="loading()" [attr.aria-disabled]="loading()">Refresh</button>
+          <button type="button" class="danger-button" (click)="logout()">Logout</button>
+        </nav>
+      </header>
+
+      <section class="status-strip" *ngIf="message() || error() || healthStatus()" aria-label="Application status">
+        <div class="status-card ok" *ngIf="healthStatus()" role="status" aria-live="polite">{{ healthStatus() }}</div>
+        <div class="status-card ok" *ngIf="message()" role="status" aria-live="polite">{{ message() }}</div>
+        <div class="status-card error" *ngIf="error()" role="alert">{{ error() }}</div>
+      </section>
+
+      <main id="main-content" class="workspace authenticated-workspace" tabindex="-1" aria-labelledby="page-title" [attr.aria-busy]="loading()">
+        <ng-container [ngSwitch]="activePage()">
+          <section *ngSwitchCase="'dashboard'" class="dashboard-grid" aria-labelledby="dashboard-heading">
+            <div class="panel dashboard-header-panel">
+              <div>
+                <p class="section-kicker">Dashboards</p>
+                <h2 id="dashboard-heading">Strategic intelligence dashboards</h2>
+                <p>{{ activeDashboardView().purpose }}</p>
+              </div>
+              <button type="button" class="ghost-button" (click)="loadDashboard()" [disabled]="dashboardLoading()" [attr.aria-disabled]="dashboardLoading()">Reload dashboard</button>
+            </div>
+
+            <ng-container *ngIf="dashboard() as dash; else dashboardEmpty">
+              <section class="panel search-panel workspace-search-panel" aria-labelledby="search-heading">
+                <div class="panel-header">
+                  <div>
+                    <p class="section-kicker">Workspace search</p>
+                    <h2 id="search-heading">Global evidence search</h2>
+                  </div>
+                </div>
+                <form class="search-form" (ngSubmit)="runSearch()">
+                  <label for="global-search">
+                    Search companies, events, and strategic turns
+                    <input
+                      id="global-search"
+                      name="global_search"
+                      [(ngModel)]="searchQuery"
+                      (input)="updateSearchSuggestions()"
+                      autocomplete="off"
+                      placeholder="Netflix advertising, pricing, expansion"
+                    />
+                  </label>
+                  <button type="submit" class="primary-button" [disabled]="searchLoading()" [attr.aria-disabled]="searchLoading()">Search</button>
+                </form>
+
+                <div class="suggestion-row" *ngIf="suggestions().length > 0" aria-label="Search suggestions">
+                  <button type="button" class="suggestion-button" *ngFor="let suggestion of suggestions()" (click)="useSuggestion(suggestion)">
+                    <span>{{ suggestion.label }}</span>
+                    <small>{{ suggestion.sector || suggestion.description }}</small>
+                  </button>
+                </div>
+
+                <div class="search-results" *ngIf="searchResults() as results" aria-live="polite">
+                  <section aria-labelledby="company-results-heading">
+                    <h3 id="company-results-heading">Companies</h3>
+                    <div class="empty-state" *ngIf="results.results.companies.length === 0">No company matches.</div>
+                    <div class="result-list" *ngIf="results.results.companies.length > 0">
+                      <article class="result-row" *ngFor="let company of results.results.companies">
+                        <strong>{{ company.name }}</strong>
+                        <span>{{ company.sector || 'Unclassified' }}</span>
+                        <span>{{ company.event_count || 0 }} events, {{ company.strategic_turn_count || 0 }} turns</span>
+                      </article>
+                    </div>
+                    <div class="pagination-row" *ngIf="results.pagination.companies.total > 0">
+                      <span>Showing {{ searchRange(results.pagination.companies) }} company matches</span>
+                      <button type="button" class="ghost-button" *ngIf="results.pagination.companies.total_pages > 1" (click)="setSearchPage('companies', results.pagination.companies.page - 1)" [disabled]="!results.pagination.companies.has_previous">Previous</button>
+                      <button type="button" class="ghost-button" *ngIf="results.pagination.companies.total_pages > 1" (click)="setSearchPage('companies', results.pagination.companies.page + 1)" [disabled]="!results.pagination.companies.has_next">Next</button>
+                    </div>
+                  </section>
+
+                  <section aria-labelledby="event-results-heading">
+                    <h3 id="event-results-heading">Business events</h3>
+                    <div class="empty-state" *ngIf="results.results.events.length === 0">No event matches.</div>
+                    <div class="result-list" *ngIf="results.results.events.length > 0">
+                      <article class="result-row" *ngFor="let event of results.results.events">
+                        <strong>{{ event.company }} · {{ event.event_type }}</strong>
+                        <span>{{ event.event_date || 'No date' }} · {{ event.decision_theme || 'No theme' }}</span>
+                        <p>{{ event.actual_change || event.source_claim }}</p>
+                      </article>
+                    </div>
+                    <div class="pagination-row" *ngIf="results.pagination.events.total > 0">
+                      <span>Showing {{ searchRange(results.pagination.events) }} eligible event matches</span>
+                      <button type="button" class="ghost-button" *ngIf="results.pagination.events.total_pages > 1" (click)="setSearchPage('events', results.pagination.events.page - 1)" [disabled]="!results.pagination.events.has_previous">Previous</button>
+                      <button type="button" class="ghost-button" *ngIf="results.pagination.events.total_pages > 1" (click)="setSearchPage('events', results.pagination.events.page + 1)" [disabled]="!results.pagination.events.has_next">Next</button>
+                    </div>
+                  </section>
+
+                  <section aria-labelledby="turn-results-heading">
+                    <h3 id="turn-results-heading">Strategic turns with specific detail</h3>
+                    <div class="empty-state" *ngIf="results.results.strategic_turns.length === 0">No strategic turn matches.</div>
+                    <div class="result-list" *ngIf="results.results.strategic_turns.length > 0">
+                      <article class="result-row" *ngFor="let turn of results.results.strategic_turns">
+                        <strong>{{ turn.title }}</strong>
+                        <span>{{ turn.start_date || 'No date' }} · {{ turn.turn_type }}</span>
+                        <p>{{ turn.summary || turn.decision || turn.outcome }}</p>
+                      </article>
+                    </div>
+                    <div class="pagination-row" *ngIf="results.pagination.strategic_turns.total > 0">
+                      <span>Showing {{ searchRange(results.pagination.strategic_turns) }} eligible turn matches</span>
+                      <button type="button" class="ghost-button" *ngIf="results.pagination.strategic_turns.total_pages > 1" (click)="setSearchPage('strategic_turns', results.pagination.strategic_turns.page - 1)" [disabled]="!results.pagination.strategic_turns.has_previous">Previous</button>
+                      <button type="button" class="ghost-button" *ngIf="results.pagination.strategic_turns.total_pages > 1" (click)="setSearchPage('strategic_turns', results.pagination.strategic_turns.page + 1)" [disabled]="!results.pagination.strategic_turns.has_next">Next</button>
+                    </div>
+                  </section>
+                </div>
+              </section>
+
+              <section class="dashboard-switcher panel" aria-label="Dashboard selector">
+                <button
+                  type="button"
+                  *ngFor="let view of dashboardViews"
+                  [class.active]="dashboardView() === view.id"
+                  [attr.aria-pressed]="dashboardView() === view.id"
+                  (click)="setDashboardView(view.id)"
+                >
+                  <span>{{ view.shortName }}</span>
+                  <small [class.available]="dashboardStatus(view) === 'available'">{{ dashboardStatus(view) }}</small>
+                </button>
+              </section>
+
+              <section class="dashboard-surface-heading panel" aria-live="polite">
+                <div>
+                  <p class="section-kicker">Active dashboard</p>
+                  <h2>{{ activeDashboardView().name }}</h2>
+                  <p>{{ activeDashboardView().purpose }}</p>
+                </div>
+                <span class="status-pill" [class.available]="activeDashboardStatus() === 'available'">{{ activeDashboardStatus() }}</span>
+              </section>
+
+              <ng-container *ngIf="dashboardView() === 'company-intelligence'; else unavailableDashboard">
+              <div class="metric-grid" aria-label="Company strategic intelligence metrics">
+                <div class="metric">
+                  <dt>Companies</dt>
+                  <dd>{{ dash.summary.company_count }}</dd>
+                </div>
+                <div class="metric">
+                  <dt>Sources</dt>
+                  <dd>{{ dash.summary.source_count }}</dd>
+                </div>
+                <div class="metric">
+                  <dt>Events</dt>
+                  <dd>{{ dash.summary.event_count }}</dd>
+                </div>
+                <div class="metric">
+                  <dt>Strategic turns</dt>
+                  <dd>{{ dash.summary.strategic_turn_count }}</dd>
+                </div>
+                <div class="metric">
+                  <dt>Sectors</dt>
+                  <dd>{{ dash.summary.sector_count }}</dd>
+                </div>
+              </div>
+
+              <div class="dashboard-chart-grid">
+                <section class="panel chart-panel" aria-labelledby="sector-chart-heading">
+                  <div class="panel-header">
+                    <div>
+                      <p class="section-kicker">Coverage graph</p>
+                      <h2 id="sector-chart-heading">Events by sector</h2>
+                    </div>
+                  </div>
+                  <div class="empty-state unavailable-state" *ngIf="dash.sector_counts.length === 0">
+                    <strong>Sector coverage unavailable.</strong>
+                    <span>No source-backed company sectors were returned by ingestion.</span>
+                  </div>
+                  <div class="bar-chart" *ngIf="dash.sector_counts.length > 0" aria-label="Event count by sector">
+                    <div class="bar-row" *ngFor="let sector of dash.sector_counts.slice(0, 8)">
+                      <div class="bar-label">
+                        <strong>{{ sector.sector }}</strong>
+                        <span>{{ sector.event_count }} events · {{ sector.source_count }} sources · {{ sector.strategic_turn_count }} turns</span>
+                      </div>
+                      <div class="bar-track" aria-hidden="true">
+                        <div class="bar-fill sector-fill" [style.width.%]="sectorShare(sector.event_count, dash)"></div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="panel chart-panel" aria-labelledby="coverage-mix-heading">
+                  <div class="panel-header">
+                    <div>
+                      <p class="section-kicker">Curation mix</p>
+                      <h2 id="coverage-mix-heading">Sources to insights</h2>
+                    </div>
+                  </div>
+                  <div class="stacked-chart" aria-label="Coverage distribution">
+                    <div class="stacked-bar" aria-hidden="true">
+                      <span class="stack-segment sources" [style.width.%]="coverageShare(dash.summary.source_count, dash)"></span>
+                      <span class="stack-segment events" [style.width.%]="coverageShare(dash.summary.event_count, dash)"></span>
+                      <span class="stack-segment turns" [style.width.%]="coverageShare(dash.summary.strategic_turn_count, dash)"></span>
+                    </div>
+                    <dl class="chart-legend">
+                      <div><dt><span class="legend-dot sources"></span>Sources</dt><dd>{{ dash.summary.source_count }}</dd></div>
+                      <div><dt><span class="legend-dot events"></span>Events</dt><dd>{{ dash.summary.event_count }}</dd></div>
+                      <div><dt><span class="legend-dot turns"></span>Strategic turns</dt><dd>{{ dash.summary.strategic_turn_count }}</dd></div>
+                    </dl>
+                  </div>
+                </section>
+
+                <section class="panel chart-panel" aria-labelledby="company-chart-heading">
+                  <div class="panel-header">
+                    <div>
+                      <p class="section-kicker">Company graph</p>
+                      <h2 id="company-chart-heading">Top event coverage</h2>
+                    </div>
+                  </div>
+                  <div class="empty-state unavailable-state" *ngIf="dash.top_companies.length === 0">
+                    <strong>Company coverage unavailable.</strong>
+                    <span>No source-backed company event counts were returned by ingestion.</span>
+                  </div>
+                  <div class="company-bars" *ngIf="dash.top_companies.length > 0" aria-label="Top companies by event count">
+                    <div class="company-bar" *ngFor="let company of dash.top_companies.slice(0, 8)">
+                      <div class="company-bar-top">
+                        <strong>{{ company.name }}</strong>
+                        <span>{{ company.event_count }}</span>
+                      </div>
+                      <div class="bar-track" aria-hidden="true">
+                        <div class="bar-fill company-fill" [style.width.%]="companyShare(company.event_count, dash)"></div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              <section class="panel source-gap-panel" aria-labelledby="source-gap-heading" *ngIf="dash.source_gaps.length > 0">
+                <div class="panel-header">
+                  <div>
+                    <p class="section-kicker">Data quality</p>
+                    <h2 id="source-gap-heading">Unavailable source-backed data</h2>
+                  </div>
+                </div>
+                <div class="source-gap-grid">
+                  <article class="source-gap" *ngFor="let gap of dash.source_gaps">
+                    <div>
+                      <strong>{{ gap.label || gap.key }}</strong>
+                      <span>{{ gap.source }}</span>
+                    </div>
+                    <p>{{ gap.reason }}</p>
+                    <small>{{ gap.next_action }}</small>
+                  </article>
+                </div>
+              </section>
+
+              <section class="panel" aria-labelledby="jobs-heading">
+                <div class="panel-header">
+                  <div>
+                    <p class="section-kicker">Ingestion</p>
+                    <h2 id="jobs-heading">Latest source refreshes</h2>
+                  </div>
+                </div>
+                <div class="empty-state unavailable-state" *ngIf="dash.latest_jobs.length === 0">
+                  <strong>Refresh history unavailable.</strong>
+                  <span>No ingestion jobs were returned, so dashboard freshness cannot be confirmed.</span>
+                </div>
+                <div class="job-card-grid" *ngIf="dash.latest_jobs.length > 0">
+                  <article class="job-card" *ngFor="let job of dash.latest_jobs">
+                    <div>
+                      <strong>{{ job.company || 'Global' }}</strong>
+                      <span>{{ job.created_at | date:'medium' }}</span>
+                    </div>
+                    <dl>
+                      <div><dt>Type</dt><dd>{{ job.job_type }}</dd></div>
+                      <div><dt>Status</dt><dd>{{ job.status }}</dd></div>
+                      <div><dt>Events</dt><dd>{{ job.events_extracted }}</dd></div>
+                    </dl>
+                  </article>
+                </div>
+              </section>
+              </ng-container>
+
+              <ng-template #unavailableDashboard>
+                <ng-container [ngSwitch]="dashboardView()">
+                  <section *ngSwitchCase="'latest-moves'" class="panel data-dashboard" aria-labelledby="latest-moves-heading">
+                    <div class="panel-header">
+                      <div>
+                        <p class="section-kicker">Event scanner</p>
+                        <h2 id="latest-moves-heading">Latest strategic moves</h2>
+                      </div>
+                    </div>
+                    <div class="result-list dashboard-data-list" *ngIf="(dashboardSection('latest-moves')?.items || []).length > 0; else dashboardGap">
+                      <article class="result-row evidence-row" *ngFor="let event of dashboardSection('latest-moves')?.items || []">
+                        <strong>{{ event.company }} · {{ event.event_type }}</strong>
+                        <span>{{ event.event_date }} · {{ event.review_status }} · {{ event.source_count }} sources</span>
+                        <p>{{ event.actual_change || event.source_claim }}</p>
+                      </article>
+                    </div>
+                    <div class="pagination-row" *ngIf="(dashboardSection('latest-moves')?.total_pages || 1) > 1">
+                      <span>{{ dashboardSectionRange('latest-moves') }}</span>
+                      <button type="button" class="ghost-button" (click)="setDashboardSectionPage('latest-moves', (dashboardSection('latest-moves')?.page || 1) - 1)" [disabled]="!dashboardSection('latest-moves')?.has_previous">Previous</button>
+                      <button type="button" class="ghost-button" (click)="setDashboardSectionPage('latest-moves', (dashboardSection('latest-moves')?.page || 1) + 1)" [disabled]="!dashboardSection('latest-moves')?.has_next">Next</button>
+                    </div>
+                  </section>
+
+                  <section *ngSwitchCase="'patterns'" class="panel data-dashboard" aria-labelledby="patterns-heading">
+                    <div class="panel-header">
+                      <div>
+                        <p class="section-kicker">Patterns</p>
+                        <h2 id="patterns-heading">Strategic pattern library</h2>
+                      </div>
+                    </div>
+                    <div class="pattern-grid" *ngIf="(dashboardSection('patterns')?.items || []).length > 0; else dashboardGap">
+                      <article class="pattern-card" *ngFor="let pattern of dashboardSection('patterns')?.items || []">
+                        <div>
+                          <strong>{{ pattern.pattern }}</strong>
+                          <span>{{ pattern.sample_size }} turns · confidence {{ pattern.avg_confidence | number:'1.2-2' }} · {{ pattern.confidence_status }}</span>
+                        </div>
+                        <ul>
+                          <li *ngFor="let example of pattern.examples">{{ example.company }}: {{ example.title }}</li>
+                        </ul>
+                      </article>
+                    </div>
+                    <div class="pagination-row" *ngIf="(dashboardSection('patterns')?.total_pages || 1) > 1">
+                      <span>{{ dashboardSectionRange('patterns') }}</span>
+                      <button type="button" class="ghost-button" (click)="setDashboardSectionPage('patterns', (dashboardSection('patterns')?.page || 1) - 1)" [disabled]="!dashboardSection('patterns')?.has_previous">Previous</button>
+                      <button type="button" class="ghost-button" (click)="setDashboardSectionPage('patterns', (dashboardSection('patterns')?.page || 1) + 1)" [disabled]="!dashboardSection('patterns')?.has_next">Next</button>
+                    </div>
+                  </section>
+
+                  <section *ngSwitchCase="'risk-signals'" class="panel data-dashboard" aria-labelledby="risk-heading">
+                    <div class="panel-header">
+                      <div>
+                        <p class="section-kicker">Risk</p>
+                        <h2 id="risk-heading">Source-backed risk signals</h2>
+                      </div>
+                    </div>
+                    <div class="result-list dashboard-data-list" *ngIf="(dashboardSection('risk-signals')?.items || []).length > 0; else dashboardGap">
+                      <article class="result-row evidence-row" *ngFor="let signal of dashboardSection('risk-signals')?.items || []">
+                        <strong>{{ signal.company }} · {{ signal.signal }}</strong>
+                        <span>{{ signal.event_date }} · confidence {{ signal.confidence_score | number:'1.2-2' }}</span>
+                        <p>{{ signal.actual_change || signal.source_claim }}</p>
+                        <small>{{ signal.calculation_method }}</small>
+                      </article>
+                    </div>
+                    <div class="pagination-row" *ngIf="(dashboardSection('risk-signals')?.total_pages || 1) > 1">
+                      <span>{{ dashboardSectionRange('risk-signals') }}</span>
+                      <button type="button" class="ghost-button" (click)="setDashboardSectionPage('risk-signals', (dashboardSection('risk-signals')?.page || 1) - 1)" [disabled]="!dashboardSection('risk-signals')?.has_previous">Previous</button>
+                      <button type="button" class="ghost-button" (click)="setDashboardSectionPage('risk-signals', (dashboardSection('risk-signals')?.page || 1) + 1)" [disabled]="!dashboardSection('risk-signals')?.has_next">Next</button>
+                    </div>
+                  </section>
+
+                  <section *ngSwitchCase="'source-confidence'" class="panel data-dashboard" aria-labelledby="confidence-heading">
+                    <div class="panel-header">
+                      <div>
+                        <p class="section-kicker">Confidence</p>
+                        <h2 id="confidence-heading">Source confidence</h2>
+                      </div>
+                    </div>
+                    <div class="confidence-grid">
+                      <div class="metric">
+                        <dt>Dated events</dt>
+                        <dd>{{ dash.dashboards.source_confidence.events.with_date }} / {{ dash.dashboards.source_confidence.events.total }}</dd>
+                      </div>
+                      <div class="metric">
+                        <dt>Events with source</dt>
+                        <dd>{{ dash.dashboards.source_confidence.events.with_source }} / {{ dash.dashboards.source_confidence.events.total }}</dd>
+                      </div>
+                      <div class="metric">
+                        <dt>Event confidence</dt>
+                        <dd>{{ dash.dashboards.source_confidence.events.avg_confidence | number:'1.2-2' }}</dd>
+                      </div>
+                      <div class="metric">
+                        <dt>Turn confidence</dt>
+                        <dd>{{ dash.dashboards.source_confidence.turns.avg_confidence | number:'1.2-2' }}</dd>
+                      </div>
+                    </div>
+                    <div class="source-gap-grid">
+                      <article class="source-gap" *ngFor="let source of dash.dashboards.source_confidence.source_types">
+                        <div>
+                          <strong>{{ source.source_api || 'unknown source' }}</strong>
+                          <span>{{ source.count }} documents</span>
+                        </div>
+                      </article>
+                      <article class="source-gap" *ngFor="let review of dash.dashboards.source_confidence.event_reviews">
+                        <div>
+                          <strong>{{ review.review_status }}</strong>
+                          <span>{{ review.count }} events</span>
+                        </div>
+                      </article>
+                    </div>
+                  </section>
+
+                  <section *ngSwitchCase="'companies-like-mine'" class="panel data-dashboard" aria-labelledby="like-mine-heading">
+                    <div class="panel-header">
+                      <div>
+                        <p class="section-kicker">Benchmark</p>
+                        <h2 id="like-mine-heading">Companies with comparable dimensions</h2>
+                      </div>
+                    </div>
+                    <div class="source-gap-grid" *ngIf="(dashboardSection('companies-like-mine')?.items || []).length > 0; else dashboardGap">
+                      <article class="source-gap" *ngFor="let company of dashboardSection('companies-like-mine')?.items || []">
+                        <div>
+                          <strong>{{ company.name }}</strong>
+                          <span>{{ company.match_dimensions.join(' · ') || 'dimension gap' }}</span>
+                        </div>
+                        <p>{{ company.event_count }} events · {{ company.strategic_turn_count }} turns · {{ company.source_count }} sources</p>
+                      </article>
+                    </div>
+                    <div class="pagination-row" *ngIf="(dashboardSection('companies-like-mine')?.total_pages || 1) > 1">
+                      <span>{{ dashboardSectionRange('companies-like-mine') }}</span>
+                      <button type="button" class="ghost-button" (click)="setDashboardSectionPage('companies-like-mine', (dashboardSection('companies-like-mine')?.page || 1) - 1)" [disabled]="!dashboardSection('companies-like-mine')?.has_previous">Previous</button>
+                      <button type="button" class="ghost-button" (click)="setDashboardSectionPage('companies-like-mine', (dashboardSection('companies-like-mine')?.page || 1) + 1)" [disabled]="!dashboardSection('companies-like-mine')?.has_next">Next</button>
+                    </div>
+                  </section>
+
+                  <section *ngSwitchCase="'strategy-scorecard'" class="panel data-dashboard" aria-labelledby="scorecard-heading">
+                    <div class="panel-header">
+                      <div>
+                        <p class="section-kicker">Scorecard</p>
+                        <h2 id="scorecard-heading">Evidence-backed scorecard candidates</h2>
+                      </div>
+                    </div>
+                    <div class="result-list dashboard-data-list" *ngIf="(dashboardSection('strategy-scorecard')?.items || []).length > 0; else dashboardGap">
+                      <article class="result-row evidence-row" *ngFor="let turn of dashboardSection('strategy-scorecard')?.items || []">
+                        <strong>{{ turn.company }} · {{ turn.title }}</strong>
+                        <span>{{ turn.start_date }} · {{ turn.source_count }} sources · confidence {{ turn.confidence_score | number:'1.2-2' }}</span>
+                        <p>{{ turn.score_reason }}</p>
+                        <div class="impact-window-grid" *ngIf="(turn.market_reaction || []).length > 0">
+                          <div class="impact-line-chart" aria-hidden="true">
+                            <svg viewBox="0 0 180 58" preserveAspectRatio="none">
+                              <line x1="0" x2="180" [attr.y1]="impactZeroLineY(turn.market_reaction || [])" [attr.y2]="impactZeroLineY(turn.market_reaction || [])"></line>
+                              <polyline [attr.points]="impactLinePoints(turn.market_reaction || [])"></polyline>
+                              <circle
+                                *ngFor="let point of turn.market_reaction || []; let pointIndex = index"
+                                r="2.8"
+                                [attr.cx]="impactLineX(turn.market_reaction || [], pointIndex)"
+                                [attr.cy]="impactLineY(turn.market_reaction || [], pointIndex)"
+                              ></circle>
+                            </svg>
+                          </div>
+                        </div>
+                      </article>
+                    </div>
+                    <div class="pagination-row" *ngIf="(dashboardSection('strategy-scorecard')?.total_pages || 1) > 1">
+                      <span>{{ dashboardSectionRange('strategy-scorecard') }}</span>
+                      <button type="button" class="ghost-button" (click)="setDashboardSectionPage('strategy-scorecard', (dashboardSection('strategy-scorecard')?.page || 1) - 1)" [disabled]="!dashboardSection('strategy-scorecard')?.has_previous">Previous</button>
+                      <button type="button" class="ghost-button" (click)="setDashboardSectionPage('strategy-scorecard', (dashboardSection('strategy-scorecard')?.page || 1) + 1)" [disabled]="!dashboardSection('strategy-scorecard')?.has_next">Next</button>
+                    </div>
+                  </section>
+
+                  <section *ngSwitchCase="'compare-turns'" class="panel data-dashboard" aria-labelledby="compare-heading">
+                    <div class="panel-header">
+                      <div>
+                        <p class="section-kicker">Compare</p>
+                        <h2 id="compare-heading">Comparable strategic turns</h2>
+                      </div>
+                    </div>
+                    <div class="pattern-grid" *ngIf="(dashboardSection('compare-turns')?.items || []).length > 0; else dashboardGap">
+                      <article class="pattern-card" *ngFor="let group of dashboardSection('compare-turns')?.items || []">
+                        <div>
+                          <strong>{{ group.turn_type }}</strong>
+                          <span>{{ group.sample_size }} candidate turns</span>
+                        </div>
+                        <ul>
+                          <li *ngFor="let turn of group.turns">{{ turn.company }}: {{ turn.title }}</li>
+                        </ul>
+                      </article>
+                    </div>
+                    <div class="pagination-row" *ngIf="(dashboardSection('compare-turns')?.total_pages || 1) > 1">
+                      <span>{{ dashboardSectionRange('compare-turns') }}</span>
+                      <button type="button" class="ghost-button" (click)="setDashboardSectionPage('compare-turns', (dashboardSection('compare-turns')?.page || 1) - 1)" [disabled]="!dashboardSection('compare-turns')?.has_previous">Previous</button>
+                      <button type="button" class="ghost-button" (click)="setDashboardSectionPage('compare-turns', (dashboardSection('compare-turns')?.page || 1) + 1)" [disabled]="!dashboardSection('compare-turns')?.has_next">Next</button>
+                    </div>
+                  </section>
+
+                  <section *ngSwitchCase="'turn-impact'" class="panel data-dashboard" aria-labelledby="impact-heading">
+                    <div class="panel-header">
+                      <div>
+                        <p class="section-kicker">Impact</p>
+                        <h2 id="impact-heading">Impact candidates and missing market data</h2>
+                      </div>
+                    </div>
+                    <div class="result-list dashboard-data-list" *ngIf="(dashboardSection('turn-impact')?.items || []).length > 0; else impactGap">
+                      <article class="result-row evidence-row impact-row" *ngFor="let impact of dashboardSection('turn-impact')?.items || []">
+                        <div>
+                          <strong>{{ impact.company }} · {{ impact.event.event_type }}</strong>
+                          <span>{{ impact.event_date }} · {{ impact.ticker }} · base {{ impact.base_price.close_price | number:'1.2-2' }}</span>
+                        </div>
+                        <p>{{ impact.event.actual_change || impact.event.source_claim }}</p>
+                        <div class="impact-window-grid" *ngIf="impact.windows.length > 0">
+                          <div class="impact-line-chart" aria-hidden="true">
+                            <svg viewBox="0 0 180 58" preserveAspectRatio="none">
+                              <line x1="0" x2="180" [attr.y1]="impactZeroLineY(impact.windows)" [attr.y2]="impactZeroLineY(impact.windows)"></line>
+                              <polyline [attr.points]="impactLinePoints(impact.windows)"></polyline>
+                              <circle
+                                *ngFor="let point of impact.windows; let pointIndex = index"
+                                r="2.8"
+                                [attr.cx]="impactLineX(impact.windows, pointIndex)"
+                                [attr.cy]="impactLineY(impact.windows, pointIndex)"
+                              ></circle>
+                            </svg>
+                          </div>
+                          <div
+                            class="impact-window"
+                            *ngFor="let window of impact.windows"
+                            [class.positive]="impactWindowTone(window.return_pct) === 'positive'"
+                            [class.negative]="impactWindowTone(window.return_pct) === 'negative'"
+                          >
+                            <div class="impact-window-top">
+                              <strong>{{ window.window }}</strong>
+                              <span>{{ window.return_pct | number:'1.1-1' }}%</span>
+                            </div>
+                            <div class="impact-sparkline" aria-hidden="true">
+                              <span [style.width.%]="impactWindowWidth(window.return_pct)"></span>
+                            </div>
+                          </div>
+                        </div>
+                        <small *ngIf="impact.financial_facts.length > 0">
+                          {{ impact.financial_facts.length }} SEC companyfacts · latest {{ impact.financial_facts[0].fy }} {{ impact.financial_facts[0].fp }}
+                        </small>
+                      </article>
+                    </div>
+                    <div class="pagination-row" *ngIf="(dashboardSection('turn-impact')?.total_pages || 1) > 1">
+                      <span>{{ dashboardSectionRange('turn-impact') }}</span>
+                      <button type="button" class="ghost-button" (click)="setDashboardSectionPage('turn-impact', (dashboardSection('turn-impact')?.page || 1) - 1)" [disabled]="!dashboardSection('turn-impact')?.has_previous">Previous</button>
+                      <button type="button" class="ghost-button" (click)="setDashboardSectionPage('turn-impact', (dashboardSection('turn-impact')?.page || 1) + 1)" [disabled]="!dashboardSection('turn-impact')?.has_next">Next</button>
+                    </div>
+                    <ng-template #impactGap>
+                      <div class="source-gap-grid" *ngIf="sectionGaps('turn-impact').length > 0; else dashboardGap">
+                        <article class="source-gap" *ngFor="let gap of sectionGaps('turn-impact')">
+                          <div>
+                            <strong>{{ gap.label || gap.key }}</strong>
+                            <span>{{ gap.source }}</span>
+                          </div>
+                          <p>{{ gap.reason }}</p>
+                          <small>{{ gap.next_action }}</small>
+                        </article>
+                      </div>
+                    </ng-template>
+                  </section>
+
+                  <section *ngSwitchCase="'business-questions'" class="panel data-dashboard" aria-labelledby="questions-heading">
+                    <div class="panel-header">
+                      <div>
+                        <p class="section-kicker">Questions</p>
+                        <h2 id="questions-heading">Evidence examples for business questions</h2>
+                      </div>
+                    </div>
+                    <div class="result-list dashboard-data-list" *ngIf="(dashboardSection('business-questions')?.items || []).length > 0; else dashboardGap">
+                      <article class="result-row evidence-row" *ngFor="let event of dashboardSection('business-questions')?.items || []">
+                        <strong>What changed at {{ event.company }}?</strong>
+                        <span>{{ event.event_date }} · {{ event.event_type }} · {{ event.source_count }} sources</span>
+                        <p>{{ event.actual_change || event.source_claim }}</p>
+                      </article>
+                    </div>
+                    <div class="pagination-row" *ngIf="(dashboardSection('business-questions')?.total_pages || 1) > 1">
+                      <span>{{ dashboardSectionRange('business-questions') }}</span>
+                      <button type="button" class="ghost-button" (click)="setDashboardSectionPage('business-questions', (dashboardSection('business-questions')?.page || 1) - 1)" [disabled]="!dashboardSection('business-questions')?.has_previous">Previous</button>
+                      <button type="button" class="ghost-button" (click)="setDashboardSectionPage('business-questions', (dashboardSection('business-questions')?.page || 1) + 1)" [disabled]="!dashboardSection('business-questions')?.has_next">Next</button>
+                    </div>
+                  </section>
+                </ng-container>
+              </ng-template>
+
+              <ng-template #dashboardGap>
+                <div class="empty-state unavailable-state">
+                  <strong>{{ activeDashboardView().name }} data unavailable.</strong>
+                  <span>{{ dashboardGapAction() }}</span>
+                </div>
+              </ng-template>
+            </ng-container>
+
+            <ng-template #dashboardEmpty>
+              <div class="panel empty-state">Dashboard data has not loaded yet.</div>
+            </ng-template>
+          </section>
+
+          <section *ngSwitchCase="'profile'" class="profile-layout" aria-labelledby="profile-heading">
+            <section class="panel profile-card" aria-labelledby="profile-heading">
+              <div class="panel-header">
+                <div>
+                  <p class="section-kicker">Profile</p>
+                  <h2 id="profile-heading">Current account</h2>
+                </div>
+                <button type="button" class="primary-button" (click)="setActivePage('subscription')">Change subscription</button>
+              </div>
+
+              <div class="profile-summary" *ngIf="currentUser() as user">
+                <div class="avatar-block">
+                  <div class="avatar-preview" aria-label="Avatar preview">
+                    <img *ngIf="avatarSrc(user); else avatarInitials" [src]="avatarSrc(user)" alt="Selected profile avatar" />
+                    <ng-template #avatarInitials>
+                      <span aria-hidden="true">{{ (user.username || 'ID').slice(0, 2).toUpperCase() }}</span>
+                    </ng-template>
+                  </div>
+                  <div class="avatar-actions">
+                    <label class="file-picker" for="avatar-upload">
+                      Choose avatar image
+                      <input id="avatar-upload" type="file" accept="image/png,image/jpeg,image/webp" (change)="chooseAvatar($event)" />
+                    </label>
+                    <button type="button" class="ghost-button avatar-delete-button" (click)="deleteAvatar()" [disabled]="loading() || !user.profile.avatar_url" [attr.aria-disabled]="loading() || !user.profile.avatar_url">
+                      Delete avatar
+                    </button>
+                  </div>
+                  <p class="helper-text" aria-live="polite">{{ avatarFilename || (user.profile.avatar_url ? 'Avatar saved to profile.' : 'No avatar image selected.') }}</p>
+                </div>
+
+                <dl class="account-grid">
+                  <div class="metric">
+                    <dt>User</dt>
+                    <dd>{{ user.username }}</dd>
+                  </div>
+                  <div class="metric">
+                    <dt>Email</dt>
+                    <dd>{{ user.email }}</dd>
+                  </div>
+                  <div class="metric">
+                    <dt>Tier</dt>
+                    <dd>{{ user.subscription.tier }}</dd>
+                  </div>
+                  <div class="metric">
+                    <dt>Status</dt>
+                    <dd>{{ user.subscription.status }}</dd>
+                  </div>
+                  <div class="metric" *ngIf="user.subscription.pending_tier">
+                    <dt>Pending tier</dt>
+                    <dd>{{ user.subscription.pending_tier }}</dd>
+                  </div>
+                </dl>
+              </div>
+            </section>
+          </section>
+
+          <ng-container *ngSwitchCase="'subscription'">
+            <section class="panel subscription-panel" aria-labelledby="subscription-heading">
+              <div class="panel-header">
+                <div>
+                  <p class="section-kicker">Subscription</p>
+                  <h2 id="subscription-heading">Plan controls</h2>
+                </div>
+              </div>
+
+              <div class="tier-grid" aria-label="Available subscription plans">
+                <article class="tier-card" *ngFor="let tier of tiers">
+                  <div>
+                    <h3 [id]="'tier-' + tier.id">{{ tier.name }}</h3>
+                    <p>{{ tier.description }}</p>
+                  </div>
+                  <div class="tier-price">{{ tier.price }}</div>
+                  <button
+                    type="button"
+                    class="primary-button"
+                    [disabled]="loading()"
+                    [attr.aria-disabled]="loading()"
+                    [attr.aria-describedby]="'tier-' + tier.id"
+                    [attr.aria-label]="tier.paid ? 'Start Razorpay checkout for ' + tier.name + ' plan' : 'Use the free subscription tier'"
+                    (click)="tier.paid ? checkout(tier.id) : changeTier(tier.id)"
+                  >
+                    {{ tier.paid ? 'Start checkout' : 'Use free tier' }}
+                  </button>
+                </article>
+              </div>
+
+              <div class="checkout-box" *ngIf="checkoutOrder() as order" role="region" aria-labelledby="checkout-heading">
+                <h3 id="checkout-heading">Razorpay checkout order</h3>
+                <dl>
+                  <div><dt>Order ID</dt><dd>{{ order.order_id }}</dd></div>
+                  <div><dt>Amount</dt><dd>{{ order.amount / 100 | number:'1.0-0' }} {{ order.currency }}</dd></div>
+                  <div><dt>Key ID</dt><dd>{{ order.key_id }}</dd></div>
+                </dl>
+                <div class="checkout-actions">
+                  <button type="button" class="primary-button" (click)="openRazorpayCheckout(order)" [disabled]="loading()" [attr.aria-disabled]="loading()">
+                    Pay with Razorpay
+                  </button>
+                  <button type="button" class="ghost-button" (click)="checkoutOrder.set(null)">Dismiss</button>
+                </div>
+                <p>Continue to Razorpay to complete payment and verify it server-side.</p>
+              </div>
+            </section>
+
+            <section class="panel history-panel" aria-labelledby="history-heading">
+              <div class="panel-header">
+                <div>
+                  <p class="section-kicker">Audit</p>
+                  <h2 id="history-heading">Subscription history</h2>
+                </div>
+                <button type="button" class="ghost-button" (click)="loadHistory()" [disabled]="loading()" [attr.aria-disabled]="loading()">Reload</button>
+              </div>
+
+              <div class="empty-state" *ngIf="history().length === 0" role="status" aria-live="polite">
+                No subscription changes loaded.
+              </div>
+
+              <table *ngIf="history().length > 0">
+                <caption class="visually-hidden">Subscription change history for the current account</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">When</th>
+                    <th scope="col">Provider</th>
+                    <th scope="col">Tier</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Reason</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let row of history()">
+                    <td>{{ row.created_at | date:'medium' }}</td>
+                    <td>{{ row.provider }}</td>
+                    <td>{{ row.old_tier }} -> {{ row.new_tier }}</td>
+                    <td>{{ row.old_status }} -> {{ row.new_status }}</td>
+                    <td>{{ row.reason }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </section>
+          </ng-container>
+        </ng-container>
+      </main>
+
+      <footer class="footer">
+        <span>InfoDJ Sprint 1</span>
+        <span>Main backend APIs only. Razorpay and Google secrets stay server-side.</span>
+      </footer>
+    </div>
+  </div>
+</ng-template>

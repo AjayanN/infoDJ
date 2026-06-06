@@ -12,7 +12,7 @@ services:
   ingestion:
     build:
       context: ../services/ingestion
-    command: .venv/bin/python manage.py run_ingestion_api_with_scheduler --host 0.0.0.0 --port 8001 --scheduler-timezone UTC --limit 20 --batch-size 10 --include-gdelt --split-batches
+    command: .venv/bin/python manage.py run_ingestion_api_with_scheduler --host 0.0.0.0 --port 8001 --scheduler-timezone UTC --limit 20 --batch-size 10 --include-gdelt --include-market-data --include-financial-facts --include-macro-context --include-quality-scoring --split-batches
     env_file:
       - ./env/ingestion.env
     ports:
@@ -41,6 +41,8 @@ services:
       - ./env/main.env
     ports:
       - "8100:8100"
+    volumes:
+      - main_media:/app/media
     depends_on:
       - postgres
 
@@ -106,3 +108,4 @@ volumes:
   postgres_data:
   loki_data:
   grafana_data:
+  main_media:

@@ -26,6 +26,8 @@ class IngestionJobType(models.TextChoices):
     ARTICLE_EXTRACTION = "ARTICLE_EXTRACTION", "Article extraction"
     EVENT_EXTRACTION = "EVENT_EXTRACTION", "Event extraction"
     EVENT_CLUSTERING = "EVENT_CLUSTERING", "Event clustering"
+    MARKET_DATA = "MARKET_DATA", "Market data"
+    FINANCIAL_FACTS = "FINANCIAL_FACTS", "Financial facts"
     FULL_COMPANY_PIPELINE = "FULL_COMPANY_PIPELINE", "Full company pipeline"
 
 
@@ -36,6 +38,13 @@ class IngestionJobStatus(models.TextChoices):
     FAILED = "FAILED", "Failed"
     PARTIAL = "PARTIAL", "Partial"
     CANCELLED = "CANCELLED", "Cancelled"
+
+
+class SourceGapStatus(models.TextChoices):
+    OPEN = "OPEN", "Open"
+    IN_PROGRESS = "IN_PROGRESS", "In progress"
+    RESOLVED = "RESOLVED", "Resolved"
+    WONT_FIX = "WONT_FIX", "Won't fix"
 
 
 class SourceDocument(models.Model):
@@ -153,3 +162,121 @@ class IngestionJob(models.Model):
     def __str__(self) -> str:
         company = self.company.name if self.company_id else "global"
         return f"{self.job_type} for {company} ({self.status})"
+
+
+class SourceGap(models.Model):
+    company = models.ForeignKey(
+        "companies.Company",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="source_gaps",
+    )
+    dashboard = models.CharField(max_length=96, db_index=True)
+    gap_type = models.CharField(max_length=96, db_index=True)
+    provider = models.CharField(max_length=96, blank=True, db_index=True)
+    reason = models.TextField()
+    next_ingestion_task = models.TextField()
+    status = models.CharField(
+        max_length=32,
+        choices=SourceGapStatus.choices,
+        default=SourceGapStatus.OPEN,
+        db_index=True,
+    )
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["dashboard", "gap_type", "company_id", "provider"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["company", "dashboard", "gap_type", "provider"],
+                name="unique_source_gap_scope",
+            )
+        ]
+        indexes = [
+            models.Index(fields=["dashboard", "status"]),
+            models.Index(fields=["gap_type", "status"]),
+            models.Index(fields=["company", "dashboard"]),
+        ]
+
+    def __str__(self) -> str:
+        company = self.company.name if self.company_id else "global"
+        return f"{self.dashboard}:{self.gap_type} for {company}"
+
+
+class MarketPrice(models.Model):
+    company = models.ForeignKey(
+        "companies.Company",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="market_prices",
+    )
+    ticker = models.CharField(max_length=32, db_index=True)
+    provider = models.CharField(max_length=64, default="STOOQ", db_index=True)
+    price_date = models.DateField(db_index=True)
+    open_price = models.DecimalField(max_digits=18, decimal_places=6, null=True, blank=True)
+    high_price = models.DecimalField(max_digits=18, decimal_places=6, null=True, blank=True)
+    low_price = models.DecimalField(max_digits=18, decimal_places=6, null=True, blank=True)
+    close_price = models.DecimalField(max_digits=18, decimal_places=6, null=True, blank=True)
+    volume = models.BigIntegerField(null=True, blank=True)
+    raw = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["company", "-price_date"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["company", "ticker", "provider", "price_date"],
+                name="unique_market_price_day",
+            )
+        ]
+        indexes = [
+            models.Index(fields=["company", "price_date"]),
+            models.Index(fields=["ticker", "price_date"]),
+            models.Index(fields=["provider", "price_date"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.company} {self.ticker} {self.price_date}"
+
+
+class FinancialFact(models.Model):
+    company = models.ForeignKey(
+        "companies.Company",
+        on_delete=models.CASCADE,
+        related_name="financial_facts",
+    )
+    taxonomy = models.CharField(max_length=64, db_index=True)
+    concept = models.CharField(max_length=128, db_index=True)
+    label = models.CharField(max_length=255, blank=True)
+    unit = models.CharField(max_length=64, db_index=True)
+    fy = models.IntegerField(null=True, blank=True, db_index=True)
+    fp = models.CharField(max_length=16, blank=True, db_index=True)
+    filed = models.DateField(null=True, blank=True, db_index=True)
+    frame = models.CharField(max_length=64, blank=True, db_index=True)
+    value = models.DecimalField(max_digits=24, decimal_places=3)
+    accession_number = models.CharField(max_length=64, blank=True)
+    raw = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["company", "concept", "-fy", "-filed"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["company", "taxonomy", "concept", "unit", "fy", "fp", "frame", "filed", "accession_number"],
+                name="unique_financial_fact_period",
+            )
+        ]
+        indexes = [
+            models.Index(fields=["company", "concept", "fy"]),
+            models.Index(fields=["company", "filed"]),
+            models.Index(fields=["concept", "unit"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.company} {self.concept} {self.fy or ''}{self.fp}"

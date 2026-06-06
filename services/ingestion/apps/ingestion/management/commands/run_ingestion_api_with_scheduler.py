@@ -19,6 +19,10 @@ class Command(BaseCommand):
         parser.add_argument("--limit", type=int, default=20)
         parser.add_argument("--batch-size", type=int, default=10)
         parser.add_argument("--include-gdelt", action="store_true")
+        parser.add_argument("--include-market-data", action="store_true")
+        parser.add_argument("--include-financial-facts", action="store_true")
+        parser.add_argument("--include-macro-context", action="store_true")
+        parser.add_argument("--include-quality-scoring", action="store_true")
         parser.add_argument("--split-batches", action="store_true")
 
     def handle(self, *args, **options):
@@ -37,6 +41,14 @@ class Command(BaseCommand):
         ]
         if options["include_gdelt"]:
             scheduler_command.append("--include-gdelt")
+        if options["include_market_data"]:
+            scheduler_command.append("--include-market-data")
+        if options["include_financial_facts"]:
+            scheduler_command.append("--include-financial-facts")
+        if options["include_macro_context"]:
+            scheduler_command.append("--include-macro-context")
+        if options["include_quality_scoring"]:
+            scheduler_command.append("--include-quality-scoring")
         if options["split_batches"]:
             scheduler_command.append("--split-batches")
 
