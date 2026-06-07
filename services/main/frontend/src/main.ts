@@ -10,6 +10,7 @@ import { provideRouter, Routes } from '@angular/router';
 import {
   CurrentUser,
   CompanyProfileResponse,
+  BusinessModelResponse,
   DashboardSection,
   DashboardResponse,
   HistoryRow,
@@ -21,7 +22,12 @@ import {
   SearchSuggestion,
   Subscription
 } from './app/services/infodj-api.service';
-import { companyProfileItemLabel, companyProfileSectionLabel } from './app/company-profile.utils';
+import {
+  businessModelComponentLabel,
+  businessModelRelationshipLabel,
+  companyProfileItemLabel,
+  companyProfileSectionLabel
+} from './app/company-profile.utils';
 
 declare global {
   interface Window {
@@ -30,7 +36,7 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-type AppPage = 'dashboard' | 'company' | 'profile' | 'subscription';
+type AppPage = 'dashboard' | 'company' | 'business-model' | 'profile' | 'subscription';
 type DashboardViewId =
   | 'company-intelligence'
   | 'turn-impact'
@@ -111,6 +117,7 @@ class AppComponent {
   history = signal<HistoryRow[]>([]);
   dashboard = signal<DashboardResponse | null>(null);
   companyProfile = signal<CompanyProfileResponse | null>(null);
+  businessModel = signal<BusinessModelResponse | null>(null);
   searchResults = signal<SearchResponse | null>(null);
   searchPages = signal<Record<SearchResultGroup, number>>({
     companies: 1,
@@ -136,7 +143,12 @@ class AppComponent {
   dashboardLoading = signal(false);
   searchLoading = signal(false);
   companyLoading = signal(false);
+  businessModelLoading = signal(false);
   companyProfileDate = '';
+  businessModelDate = '';
+  businessModelCompareDate = '';
+  readonly businessModelComponentOrder = ['PAYER', 'USER', 'OFFERING', 'REVENUE', 'CHANNEL', 'GEOGRAPHY', 'PARTNER', 'COST', 'ASSET'];
+  businessModelTypeFilter = '';
   readonly companyProfileSectionOrder = [
     'summary',
     'business_model',
@@ -422,6 +434,9 @@ class AppComponent {
     if (this.activePage() === 'company') {
       return this.companyProfile()?.company.name || 'Company 360';
     }
+    if (this.activePage() === 'business-model') {
+      return `${this.businessModel()?.company.name || 'Company'} Business Model`;
+    }
     if (this.activePage() === 'profile') {
       return 'Profile';
     }
@@ -434,6 +449,9 @@ class AppComponent {
   pageDescription(): string {
     if (this.activePage() === 'company') {
       return 'Source-backed company structure, strategic priorities, recent changes, and evidence coverage.';
+    }
+    if (this.activePage() === 'business-model') {
+      return 'Who pays, who uses the offering, how it is delivered, where revenue comes from, and what changed over time.';
     }
     if (this.activePage() === 'profile') {
       return 'Manage account details, avatar preview, and subscription access.';
@@ -710,6 +728,43 @@ class AppComponent {
 
   printCompanyProfile(): void {
     window.print();
+  }
+
+  openBusinessModel(slug: string, asOf = '', compareTo = ''): void {
+    if (!slug || !this.token()) {
+      return;
+    }
+    this.activePage.set('business-model');
+    this.menuOpen.set(false);
+    this.businessModelLoading.set(true);
+    this.error.set('');
+    this.api.businessModel(this.token(), slug, asOf, compareTo).subscribe({
+      next: (response) => {
+        this.businessModel.set(response);
+        this.businessModelDate = response.snapshot?.effective_date || '';
+        this.businessModelCompareDate = response.comparison_snapshot?.effective_date || '';
+        this.businessModelLoading.set(false);
+      },
+      error: (response) => {
+        this.businessModelLoading.set(false);
+        this.showError(response);
+      }
+    });
+  }
+
+  reloadBusinessModel(): void {
+    const company = this.businessModel()?.company;
+    if (company) {
+      this.openBusinessModel(company.slug, this.businessModelDate, this.businessModelCompareDate);
+    }
+  }
+
+  businessModelComponentLabel(type: string): string {
+    return businessModelComponentLabel(type);
+  }
+
+  businessModelRelationshipLabel(type: string): string {
+    return businessModelRelationshipLabel(type);
   }
 
   profileSectionLabel(key: string): string {

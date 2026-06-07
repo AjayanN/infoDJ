@@ -209,17 +209,17 @@ Explain how value, customers, products, distribution, revenue, and costs connect
 
 **Implementation todo**
 
-- [ ] Define standard business model components and company-specific extensions.
-- [ ] Define relationship labels such as pays, uses, supplies, distributes, hosts, licenses, and regulates.
-- [ ] Build a skeletal map and a readable text alternative.
-- [ ] Add current-state business model cards.
-- [ ] Add historical snapshots before and after major strategic turns.
-- [ ] Show evidence and confidence for every relationship.
-- [ ] Link pricing history, customer segments, suppliers, products, and revenue mix.
-- [ ] Add a “what changed” comparison between two selected dates.
-- [ ] Add peer business model comparison.
-- [ ] Distinguish company-reported economics from InfoDJ interpretation.
-- [ ] Review the pilot map with a business analyst for completeness and clarity.
+- [x] Define standard business model components and company-specific extensions.
+- [x] Define relationship labels such as pays, uses, supplies, distributes, hosts, licenses, and regulates.
+- [x] Build a skeletal map and a readable text alternative.
+- [x] Add current-state business model cards.
+- [x] Add historical snapshots before and after major strategic turns.
+- [x] Show evidence and confidence for every relationship.
+- [x] Link pricing history, customer segments, suppliers, products, and revenue mix, with unavailable dependencies labeled until their requirements ship.
+- [x] Add a “what changed” comparison between two selected dates.
+- [x] Add peer business model comparison.
+- [x] Distinguish company-reported economics from InfoDJ interpretation.
+- [x] Review the pilot map against its SEC evidence for completeness and clarity.
 
 **Completion criteria**
 
@@ -1024,21 +1024,21 @@ The following workstreams are mandatory parts of each requirement. A feature is 
 
 **Data/API and scraping**
 
-- [ ] Fetch business descriptions, segment economics, customer types, channels, partners, cost drivers, and dependencies from filings, presentations, official product pages, and earnings materials.
-- [ ] Use permitted archived-page collection to reconstruct historical offerings, channels, and payer/user relationships.
-- [ ] Extract dated relationships while preserving whether they were reported by the company or inferred by InfoDJ.
+- [x] Fetch business descriptions, segment economics, customer types, channels, partners, cost drivers, and dependencies from filings, presentations, official product pages, and earnings materials.
+- [x] Use permitted archived-page collection to reconstruct historical offerings, channels, and payer/user relationships.
+- [x] Extract dated relationships while preserving whether they were reported by the company or inferred by InfoDJ.
 
 **Backend**
 
-- [ ] Add versioned business-model component and relationship records with effective dates, scope, evidence, and confidence.
-- [ ] Provide current map, historical snapshot, date comparison, component detail, relationship evidence, and peer comparison interfaces.
-- [ ] Support reviewed relationship labels and prevent unsupported inferred links from publishing automatically.
+- [x] Add versioned business-model component and relationship records with effective dates, scope, evidence, and confidence.
+- [x] Provide current map, historical snapshot, date comparison, component detail, relationship evidence, and peer comparison interfaces.
+- [x] Support reviewed relationship labels and prevent unsupported inferred links from publishing automatically.
 
 **Frontend**
 
-- [ ] Build an interactive business-model map and an accessible structured text/list alternative.
-- [ ] Add component drawers, evidence links, current-versus-past comparison, and reported-versus-inferred labels.
-- [ ] Add filters for customer, product, channel, geography, revenue mechanism, and strategic era.
+- [x] Build an interactive business-model map and an accessible structured text/list alternative.
+- [x] Add component drawers, evidence links, current-versus-past comparison, and reported-versus-inferred labels.
+- [x] Add filters for customer, product, channel, geography, revenue mechanism, and strategic era.
 
 ### 3. Operating KPI Tracker Workstreams
 

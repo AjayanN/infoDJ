@@ -116,6 +116,7 @@
       <nav class="side-nav" aria-label="Main menu">
         <button type="button" [class.active]="activePage() === 'dashboard'" [attr.aria-current]="activePage() === 'dashboard' ? 'page' : null" (click)="setActivePage('dashboard')">Dashboard</button>
         <button type="button" *ngIf="companyProfile()" [class.active]="activePage() === 'company'" [attr.aria-current]="activePage() === 'company' ? 'page' : null" (click)="setActivePage('company')">Company 360</button>
+        <button type="button" *ngIf="businessModel()" [class.active]="activePage() === 'business-model'" [attr.aria-current]="activePage() === 'business-model' ? 'page' : null" (click)="setActivePage('business-model')">Business Model</button>
         <button type="button" [class.active]="activePage() === 'profile'" [attr.aria-current]="activePage() === 'profile' ? 'page' : null" (click)="setActivePage('profile')">Profile</button>
         <button type="button" [class.active]="activePage() === 'subscription'" [attr.aria-current]="activePage() === 'subscription' ? 'page' : null" (click)="setActivePage('subscription')">Subscription</button>
       </nav>
@@ -736,6 +737,7 @@
                   </select>
                 </label>
                 <div class="profile-control-actions">
+                  <button type="button" class="ghost-button" (click)="openBusinessModel(companyView.company.slug)">Business model map</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('companies-like-mine')">Compare peers</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('latest-moves')">Latest moves</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('risk-signals')">Risk signals</button>
@@ -830,6 +832,123 @@
                     <p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a>
                   </article>
                 </div>
+              </section>
+            </ng-container>
+          </section>
+
+          <section *ngSwitchCase="'business-model'" class="business-model-layout" aria-labelledby="business-model-heading">
+            <div class="panel empty-state" *ngIf="businessModelLoading()" role="status">Loading source-backed business-model map.</div>
+            <ng-container *ngIf="businessModel() as modelView">
+              <section class="panel business-model-hero">
+                <div>
+                  <p class="section-kicker">Business Model Map · {{ modelView.status }}</p>
+                  <h2 id="business-model-heading">{{ modelView.company.name }}</h2>
+                  <p>{{ modelView.snapshot?.summary || 'Reviewed business-model summary unavailable.' }}</p>
+                </div>
+                <div class="coverage-summary">
+                  <strong>{{ modelView.coverage.completeness_percent }}%</strong>
+                  <span>{{ modelView.coverage.component_count }} components</span>
+                  <span>{{ modelView.coverage.relationship_count }} relationships</span>
+                  <small>Updated {{ modelView.coverage.last_updated | date:'medium' }}</small>
+                </div>
+              </section>
+
+              <section class="panel business-model-controls" aria-label="Business model date controls">
+                <label for="business-model-date">Map at date
+                  <select id="business-model-date" name="business_model_date" [(ngModel)]="businessModelDate">
+                    <option *ngFor="let snapshot of modelView.snapshot_history" [value]="snapshot.effective_date">{{ snapshot.effective_date }} · {{ snapshot.status }}</option>
+                  </select>
+                </label>
+                <label for="business-model-compare-date">Compare with
+                  <select id="business-model-compare-date" name="business_model_compare_date" [(ngModel)]="businessModelCompareDate">
+                    <option value="">Previous reviewed map</option>
+                    <option *ngFor="let snapshot of modelView.snapshot_history" [value]="snapshot.effective_date">{{ snapshot.effective_date }}</option>
+                  </select>
+                </label>
+                <label for="business-model-type-filter">Show component type
+                  <select id="business-model-type-filter" name="business_model_type_filter" [(ngModel)]="businessModelTypeFilter">
+                    <option value="">All components</option>
+                    <option *ngFor="let type of businessModelComponentOrder" [value]="type">{{ businessModelComponentLabel(type) }}</option>
+                  </select>
+                </label>
+                <button type="button" class="primary-button" (click)="reloadBusinessModel()">Update comparison</button>
+                <button type="button" class="ghost-button" (click)="openCompany(modelView.company.slug)">Back to Company 360</button>
+              </section>
+
+              <section class="business-model-map" aria-label="Business model component map">
+                <article class="panel business-model-column" *ngFor="let type of businessModelComponentOrder" [hidden]="businessModelTypeFilter && businessModelTypeFilter !== type">
+                  <div class="panel-header">
+                    <h3>{{ businessModelComponentLabel(type) }}</h3>
+                    <span>{{ modelView.snapshot?.component_groups?.[type]?.length || 0 }}</span>
+                  </div>
+                  <div class="empty-state unavailable-state" *ngIf="(modelView.snapshot?.component_groups?.[type]?.length || 0) === 0">No reviewed component.</div>
+                  <div class="business-component" *ngFor="let component of modelView.snapshot?.component_groups?.[type] || []">
+                    <strong>{{ component.name }}</strong>
+                    <span *ngIf="component.scope">{{ component.scope }}</span>
+                    <p *ngIf="component.description">{{ component.description }}</p>
+                    <small>{{ component.is_inferred ? 'InfoDJ inference' : 'Reported evidence' }} · confidence {{ component.confidence_score | number:'1.2-2' }}</small>
+                    <details *ngIf="component.evidence_text"><summary>Evidence</summary><p>{{ component.evidence_text }}</p></details>
+                  </div>
+                </article>
+              </section>
+
+              <section class="panel" aria-labelledby="relationship-heading">
+                <div class="panel-header"><div><p class="section-kicker">Value flow</p><h2 id="relationship-heading">How the components connect</h2></div></div>
+                <div class="empty-state" *ngIf="!modelView.snapshot || modelView.snapshot.relationships.length === 0">No reviewed business-model relationships.</div>
+                <div class="relationship-grid">
+                  <article class="relationship-card" *ngFor="let relationship of modelView.snapshot?.relationships || []">
+                    <strong>{{ relationship.from_name }}</strong>
+                    <span>{{ businessModelRelationshipLabel(relationship.relationship_type) }}</span>
+                    <strong>{{ relationship.to_name }}</strong>
+                    <small>{{ relationship.is_inferred ? 'InfoDJ inference' : 'Reported evidence' }} · confidence {{ relationship.confidence_score | number:'1.2-2' }}</small>
+                    <details *ngIf="relationship.evidence_text"><summary>Evidence</summary><p>{{ relationship.evidence_text }}</p></details>
+                  </article>
+                </div>
+              </section>
+
+              <section class="panel" aria-labelledby="model-changes-heading">
+                <div class="panel-header"><div><p class="section-kicker">Historical comparison</p><h2 id="model-changes-heading">What changed</h2></div><span>{{ modelView.changes.from_date || 'No earlier map' }} to {{ modelView.changes.to_date || 'current' }}</span></div>
+                <div class="change-grid">
+                  <article><h3>Components added</h3><p *ngIf="modelView.changes.components_added.length === 0">None identified.</p><ul><li *ngFor="let item of modelView.changes.components_added">{{ item.component_type }} · {{ item.name }}</li></ul></article>
+                  <article><h3>Components removed</h3><p *ngIf="modelView.changes.components_removed.length === 0">None identified.</p><ul><li *ngFor="let item of modelView.changes.components_removed">{{ item.component_type }} · {{ item.name }}</li></ul></article>
+                  <article><h3>Relationships added</h3><p *ngIf="modelView.changes.relationships_added.length === 0">None identified.</p><ul><li *ngFor="let item of modelView.changes.relationships_added">{{ item.from_name }} {{ businessModelRelationshipLabel(item.relationship_type) }} {{ item.to_name }}</li></ul></article>
+                  <article><h3>Relationships removed</h3><p *ngIf="modelView.changes.relationships_removed.length === 0">None identified.</p><ul><li *ngFor="let item of modelView.changes.relationships_removed">{{ item.from_name }} {{ businessModelRelationshipLabel(item.relationship_type) }} {{ item.to_name }}</li></ul></article>
+                </div>
+              </section>
+
+              <section class="panel" aria-labelledby="peer-model-heading">
+                <div class="panel-header"><div><p class="section-kicker">Peer context</p><h2 id="peer-model-heading">Comparable business models</h2></div></div>
+                <div class="empty-state unavailable-state" *ngIf="modelView.peer_models.length === 0">No reviewed same-sector peer business-model maps are available.</div>
+                <div class="peer-model-grid">
+                  <article class="peer-model-card" *ngFor="let peer of modelView.peer_models">
+                    <strong>{{ peer.company }}</strong><span>{{ peer.effective_date }} · {{ peer.component_count }} components</span>
+                    <p>{{ peer.summary }}</p>
+                    <small>{{ peer.shared_components.length }} shared named components · confidence {{ peer.confidence_score | number:'1.2-2' }}</small>
+                    <button type="button" class="ghost-button" (click)="openBusinessModel(peer.company_slug)">Open peer map</button>
+                  </article>
+                </div>
+              </section>
+
+              <section class="panel" aria-labelledby="related-model-heading">
+                <div class="panel-header"><div><p class="section-kicker">Related intelligence</p><h2 id="related-model-heading">Supporting business-model context</h2></div></div>
+                <div class="related-surface-grid">
+                  <article class="related-surface-card" *ngFor="let surface of modelView.related_surfaces">
+                    <strong>{{ surface.label }}</strong>
+                    <span class="status-pill" [class.available]="surface.status === 'available'">{{ surface.status }}</span>
+                    <button *ngIf="surface.destination === 'company_profile'" type="button" class="ghost-button" (click)="openCompany(modelView.company.slug)">Open Company 360</button>
+                    <small *ngIf="surface.status === 'unavailable'">Planned in {{ surface.destination.replace('phase2_requirement_', 'Phase 2 Requirement ') }}.</small>
+                  </article>
+                </div>
+              </section>
+
+              <section class="panel source-gap-panel" *ngIf="modelView.source_gaps.length > 0" aria-labelledby="model-gap-heading">
+                <div class="panel-header"><div><p class="section-kicker">Coverage gaps</p><h2 id="model-gap-heading">Unavailable business-model evidence</h2></div></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of modelView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+              </section>
+
+              <section class="panel" aria-labelledby="model-evidence-heading">
+                <div class="panel-header"><div><p class="section-kicker">Sources</p><h2 id="model-evidence-heading">Business-model evidence</h2></div></div>
+                <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of modelView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
               </section>
             </ng-container>
           </section>

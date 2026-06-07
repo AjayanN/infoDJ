@@ -182,6 +182,55 @@ BASE_URL=http://localhost:8080/api/app \
   bash scripts/smoke/phase2_company_360.sh
 ```
 
+## Business Model Map
+
+Phase 2 Requirement 2 adds a dated, source-backed map of who pays, who uses the offering, what is delivered, how revenue is earned, which channels and partners matter, and which costs and assets support the model.
+
+The Business Model Map includes:
+
+- typed payer, user, offering, revenue, channel, partner, cost, and asset components
+- explicit relationship edges such as `PAYS_FOR`, `USES`, `MONETIZED_BY`, and `DELIVERED_THROUGH`
+- reported-versus-inferred labels and confidence for every component and relationship
+- historical snapshot selection and before/after change analysis
+- evidence links, completeness, freshness, and explicit missing-component gaps
+- an accessible component-column and relationship-list view instead of relying only on a visual graph
+
+The Netflix pilot seed creates reviewed 2011 and 2022 maps. A conservative draft can also be generated from the latest reviewed Company 360 profile:
+
+```bash
+sudo docker compose -f infra/docker-compose.yml exec -T ingestion \
+  .venv/bin/python manage.py build_business_model_map --company netflix
+```
+
+Collect a permitted current or archived page as dated draft evidence:
+
+```bash
+sudo docker compose -f infra/docker-compose.yml exec -T ingestion \
+  .venv/bin/python manage.py collect_business_model_page \
+  --company netflix \
+  --url https://example.com/permitted-company-history-page \
+  --effective-date 2015-12-31
+```
+
+The collector checks `robots.txt`, stores the page as evidence, and requires review before components or relationships are published.
+
+Business Model endpoints:
+
+```text
+Ingestion: GET /api/ingestion/companies/{slug}/business-model
+Product:   GET /api/app/companies/{slug}/business-model
+History:   GET /api/app/companies/{slug}/business-model?as_of=YYYY-MM-DD&compare_to=YYYY-MM-DD
+```
+
+Open the map from the `Business model map` action on Company 360. Once opened, `Business Model` remains available in the left navigation.
+
+Business Model smoke check:
+
+```bash
+BASE_URL=http://localhost:8080/api/app \
+  bash scripts/smoke/phase2_business_model.sh
+```
+
 ## Test Commands
 
 Run tests inside Docker Compose:

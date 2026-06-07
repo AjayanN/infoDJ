@@ -16,3 +16,22 @@ export function companyProfileItemLabel(item: unknown): string {
 export function companyProfileSectionHasData(section: { text: string; items: unknown[] }): boolean {
   return Boolean(section.text.trim()) || section.items.length > 0;
 }
+
+export function businessModelComponentLabel(type: string): string {
+  const labels: Record<string, string> = {
+    PAYER: 'Who pays',
+    USER: 'Who uses',
+    OFFERING: 'What they receive',
+    REVENUE: 'How revenue is earned',
+    CHANNEL: 'How it is delivered',
+    GEOGRAPHY: 'Where it operates',
+    PARTNER: 'Key partners',
+    COST: 'Major costs',
+    ASSET: 'Key assets'
+  };
+  return labels[type] || type;
+}
+
+export function businessModelRelationshipLabel(type: string): string {
+  return type.toLowerCase().replace(/_/g, ' ');
+}

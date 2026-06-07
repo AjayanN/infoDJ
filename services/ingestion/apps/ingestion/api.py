@@ -9,7 +9,12 @@ from django.db.models import Avg, Count, Max, Q
 from django.http import Http404, HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 
-from apps.companies.models import Company, CompanyProfileSnapshot
+from apps.companies.models import (
+    BusinessModelComponentType,
+    BusinessModelSnapshot,
+    Company,
+    CompanyProfileSnapshot,
+)
 from apps.curation.models import BusinessEvent, StrategicTurn, StrategicTurnSource
 from apps.ingestion.models import FinancialFact, IngestionJob, MarketPrice, SourceDocument, SourceGap
 from apps.ingestion.services.dashboard_quality import (
@@ -150,6 +155,82 @@ def company_profile(request: HttpRequest, slug: str) -> JsonResponse:
                 ),
             },
             "source_gaps": source_gaps,
+        }
+    )
+
+
+@require_GET
+def company_business_model(request: HttpRequest, slug: str) -> JsonResponse:
+    company = get_company(slug)
+    snapshots = list(
+        BusinessModelSnapshot.objects.filter(company=company, status__in=["PUBLISHED", "REVIEWED"])
+        .select_related("source_document")
+        .prefetch_related("components", "relationships__from_component", "relationships__to_component")
+        .order_by("-effective_date", "-updated_at")
+    )
+    as_of = parse_iso_date(request.GET.get("as_of"))
+    eligible = [snapshot for snapshot in snapshots if as_of is None or snapshot.effective_date <= as_of]
+    current = eligible[0] if eligible else None
+    compare_date = parse_iso_date(request.GET.get("compare_to"))
+    comparison = next((snapshot for snapshot in snapshots if compare_date and snapshot.effective_date <= compare_date), None)
+    if comparison is None and len(eligible) > 1:
+        comparison = eligible[1]
+
+    required_types = [choice for choice, _label in BusinessModelComponentType.choices]
+    present_types = {component.component_type for component in current.components.all()} if current else set()
+    missing_types = [component_type for component_type in required_types if component_type not in present_types]
+    labels = dict(BusinessModelComponentType.choices)
+    gaps = [
+        {
+            "key": f"business_model_{component_type.lower()}",
+            "label": f"{labels[component_type]} unavailable",
+            "reason": f"No reviewed, source-backed {labels[component_type].lower()} component is available for {company.name}.",
+            "source": "business-model-map",
+            "next_action": "Review filings, investor materials, and permitted official company pages for this component.",
+        }
+        for component_type in missing_types
+    ]
+    has_relationships = bool(current and current.relationships.exists())
+    if current and not has_relationships:
+        gaps.append(
+            {
+                "key": "business_model_relationships",
+                "label": "Business-model relationships unavailable",
+                "reason": "Components exist, but no reviewed relationships connect them.",
+                "source": "business-model-map",
+                "next_action": "Review payer, user, offering, channel, revenue, partner, cost, and asset relationships.",
+            }
+        )
+    persist_business_model_gaps(company, gaps, present_types, has_relationships)
+    completeness = round(((len(required_types) - len(missing_types)) / len(required_types)) * 100)
+    status = "available" if current and completeness == 100 and has_relationships else "partial" if current else "unavailable"
+
+    return JsonResponse(
+        {
+            "status": status,
+            "company": serialize_company_detail(company),
+            "snapshot": serialize_business_model_snapshot(current),
+            "snapshot_history": [serialize_business_model_history(row, current) for row in snapshots],
+            "comparison_snapshot": serialize_business_model_snapshot(comparison),
+            "changes": business_model_changes(current, comparison),
+            "peer_models": peer_business_model_rows(company, current),
+            "related_surfaces": [
+                {"key": "customer_groups", "label": "Customer groups", "status": "available", "destination": "company_profile"},
+                {"key": "products", "label": "Products and services", "status": "available", "destination": "company_profile"},
+                {"key": "revenue_sources", "label": "Revenue sources", "status": "available", "destination": "company_profile"},
+                {"key": "pricing_history", "label": "Product and pricing history", "status": "unavailable", "destination": "phase2_requirement_9"},
+                {"key": "supplier_dependency", "label": "Supplier dependencies", "status": "unavailable", "destination": "phase2_requirement_11"},
+            ],
+            "coverage": {
+                "completeness_percent": completeness,
+                "component_count": current.components.count() if current else 0,
+                "relationship_count": current.relationships.count() if current else 0,
+                "required_component_types": len(required_types),
+                "available_component_types": len(present_types),
+                "last_updated": current.updated_at.isoformat() if current else company.updated_at.isoformat(),
+            },
+            "evidence": [serialize_profile_source(row.source_document) for row in snapshots if row.source_document_id],
+            "source_gaps": gaps,
         }
     )
 
@@ -1283,6 +1364,146 @@ def persist_company_profile_gaps(company: Company, gaps: list[dict[str, str]], s
         gap_type__in=available_keys,
         status__in=["OPEN", "IN_PROGRESS"],
     ).update(status="RESOLVED")
+
+
+def serialize_business_model_snapshot(snapshot: BusinessModelSnapshot | None) -> dict[str, object] | None:
+    if snapshot is None:
+        return None
+    components = list(snapshot.components.all())
+    grouped = {
+        component_type: [serialize_business_model_component(row) for row in components if row.component_type == component_type]
+        for component_type, _label in BusinessModelComponentType.choices
+    }
+    return {
+        "id": snapshot.id,
+        "effective_date": snapshot.effective_date.isoformat(),
+        "status": snapshot.status,
+        "summary": snapshot.summary,
+        "confidence_score": decimal_to_float(snapshot.confidence_score),
+        "source_id": snapshot.source_document_id,
+        "components": [serialize_business_model_component(row) for row in components],
+        "component_groups": grouped,
+        "relationships": [
+            {
+                "id": row.id,
+                "from_component_id": row.from_component_id,
+                "from_name": row.from_component.name,
+                "to_component_id": row.to_component_id,
+                "to_name": row.to_component.name,
+                "relationship_type": row.relationship_type,
+                "description": row.description,
+                "evidence_text": row.evidence_text,
+                "is_inferred": row.is_inferred,
+                "confidence_score": decimal_to_float(row.confidence_score),
+            }
+            for row in snapshot.relationships.all()
+        ],
+    }
+
+
+def serialize_business_model_component(component) -> dict[str, object]:
+    return {
+        "id": component.id,
+        "component_type": component.component_type,
+        "component_type_label": component.get_component_type_display(),
+        "name": component.name,
+        "description": component.description,
+        "scope": component.scope,
+        "evidence_text": component.evidence_text,
+        "is_inferred": component.is_inferred,
+        "confidence_score": decimal_to_float(component.confidence_score),
+    }
+
+
+def serialize_business_model_history(snapshot: BusinessModelSnapshot, selected: BusinessModelSnapshot | None) -> dict[str, object]:
+    return {
+        "id": snapshot.id,
+        "effective_date": snapshot.effective_date.isoformat(),
+        "status": snapshot.status,
+        "summary": snapshot.summary,
+        "confidence_score": decimal_to_float(snapshot.confidence_score),
+        "component_count": snapshot.components.count(),
+        "relationship_count": snapshot.relationships.count(),
+        "selected": bool(selected and selected.id == snapshot.id),
+    }
+
+
+def business_model_changes(current: BusinessModelSnapshot | None, comparison: BusinessModelSnapshot | None) -> dict[str, object]:
+    if current is None or comparison is None or current.id == comparison.id:
+        return {"from_date": None, "to_date": current.effective_date.isoformat() if current else None, "components_added": [], "components_removed": [], "relationships_added": [], "relationships_removed": []}
+    current_components = {(row.component_type, row.name) for row in current.components.all()}
+    comparison_components = {(row.component_type, row.name) for row in comparison.components.all()}
+    current_relationships = {(row.from_component.name, row.relationship_type, row.to_component.name) for row in current.relationships.all()}
+    comparison_relationships = {(row.from_component.name, row.relationship_type, row.to_component.name) for row in comparison.relationships.all()}
+    return {
+        "from_date": comparison.effective_date.isoformat(),
+        "to_date": current.effective_date.isoformat(),
+        "components_added": [{"component_type": row[0], "name": row[1]} for row in sorted(current_components - comparison_components)],
+        "components_removed": [{"component_type": row[0], "name": row[1]} for row in sorted(comparison_components - current_components)],
+        "relationships_added": [{"from_name": row[0], "relationship_type": row[1], "to_name": row[2]} for row in sorted(current_relationships - comparison_relationships)],
+        "relationships_removed": [{"from_name": row[0], "relationship_type": row[1], "to_name": row[2]} for row in sorted(comparison_relationships - current_relationships)],
+    }
+
+
+def persist_business_model_gaps(company: Company, gaps: list[dict[str, str]], present_types: set[str], has_relationships: bool) -> None:
+    for gap in gaps:
+        SourceGap.objects.update_or_create(
+            company=company,
+            dashboard="business_model",
+            gap_type=gap["key"],
+            provider="business-model-map",
+            defaults={
+                "reason": gap["reason"],
+                "next_ingestion_task": gap["next_action"],
+                "status": "OPEN",
+                "metadata": {},
+            },
+        )
+    resolved = {f"business_model_{component_type.lower()}" for component_type in present_types}
+    if has_relationships:
+        resolved.add("business_model_relationships")
+    SourceGap.objects.filter(
+        company=company,
+        dashboard="business_model",
+        gap_type__in=resolved,
+        status__in=["OPEN", "IN_PROGRESS"],
+    ).update(status="RESOLVED")
+
+
+def peer_business_model_rows(company: Company, current: BusinessModelSnapshot | None) -> list[dict[str, object]]:
+    if not company.industry:
+        return []
+    candidates = (
+        BusinessModelSnapshot.objects.filter(
+            company__industry=company.industry,
+            status__in=["PUBLISHED", "REVIEWED"],
+        )
+        .exclude(company=company)
+        .select_related("company")
+        .prefetch_related("components")
+        .order_by("company__name", "-effective_date")
+    )
+    latest_by_company = {}
+    for snapshot in candidates:
+        latest_by_company.setdefault(snapshot.company_id, snapshot)
+    current_components = {(row.component_type, row.name.lower()) for row in current.components.all()} if current else set()
+    rows = []
+    for snapshot in latest_by_company.values():
+        components = list(snapshot.components.all())
+        peer_components = {(row.component_type, row.name.lower()) for row in components}
+        shared = sorted(current_components & peer_components)
+        rows.append(
+            {
+                "company": snapshot.company.name,
+                "company_slug": snapshot.company.slug,
+                "effective_date": snapshot.effective_date.isoformat(),
+                "summary": snapshot.summary,
+                "component_count": len(components),
+                "shared_components": [{"component_type": item[0], "name": item[1]} for item in shared],
+                "confidence_score": decimal_to_float(snapshot.confidence_score),
+            }
+        )
+    return rows
 
 
 def serialize_business_event(event: BusinessEvent) -> dict[str, object]:
