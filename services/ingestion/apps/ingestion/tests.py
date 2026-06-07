@@ -5,11 +5,18 @@ from datetime import date
 from django.core.management import call_command
 from django.test import Client, TestCase
 
-from apps.companies.models import Company, CompanyProfileSnapshot
+from apps.companies.models import (
+    BusinessModelComponent,
+    BusinessModelRelationship,
+    BusinessModelSnapshot,
+    Company,
+    CompanyProfileSnapshot,
+)
 from apps.curation.models import BusinessEvent, StrategicTurn, StrategicTurnSource
 from apps.ingestion.models import FinancialFact, MarketPrice, SourceDocument, SourceGap
 from apps.ingestion.services.event_extractor import EventSignal, actual_change_for, find_evidence_sentence
 from apps.ingestion.services.company_profile_client import collect_official_company_profile, parse_official_profile_html
+from apps.ingestion.services.business_model_builder import build_business_model_from_profile, collect_business_model_page
 from apps.ingestion.services.market_price_client import (
     parse_alpha_vantage_daily_csv,
     parse_fmp_historical_prices,
@@ -225,6 +232,88 @@ class IngestionSearchApiTests(TestCase):
 
         self.assertEqual(response.status_code, 404)
 
+    def test_business_model_returns_components_relationships_and_changes(self):
+        older = BusinessModelSnapshot.objects.create(
+            company=self.netflix,
+            effective_date=date(2011, 12, 31),
+            source_document=self.source,
+            status="REVIEWED",
+            summary="DVD and streaming subscriptions.",
+            confidence_score="0.800",
+        )
+        old_payer = BusinessModelComponent.objects.create(snapshot=older, component_type="PAYER", name="DVD members", confidence_score="0.8")
+        old_offer = BusinessModelComponent.objects.create(snapshot=older, component_type="OFFERING", name="DVD-by-mail", confidence_score="0.8")
+        BusinessModelRelationship.objects.create(snapshot=older, from_component=old_payer, to_component=old_offer, relationship_type="PAYS_FOR", confidence_score="0.8")
+
+        current = BusinessModelSnapshot.objects.create(
+            company=self.netflix,
+            effective_date=date(2022, 12, 31),
+            source_document=self.source,
+            status="PUBLISHED",
+            summary="Streaming subscriptions and advertising.",
+            confidence_score="0.900",
+        )
+        components = {}
+        values = {
+            "PAYER": "Streaming members",
+            "USER": "Entertainment viewers",
+            "OFFERING": "Ad-supported plan",
+            "REVENUE": "Advertising revenue",
+            "CHANNEL": "Internet-connected devices",
+            "GEOGRAPHY": "Global markets",
+            "PARTNER": "Advertising partners",
+            "COST": "Content production",
+            "ASSET": "Streaming platform",
+        }
+        for component_type, name in values.items():
+            components[component_type] = BusinessModelComponent.objects.create(
+                snapshot=current,
+                component_type=component_type,
+                name=name,
+                confidence_score="0.9",
+            )
+        BusinessModelRelationship.objects.create(
+            snapshot=current,
+            from_component=components["PAYER"],
+            to_component=components["OFFERING"],
+            relationship_type="PAYS_FOR",
+            confidence_score="0.9",
+        )
+        peer = Company.objects.create(name="StreamPeer", industry="Communication Services")
+        peer_snapshot = BusinessModelSnapshot.objects.create(
+            company=peer,
+            effective_date=date(2022, 12, 31),
+            status="REVIEWED",
+            summary="Peer subscription streaming model.",
+            confidence_score="0.800",
+        )
+        BusinessModelComponent.objects.create(
+            snapshot=peer_snapshot,
+            component_type="PAYER",
+            name="Streaming members",
+            confidence_score="0.8",
+        )
+
+        response = self.client.get("/companies/netflix/business-model?as_of=2022-12-31&compare_to=2011-12-31")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "available")
+        self.assertEqual(payload["coverage"]["completeness_percent"], 100)
+        self.assertEqual(payload["snapshot"]["component_groups"]["PAYER"][0]["name"], "Streaming members")
+        self.assertEqual(payload["snapshot"]["relationships"][0]["relationship_type"], "PAYS_FOR")
+        self.assertIn("Ad-supported plan", [row["name"] for row in payload["changes"]["components_added"]])
+        self.assertIn("DVD-by-mail", [row["name"] for row in payload["changes"]["components_removed"]])
+        self.assertEqual(payload["peer_models"][0]["company"], "StreamPeer")
+        self.assertEqual(payload["peer_models"][0]["shared_components"][0]["name"], "streaming members")
+
+    def test_business_model_reports_unavailable_without_reviewed_snapshot(self):
+        response = self.client.get("/companies/netflix/business-model")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "unavailable")
+        self.assertGreater(len(response.json()["source_gaps"]), 0)
+
     def test_dashboard_data_returns_source_backed_surfaces(self):
         response = self.client.get("/dashboard-data")
 
@@ -387,6 +476,49 @@ class CompanyProfileCollectorTests(TestCase):
         self.assertEqual(snapshot.products, ["Analytics Platform"])
         self.assertEqual(snapshot.source_document.source_api, "OFFICIAL_WEBSITE")
         self.assertEqual(session.calls, ["https://example.com/robots.txt", "https://example.com"])
+
+    def test_build_business_model_from_profile_marks_relationships_inferred(self):
+        company = Company.objects.create(name="ProfileCo")
+        source = SourceDocument.objects.create(
+            company=company,
+            source_api="OFFICIAL_WEBSITE",
+            url="https://example.com/profile",
+            title="ProfileCo official profile",
+        )
+        CompanyProfileSnapshot.objects.create(
+            company=company,
+            effective_date=date(2025, 12, 31),
+            source_document=source,
+            status="REVIEWED",
+            business_model="Subscription software.",
+            products=["Analytics platform"],
+            customer_groups=["Business teams"],
+            revenue_sources=["Subscriptions"],
+            evidence_text="ProfileCo sells analytics subscriptions to business teams.",
+            confidence_score="0.850",
+        )
+
+        snapshot = build_business_model_from_profile(company)
+
+        self.assertEqual(snapshot.status, "DRAFT")
+        self.assertEqual(snapshot.components.count(), 3)
+        self.assertEqual(snapshot.relationships.count(), 2)
+        self.assertTrue(all(row.is_inferred for row in snapshot.relationships.all()))
+
+    def test_collect_business_model_page_persists_draft_historical_source(self):
+        company = Company.objects.create(name="ArchiveCo", website="https://example.com")
+        session = FakeProfileSession()
+
+        snapshot = collect_business_model_page(
+            company,
+            url="https://example.com",
+            effective_date=date(2020, 12, 31),
+            session=session,
+        )
+
+        self.assertEqual(snapshot.status, "DRAFT")
+        self.assertEqual(snapshot.effective_date, date(2020, 12, 31))
+        self.assertEqual(snapshot.source_document.source_api, "OFFICIAL_WEBSITE")
 
 
 class FakeProfileResponse:

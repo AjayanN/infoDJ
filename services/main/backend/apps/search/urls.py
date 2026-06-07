@@ -9,4 +9,5 @@ urlpatterns = [
     path("search", api.search, name="app-search"),
     path("search/suggest", api.search_suggest, name="app-search-suggest"),
     path("companies/<slug:slug>/profile", api.company_profile, name="app-company-profile"),
+    path("companies/<slug:slug>/business-model", api.company_business_model, name="app-company-business-model"),
 ]

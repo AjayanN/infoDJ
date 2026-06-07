@@ -417,6 +417,93 @@ export type CompanyProfileResponse = {
   source_gaps: SourceGap[];
 };
 
+export type BusinessModelComponent = {
+  id: number;
+  component_type: string;
+  component_type_label: string;
+  name: string;
+  description: string;
+  scope: string;
+  evidence_text: string;
+  is_inferred: boolean;
+  confidence_score: number;
+};
+
+export type BusinessModelRelationship = {
+  id: number;
+  from_component_id: number;
+  from_name: string;
+  to_component_id: number;
+  to_name: string;
+  relationship_type: string;
+  description: string;
+  evidence_text: string;
+  is_inferred: boolean;
+  confidence_score: number;
+};
+
+export type BusinessModelSnapshot = {
+  id: number;
+  effective_date: string;
+  status: string;
+  summary: string;
+  confidence_score: number;
+  source_id: number | null;
+  components: BusinessModelComponent[];
+  component_groups: Record<string, BusinessModelComponent[]>;
+  relationships: BusinessModelRelationship[];
+};
+
+export type BusinessModelResponse = {
+  status: 'available' | 'partial' | 'unavailable';
+  company: CompanyProfileResponse['company'];
+  snapshot: BusinessModelSnapshot | null;
+  snapshot_history: {
+    id: number;
+    effective_date: string;
+    status: string;
+    summary: string;
+    confidence_score: number;
+    component_count: number;
+    relationship_count: number;
+    selected: boolean;
+  }[];
+  comparison_snapshot: BusinessModelSnapshot | null;
+  peer_models: {
+    company: string;
+    company_slug: string;
+    effective_date: string;
+    summary: string;
+    component_count: number;
+    shared_components: { component_type: string; name: string }[];
+    confidence_score: number;
+  }[];
+  related_surfaces: {
+    key: string;
+    label: string;
+    status: 'available' | 'unavailable';
+    destination: string;
+  }[];
+  changes: {
+    from_date: string | null;
+    to_date: string | null;
+    components_added: { component_type: string; name: string }[];
+    components_removed: { component_type: string; name: string }[];
+    relationships_added: { from_name: string; relationship_type: string; to_name: string }[];
+    relationships_removed: { from_name: string; relationship_type: string; to_name: string }[];
+  };
+  coverage: {
+    completeness_percent: number;
+    component_count: number;
+    relationship_count: number;
+    required_component_types: number;
+    available_component_types: number;
+    last_updated: string;
+  };
+  evidence: CompanyProfileSource[];
+  source_gaps: SourceGap[];
+};
+
 @Injectable({ providedIn: 'root' })
 export class InfoDjApiService {
   private readonly http = inject(HttpClient);
@@ -563,6 +650,20 @@ export class InfoDjApiService {
       params['as_of'] = asOf;
     }
     return this.http.get<CompanyProfileResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/profile`, {
+      headers: this.authHeaders(token),
+      params
+    });
+  }
+
+  businessModel(token: string, slug: string, asOf = '', compareTo = '') {
+    const params: Record<string, string> = {};
+    if (asOf) {
+      params['as_of'] = asOf;
+    }
+    if (compareTo) {
+      params['compare_to'] = compareTo;
+    }
+    return this.http.get<BusinessModelResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/business-model`, {
       headers: this.authHeaders(token),
       params
     });

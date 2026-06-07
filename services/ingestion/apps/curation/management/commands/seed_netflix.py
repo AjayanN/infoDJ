@@ -59,6 +59,18 @@ SAMPLE_PROFILE_SOURCE = {
     "status": "APPROVED",
 }
 
+SAMPLE_HISTORICAL_MODEL_SOURCE = {
+    "source_api": "SEC_EDGAR",
+    "url": "https://www.sec.gov/Archives/edgar/data/1065280/000119312512071228/d260853d10k.htm",
+    "canonical_url": "https://www.sec.gov/Archives/edgar/data/1065280/000119312512071228/d260853d10k.htm",
+    "title": "Netflix 2011 Form 10-K",
+    "publisher": "SEC",
+    "published_date": datetime(2012, 2, 10, tzinfo=timezone.utc),
+    "snippet": "Netflix reported domestic streaming, international streaming, and domestic DVD operations.",
+    "language": "en",
+    "status": "APPROVED",
+}
+
 SAMPLE_TURN = {
     "title": "Netflix launches ad-supported subscription tier",
     "turn_type": "REVENUE_MODEL_EXPANSION",
@@ -110,17 +122,30 @@ class Command(BaseCommand):
         turn_model = self._optional_model("curation", "StrategicTurn")
         turn_source_model = self._optional_model("curation", "StrategicTurnSource")
         profile_model = self._optional_model("companies", "CompanyProfileSnapshot")
+        business_model_snapshot = self._optional_model("companies", "BusinessModelSnapshot")
+        business_model_component = self._optional_model("companies", "BusinessModelComponent")
+        business_model_relationship = self._optional_model("companies", "BusinessModelRelationship")
 
         with transaction.atomic():
             company = self._upsert_company(company_model)
             source = self._upsert_source(source_model, company) if source_model else None
             profile_source = self._upsert_source(source_model, company, values=SAMPLE_PROFILE_SOURCE) if source_model else None
+            historical_model_source = self._upsert_source(source_model, company, values=SAMPLE_HISTORICAL_MODEL_SOURCE) if source_model else None
             event = self._upsert_event(event_model, company, source) if event_model else None
             turn = self._upsert_turn(turn_model, company) if turn_model else None
             if turn_source_model and turn and source:
                 self._upsert_turn_source(turn_source_model, turn, source, event)
             if profile_model and profile_source:
                 self._upsert_profile(profile_model, company, profile_source)
+            if all((business_model_snapshot, business_model_component, business_model_relationship, profile_source, historical_model_source)):
+                self._upsert_business_model_maps(
+                    business_model_snapshot,
+                    business_model_component,
+                    business_model_relationship,
+                    company,
+                    historical_model_source,
+                    profile_source,
+                )
 
         self.stdout.write(self.style.SUCCESS("Seeded Netflix admin review data."))
         if source_model is None:
@@ -211,6 +236,91 @@ class Command(BaseCommand):
             source_document=source,
             defaults=defaults,
         )
+
+    def _upsert_business_model_maps(self, snapshot_model, component_model, relationship_model, company, historical_source, current_source):
+        maps = [
+            {
+                "effective_date": date(2011, 12, 31),
+                "source": historical_source,
+                "summary": "Netflix combined streaming subscriptions with a declining DVD-by-mail service.",
+                "components": [
+                    ("PAYER", "Streaming members"),
+                    ("PAYER", "DVD members"),
+                    ("USER", "Entertainment viewers"),
+                    ("OFFERING", "Streaming plans"),
+                    ("OFFERING", "DVD-by-mail plans"),
+                    ("REVENUE", "Subscription fees"),
+                    ("CHANNEL", "Internet streaming"),
+                    ("CHANNEL", "Postal delivery"),
+                    ("GEOGRAPHY", "United States"),
+                    ("GEOGRAPHY", "International markets"),
+                    ("COST", "Content licensing"),
+                    ("ASSET", "Recommendation and streaming platform"),
+                ],
+                "relationships": [
+                    ("Streaming members", "PAYS_FOR", "Streaming plans"),
+                    ("DVD members", "PAYS_FOR", "DVD-by-mail plans"),
+                    ("Entertainment viewers", "USES", "Streaming plans"),
+                    ("Streaming plans", "DELIVERED_THROUGH", "Internet streaming"),
+                    ("DVD-by-mail plans", "DELIVERED_THROUGH", "Postal delivery"),
+                    ("Streaming plans", "MONETIZED_BY", "Subscription fees"),
+                ],
+            },
+            {
+                "effective_date": date(2022, 12, 31),
+                "source": current_source,
+                "summary": "Netflix combined global streaming subscriptions with a new advertising-supported plan.",
+                "components": [
+                    ("PAYER", "Streaming members"),
+                    ("PAYER", "Advertisers"),
+                    ("USER", "Entertainment viewers"),
+                    ("OFFERING", "Streaming plans"),
+                    ("OFFERING", "Ad-supported plan"),
+                    ("REVENUE", "Subscription fees"),
+                    ("REVENUE", "Advertising revenue"),
+                    ("CHANNEL", "Internet-connected devices"),
+                    ("GEOGRAPHY", "Global markets"),
+                    ("PARTNER", "Advertising technology partners"),
+                    ("COST", "Content production and licensing"),
+                    ("ASSET", "Global streaming and recommendation platform"),
+                ],
+                "relationships": [
+                    ("Streaming members", "PAYS_FOR", "Streaming plans"),
+                    ("Advertisers", "BUYS_ACCESS_TO", "Ad-supported plan"),
+                    ("Entertainment viewers", "USES", "Streaming plans"),
+                    ("Entertainment viewers", "USES", "Ad-supported plan"),
+                    ("Streaming plans", "MONETIZED_BY", "Subscription fees"),
+                    ("Ad-supported plan", "MONETIZED_BY", "Advertising revenue"),
+                    ("Streaming plans", "DELIVERED_THROUGH", "Internet-connected devices"),
+                ],
+            },
+        ]
+        for map_data in maps:
+            snapshot, _created = snapshot_model.objects.update_or_create(
+                company=company,
+                effective_date=map_data["effective_date"],
+                source_document=map_data["source"],
+                defaults={"status": "REVIEWED", "summary": map_data["summary"], "confidence_score": Decimal("0.85")},
+            )
+            snapshot.components.all().delete()
+            components = {}
+            for component_type, name in map_data["components"]:
+                components[name] = component_model.objects.create(
+                    snapshot=snapshot,
+                    component_type=component_type,
+                    name=name,
+                    evidence_text=map_data["source"].snippet,
+                    confidence_score=Decimal("0.85"),
+                )
+            for from_name, relationship_type, to_name in map_data["relationships"]:
+                relationship_model.objects.create(
+                    snapshot=snapshot,
+                    from_component=components[from_name],
+                    to_component=components[to_name],
+                    relationship_type=relationship_type,
+                    evidence_text=map_data["source"].snippet,
+                    confidence_score=Decimal("0.80"),
+                )
 
     def _filter_model_values(self, model, values):
         return {key: value for key, value in values.items() if self._has_field(model, key)}

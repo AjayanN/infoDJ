@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  businessModelComponentLabel,
+  businessModelRelationshipLabel,
   companyProfileItemLabel,
   companyProfileSectionHasData,
   companyProfileSectionLabel
@@ -20,4 +22,11 @@ test('detects available and unavailable Company 360 sections', () => {
   assert.equal(companyProfileSectionHasData({ text: '', items: [] }), false);
   assert.equal(companyProfileSectionHasData({ text: 'Subscription business', items: [] }), true);
   assert.equal(companyProfileSectionHasData({ text: '', items: ['Advertising'] }), true);
+});
+
+test('formats business-model components and relationships for accessible display', () => {
+  assert.equal(businessModelComponentLabel('PAYER'), 'Who pays');
+  assert.equal(businessModelComponentLabel('ASSET'), 'Key assets');
+  assert.equal(businessModelComponentLabel('GEOGRAPHY'), 'Where it operates');
+  assert.equal(businessModelRelationshipLabel('DELIVERED_THROUGH'), 'delivered through');
 });

@@ -268,6 +268,32 @@ class DashboardSearchApiTests(TestCase):
 
         self.assertEqual(response.status_code, 401)
 
+    @override_settings(INGESTION_API_URL="http://ingestion.test/api/ingestion")
+    @patch("apps.search.api.requests.get")
+    def test_business_model_proxies_dates_and_response(self, get):
+        get.return_value = json_response(
+            {
+                "status": "available",
+                "company": {"name": "Netflix", "slug": "netflix"},
+                "snapshot": {"effective_date": "2022-12-31", "components": [], "relationships": []},
+                "source_gaps": [],
+            }
+        )
+
+        response = self.client.get(
+            "/api/app/companies/netflix/business-model?as_of=2022-12-31&compare_to=2011-12-31"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["company"]["slug"], "netflix")
+        self.assertEqual(get.call_args.args[0], "http://ingestion.test/api/ingestion/companies/netflix/business-model")
+        self.assertEqual(get.call_args.kwargs["params"], {"as_of": "2022-12-31", "compare_to": "2011-12-31"})
+
+    def test_business_model_requires_authentication(self):
+        response = APIClient().get("/api/app/companies/netflix/business-model")
+
+        self.assertEqual(response.status_code, 401)
+
 
 def json_response(payload: dict):
     response = Mock()

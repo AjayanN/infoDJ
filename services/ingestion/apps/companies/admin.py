@@ -9,7 +9,12 @@ from apps.ingestion.services.gdelt_client import discover_sources_for_company
 from apps.ingestion.services.query_generator import generate_query_strings
 from apps.ingestion.services.sec_edgar_client import discover_sec_filings_for_company
 from apps.ingestion.services.wikidata_client import sync_company_metadata
-from apps.companies.models import CompanyProfileSnapshot
+from apps.companies.models import (
+    BusinessModelComponent,
+    BusinessModelRelationship,
+    BusinessModelSnapshot,
+    CompanyProfileSnapshot,
+)
 
 
 class CompanyAdmin(admin.ModelAdmin):
@@ -140,3 +145,37 @@ class CompanyProfileSnapshotAdmin(admin.ModelAdmin):
     search_fields = ("company__name", "summary", "business_model", "evidence_text")
     readonly_fields = ("created_at", "updated_at")
     ordering = ("-effective_date", "company__name")
+
+
+class BusinessModelComponentInline(admin.TabularInline):
+    model = BusinessModelComponent
+    extra = 0
+
+
+class BusinessModelRelationshipInline(admin.TabularInline):
+    model = BusinessModelRelationship
+    extra = 0
+    fk_name = "snapshot"
+
+
+@admin.register(BusinessModelSnapshot)
+class BusinessModelSnapshotAdmin(admin.ModelAdmin):
+    list_display = ("company", "effective_date", "status", "confidence_score", "source_document", "updated_at")
+    list_filter = ("status", "effective_date", "company")
+    search_fields = ("company__name", "summary")
+    readonly_fields = ("created_at", "updated_at")
+    inlines = (BusinessModelComponentInline, BusinessModelRelationshipInline)
+
+
+@admin.register(BusinessModelComponent)
+class BusinessModelComponentAdmin(admin.ModelAdmin):
+    list_display = ("name", "component_type", "snapshot", "scope", "is_inferred", "confidence_score")
+    list_filter = ("component_type", "is_inferred", "snapshot__company")
+    search_fields = ("name", "description", "evidence_text", "snapshot__company__name")
+
+
+@admin.register(BusinessModelRelationship)
+class BusinessModelRelationshipAdmin(admin.ModelAdmin):
+    list_display = ("from_component", "relationship_type", "to_component", "snapshot", "is_inferred")
+    list_filter = ("relationship_type", "is_inferred", "snapshot__company")
+    search_fields = ("description", "evidence_text", "snapshot__company__name")

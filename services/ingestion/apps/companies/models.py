@@ -90,3 +90,103 @@ class CompanyProfileSnapshot(models.Model):
 
     def __str__(self) -> str:
         return f"{self.company} profile at {self.effective_date}"
+
+
+class BusinessModelComponentType(models.TextChoices):
+    PAYER = "PAYER", "Payer"
+    USER = "USER", "User"
+    OFFERING = "OFFERING", "Product or service"
+    REVENUE = "REVENUE", "Revenue mechanism"
+    CHANNEL = "CHANNEL", "Sales or distribution channel"
+    GEOGRAPHY = "GEOGRAPHY", "Geographic market"
+    PARTNER = "PARTNER", "Partner"
+    COST = "COST", "Cost driver"
+    ASSET = "ASSET", "Key asset"
+
+
+class BusinessModelSnapshot(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="business_model_snapshots")
+    effective_date = models.DateField(db_index=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="business_model_snapshots",
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=CompanyProfileStatus.choices,
+        default=CompanyProfileStatus.DRAFT,
+        db_index=True,
+    )
+    summary = models.TextField(blank=True)
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-effective_date", "-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["company", "effective_date", "source_document"],
+                name="unique_business_model_snapshot_source",
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.company} business model at {self.effective_date}"
+
+
+class BusinessModelComponent(models.Model):
+    snapshot = models.ForeignKey(BusinessModelSnapshot, on_delete=models.CASCADE, related_name="components")
+    component_type = models.CharField(max_length=16, choices=BusinessModelComponentType.choices, db_index=True)
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    scope = models.CharField(max_length=255, blank=True)
+    evidence_text = models.TextField(blank=True)
+    is_inferred = models.BooleanField(default=False)
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+
+    class Meta:
+        ordering = ["component_type", "name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["snapshot", "component_type", "name", "scope"],
+                name="unique_business_model_component",
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.get_component_type_display()}: {self.name}"
+
+
+class BusinessModelRelationship(models.Model):
+    snapshot = models.ForeignKey(BusinessModelSnapshot, on_delete=models.CASCADE, related_name="relationships")
+    from_component = models.ForeignKey(
+        BusinessModelComponent,
+        on_delete=models.CASCADE,
+        related_name="outgoing_relationships",
+    )
+    to_component = models.ForeignKey(
+        BusinessModelComponent,
+        on_delete=models.CASCADE,
+        related_name="incoming_relationships",
+    )
+    relationship_type = models.CharField(max_length=64, db_index=True)
+    description = models.TextField(blank=True)
+    evidence_text = models.TextField(blank=True)
+    is_inferred = models.BooleanField(default=False)
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+
+    class Meta:
+        ordering = ["relationship_type", "id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["snapshot", "from_component", "to_component", "relationship_type"],
+                name="unique_business_model_relationship",
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.from_component} {self.relationship_type} {self.to_component}"
