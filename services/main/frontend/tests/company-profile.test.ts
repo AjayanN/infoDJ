@@ -6,11 +6,18 @@ import {
   businessModelRelationshipLabel,
   companyProfileItemLabel,
   companyProfileSectionHasData,
-  companyProfileSectionLabel
+  companyProfileSectionLabel,
+  kpiObservationFlags
 } from '../src/app/company-profile.utils';
 
 test('formats Company 360 section keys for display', () => {
   assert.equal(companyProfileSectionLabel('strategic_priorities'), 'Strategic Priorities');
+});
+
+test('labels KPI quality conditions without treating missing data as zero', () => {
+  assert.deepEqual(kpiObservationFlags({
+    is_estimated: true, is_restatement: false, is_non_comparable: true, definition_changed: false
+  }), ['Estimated', 'Non-comparable']);
 });
 
 test('formats structured Company 360 items without exposing object placeholders', () => {

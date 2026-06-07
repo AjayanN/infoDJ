@@ -10,4 +10,5 @@ urlpatterns = [
     path("search/suggest", api.search_suggest, name="app-search-suggest"),
     path("companies/<slug:slug>/profile", api.company_profile, name="app-company-profile"),
     path("companies/<slug:slug>/business-model", api.company_business_model, name="app-company-business-model"),
+    path("companies/<slug:slug>/operating-kpis", api.company_operating_kpis, name="app-company-operating-kpis"),
 ]

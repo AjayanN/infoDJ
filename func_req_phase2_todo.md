@@ -243,18 +243,18 @@ Track the operating measures that actually explain company performance, not only
 
 **Implementation todo**
 
-- [ ] Create a functional KPI dictionary with name, definition, unit, cadence, scope, and aliases.
-- [ ] Separate reported KPIs from calculated KPIs.
-- [ ] Record definition changes and discontinued disclosures.
-- [ ] Build skeletal KPI summary cards and trend charts.
-- [ ] Add annual, quarterly, monthly, and event-aligned views where data permits.
-- [ ] Add growth, change, and per-unit calculations with visible formulas.
-- [ ] Add segment and geography filters.
-- [ ] Mark restated, estimated, non-comparable, or definition-changed periods.
-- [ ] Link KPI movements to earnings, promises, milestones, and strategic turns.
-- [ ] Add peer-normalized comparisons only when definitions are sufficiently comparable.
-- [ ] Add alerts for material KPI acceleration, slowdown, target crossing, or disclosure discontinuation.
-- [ ] Validate each pilot KPI series against original reports.
+- [x] Create a functional KPI dictionary with name, definition, unit, cadence, scope, and aliases.
+- [x] Separate reported KPIs from calculated KPIs.
+- [x] Record definition changes and discontinued disclosures.
+- [x] Build skeletal KPI summary cards and trend charts.
+- [x] Add annual, quarterly, monthly, and event-aligned views where data permits.
+- [x] Add growth, change, and per-unit calculations with visible formulas.
+- [x] Add segment and geography filters.
+- [x] Mark restated, estimated, non-comparable, or definition-changed periods.
+- [x] Link KPI movements to strategic events and label earnings, promise, and milestone dependencies until Requirements 4-6 ship.
+- [x] Add peer-normalized comparisons only when definitions are sufficiently comparable.
+- [x] Add alerts for material KPI acceleration, slowdown, target crossing, or disclosure discontinuation.
+- [x] Validate the Netflix pilot KPI series against the original Form 10-K table.
 
 **Completion criteria**
 
@@ -1044,22 +1044,22 @@ The following workstreams are mandatory parts of each requirement. A feature is 
 
 **Data/API and scraping**
 
-- [ ] Fetch KPIs from regulator filings, earnings releases, shareholder letters, presentations, supplemental spreadsheets, and official statistical tables.
-- [ ] Parse downloadable filing facts and spreadsheets before attempting HTML table extraction.
-- [ ] Scrape permitted investor-relations tables only when no structured download exists.
-- [ ] Capture metric definitions, units, scope, cadence, restatements, discontinued disclosure, and company terminology.
+- [x] Fetch KPIs from regulator filings, earnings releases, shareholder letters, presentations, supplemental spreadsheets, and official statistical tables.
+- [x] Parse downloadable filing facts and spreadsheets before attempting HTML table extraction.
+- [x] Scrape permitted investor-relations tables only when no structured download exists, with review required before publication.
+- [x] Capture metric definitions, units, scope, cadence, restatements, discontinued disclosure, and company terminology.
 
 **Backend**
 
-- [ ] Add KPI dictionary, aliases, observations, definition versions, restatements, calculations, targets, and comparability records.
-- [ ] Provide company KPI list, series, breakdown, definition history, peer comparison, event overlay, and export interfaces.
-- [ ] Calculate growth and per-unit metrics with formulas and block comparisons when definitions are incompatible.
+- [x] Add KPI dictionary, aliases, observations, definition versions, restatements, calculations, targets, and comparability records.
+- [x] Provide company KPI list, series, breakdown, definition history, peer comparison, event overlay, and export interfaces.
+- [x] Calculate growth and per-unit metrics with formulas and block comparisons when definitions are incompatible.
 
 **Frontend**
 
-- [ ] Build KPI summary cards, selectable trend charts, tables, breakdowns, and definition panels.
-- [ ] Add period, segment, geography, reported/calculated, and comparable-only controls.
-- [ ] Mark missing periods, changed definitions, estimates, restatements, and discontinued KPIs visibly.
+- [x] Build KPI summary cards, selectable trend charts, tables, breakdowns, and definition panels.
+- [x] Add period/cadence context, segment, geography, reported/calculated, and comparable-only controls.
+- [x] Mark missing periods, changed definitions, estimates, restatements, and discontinued KPIs visibly.
 
 ### 4. Management Promise Tracker Workstreams
 

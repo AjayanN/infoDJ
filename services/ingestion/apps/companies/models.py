@@ -190,3 +190,111 @@ class BusinessModelRelationship(models.Model):
 
     def __str__(self) -> str:
         return f"{self.from_component} {self.relationship_type} {self.to_component}"
+
+
+class KpiValueType(models.TextChoices):
+    REPORTED = "REPORTED", "Reported"
+    CALCULATED = "CALCULATED", "Calculated"
+
+
+class KpiCadence(models.TextChoices):
+    MONTHLY = "MONTHLY", "Monthly"
+    QUARTERLY = "QUARTERLY", "Quarterly"
+    ANNUAL = "ANNUAL", "Annual"
+    EVENT = "EVENT", "Event aligned"
+
+
+class KpiDefinition(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="kpi_definitions")
+    slug = models.SlugField(max_length=120)
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    unit = models.CharField(max_length=64)
+    cadence = models.CharField(max_length=16, choices=KpiCadence.choices)
+    value_type = models.CharField(max_length=16, choices=KpiValueType.choices, default=KpiValueType.REPORTED)
+    scope = models.CharField(max_length=255, blank=True)
+    aliases = models.JSONField(default=list, blank=True)
+    formula = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    peer_comparable = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["name"]
+        constraints = [models.UniqueConstraint(fields=["company", "slug"], name="unique_company_kpi_slug")]
+
+    def __str__(self) -> str:
+        return f"{self.company}: {self.name}"
+
+
+class KpiDefinitionVersion(models.Model):
+    kpi = models.ForeignKey(KpiDefinition, on_delete=models.CASCADE, related_name="definition_versions")
+    effective_date = models.DateField(db_index=True)
+    definition = models.TextField()
+    scope = models.CharField(max_length=255, blank=True)
+    change_note = models.TextField(blank=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument", null=True, blank=True, on_delete=models.SET_NULL, related_name="kpi_definition_versions"
+    )
+
+    class Meta:
+        ordering = ["-effective_date"]
+        constraints = [models.UniqueConstraint(fields=["kpi", "effective_date"], name="unique_kpi_definition_date")]
+
+
+class KpiObservation(models.Model):
+    kpi = models.ForeignKey(KpiDefinition, on_delete=models.CASCADE, related_name="observations")
+    period_start = models.DateField()
+    period_end = models.DateField(db_index=True)
+    fiscal_year = models.PositiveIntegerField(null=True, blank=True)
+    fiscal_period = models.CharField(max_length=16, blank=True)
+    value = models.DecimalField(max_digits=24, decimal_places=6)
+    segment = models.CharField(max_length=255, blank=True)
+    geography = models.CharField(max_length=255, blank=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument", null=True, blank=True, on_delete=models.SET_NULL, related_name="kpi_observations"
+    )
+    evidence_text = models.TextField(blank=True)
+    is_estimated = models.BooleanField(default=False)
+    is_restatement = models.BooleanField(default=False)
+    is_non_comparable = models.BooleanField(default=False)
+    definition_changed = models.BooleanField(default=False)
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["period_end", "segment", "geography"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["kpi", "period_end", "segment", "geography"], name="unique_kpi_observation_scope"
+            )
+        ]
+
+
+class KpiTarget(models.Model):
+    kpi = models.ForeignKey(KpiDefinition, on_delete=models.CASCADE, related_name="targets")
+    target_date = models.DateField(db_index=True)
+    target_value = models.DecimalField(max_digits=24, decimal_places=6)
+    condition = models.TextField(blank=True)
+    status = models.CharField(max_length=32, default="IN_PROGRESS")
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument", null=True, blank=True, on_delete=models.SET_NULL, related_name="kpi_targets"
+    )
+
+    class Meta:
+        ordering = ["target_date"]
+
+
+class KpiComparability(models.Model):
+    kpi = models.ForeignKey(KpiDefinition, on_delete=models.CASCADE, related_name="comparability_records")
+    comparable_kpi = models.ForeignKey(KpiDefinition, on_delete=models.CASCADE, related_name="compared_by_records")
+    is_comparable = models.BooleanField(default=False)
+    rationale = models.TextField()
+    reviewed_at = models.DateField()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["kpi", "comparable_kpi"], name="unique_kpi_comparability_pair")
+        ]

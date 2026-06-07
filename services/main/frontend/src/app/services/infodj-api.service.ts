@@ -504,6 +504,37 @@ export type BusinessModelResponse = {
   source_gaps: SourceGap[];
 };
 
+export type KpiDefinition = {
+  id: number; slug: string; name: string; description: string; unit: string; cadence: string;
+  value_type: string; scope: string; aliases: string[]; formula: string; peer_comparable: boolean;
+  definition_history: { effective_date: string; definition: string; scope: string; change_note: string; source_id: number | null }[];
+  targets: { target_date: string; target_value: number; condition: string; status: string }[];
+};
+
+export type KpiObservation = {
+  id: number; period_start: string; period_end: string; fiscal_year: number | null; fiscal_period: string;
+  value: number; segment: string; geography: string; evidence_text: string; source_id: number | null;
+  is_estimated: boolean; is_restatement: boolean; is_non_comparable: boolean; definition_changed: boolean;
+  confidence_score: number;
+};
+
+export type OperatingKpiResponse = {
+  status: 'available' | 'partial' | 'unavailable';
+  company: CompanyProfileResponse['company'];
+  dictionary: KpiDefinition[];
+  selected_metric: KpiDefinition | null;
+  series: KpiObservation[];
+  missing_periods: string[];
+  filters: { segments: string[]; geographies: string[]; selected_segment: string; selected_geography: string; selected_start: string; selected_end: string; comparable_only: boolean };
+  alerts: { period_end: string | null; type: string; change_percent: number | null; message: string }[];
+  event_overlays: DashboardEvent[];
+  peer_comparisons: { company: string; company_slug: string; metric: string; unit: string; comparable: boolean }[];
+  export_rows: Record<string, unknown>[];
+  coverage: { metric_count: number; observation_count: number; reported_count: number; calculated_count: number; last_period: string | null };
+  evidence: CompanyProfileSource[];
+  source_gaps: SourceGap[];
+};
+
 @Injectable({ providedIn: 'root' })
 export class InfoDjApiService {
   private readonly http = inject(HttpClient);
@@ -666,6 +697,19 @@ export class InfoDjApiService {
     return this.http.get<BusinessModelResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/business-model`, {
       headers: this.authHeaders(token),
       params
+    });
+  }
+
+  operatingKpis(token: string, slug: string, metric = '', segment = '', geography = '', start = '', end = '', comparableOnly = false) {
+    const params: Record<string, string> = {};
+    if (metric) params['metric'] = metric;
+    if (segment) params['segment'] = segment;
+    if (geography) params['geography'] = geography;
+    if (start) params['start'] = start;
+    if (end) params['end'] = end;
+    if (comparableOnly) params['comparable_only'] = 'true';
+    return this.http.get<OperatingKpiResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/operating-kpis`, {
+      headers: this.authHeaders(token), params
     });
   }
 

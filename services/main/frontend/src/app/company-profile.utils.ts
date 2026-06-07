@@ -35,3 +35,14 @@ export function businessModelComponentLabel(type: string): string {
 export function businessModelRelationshipLabel(type: string): string {
   return type.toLowerCase().replace(/_/g, ' ');
 }
+
+export function kpiObservationFlags(observation: {
+  is_estimated: boolean; is_restatement: boolean; is_non_comparable: boolean; definition_changed: boolean;
+}): string[] {
+  const flags: string[] = [];
+  if (observation.is_estimated) flags.push('Estimated');
+  if (observation.is_restatement) flags.push('Restated');
+  if (observation.is_non_comparable) flags.push('Non-comparable');
+  if (observation.definition_changed) flags.push('Definition changed');
+  return flags;
+}

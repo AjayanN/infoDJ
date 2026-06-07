@@ -14,6 +14,8 @@ from apps.companies.models import (
     BusinessModelSnapshot,
     Company,
     CompanyProfileSnapshot,
+    KpiDefinition,
+    KpiObservation,
 )
 from apps.curation.models import BusinessEvent, StrategicTurn, StrategicTurnSource
 from apps.ingestion.models import FinancialFact, IngestionJob, MarketPrice, SourceDocument, SourceGap
@@ -233,6 +235,63 @@ def company_business_model(request: HttpRequest, slug: str) -> JsonResponse:
             "source_gaps": gaps,
         }
     )
+
+
+@require_GET
+def company_operating_kpis(request: HttpRequest, slug: str) -> JsonResponse:
+    company = get_company(slug)
+    definitions = list(KpiDefinition.objects.filter(company=company, is_active=True).prefetch_related(
+        "definition_versions__source_document", "observations__source_document", "targets"
+    ).order_by("name"))
+    metric_slug = (request.GET.get("metric") or "").strip()
+    selected = next((row for row in definitions if row.slug == metric_slug), definitions[0] if definitions else None)
+    segment = (request.GET.get("segment") or "").strip()
+    geography = (request.GET.get("geography") or "").strip()
+    start_date = parse_iso_date(request.GET.get("start"))
+    end_date = parse_iso_date(request.GET.get("end"))
+    comparable_only = (request.GET.get("comparable_only") or "").lower() in {"1", "true", "yes"}
+    observations = list(selected.observations.all()) if selected else []
+    if segment:
+        observations = [row for row in observations if row.segment == segment]
+    if geography:
+        observations = [row for row in observations if row.geography == geography]
+    if start_date:
+        observations = [row for row in observations if row.period_end >= start_date]
+    if end_date:
+        observations = [row for row in observations if row.period_end <= end_date]
+    if comparable_only:
+        observations = [row for row in observations if not row.is_non_comparable and not row.definition_changed]
+    observations.sort(key=lambda row: (row.period_end, row.segment, row.geography))
+    gaps = []
+    if not definitions:
+        gaps.append({"key": "operating_kpis", "label": "Operating KPIs unavailable", "reason": f"No reviewed operating KPI dictionary is available for {company.name}.", "source": "operating-kpi-tracker", "next_action": "Review filings, earnings materials, and official supplemental tables for company-specific KPIs."})
+    if selected and not observations:
+        gaps.append({"key": f"operating_kpi_{selected.slug}_series", "label": f"{selected.name} series unavailable", "reason": "No observations match the selected segment, geography, and comparability controls.", "source": "operating-kpi-tracker", "next_action": "Broaden the filters or collect and review the missing period data."})
+    persist_operating_kpi_gaps(company, gaps, bool(definitions), bool(observations))
+    events = list(BusinessEvent.objects.filter(company=company).exclude(actual_change="").order_by("event_date")[:100])
+    sources, seen_sources = [], set()
+    for definition in definitions:
+        for observation in definition.observations.all():
+            if observation.source_document_id and observation.source_document_id not in seen_sources:
+                sources.append(serialize_profile_source(observation.source_document))
+                seen_sources.add(observation.source_document_id)
+    return JsonResponse({
+        "status": "available" if definitions and observations else "partial" if definitions else "unavailable",
+        "company": serialize_company_detail(company), "dictionary": [serialize_kpi_definition(row) for row in definitions],
+        "selected_metric": serialize_kpi_definition(selected), "series": [serialize_kpi_observation(row) for row in observations],
+        "missing_periods": missing_kpi_periods(selected, observations),
+        "filters": {"segments": sorted({row.segment for definition in definitions for row in definition.observations.all() if row.segment}), "geographies": sorted({row.geography for definition in definitions for row in definition.observations.all() if row.geography}), "selected_segment": segment, "selected_geography": geography, "selected_start": start_date.isoformat() if start_date else "", "selected_end": end_date.isoformat() if end_date else "", "comparable_only": comparable_only},
+        "alerts": kpi_alerts(selected, observations), "event_overlays": [serialize_business_event(row) for row in events],
+        "peer_comparisons": peer_kpi_rows(company, selected), "export_rows": [serialize_kpi_export_row(row) for row in observations],
+        "related_surfaces": [
+            {"key": "events", "label": "Strategic events", "status": "available"},
+            {"key": "earnings", "label": "Earnings intelligence", "status": "unavailable", "requirement": 5},
+            {"key": "promises", "label": "Management promises", "status": "unavailable", "requirement": 4},
+            {"key": "milestones", "label": "Strategy milestones", "status": "unavailable", "requirement": 6},
+        ],
+        "coverage": {"metric_count": len(definitions), "observation_count": len(observations), "reported_count": sum(1 for row in definitions if row.value_type == "REPORTED"), "calculated_count": sum(1 for row in definitions if row.value_type == "CALCULATED"), "last_period": observations[-1].period_end.isoformat() if observations else None},
+        "evidence": sources, "source_gaps": gaps,
+    })
 
 
 @require_GET
@@ -1364,6 +1423,109 @@ def persist_company_profile_gaps(company: Company, gaps: list[dict[str, str]], s
         gap_type__in=available_keys,
         status__in=["OPEN", "IN_PROGRESS"],
     ).update(status="RESOLVED")
+
+
+def serialize_kpi_definition(kpi: KpiDefinition | None) -> dict[str, object] | None:
+    if kpi is None:
+        return None
+    versions = list(kpi.definition_versions.all())
+    return {
+        "id": kpi.id, "slug": kpi.slug, "name": kpi.name, "description": kpi.description,
+        "unit": kpi.unit, "cadence": kpi.cadence, "value_type": kpi.value_type, "scope": kpi.scope,
+        "aliases": kpi.aliases if isinstance(kpi.aliases, list) else [], "formula": kpi.formula,
+        "peer_comparable": kpi.peer_comparable,
+        "definition_history": [{
+            "effective_date": row.effective_date.isoformat(), "definition": row.definition,
+            "scope": row.scope, "change_note": row.change_note, "source_id": row.source_document_id,
+        } for row in versions],
+        "targets": [{"target_date": row.target_date.isoformat(), "target_value": decimal_to_float(row.target_value), "condition": row.condition, "status": row.status} for row in kpi.targets.all()],
+    }
+
+
+def serialize_kpi_observation(row: KpiObservation) -> dict[str, object]:
+    return {
+        "id": row.id, "period_start": row.period_start.isoformat(), "period_end": row.period_end.isoformat(),
+        "fiscal_year": row.fiscal_year, "fiscal_period": row.fiscal_period, "value": decimal_to_float(row.value),
+        "segment": row.segment, "geography": row.geography, "evidence_text": row.evidence_text,
+        "source_id": row.source_document_id, "is_estimated": row.is_estimated, "is_restatement": row.is_restatement,
+        "is_non_comparable": row.is_non_comparable, "definition_changed": row.definition_changed,
+        "confidence_score": decimal_to_float(row.confidence_score),
+    }
+
+
+def serialize_kpi_export_row(row: KpiObservation) -> dict[str, object]:
+    payload = serialize_kpi_observation(row)
+    payload.update({"metric": row.kpi.name, "metric_slug": row.kpi.slug, "unit": row.kpi.unit, "value_type": row.kpi.value_type})
+    return payload
+
+
+def missing_kpi_periods(kpi: KpiDefinition | None, observations: list[KpiObservation]) -> list[str]:
+    if kpi is None or kpi.cadence != "QUARTERLY":
+        return []
+    global_rows = sorted({row.period_end for row in observations if not row.geography})
+    if len(global_rows) < 2:
+        return []
+    observed = set(global_rows)
+    cursor = global_rows[0]
+    missing = []
+    while cursor < global_rows[-1]:
+        next_month = cursor.month + 3
+        next_year = cursor.year + (1 if next_month > 12 else 0)
+        next_month = next_month - 12 if next_month > 12 else next_month
+        month_end = {3: 31, 6: 30, 9: 30, 12: 31}[next_month]
+        cursor = date(next_year, next_month, month_end)
+        if cursor not in observed:
+            missing.append(cursor.isoformat())
+    return missing
+
+
+def kpi_alerts(kpi: KpiDefinition | None, observations: list[KpiObservation]) -> list[dict[str, object]]:
+    if kpi is None:
+        return []
+    rows = [row for row in observations if not row.geography and not row.is_non_comparable]
+    alerts = []
+    for previous, current in zip(rows, rows[1:]):
+        previous_value = float(previous.value)
+        if previous_value == 0:
+            continue
+        change = ((float(current.value) / previous_value) - 1) * 100
+        if abs(change) >= 1:
+            alerts.append({
+                "period_end": current.period_end.isoformat(), "type": "ACCELERATION" if change > 0 else "SLOWDOWN",
+                "change_percent": round(change, 2),
+                "message": f"{kpi.name} {'increased' if change > 0 else 'decreased'} {abs(change):.2f}% from the prior period.",
+            })
+    if not kpi.is_active:
+        alerts.append({"period_end": None, "type": "DISCLOSURE_DISCONTINUED", "change_percent": None, "message": f"{kpi.name} is no longer disclosed."})
+    latest = rows[-1] if rows else None
+    for target in kpi.targets.all():
+        if latest and latest.period_end <= target.target_date and latest.value >= target.target_value:
+            alerts.append({
+                "period_end": latest.period_end.isoformat(), "type": "TARGET_CROSSED", "change_percent": None,
+                "message": f"{kpi.name} crossed the {decimal_to_float(target.target_value)} target due {target.target_date.isoformat()}.",
+            })
+    return alerts
+
+
+def peer_kpi_rows(company: Company, kpi: KpiDefinition | None) -> list[dict[str, object]]:
+    if kpi is None or not kpi.peer_comparable or not company.industry:
+        return []
+    peers = KpiDefinition.objects.filter(company__industry=company.industry, peer_comparable=True, slug=kpi.slug).exclude(company=company).select_related("company")
+    return [{"company": row.company.name, "company_slug": row.company.slug, "metric": row.name, "unit": row.unit, "comparable": True} for row in peers]
+
+
+def persist_operating_kpi_gaps(company: Company, gaps: list[dict[str, str]], has_definitions: bool, has_observations: bool) -> None:
+    for gap in gaps:
+        SourceGap.objects.update_or_create(
+            company=company, dashboard="operating_kpis", gap_type=gap["key"], provider="operating-kpi-tracker",
+            defaults={"reason": gap["reason"], "next_ingestion_task": gap["next_action"], "status": "OPEN", "metadata": {}},
+        )
+    resolved = []
+    if has_definitions:
+        resolved.append("operating_kpis")
+    if has_observations:
+        resolved.extend(SourceGap.objects.filter(company=company, dashboard="operating_kpis", gap_type__endswith="_series").values_list("gap_type", flat=True))
+    SourceGap.objects.filter(company=company, dashboard="operating_kpis", gap_type__in=resolved, status__in=["OPEN", "IN_PROGRESS"]).update(status="RESOLVED")
 
 
 def serialize_business_model_snapshot(snapshot: BusinessModelSnapshot | None) -> dict[str, object] | None:

@@ -14,6 +14,11 @@ from apps.companies.models import (
     BusinessModelRelationship,
     BusinessModelSnapshot,
     CompanyProfileSnapshot,
+    KpiComparability,
+    KpiDefinition,
+    KpiDefinitionVersion,
+    KpiObservation,
+    KpiTarget,
 )
 
 
@@ -179,3 +184,33 @@ class BusinessModelRelationshipAdmin(admin.ModelAdmin):
     list_display = ("from_component", "relationship_type", "to_component", "snapshot", "is_inferred")
     list_filter = ("relationship_type", "is_inferred", "snapshot__company")
     search_fields = ("description", "evidence_text", "snapshot__company__name")
+
+
+class KpiDefinitionVersionInline(admin.TabularInline):
+    model = KpiDefinitionVersion
+    extra = 0
+
+
+class KpiObservationInline(admin.TabularInline):
+    model = KpiObservation
+    extra = 0
+
+
+@admin.register(KpiDefinition)
+class KpiDefinitionAdmin(admin.ModelAdmin):
+    list_display = ("name", "company", "unit", "cadence", "value_type", "is_active", "peer_comparable")
+    list_filter = ("cadence", "value_type", "is_active", "peer_comparable", "company")
+    search_fields = ("name", "slug", "description", "aliases", "company__name")
+    inlines = (KpiDefinitionVersionInline, KpiObservationInline)
+
+
+@admin.register(KpiObservation)
+class KpiObservationAdmin(admin.ModelAdmin):
+    list_display = ("kpi", "period_end", "value", "segment", "geography", "is_estimated", "is_restatement")
+    list_filter = ("is_estimated", "is_restatement", "is_non_comparable", "definition_changed", "kpi__company")
+    search_fields = ("kpi__name", "evidence_text", "segment", "geography")
+
+
+admin.site.register(KpiDefinitionVersion)
+admin.site.register(KpiTarget)
+admin.site.register(KpiComparability)

@@ -125,6 +125,9 @@ class Command(BaseCommand):
         business_model_snapshot = self._optional_model("companies", "BusinessModelSnapshot")
         business_model_component = self._optional_model("companies", "BusinessModelComponent")
         business_model_relationship = self._optional_model("companies", "BusinessModelRelationship")
+        kpi_definition = self._optional_model("companies", "KpiDefinition")
+        kpi_definition_version = self._optional_model("companies", "KpiDefinitionVersion")
+        kpi_observation = self._optional_model("companies", "KpiObservation")
 
         with transaction.atomic():
             company = self._upsert_company(company_model)
@@ -145,6 +148,10 @@ class Command(BaseCommand):
                     company,
                     historical_model_source,
                     profile_source,
+                )
+            if all((kpi_definition, kpi_definition_version, kpi_observation, profile_source)):
+                self._upsert_operating_kpis(
+                    kpi_definition, kpi_definition_version, kpi_observation, company, profile_source
                 )
 
         self.stdout.write(self.style.SUCCESS("Seeded Netflix admin review data."))
@@ -321,6 +328,91 @@ class Command(BaseCommand):
                     evidence_text=map_data["source"].snippet,
                     confidence_score=Decimal("0.80"),
                 )
+
+    def _upsert_operating_kpis(self, definition_model, version_model, observation_model, company, source):
+        memberships, _created = definition_model.objects.update_or_create(
+            company=company,
+            slug="paid-memberships",
+            defaults={
+                "name": "Paid memberships",
+                "description": "Paid streaming memberships at the end of the reporting period.",
+                "unit": "million memberships",
+                "cadence": "QUARTERLY",
+                "value_type": "REPORTED",
+                "scope": "Global streaming",
+                "aliases": ["paid subscribers", "paid streaming memberships"],
+                "peer_comparable": False,
+            },
+        )
+        version_model.objects.update_or_create(
+            kpi=memberships,
+            effective_date=date(2022, 1, 1),
+            defaults={
+                "definition": "Paid memberships are memberships with the right to receive Netflix service following sign-up and payment.",
+                "scope": "Global streaming",
+                "change_note": "Company terminology preserved; comparison is blocked against peers without a reviewed matching definition.",
+                "source_document": source,
+            },
+        )
+        reported = [
+            (date(2022, 3, 31), "Q1", Decimal("221.641"), ""),
+            (date(2022, 6, 30), "Q2", Decimal("220.672"), ""),
+            (date(2022, 9, 30), "Q3", Decimal("223.085"), ""),
+            (date(2022, 12, 31), "Q4", Decimal("230.747"), ""),
+            (date(2022, 12, 31), "Q4", Decimal("74.296"), "UCAN"),
+            (date(2022, 12, 31), "Q4", Decimal("76.729"), "EMEA"),
+            (date(2022, 12, 31), "Q4", Decimal("41.699"), "LATAM"),
+            (date(2022, 12, 31), "Q4", Decimal("38.023"), "APAC"),
+        ]
+        for period_end, fiscal_period, value, geography in reported:
+            observation_model.objects.update_or_create(
+                kpi=memberships,
+                period_end=period_end,
+                segment="Streaming",
+                geography=geography,
+                defaults={
+                    "period_start": date(period_end.year, ((period_end.month - 1) // 3) * 3 + 1, 1),
+                    "fiscal_year": period_end.year,
+                    "fiscal_period": fiscal_period,
+                    "value": value,
+                    "source_document": source,
+                    "evidence_text": "Netflix 2022 Form 10-K paid membership table.",
+                    "confidence_score": Decimal("0.95"),
+                },
+            )
+        growth, _created = definition_model.objects.update_or_create(
+            company=company,
+            slug="paid-membership-qoq-growth",
+            defaults={
+                "name": "Paid membership quarter-over-quarter growth",
+                "description": "Sequential percentage change in global paid streaming memberships.",
+                "unit": "%",
+                "cadence": "QUARTERLY",
+                "value_type": "CALCULATED",
+                "scope": "Global streaming",
+                "aliases": ["subscriber growth"],
+                "formula": "((current paid memberships / prior-quarter paid memberships) - 1) * 100",
+                "peer_comparable": False,
+            },
+        )
+        globals_only = [row for row in reported if not row[3]]
+        for previous, current in zip(globals_only, globals_only[1:]):
+            value = ((current[2] / previous[2]) - Decimal("1")) * Decimal("100")
+            observation_model.objects.update_or_create(
+                kpi=growth,
+                period_end=current[0],
+                segment="Streaming",
+                geography="",
+                defaults={
+                    "period_start": date(current[0].year, ((current[0].month - 1) // 3) * 3 + 1, 1),
+                    "fiscal_year": current[0].year,
+                    "fiscal_period": current[1],
+                    "value": value.quantize(Decimal("0.001")),
+                    "source_document": source,
+                    "evidence_text": "Calculated by InfoDJ from consecutive reported paid membership observations.",
+                    "confidence_score": Decimal("0.95"),
+                },
+            )
 
     def _filter_model_values(self, model, values):
         return {key: value for key, value in values.items() if self._has_field(model, key)}

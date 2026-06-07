@@ -11,12 +11,16 @@ from apps.companies.models import (
     BusinessModelSnapshot,
     Company,
     CompanyProfileSnapshot,
+    KpiDefinition,
+    KpiDefinitionVersion,
+    KpiObservation,
 )
 from apps.curation.models import BusinessEvent, StrategicTurn, StrategicTurnSource
 from apps.ingestion.models import FinancialFact, MarketPrice, SourceDocument, SourceGap
 from apps.ingestion.services.event_extractor import EventSignal, actual_change_for, find_evidence_sentence
 from apps.ingestion.services.company_profile_client import collect_official_company_profile, parse_official_profile_html
 from apps.ingestion.services.business_model_builder import build_business_model_from_profile, collect_business_model_page
+from apps.ingestion.services.kpi_collector import collect_kpi_csv, collect_kpi_html_table
 from apps.ingestion.services.market_price_client import (
     parse_alpha_vantage_daily_csv,
     parse_fmp_historical_prices,
@@ -314,6 +318,41 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(response.json()["status"], "unavailable")
         self.assertGreater(len(response.json()["source_gaps"]), 0)
 
+    def test_operating_kpis_returns_dictionary_series_formula_and_alerts(self):
+        metric = KpiDefinition.objects.create(
+            company=self.netflix, slug="paid-memberships", name="Paid memberships",
+            description="Period-end paid memberships.", unit="million", cadence="QUARTERLY",
+            value_type="REPORTED", scope="Global streaming",
+        )
+        KpiDefinitionVersion.objects.create(
+            kpi=metric, effective_date=date(2022, 1, 1), definition="Paid memberships at period end.",
+            source_document=self.source,
+        )
+        for period_end, fiscal_period, value in ((date(2022, 3, 31), "Q1", "220"), (date(2022, 6, 30), "Q2", "225")):
+            KpiObservation.objects.create(
+                kpi=metric, period_start=date(2022, period_end.month - 2, 1), period_end=period_end,
+                fiscal_year=2022, fiscal_period=fiscal_period, value=value, segment="Streaming",
+                source_document=self.source, confidence_score="0.9",
+            )
+
+        response = self.client.get("/companies/netflix/operating-kpis?metric=paid-memberships&segment=Streaming")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "available")
+        self.assertEqual(payload["selected_metric"]["slug"], "paid-memberships")
+        self.assertEqual(len(payload["series"]), 2)
+        self.assertEqual(payload["missing_periods"], [])
+        self.assertEqual(payload["alerts"][0]["type"], "ACCELERATION")
+        self.assertEqual(payload["export_rows"][0]["metric_slug"], "paid-memberships")
+
+    def test_operating_kpis_does_not_treat_missing_data_as_zero(self):
+        response = self.client.get("/companies/netflix/operating-kpis")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "unavailable")
+        self.assertEqual(response.json()["series"], [])
+
     def test_dashboard_data_returns_source_backed_surfaces(self):
         response = self.client.get("/dashboard-data")
 
@@ -520,6 +559,22 @@ class CompanyProfileCollectorTests(TestCase):
         self.assertEqual(snapshot.effective_date, date(2020, 12, 31))
         self.assertEqual(snapshot.source_document.source_api, "OFFICIAL_WEBSITE")
 
+    def test_collect_kpi_structured_sources_require_review_before_publication(self):
+        company = Company.objects.create(name="MetricCo")
+        csv_kpi, csv_count = collect_kpi_csv(
+            company, url="https://example.com/metrics.csv", metric_slug="users", metric_name="Users",
+            unit="million", session=FakeKpiSession("csv"),
+        )
+        html_kpi, html_count = collect_kpi_html_table(
+            company, url="https://example.com/metrics.html", metric_slug="accounts", metric_name="Accounts",
+            unit="million", session=FakeKpiSession("html"),
+        )
+
+        self.assertEqual((csv_count, html_count), (2, 2))
+        self.assertFalse(csv_kpi.is_active)
+        self.assertFalse(html_kpi.is_active)
+        self.assertTrue(all(row.is_non_comparable for row in csv_kpi.observations.all()))
+
 
 class FakeProfileResponse:
     def __init__(self, *, url: str, text: str, status_code: int = 200):
@@ -549,6 +604,21 @@ class FakeProfileSession:
               "makesOffer": [{"itemOffered": {"name": "Analytics Platform"}}]
             }</script></head></html>''',
         )
+
+
+class FakeKpiSession:
+    def __init__(self, mode):
+        self.mode = mode
+        self.headers = {}
+
+    def get(self, url, timeout):
+        if url.endswith("robots.txt"):
+            return FakeProfileResponse(url=url, text="User-agent: *\nAllow: /")
+        if self.mode == "html":
+            text = "<table><tr><th>period_end</th><th>value</th></tr><tr><td>2025-03-31</td><td>10</td></tr><tr><td>2025-06-30</td><td>12</td></tr></table>"
+        else:
+            text = "period_end,value\n2025-03-31,10\n2025-06-30,12\n"
+        return FakeProfileResponse(url=url, text=text)
 
 
 class MarketPriceClientTests(TestCase):
