@@ -244,6 +244,30 @@ class DashboardSearchApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["suggestions"][0]["label"], "Netflix")
 
+    @override_settings(INGESTION_API_URL="http://ingestion.test/api/ingestion")
+    @patch("apps.search.api.requests.get")
+    def test_company_profile_proxies_authenticated_ingestion_response(self, get):
+        get.return_value = json_response(
+            {
+                "status": "partial",
+                "company": {"name": "Netflix", "slug": "netflix"},
+                "sections": {"summary": {"status": "available", "text": "Streaming service", "items": []}},
+                "source_gaps": [],
+            }
+        )
+
+        response = self.client.get("/api/app/companies/netflix/profile?as_of=2024-12-31")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["company"]["slug"], "netflix")
+        self.assertEqual(get.call_args.args[0], "http://ingestion.test/api/ingestion/companies/netflix/profile")
+        self.assertEqual(get.call_args.kwargs["params"], {"as_of": "2024-12-31"})
+
+    def test_company_profile_requires_authentication(self):
+        response = APIClient().get("/api/app/companies/netflix/profile")
+
+        self.assertEqual(response.status_code, 401)
+
 
 def json_response(payload: dict):
     response = Mock()

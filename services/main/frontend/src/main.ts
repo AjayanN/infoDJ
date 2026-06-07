@@ -9,6 +9,7 @@ import { provideRouter, Routes } from '@angular/router';
 
 import {
   CurrentUser,
+  CompanyProfileResponse,
   DashboardSection,
   DashboardResponse,
   HistoryRow,
@@ -20,6 +21,7 @@ import {
   SearchSuggestion,
   Subscription
 } from './app/services/infodj-api.service';
+import { companyProfileItemLabel, companyProfileSectionLabel } from './app/company-profile.utils';
 
 declare global {
   interface Window {
@@ -28,7 +30,7 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-type AppPage = 'dashboard' | 'profile' | 'subscription';
+type AppPage = 'dashboard' | 'company' | 'profile' | 'subscription';
 type DashboardViewId =
   | 'company-intelligence'
   | 'turn-impact'
@@ -108,6 +110,7 @@ class AppComponent {
   currentUser = signal<CurrentUser | null>(null);
   history = signal<HistoryRow[]>([]);
   dashboard = signal<DashboardResponse | null>(null);
+  companyProfile = signal<CompanyProfileResponse | null>(null);
   searchResults = signal<SearchResponse | null>(null);
   searchPages = signal<Record<SearchResultGroup, number>>({
     companies: 1,
@@ -132,6 +135,22 @@ class AppComponent {
   loading = signal(false);
   dashboardLoading = signal(false);
   searchLoading = signal(false);
+  companyLoading = signal(false);
+  companyProfileDate = '';
+  readonly companyProfileSectionOrder = [
+    'summary',
+    'business_model',
+    'subsidiaries',
+    'brands',
+    'segments',
+    'products',
+    'customer_groups',
+    'revenue_sources',
+    'geographies',
+    'leadership',
+    'competitors',
+    'strategic_priorities'
+  ];
 
   username = '';
   email = '';
@@ -400,6 +419,9 @@ class AppComponent {
   }
 
   pageTitle(): string {
+    if (this.activePage() === 'company') {
+      return this.companyProfile()?.company.name || 'Company 360';
+    }
     if (this.activePage() === 'profile') {
       return 'Profile';
     }
@@ -410,6 +432,9 @@ class AppComponent {
   }
 
   pageDescription(): string {
+    if (this.activePage() === 'company') {
+      return 'Source-backed company structure, strategic priorities, recent changes, and evidence coverage.';
+    }
     if (this.activePage() === 'profile') {
       return 'Manage account details, avatar preview, and subscription access.';
     }
@@ -642,7 +667,57 @@ class AppComponent {
   }
 
   useSuggestion(suggestion: SearchSuggestion): void {
+    if (suggestion.type === 'company' && suggestion.slug) {
+      this.openCompany(suggestion.slug);
+      return;
+    }
     this.runSearch(suggestion.label);
+  }
+
+  openCompany(slug: string, asOf = ''): void {
+    if (!slug || !this.token()) {
+      return;
+    }
+    this.activePage.set('company');
+    this.menuOpen.set(false);
+    this.companyLoading.set(true);
+    this.companyProfile.set(null);
+    this.error.set('');
+    this.api.companyProfile(this.token(), slug, asOf).subscribe({
+      next: (response) => {
+        this.companyProfile.set(response);
+        this.companyProfileDate = response.profile?.effective_date || '';
+        this.companyLoading.set(false);
+      },
+      error: (response) => {
+        this.companyLoading.set(false);
+        this.showError(response);
+      }
+    });
+  }
+
+  selectCompanyProfileDate(): void {
+    const company = this.companyProfile()?.company;
+    if (company && this.companyProfileDate) {
+      this.openCompany(company.slug, this.companyProfileDate);
+    }
+  }
+
+  openCompanyDashboard(view: DashboardViewId): void {
+    this.dashboardView.set(view);
+    this.setActivePage('dashboard');
+  }
+
+  printCompanyProfile(): void {
+    window.print();
+  }
+
+  profileSectionLabel(key: string): string {
+    return companyProfileSectionLabel(key);
+  }
+
+  profileItemLabel(item: unknown): string {
+    return companyProfileItemLabel(item);
   }
 
   sectorShare(eventCount: number, dash: DashboardResponse): number {

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import date, timedelta
 
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector, TrigramSimilarity
 from django.core.management import call_command
@@ -9,7 +9,7 @@ from django.db.models import Avg, Count, Max, Q
 from django.http import Http404, HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 
-from apps.companies.models import Company
+from apps.companies.models import Company, CompanyProfileSnapshot
 from apps.curation.models import BusinessEvent, StrategicTurn, StrategicTurnSource
 from apps.ingestion.models import FinancialFact, IngestionJob, MarketPrice, SourceDocument, SourceGap
 from apps.ingestion.services.dashboard_quality import (
@@ -50,6 +50,108 @@ def companies(_request: HttpRequest) -> JsonResponse:
             }
         )
     return JsonResponse({"companies": rows})
+
+
+@require_GET
+def company_profile(request: HttpRequest, slug: str) -> JsonResponse:
+    company = get_company(slug)
+    snapshots = list(
+        CompanyProfileSnapshot.objects.filter(company=company)
+        .select_related("source_document")
+        .order_by("-effective_date", "-updated_at")[:20]
+    )
+    as_of = parse_iso_date(request.GET.get("as_of"))
+    eligible_snapshots = [
+        row
+        for row in snapshots
+        if row.status in {"PUBLISHED", "REVIEWED"} and (as_of is None or row.effective_date <= as_of)
+    ]
+    current = eligible_snapshots[0] if eligible_snapshots else None
+    previous = eligible_snapshots[1] if len(eligible_snapshots) > 1 else None
+
+    events = list(
+        BusinessEvent.objects.filter(company=company)
+        .exclude(actual_change="")
+        .select_related("source_document")
+        .order_by("-event_date", "-created_at")[:6]
+    )
+    turns = list(
+        StrategicTurn.objects.filter(company=company)
+        .exclude(summary="")
+        .order_by("-start_date", "-created_at")[:6]
+    )
+    turn_source_counts = dict(
+        StrategicTurnSource.objects.filter(strategic_turn__in=turns)
+        .values("strategic_turn_id")
+        .annotate(count=Count("id"))
+        .values_list("strategic_turn_id", "count")
+    )
+    facts = list(
+        FinancialFact.objects.filter(company=company)
+        .order_by("-filed", "-fy", "concept")[:8]
+    )
+    sources = list(SourceDocument.objects.filter(company=company).order_by("-published_date", "-updated_at")[:12])
+
+    section_values = profile_section_values(company, current)
+    missing_sections = [key for key, value in section_values.items() if not value]
+    source_gaps = [
+        {
+            "key": f"company_profile_{section}",
+            "label": f"{section.replace('_', ' ').title()} unavailable",
+            "reason": f"No reviewed, source-backed {section.replace('_', ' ')} information is available for {company.name}.",
+            "source": "company-profile",
+            "next_action": f"Review official filings and company pages for {section.replace('_', ' ')} data.",
+        }
+        for section in missing_sections
+    ]
+    persist_company_profile_gaps(company, source_gaps, section_values)
+    completeness = round(((len(section_values) - len(missing_sections)) / len(section_values)) * 100)
+    status = "available" if current and completeness == 100 else "partial" if sources or current else "unavailable"
+
+    return JsonResponse(
+        {
+            "status": status,
+            "company": serialize_company_detail(company),
+            "profile": serialize_profile_snapshot(current, section_values),
+            "snapshot_history": [
+                {
+                    "id": snapshot.id,
+                    "effective_date": snapshot.effective_date.isoformat(),
+                    "status": snapshot.status,
+                    "confidence_score": decimal_to_float(snapshot.confidence_score),
+                    "selected": bool(current and snapshot.id == current.id),
+                }
+                for snapshot in snapshots
+                if snapshot.status in {"PUBLISHED", "REVIEWED"}
+            ],
+            "sections": {
+                key: {"status": "available" if value else "unavailable", "items": value if isinstance(value, list) else [], "text": value if isinstance(value, str) else ""}
+                for key, value in section_values.items()
+            },
+            "highlights": {
+                "latest_events": [serialize_business_event(event) for event in events],
+                "latest_turns": [serialize_strategic_turn(turn, source_count=turn_source_counts.get(turn.id, 0)) for turn in turns],
+                "financial_facts": [serialize_financial_fact(fact) for fact in facts],
+            },
+            "changes": profile_changes(current, previous),
+            "conflicts": profile_conflicts(current, snapshots),
+            "evidence": [serialize_profile_source(source) for source in sources],
+            "coverage": {
+                "completeness_percent": completeness,
+                "available_sections": len(section_values) - len(missing_sections),
+                "total_sections": len(section_values),
+                "source_count": SourceDocument.objects.filter(company=company).count(),
+                "snapshot_count": len(snapshots),
+                "last_updated": max_date_iso(
+                    max(
+                        [company.updated_at, *[source.updated_at for source in sources], *[snapshot.updated_at for snapshot in snapshots]],
+                        default=company.updated_at,
+                    )
+                ),
+            },
+            "source_gaps": source_gaps,
+        }
+    )
 
 
 @require_GET
@@ -406,6 +508,15 @@ def get_company(slug: str) -> Company:
 
 def bounded_limit(request: HttpRequest, *, default: int, maximum: int) -> int:
     return bounded_positive_int(request, "limit", default=default, maximum=maximum)
+
+
+def parse_iso_date(value: str | None) -> date | None:
+    if not value:
+        return None
+    try:
+        return date.fromisoformat(value)
+    except ValueError:
+        return None
 
 
 def bounded_page(request: HttpRequest) -> int:
@@ -1036,6 +1147,142 @@ def serialize_company(company: Company) -> dict[str, object]:
         "event_count": getattr(company, "event_count", 0),
         "strategic_turn_count": getattr(company, "turn_count", 0),
     }
+
+
+def serialize_company_detail(company: Company) -> dict[str, object]:
+    payload = serialize_company(company)
+    payload.update(
+        {
+            "aliases": company.aliases if isinstance(company.aliases, list) else [],
+            "website": company.website,
+            "founded_date": company.founded_date.isoformat() if company.founded_date else None,
+            "description": company.description,
+            "is_active": company.is_active,
+        }
+    )
+    return payload
+
+
+def profile_section_values(company: Company, snapshot: CompanyProfileSnapshot | None) -> dict[str, object]:
+    return {
+        "summary": snapshot.summary if snapshot and snapshot.summary else company.description,
+        "business_model": snapshot.business_model if snapshot else "",
+        "subsidiaries": snapshot.subsidiaries if snapshot else [],
+        "brands": snapshot.brands if snapshot else [],
+        "segments": snapshot.segments if snapshot else [],
+        "products": snapshot.products if snapshot else [],
+        "customer_groups": snapshot.customer_groups if snapshot else [],
+        "revenue_sources": snapshot.revenue_sources if snapshot else [],
+        "geographies": snapshot.geographies if snapshot and snapshot.geographies else ([company.country] if company.country else []),
+        "leadership": snapshot.leadership if snapshot else [],
+        "competitors": snapshot.competitors if snapshot else [],
+        "strategic_priorities": snapshot.strategic_priorities if snapshot else [],
+    }
+
+
+def serialize_profile_snapshot(snapshot: CompanyProfileSnapshot | None, sections: dict[str, object]) -> dict[str, object] | None:
+    if snapshot is None:
+        return None
+    return {
+        "id": snapshot.id,
+        "effective_date": snapshot.effective_date.isoformat(),
+        "status": snapshot.status,
+        "confidence_score": decimal_to_float(snapshot.confidence_score),
+        "evidence_text": snapshot.evidence_text,
+        "source_id": snapshot.source_document_id,
+        "sections": sections,
+    }
+
+
+def profile_changes(current: CompanyProfileSnapshot | None, previous: CompanyProfileSnapshot | None) -> list[dict[str, object]]:
+    if current is None or previous is None:
+        return []
+    fields = (
+        "summary",
+        "business_model",
+        "subsidiaries",
+        "brands",
+        "segments",
+        "products",
+        "customer_groups",
+        "revenue_sources",
+        "geographies",
+        "leadership",
+        "competitors",
+        "strategic_priorities",
+    )
+    return [
+        {
+            "section": field,
+            "previous_effective_date": previous.effective_date.isoformat(),
+            "current_effective_date": current.effective_date.isoformat(),
+            "previous": getattr(previous, field),
+            "current": getattr(current, field),
+        }
+        for field in fields
+        if getattr(previous, field) != getattr(current, field)
+    ]
+
+
+def profile_conflicts(current: CompanyProfileSnapshot | None, snapshots: list[CompanyProfileSnapshot]) -> list[dict[str, object]]:
+    if current is None:
+        return []
+    peers = [row for row in snapshots if row.id != current.id and row.effective_date == current.effective_date]
+    conflicts = []
+    for peer in peers:
+        differing = [
+            field
+            for field in ("summary", "business_model", "subsidiaries", "brands", "segments", "products", "customer_groups", "revenue_sources", "geographies", "leadership", "competitors", "strategic_priorities")
+            if getattr(peer, field) and getattr(current, field) and getattr(peer, field) != getattr(current, field)
+        ]
+        if differing:
+            conflicts.append(
+                {
+                    "snapshot_id": peer.id,
+                    "effective_date": peer.effective_date.isoformat(),
+                    "differing_sections": differing,
+                    "source_id": peer.source_document_id,
+                    "status": "needs_review",
+                }
+            )
+    return conflicts
+
+
+def serialize_profile_source(source: SourceDocument) -> dict[str, object]:
+    return {
+        "id": source.id,
+        "source_api": source.source_api,
+        "title": source.title,
+        "publisher": source.publisher,
+        "url": source.canonical_url or source.url,
+        "published_date": source.published_date.isoformat() if source.published_date else None,
+        "snippet": source.snippet,
+        "status": source.status,
+        "updated_at": source.updated_at.isoformat(),
+    }
+
+
+def persist_company_profile_gaps(company: Company, gaps: list[dict[str, str]], sections: dict[str, object]) -> None:
+    for gap in gaps:
+        SourceGap.objects.update_or_create(
+            company=company,
+            dashboard="company_profile",
+            gap_type=gap["key"],
+            provider="company-profile",
+            defaults={
+                "reason": gap["reason"],
+                "next_ingestion_task": gap["next_action"],
+                "status": "OPEN",
+                "metadata": {"section": gap["key"].removeprefix("company_profile_")},
+            },
+        )
+    available_keys = {f"company_profile_{key}" for key, value in sections.items() if value}
+    SourceGap.objects.filter(
+        company=company,
+        dashboard="company_profile",
+        gap_type__in=available_keys,
+        status__in=["OPEN", "IN_PROGRESS"],
+    ).update(status="RESOLVED")
 
 
 def serialize_business_event(event: BusinessEvent) -> dict[str, object]:

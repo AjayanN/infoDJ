@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Any, Mapping
 
 import requests
@@ -186,12 +186,52 @@ def sync_company_metadata(
             entity_id=entity_id,
             save=True,
         )
+        _persist_company_profile_snapshot(updated_company, client=client)
     except Exception as exc:
         _mark_job_failed(job, exc)
         raise
 
     _mark_job_succeeded(job)
     return updated_company
+
+
+def _persist_company_profile_snapshot(company: Any, *, client: WikidataClient | None) -> None:
+    """Persist the source-backed Company 360 foundation after Wikidata sync."""
+
+    if not hasattr(company, "profile_snapshots") or not getattr(company, "wikidata_id", ""):
+        return
+
+    from apps.companies.models import CompanyProfileSnapshot, CompanyProfileStatus
+    from apps.ingestion.models import SourceDocument
+    from apps.ingestion.services.url_utils import url_hash
+
+    entity_url = f"https://www.wikidata.org/wiki/{company.wikidata_id}"
+    source, _created = SourceDocument.objects.update_or_create(
+        url_hash=url_hash(entity_url),
+        defaults={
+            "company": company,
+            "source_api": "WIKIDATA",
+            "url": entity_url,
+            "canonical_url": entity_url,
+            "title": f"{company.name} - Wikidata",
+            "publisher": "Wikidata",
+            "snippet": company.description,
+            "language": getattr(client, "language", "en") if client else "en",
+            "status": "APPROVED",
+        },
+    )
+    CompanyProfileSnapshot.objects.update_or_create(
+        company=company,
+        effective_date=date.today(),
+        source_document=source,
+        defaults={
+            "status": CompanyProfileStatus.REVIEWED,
+            "summary": company.description,
+            "geographies": [company.country] if company.country else [],
+            "evidence_text": company.description,
+            "confidence_score": "0.650",
+        },
+    )
 
 
 def _localized_value(values: Mapping[str, Any], language: str) -> str:

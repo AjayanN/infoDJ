@@ -118,6 +118,16 @@ def search_suggest(request):
     return Response(payload)
 
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def company_profile(request, slug: str):
+    params = {"as_of": request.GET["as_of"]} if request.GET.get("as_of") else None
+    payload, error = ingestion_get(f"companies/{slug}/profile", params)
+    if error:
+        return Response({"error": "company profile unavailable", "detail": error}, status=503)
+    return Response(payload)
+
+
 def ingestion_get(path: str, params: dict[str, object] | None = None) -> tuple[dict | None, str]:
     base_url = settings.INGESTION_API_URL.rstrip("/") + "/"
     url = urljoin(base_url, path)

@@ -5,7 +5,7 @@
   "scripts": {
     "start": "ng build && node serve-static.mjs",
     "build": "ng build",
-    "test": "ng test"
+    "test": "tsx --test tests/*.test.ts"
   },
   "dependencies": {
     "@angular/animations": "^18.0.0",
@@ -23,6 +23,7 @@
     "@angular-devkit/build-angular": "^18.0.0",
     "@angular/cli": "^18.0.0",
     "@angular/compiler-cli": "^18.0.0",
+    "tsx": "^4.19.0",
     "typescript": "^5.4.0"
   }
 }

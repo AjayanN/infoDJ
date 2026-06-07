@@ -29,15 +29,17 @@ Each requirement must be delivered independently using this sequence:
 7. Run the complete frontend test suite and production build.
 8. Run relevant end-to-end or smoke checks against the working application stack.
 9. Fix failures and repeat the actual test commands until all required suites pass.
-10. Commit the completed requirement on its feature branch.
-11. Merge the feature branch into `main` only after all required verification passes.
-12. Pull/update `main` again before creating the branch for the next requirement.
+10. Update `README.md` with the feature behavior, data sources, user entry points, endpoints, and verification commands.
+11. Commit the completed requirement on its feature branch.
+12. Merge the feature branch into `main` only after all required verification passes.
+13. Pull/update `main` again before creating the branch for the next requirement.
 
 Additional delivery rules:
 
 - Use no more than three implementation agents concurrently.
 - Do not replace executed tests with static inspection or assumed validation.
 - Do not combine multiple Phase 2 requirements into one feature branch.
+- Do not merge a requirement with stale or missing README documentation.
 - Do not merge a partially implemented requirement merely because its skeleton is visible.
 - Record commands run, pass/fail results, known environmental limitations, and any intentionally deferred coverage.
 - A requirement is not complete until backend, frontend, data acquisition, and unavailable/error states work together.
@@ -170,17 +172,17 @@ Provide the definitive starting page for understanding what a company is today, 
 
 **Implementation todo**
 
-- [ ] Define the standard Company 360 section order and required fields.
-- [ ] Define which sections can be hidden and which must show unavailable states.
-- [ ] Build a skeletal company page with section navigation and evidence access.
-- [ ] Populate a complete reviewed pilot profile.
-- [ ] Add period selectors for current view versus historical company eras.
-- [ ] Add links from summary cards to detailed Phase 2 dashboards.
-- [ ] Add recent-change markers showing what changed since the prior reporting period.
-- [ ] Add peer comparison entry points.
-- [ ] Add profile completeness and freshness indicators.
-- [ ] Add a concise printable/exportable company brief.
-- [ ] Validate that all summaries are specific to the company and not generic sector descriptions.
+- [x] Define the standard Company 360 section order and required fields.
+- [x] Define which sections can be hidden and which must show unavailable states.
+- [x] Build a skeletal company page with section navigation and evidence access.
+- [x] Populate a complete reviewed pilot profile.
+- [x] Add period selectors for current view versus historical company eras.
+- [x] Add links from summary cards to detailed Phase 2 dashboards.
+- [x] Add recent-change markers showing what changed since the prior reporting period.
+- [x] Add peer comparison entry points.
+- [x] Add profile completeness and freshness indicators.
+- [x] Add a concise printable/exportable company brief.
+- [x] Validate that all summaries are specific to the company and not generic sector descriptions.
 
 **Completion criteria**
 
@@ -1001,22 +1003,22 @@ The following workstreams are mandatory parts of each requirement. A feature is 
 
 **Data/API and scraping**
 
-- [ ] Fetch company identity, descriptions, aliases, industry, country, website, founding date, subsidiaries, and brands from Wikidata, regulator submissions, exchange records, and official company pages.
-- [ ] Fetch segment, geography, revenue mix, leadership, risks, and priorities from annual reports, proxy statements, investor presentations, earnings releases, and company leadership pages.
-- [ ] Scrape official About, Products, Leadership, Investor Relations, and newsroom pages when structured feeds are unavailable and access is permitted.
-- [ ] Detect profile changes such as new segments, renamed products, leadership changes, and revised strategic priorities.
+- [x] Fetch company identity, descriptions, aliases, industry, country, website, founding date, subsidiaries, and brands from Wikidata, regulator submissions, exchange records, and official company pages.
+- [x] Fetch segment, geography, revenue mix, leadership, risks, and priorities from annual reports, proxy statements, investor presentations, earnings releases, and company leadership pages.
+- [x] Scrape official About, Products, Leadership, Investor Relations, and newsroom pages when structured feeds are unavailable and access is permitted.
+- [x] Detect profile changes such as new segments, renamed products, leadership changes, and revised strategic priorities.
 
 **Backend**
 
-- [ ] Add versioned company profile, segment, brand, leadership, priority, peer, and profile-completeness records.
-- [ ] Provide company overview, historical snapshot, section detail, recent changes, evidence, completeness, and export interfaces.
-- [ ] Aggregate latest KPIs, promises, milestones, risks, and strategic events without duplicating their source records.
+- [x] Add versioned company profile, segment, brand, leadership, priority, peer, and profile-completeness records.
+- [x] Provide company overview, historical snapshot, section detail, recent changes, evidence, completeness, and export interfaces.
+- [x] Aggregate latest KPIs, promises, milestones, risks, and strategic events without duplicating their source records.
 
 **Frontend**
 
-- [ ] Build the Company 360 overview with anchored section navigation and current/historical date controls.
-- [ ] Add segment, product, geography, leadership, competitor, priority, metric, and recent-change cards.
-- [ ] Add completeness, freshness, partial-data, conflict, evidence, and printable brief views.
+- [x] Build the Company 360 overview with anchored section navigation and current/historical date controls.
+- [x] Add segment, product, geography, leadership, competitor, priority, metric, and recent-change cards.
+- [x] Add completeness, freshness, partial-data, conflict, evidence, and printable brief views.
 
 ### 2. Business Model Map Workstreams
 

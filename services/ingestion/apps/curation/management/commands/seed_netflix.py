@@ -47,6 +47,18 @@ SAMPLE_EVENT = {
     "review_status": "NEEDS_REVIEW",
 }
 
+SAMPLE_PROFILE_SOURCE = {
+    "source_api": "SEC_EDGAR",
+    "url": "https://www.sec.gov/Archives/edgar/data/1065280/000106528023000017/nflx-20221231.htm",
+    "canonical_url": "https://www.sec.gov/Archives/edgar/data/1065280/000106528023000017/nflx-20221231.htm",
+    "title": "Netflix 2022 Form 10-K",
+    "publisher": "SEC",
+    "published_date": datetime(2023, 1, 27, tzinfo=timezone.utc),
+    "snippet": "Netflix describes its streaming business, members, revenue, international operations, competition, leadership, and strategy.",
+    "language": "en",
+    "status": "APPROVED",
+}
+
 SAMPLE_TURN = {
     "title": "Netflix launches ad-supported subscription tier",
     "turn_type": "REVENUE_MODEL_EXPANSION",
@@ -68,6 +80,25 @@ SAMPLE_TURN = {
     "is_published": False,
 }
 
+SAMPLE_PROFILE = {
+    "effective_date": date(2022, 10, 13),
+    "status": "REVIEWED",
+    "summary": "Netflix is a global entertainment service offering streaming plans and producing content.",
+    "business_model": "Netflix earns subscription revenue and expanded into advertising through an ad-supported plan.",
+    "subsidiaries": ["Netflix Studios"],
+    "brands": ["Netflix"],
+    "segments": ["Streaming entertainment"],
+    "products": ["Streaming plans", "Ad-supported streaming plan", "Original films and series"],
+    "customer_groups": ["Streaming members", "Advertisers"],
+    "revenue_sources": ["Subscriptions", "Advertising"],
+    "geographies": ["United States", "International markets"],
+    "leadership": [{"name": "Netflix executive team", "role": "Company leadership"}],
+    "competitors": ["Disney+", "Prime Video", "YouTube", "Traditional entertainment providers"],
+    "strategic_priorities": ["Grow advertising", "Improve member value", "Expand global entertainment reach"],
+    "evidence_text": "Netflix announced Basic with Ads as a lower-priced ad-supported streaming plan.",
+    "confidence_score": Decimal("0.85"),
+}
+
 
 class Command(BaseCommand):
     help = "Seed Netflix and a manually curated sample strategic turn for admin review."
@@ -78,14 +109,18 @@ class Command(BaseCommand):
         event_model = self._optional_model("curation", "BusinessEvent")
         turn_model = self._optional_model("curation", "StrategicTurn")
         turn_source_model = self._optional_model("curation", "StrategicTurnSource")
+        profile_model = self._optional_model("companies", "CompanyProfileSnapshot")
 
         with transaction.atomic():
             company = self._upsert_company(company_model)
             source = self._upsert_source(source_model, company) if source_model else None
+            profile_source = self._upsert_source(source_model, company, values=SAMPLE_PROFILE_SOURCE) if source_model else None
             event = self._upsert_event(event_model, company, source) if event_model else None
             turn = self._upsert_turn(turn_model, company) if turn_model else None
             if turn_source_model and turn and source:
                 self._upsert_turn_source(turn_source_model, turn, source, event)
+            if profile_model and profile_source:
+                self._upsert_profile(profile_model, company, profile_source)
 
         self.stdout.write(self.style.SUCCESS("Seeded Netflix admin review data."))
         if source_model is None:
@@ -115,8 +150,8 @@ class Command(BaseCommand):
         company, _created = model.objects.update_or_create(slug="netflix", defaults=defaults)
         return company
 
-    def _upsert_source(self, model, company):
-        values = dict(SAMPLE_SOURCE)
+    def _upsert_source(self, model, company, *, values=None):
+        values = dict(values or SAMPLE_SOURCE)
         values["company"] = company
         values["url_hash"] = self._sha256(values["canonical_url"])
         values["title_hash"] = self._sha256(values["title"].lower())
@@ -164,6 +199,18 @@ class Command(BaseCommand):
         if event is not None and self._has_field(model, "business_event"):
             lookup["business_event"] = event
         model.objects.update_or_create(**lookup, defaults=defaults)
+
+    def _upsert_profile(self, model, company, source):
+        values = dict(SAMPLE_PROFILE)
+        values["company"] = company
+        values["source_document"] = source
+        defaults = self._filter_model_values(model, values)
+        model.objects.update_or_create(
+            company=company,
+            effective_date=SAMPLE_PROFILE["effective_date"],
+            source_document=source,
+            defaults=defaults,
+        )
 
     def _filter_model_values(self, model, values):
         return {key: value for key, value in values.items() if self._has_field(model, key)}
