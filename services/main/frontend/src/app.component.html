@@ -117,6 +117,7 @@
         <button type="button" [class.active]="activePage() === 'dashboard'" [attr.aria-current]="activePage() === 'dashboard' ? 'page' : null" (click)="setActivePage('dashboard')">Dashboard</button>
         <button type="button" *ngIf="companyProfile()" [class.active]="activePage() === 'company'" [attr.aria-current]="activePage() === 'company' ? 'page' : null" (click)="setActivePage('company')">Company 360</button>
         <button type="button" *ngIf="businessModel()" [class.active]="activePage() === 'business-model'" [attr.aria-current]="activePage() === 'business-model' ? 'page' : null" (click)="setActivePage('business-model')">Business Model</button>
+        <button type="button" *ngIf="operatingKpis()" [class.active]="activePage() === 'operating-kpis'" [attr.aria-current]="activePage() === 'operating-kpis' ? 'page' : null" (click)="setActivePage('operating-kpis')">Operating KPIs</button>
         <button type="button" [class.active]="activePage() === 'profile'" [attr.aria-current]="activePage() === 'profile' ? 'page' : null" (click)="setActivePage('profile')">Profile</button>
         <button type="button" [class.active]="activePage() === 'subscription'" [attr.aria-current]="activePage() === 'subscription' ? 'page' : null" (click)="setActivePage('subscription')">Subscription</button>
       </nav>
@@ -738,6 +739,7 @@
                 </label>
                 <div class="profile-control-actions">
                   <button type="button" class="ghost-button" (click)="openBusinessModel(companyView.company.slug)">Business model map</button>
+                  <button type="button" class="ghost-button" (click)="openOperatingKpis(companyView.company.slug)">Operating KPI tracker</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('companies-like-mine')">Compare peers</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('latest-moves')">Latest moves</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('risk-signals')">Risk signals</button>
@@ -949,6 +951,106 @@
               <section class="panel" aria-labelledby="model-evidence-heading">
                 <div class="panel-header"><div><p class="section-kicker">Sources</p><h2 id="model-evidence-heading">Business-model evidence</h2></div></div>
                 <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of modelView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+              </section>
+            </ng-container>
+          </section>
+
+          <section *ngSwitchCase="'operating-kpis'" class="company-profile-layout" aria-labelledby="operating-kpi-heading">
+            <div class="panel empty-state" *ngIf="operatingKpiLoading()" role="status">Loading reviewed operating KPI series.</div>
+            <ng-container *ngIf="operatingKpis() as kpiView">
+              <section class="panel company-profile-hero">
+                <div>
+                  <p class="section-kicker">Operating KPI Tracker · {{ kpiView.status }}</p>
+                  <h2 id="operating-kpi-heading">{{ kpiView.company.name }} operating drivers</h2>
+                  <p>{{ kpiView.selected_metric?.description || 'No reviewed operating KPI is available.' }}</p>
+                </div>
+                <div class="coverage-summary">
+                  <strong>{{ kpiView.coverage.metric_count }}</strong><span>tracked metrics</span>
+                  <small>{{ kpiView.coverage.observation_count }} visible observations · latest {{ kpiView.coverage.last_period || 'unavailable' }}</small>
+                </div>
+              </section>
+
+              <section class="panel company-profile-controls kpi-controls" aria-label="Operating KPI controls">
+                <label>Metric
+                  <select [(ngModel)]="operatingKpiMetric">
+                    <option *ngFor="let metric of kpiView.dictionary" [value]="metric.slug">{{ metric.name }} · {{ metric.value_type }}</option>
+                  </select>
+                </label>
+                <label>Segment
+                  <select [(ngModel)]="operatingKpiSegment"><option value="">All segments</option><option *ngFor="let item of kpiView.filters.segments" [value]="item">{{ item }}</option></select>
+                </label>
+                <label>Geography
+                  <select [(ngModel)]="operatingKpiGeography"><option value="">Global and all regions</option><option *ngFor="let item of kpiView.filters.geographies" [value]="item">{{ item }}</option></select>
+                </label>
+                <label>Period start<input type="date" [(ngModel)]="operatingKpiStart" /></label>
+                <label>Period end<input type="date" [(ngModel)]="operatingKpiEnd" /></label>
+                <label class="checkbox-row"><input type="checkbox" [(ngModel)]="operatingKpiComparableOnly" /> Comparable periods only</label>
+                <button type="button" class="primary-button" (click)="reloadOperatingKpis()">Apply filters</button>
+                <button type="button" class="ghost-button" (click)="openCompany(kpiView.company.slug)">Back to Company 360</button>
+              </section>
+
+              <section class="kpi-summary-grid" aria-label="KPI dictionary">
+                <article class="panel kpi-summary-card" *ngFor="let metric of kpiView.dictionary" [class.selected]="metric.slug === kpiView.selected_metric?.slug">
+                  <span>{{ metric.value_type }} · {{ metric.cadence }}</span><h3>{{ metric.name }}</h3>
+                  <strong>{{ metric.unit }}</strong><p>{{ metric.description }}</p>
+                  <button type="button" class="ghost-button" (click)="openOperatingKpis(kpiView.company.slug, metric.slug)">View series</button>
+                </article>
+              </section>
+
+              <section class="panel" aria-labelledby="kpi-trend-heading">
+                <div class="panel-header"><div><p class="section-kicker">Trend and table</p><h2 id="kpi-trend-heading">{{ kpiView.selected_metric?.name || 'KPI series' }}</h2></div><span>{{ kpiView.selected_metric?.unit }}</span></div>
+                <div class="empty-state unavailable-state" *ngIf="kpiView.series.length === 0">No observations match these controls. Missing data is not treated as zero.</div>
+                <div class="kpi-trend" *ngIf="kpiView.series.length > 0">
+                  <article class="kpi-trend-row" *ngFor="let point of kpiView.series">
+                    <div><strong>{{ point.fiscal_year }} {{ point.fiscal_period }}</strong><span>{{ point.geography || 'Global' }} · {{ point.segment || 'Company' }}</span></div>
+                    <div class="kpi-bar-track"><span [style.width.%]="kpiBarWidth(point.value, kpiView.series)"></span></div>
+                    <strong>{{ point.value | number:'1.0-3' }} {{ kpiView.selected_metric?.unit }}</strong>
+                    <small>
+                      <span *ngIf="point.is_estimated">Estimated </span><span *ngIf="point.is_restatement">Restated </span>
+                      <span *ngIf="point.is_non_comparable">Non-comparable </span><span *ngIf="point.definition_changed">Definition changed </span>
+                      Confidence {{ point.confidence_score | number:'1.2-2' }}
+                    </small>
+                  </article>
+                </div>
+                <p class="formula-note" *ngIf="kpiView.selected_metric?.formula"><strong>Visible formula:</strong> {{ kpiView.selected_metric?.formula }}</p>
+                <p class="missing-period-note" *ngIf="kpiView.missing_periods.length > 0"><strong>Missing periods:</strong> {{ kpiView.missing_periods.join(', ') }}</p>
+              </section>
+
+              <section class="dashboard-two-column">
+                <article class="panel">
+                  <div class="panel-header"><h2>Definition history</h2></div>
+                  <div class="empty-state" *ngIf="!kpiView.selected_metric || kpiView.selected_metric.definition_history.length === 0">No reviewed definition history.</div>
+                  <div class="result-row" *ngFor="let version of kpiView.selected_metric?.definition_history || []">
+                    <strong>{{ version.effective_date }}</strong><span>{{ version.scope }}</span><p>{{ version.definition }}</p><small>{{ version.change_note }}</small>
+                  </div>
+                </article>
+                <article class="panel">
+                  <div class="panel-header"><h2>Material movement alerts</h2></div>
+                  <div class="empty-state" *ngIf="kpiView.alerts.length === 0">No material acceleration, slowdown, target crossing, or disclosure alert.</div>
+                  <div class="result-row" *ngFor="let alert of kpiView.alerts"><strong>{{ alert.type }}</strong><span>{{ alert.period_end || 'Current' }}</span><p>{{ alert.message }}</p></div>
+                </article>
+              </section>
+
+              <section class="panel">
+                <div class="panel-header"><div><p class="section-kicker">Context</p><h2>Related company events</h2></div></div>
+                <div class="result-row" *ngFor="let event of kpiView.event_overlays"><strong>{{ event.event_type }}</strong><span>{{ event.event_date }}</span><p>{{ event.actual_change || event.source_claim }}</p></div>
+                <div class="empty-state" *ngIf="kpiView.event_overlays.length === 0">No eligible event overlays.</div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-header"><div><p class="section-kicker">Peer normalization</p><h2>Comparable peer metrics</h2></div></div>
+                <div class="empty-state unavailable-state" *ngIf="kpiView.peer_comparisons.length === 0">Peer comparison is blocked until reviewed definitions and units are sufficiently comparable.</div>
+                <div class="result-row" *ngFor="let peer of kpiView.peer_comparisons"><strong>{{ peer.company }}</strong><span>{{ peer.metric }} · {{ peer.unit }}</span></div>
+              </section>
+
+              <section class="panel source-gap-panel" *ngIf="kpiView.source_gaps.length > 0">
+                <div class="panel-header"><h2>Unavailable KPI evidence</h2></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of kpiView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-header"><div><p class="section-kicker">Sources and export</p><h2>KPI evidence</h2></div><span>{{ kpiView.export_rows.length }} export-ready rows</span></div>
+                <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of kpiView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
               </section>
             </ng-container>
           </section>

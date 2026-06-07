@@ -231,6 +231,50 @@ BASE_URL=http://localhost:8080/api/app \
   bash scripts/smoke/phase2_business_model.sh
 ```
 
+## Operating KPI Tracker
+
+Phase 2 Requirement 3 tracks company-specific operating measures with their definitions, units, cadence, scope, aliases, source evidence, quality conditions, and comparability rules.
+
+The tracker includes:
+
+- reported and InfoDJ-calculated KPI series with visible formulas
+- quarterly, annual, monthly, and event-aligned metric definitions
+- segment and geography filters plus comparable-period controls
+- visible estimate, restatement, non-comparable, definition-change, discontinued-disclosure, and missing-period states
+- movement and target-crossing alerts, related strategic-event overlays, definition history, and export-ready rows
+- peer comparisons only after definition and unit comparability are reviewed
+
+The Netflix pilot contains source-backed 2022 paid streaming memberships, regional Q4 observations, and calculated quarter-over-quarter growth. Open Company 360 and select `Operating KPI tracker`; after loading, `Operating KPIs` remains in the left navigation.
+
+Collect a permitted official CSV with `period_end`, `value`, and optional period/scope columns. Imported records remain inactive and non-comparable until analyst review:
+
+```bash
+sudo docker compose -f infra/docker-compose.yml exec -T ingestion \
+  .venv/bin/python manage.py collect_kpi_csv \
+  --company netflix \
+  --url https://example.com/permitted-official-kpi.csv \
+  --metric-slug paid-memberships \
+  --metric-name "Paid memberships" \
+  --unit "million memberships"
+```
+
+When no structured download exists, the equivalent `collect_kpi_html_table` command can read the first permitted investor-relations table with `period_end` and `value` headers. Structured CSV remains the preferred source.
+
+Operating KPI endpoints:
+
+```text
+Ingestion: GET /api/ingestion/companies/{slug}/operating-kpis
+Product:   GET /api/app/companies/{slug}/operating-kpis
+Filters:   ?metric={slug}&segment={segment}&geography={geography}&start=YYYY-MM-DD&end=YYYY-MM-DD&comparable_only=true
+```
+
+Authenticated smoke check:
+
+```bash
+BASE_URL=http://localhost:8080/api/app \
+  bash scripts/smoke/phase2_operating_kpis.sh
+```
+
 ## Test Commands
 
 Run tests inside Docker Compose:

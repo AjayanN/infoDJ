@@ -11,6 +11,7 @@ import {
   CurrentUser,
   CompanyProfileResponse,
   BusinessModelResponse,
+  OperatingKpiResponse,
   DashboardSection,
   DashboardResponse,
   HistoryRow,
@@ -36,7 +37,7 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-type AppPage = 'dashboard' | 'company' | 'business-model' | 'profile' | 'subscription';
+type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'profile' | 'subscription';
 type DashboardViewId =
   | 'company-intelligence'
   | 'turn-impact'
@@ -118,6 +119,7 @@ class AppComponent {
   dashboard = signal<DashboardResponse | null>(null);
   companyProfile = signal<CompanyProfileResponse | null>(null);
   businessModel = signal<BusinessModelResponse | null>(null);
+  operatingKpis = signal<OperatingKpiResponse | null>(null);
   searchResults = signal<SearchResponse | null>(null);
   searchPages = signal<Record<SearchResultGroup, number>>({
     companies: 1,
@@ -144,11 +146,18 @@ class AppComponent {
   searchLoading = signal(false);
   companyLoading = signal(false);
   businessModelLoading = signal(false);
+  operatingKpiLoading = signal(false);
   companyProfileDate = '';
   businessModelDate = '';
   businessModelCompareDate = '';
   readonly businessModelComponentOrder = ['PAYER', 'USER', 'OFFERING', 'REVENUE', 'CHANNEL', 'GEOGRAPHY', 'PARTNER', 'COST', 'ASSET'];
   businessModelTypeFilter = '';
+  operatingKpiMetric = '';
+  operatingKpiSegment = '';
+  operatingKpiGeography = '';
+  operatingKpiStart = '';
+  operatingKpiEnd = '';
+  operatingKpiComparableOnly = false;
   readonly companyProfileSectionOrder = [
     'summary',
     'business_model',
@@ -437,6 +446,9 @@ class AppComponent {
     if (this.activePage() === 'business-model') {
       return `${this.businessModel()?.company.name || 'Company'} Business Model`;
     }
+    if (this.activePage() === 'operating-kpis') {
+      return `${this.operatingKpis()?.company.name || 'Company'} Operating KPIs`;
+    }
     if (this.activePage() === 'profile') {
       return 'Profile';
     }
@@ -452,6 +464,9 @@ class AppComponent {
     }
     if (this.activePage() === 'business-model') {
       return 'Who pays, who uses the offering, how it is delivered, where revenue comes from, and what changed over time.';
+    }
+    if (this.activePage() === 'operating-kpis') {
+      return 'Company-specific operating drivers, definitions, trends, quality flags, alerts, and source evidence.';
     }
     if (this.activePage() === 'profile') {
       return 'Manage account details, avatar preview, and subscription access.';
@@ -757,6 +772,35 @@ class AppComponent {
     if (company) {
       this.openBusinessModel(company.slug, this.businessModelDate, this.businessModelCompareDate);
     }
+  }
+
+  openOperatingKpis(slug: string, metric = ''): void {
+    if (!slug || !this.token()) return;
+    this.activePage.set('operating-kpis');
+    this.menuOpen.set(false);
+    this.operatingKpiLoading.set(true);
+    this.error.set('');
+    this.api.operatingKpis(
+      this.token(), slug, metric || this.operatingKpiMetric, this.operatingKpiSegment,
+      this.operatingKpiGeography, this.operatingKpiStart, this.operatingKpiEnd, this.operatingKpiComparableOnly
+    ).subscribe({
+      next: (response) => {
+        this.operatingKpis.set(response);
+        this.operatingKpiMetric = response.selected_metric?.slug || '';
+        this.operatingKpiLoading.set(false);
+      },
+      error: (response) => { this.operatingKpiLoading.set(false); this.showError(response); }
+    });
+  }
+
+  reloadOperatingKpis(): void {
+    const company = this.operatingKpis()?.company;
+    if (company) this.openOperatingKpis(company.slug, this.operatingKpiMetric);
+  }
+
+  kpiBarWidth(value: number, series: { value: number }[]): number {
+    const maximum = Math.max(...series.map((row) => Math.abs(row.value)), 1);
+    return Math.max(2, Math.round((Math.abs(value) / maximum) * 100));
   }
 
   businessModelComponentLabel(type: string): string {

@@ -294,6 +294,23 @@ class DashboardSearchApiTests(TestCase):
 
         self.assertEqual(response.status_code, 401)
 
+    @override_settings(INGESTION_API_URL="http://ingestion.test/api/ingestion")
+    @patch("apps.search.api.requests.get")
+    def test_operating_kpis_proxies_filters_and_response(self, get):
+        get.return_value = json_response({"status": "available", "company": {"slug": "netflix"}, "series": []})
+
+        response = self.client.get(
+            "/api/app/companies/netflix/operating-kpis?metric=paid-memberships&segment=Streaming&comparable_only=true"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(get.call_args.args[0], "http://ingestion.test/api/ingestion/companies/netflix/operating-kpis")
+        self.assertEqual(get.call_args.kwargs["params"], {"metric": "paid-memberships", "segment": "Streaming", "comparable_only": "true"})
+
+    def test_operating_kpis_requires_authentication(self):
+        response = APIClient().get("/api/app/companies/netflix/operating-kpis")
+        self.assertEqual(response.status_code, 401)
+
 
 def json_response(payload: dict):
     response = Mock()

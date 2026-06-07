@@ -141,6 +141,19 @@ def company_business_model(request, slug: str):
     return Response(payload)
 
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def company_operating_kpis(request, slug: str):
+    params = {}
+    for key in ("metric", "segment", "geography", "start", "end", "comparable_only"):
+        if request.GET.get(key):
+            params[key] = request.GET[key]
+    payload, error = ingestion_get(f"companies/{slug}/operating-kpis", params or None)
+    if error:
+        return Response({"error": "operating KPIs unavailable", "detail": error}, status=503)
+    return Response(payload)
+
+
 def ingestion_get(path: str, params: dict[str, object] | None = None) -> tuple[dict | None, str]:
     base_url = settings.INGESTION_API_URL.rstrip("/") + "/"
     url = urljoin(base_url, path)

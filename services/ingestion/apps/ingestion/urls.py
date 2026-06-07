@@ -8,6 +8,7 @@ urlpatterns = [
     path("companies", api.companies, name="ingestion-companies"),
     path("companies/<slug:slug>/profile", api.company_profile, name="ingestion-company-profile"),
     path("companies/<slug:slug>/business-model", api.company_business_model, name="ingestion-company-business-model"),
+    path("companies/<slug:slug>/operating-kpis", api.company_operating_kpis, name="ingestion-company-operating-kpis"),
     path("dashboard-data", api.dashboard_data, name="ingestion-dashboard-data"),
     path("search", api.search, name="ingestion-search"),
     path("search/suggest", api.search_suggest, name="ingestion-search-suggest"),
