@@ -9,6 +9,7 @@ from apps.ingestion.services.gdelt_client import discover_sources_for_company
 from apps.ingestion.services.query_generator import generate_query_strings
 from apps.ingestion.services.sec_edgar_client import discover_sec_filings_for_company
 from apps.ingestion.services.wikidata_client import sync_company_metadata
+from apps.companies.models import CompanyProfileSnapshot
 
 
 class CompanyAdmin(admin.ModelAdmin):
@@ -130,3 +131,12 @@ class CompanyAdmin(admin.ModelAdmin):
 
 
 register_planned_model("companies", "Company", CompanyAdmin)
+
+
+@admin.register(CompanyProfileSnapshot)
+class CompanyProfileSnapshotAdmin(admin.ModelAdmin):
+    list_display = ("company", "effective_date", "status", "confidence_score", "source_document", "updated_at")
+    list_filter = ("status", "effective_date", "company")
+    search_fields = ("company__name", "summary", "business_model", "evidence_text")
+    readonly_fields = ("created_at", "updated_at")
+    ordering = ("-effective_date", "company__name")

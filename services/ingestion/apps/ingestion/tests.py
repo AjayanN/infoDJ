@@ -5,10 +5,11 @@ from datetime import date
 from django.core.management import call_command
 from django.test import Client, TestCase
 
-from apps.companies.models import Company
+from apps.companies.models import Company, CompanyProfileSnapshot
 from apps.curation.models import BusinessEvent, StrategicTurn, StrategicTurnSource
 from apps.ingestion.models import FinancialFact, MarketPrice, SourceDocument, SourceGap
 from apps.ingestion.services.event_extractor import EventSignal, actual_change_for, find_evidence_sentence
+from apps.ingestion.services.company_profile_client import collect_official_company_profile, parse_official_profile_html
 from apps.ingestion.services.market_price_client import (
     parse_alpha_vantage_daily_csv,
     parse_fmp_historical_prices,
@@ -125,6 +126,104 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         titles = [turn["title"] for turn in response.json()["results"]["strategic_turns"]]
         self.assertNotIn("Netflix adapts to regulatory and legal risk", titles)
+
+    def test_company_profile_returns_source_backed_360_sections(self):
+        CompanyProfileSnapshot.objects.create(
+            company=self.netflix,
+            effective_date=date(2024, 12, 31),
+            source_document=self.source,
+            status="PUBLISHED",
+            summary="Netflix is a global entertainment service.",
+            business_model="Subscriptions and advertising fund streaming entertainment.",
+            subsidiaries=["Netflix Studios"],
+            brands=["Netflix"],
+            segments=["Streaming entertainment", "Advertising"],
+            products=["Streaming plans", "Ad-supported plan"],
+            customer_groups=["Consumers", "Advertisers"],
+            revenue_sources=["Subscriptions", "Advertising"],
+            geographies=["United States", "International"],
+            leadership=[{"name": "Executive team", "role": "Management"}],
+            competitors=["Disney+", "Prime Video"],
+            strategic_priorities=["Grow advertising", "Improve member value"],
+            evidence_text="Netflix described its services and revenue model in its filing.",
+            confidence_score="0.900",
+        )
+
+        response = self.client.get("/companies/netflix/profile")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "available")
+        self.assertEqual(payload["company"]["name"], "Netflix")
+        self.assertEqual(payload["sections"]["revenue_sources"]["items"], ["Subscriptions", "Advertising"])
+        self.assertEqual(payload["coverage"]["completeness_percent"], 100)
+        self.assertEqual(payload["highlights"]["latest_events"][0]["company_slug"], "netflix")
+        self.assertEqual(payload["highlights"]["financial_facts"][0]["concept"], "Revenues")
+        self.assertEqual(payload["evidence"][0]["title"], "Netflix 10-K")
+        self.assertEqual(payload["source_gaps"], [])
+
+    def test_company_profile_reports_partial_section_gaps(self):
+        response = self.client.get("/companies/netflix/profile")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "partial")
+        self.assertEqual(payload["sections"]["geographies"]["status"], "available")
+        self.assertEqual(payload["sections"]["business_model"]["status"], "unavailable")
+        self.assertIn("company_profile_business_model", [gap["key"] for gap in payload["source_gaps"]])
+
+    def test_company_profile_supports_historical_snapshot_selection(self):
+        CompanyProfileSnapshot.objects.create(
+            company=self.netflix,
+            effective_date=date(2021, 12, 31),
+            source_document=self.source,
+            status="REVIEWED",
+            summary="Netflix was a subscription streaming service.",
+            business_model="Subscription streaming.",
+            subsidiaries=["Netflix Studios"],
+            brands=["Netflix"],
+            segments=["Streaming entertainment"],
+            products=["Streaming plans"],
+            customer_groups=["Streaming members"],
+            revenue_sources=["Subscriptions"],
+            geographies=["United States", "International"],
+            leadership=["Executive team"],
+            competitors=["Disney+"],
+            strategic_priorities=["Grow memberships"],
+            confidence_score="0.800",
+        )
+        CompanyProfileSnapshot.objects.create(
+            company=self.netflix,
+            effective_date=date(2024, 12, 31),
+            source_document=self.source,
+            status="PUBLISHED",
+            summary="Netflix expanded its monetization model.",
+            business_model="Subscriptions and advertising.",
+            subsidiaries=["Netflix Studios"],
+            brands=["Netflix"],
+            segments=["Streaming entertainment", "Advertising"],
+            products=["Streaming plans", "Ad-supported plan"],
+            customer_groups=["Streaming members", "Advertisers"],
+            revenue_sources=["Subscriptions", "Advertising"],
+            geographies=["United States", "International"],
+            leadership=["Executive team"],
+            competitors=["Disney+"],
+            strategic_priorities=["Grow advertising"],
+            confidence_score="0.900",
+        )
+
+        response = self.client.get("/companies/netflix/profile?as_of=2021-12-31")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["profile"]["effective_date"], "2021-12-31")
+        self.assertEqual(payload["sections"]["business_model"]["text"], "Subscription streaming.")
+        self.assertEqual(len(payload["snapshot_history"]), 2)
+
+    def test_company_profile_unknown_company_returns_404(self):
+        response = self.client.get("/companies/unknown/profile")
+
+        self.assertEqual(response.status_code, 404)
 
     def test_dashboard_data_returns_source_backed_surfaces(self):
         response = self.client.get("/dashboard-data")
@@ -252,6 +351,72 @@ class EventClaimTextTests(TestCase):
 
         self.assertIn("require us to continue to make investments", evidence)
         self.assertNotIn("Legal Proceedings |", evidence)
+
+
+class CompanyProfileCollectorTests(TestCase):
+    def test_parse_official_profile_html_uses_structured_organization_data(self):
+        html = """
+        <html><head><title>ExampleCo</title>
+        <script type="application/ld+json">
+        {
+          "@type": "Organization",
+          "name": "ExampleCo",
+          "description": "ExampleCo provides business software.",
+          "brand": [{"name": "Example Cloud"}],
+          "makesOffer": [{"itemOffered": {"name": "Analytics Platform"}}],
+          "areaServed": [{"name": "United States"}]
+        }
+        </script></head><body></body></html>
+        """
+
+        data = parse_official_profile_html(html)
+
+        self.assertEqual(data.summary, "ExampleCo provides business software.")
+        self.assertEqual(data.brands, ("Example Cloud",))
+        self.assertEqual(data.products, ("Analytics Platform",))
+        self.assertEqual(data.geographies, ("United States",))
+
+    def test_collect_official_company_profile_persists_draft_evidence(self):
+        company = Company.objects.create(name="ExampleCo", website="https://example.com")
+        session = FakeProfileSession()
+
+        snapshot = collect_official_company_profile(company, session=session)
+
+        self.assertEqual(snapshot.status, "DRAFT")
+        self.assertEqual(snapshot.summary, "ExampleCo provides business software.")
+        self.assertEqual(snapshot.products, ["Analytics Platform"])
+        self.assertEqual(snapshot.source_document.source_api, "OFFICIAL_WEBSITE")
+        self.assertEqual(session.calls, ["https://example.com/robots.txt", "https://example.com"])
+
+
+class FakeProfileResponse:
+    def __init__(self, *, url: str, text: str, status_code: int = 200):
+        self.url = url
+        self.text = text
+        self.status_code = status_code
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise RuntimeError(f"HTTP {self.status_code}")
+
+
+class FakeProfileSession:
+    def __init__(self):
+        self.headers = {}
+        self.calls = []
+
+    def get(self, url, timeout):
+        self.calls.append(url)
+        if url.endswith("robots.txt"):
+            return FakeProfileResponse(url=url, text="User-agent: *\nAllow: /")
+        return FakeProfileResponse(
+            url=url,
+            text='''<html><head><title>ExampleCo</title><script type="application/ld+json">{
+              "@type": "Organization",
+              "description": "ExampleCo provides business software.",
+              "makesOffer": [{"itemOffered": {"name": "Analytics Platform"}}]
+            }</script></head></html>''',
+        )
 
 
 class MarketPriceClientTests(TestCase):

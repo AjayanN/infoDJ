@@ -28,3 +28,65 @@ class Company(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+
+class CompanyProfileStatus(models.TextChoices):
+    DRAFT = "DRAFT", "Draft"
+    REVIEWED = "REVIEWED", "Reviewed"
+    PUBLISHED = "PUBLISHED", "Published"
+
+
+class CompanyProfileSnapshot(models.Model):
+    company = models.ForeignKey(
+        Company,
+        on_delete=models.CASCADE,
+        related_name="profile_snapshots",
+    )
+    effective_date = models.DateField(db_index=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="company_profile_snapshots",
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=CompanyProfileStatus.choices,
+        default=CompanyProfileStatus.DRAFT,
+        db_index=True,
+    )
+    summary = models.TextField(blank=True)
+    business_model = models.TextField(blank=True)
+    subsidiaries = models.JSONField(default=list, blank=True)
+    brands = models.JSONField(default=list, blank=True)
+    segments = models.JSONField(default=list, blank=True)
+    products = models.JSONField(default=list, blank=True)
+    customer_groups = models.JSONField(default=list, blank=True)
+    revenue_sources = models.JSONField(default=list, blank=True)
+    geographies = models.JSONField(default=list, blank=True)
+    leadership = models.JSONField(default=list, blank=True)
+    competitors = models.JSONField(default=list, blank=True)
+    strategic_priorities = models.JSONField(default=list, blank=True)
+    evidence_text = models.TextField(blank=True)
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-effective_date", "-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["company", "effective_date", "source_document"],
+                name="unique_company_profile_snapshot_source",
+            )
+        ]
+        indexes = [
+            models.Index(
+                fields=["company", "status", "effective_date"],
+                name="company_prof_status_date_idx",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.company} profile at {self.effective_date}"

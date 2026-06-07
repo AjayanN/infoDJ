@@ -343,6 +343,80 @@ export type SearchSuggestion = {
   description: string;
 };
 
+export type CompanyProfileSection = {
+  status: 'available' | 'unavailable';
+  items: unknown[];
+  text: string;
+};
+
+export type CompanyProfileSource = {
+  id: number;
+  source_api: string;
+  title: string;
+  publisher: string;
+  url: string;
+  published_date: string | null;
+  snippet: string;
+  status: string;
+  updated_at: string;
+};
+
+export type CompanyProfileResponse = {
+  status: 'available' | 'partial' | 'unavailable';
+  company: DashboardCompany & {
+    aliases: string[];
+    website: string;
+    founded_date: string | null;
+    description: string;
+    is_active: boolean;
+  };
+  profile: {
+    id: number;
+    effective_date: string;
+    status: string;
+    confidence_score: number;
+    evidence_text: string;
+    source_id: number | null;
+  } | null;
+  snapshot_history: {
+    id: number;
+    effective_date: string;
+    status: string;
+    confidence_score: number;
+    selected: boolean;
+  }[];
+  sections: Record<string, CompanyProfileSection>;
+  highlights: {
+    latest_events: DashboardEvent[];
+    latest_turns: DashboardTurn[];
+    financial_facts: FinancialFactSummary[];
+  };
+  changes: {
+    section: string;
+    previous_effective_date: string;
+    current_effective_date: string;
+    previous: unknown;
+    current: unknown;
+  }[];
+  conflicts: {
+    snapshot_id: number;
+    effective_date: string;
+    differing_sections: string[];
+    source_id: number | null;
+    status: string;
+  }[];
+  evidence: CompanyProfileSource[];
+  coverage: {
+    completeness_percent: number;
+    available_sections: number;
+    total_sections: number;
+    source_count: number;
+    snapshot_count: number;
+    last_updated: string | null;
+  };
+  source_gaps: SourceGap[];
+};
+
 @Injectable({ providedIn: 'root' })
 export class InfoDjApiService {
   private readonly http = inject(HttpClient);
@@ -480,6 +554,17 @@ export class InfoDjApiService {
     return this.http.get<{ suggestions: SearchSuggestion[] }>(`${this.apiBaseUrl}/search/suggest`, {
       headers: this.authHeaders(token),
       params: { q: query, language: 'en' }
+    });
+  }
+
+  companyProfile(token: string, slug: string, asOf = '') {
+    const params: Record<string, string> = {};
+    if (asOf) {
+      params['as_of'] = asOf;
+    }
+    return this.http.get<CompanyProfileResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/profile`, {
+      headers: this.authHeaders(token),
+      params
     });
   }
 
