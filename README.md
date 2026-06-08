@@ -244,7 +244,20 @@ The tracker includes:
 - movement and target-crossing alerts, related strategic-event overlays, definition history, and export-ready rows
 - peer comparisons only after definition and unit comparability are reviewed
 
-The Netflix pilot contains source-backed 2022 paid streaming memberships, regional Q4 observations, and calculated quarter-over-quarter growth. Open Company 360 and select `Operating KPI tracker`; after loading, `Operating KPIs` remains in the left navigation.
+The Netflix pilot contains source-backed 2022 paid streaming memberships, regional Q4 observations, and calculated quarter-over-quarter growth. Every company in the current 20-company universe also receives annual and quarterly SEC Company Facts series for every stored concept. Those baseline series are labeled `Company-wide reported financial context`; they are not presented as company-specific operating KPIs such as subscribers, stores, deliveries, occupancy, or production.
+
+Open any company from search or Company 360 and select `Operating KPI tracker`; after loading, `Operating KPIs` remains in the left navigation.
+
+Refresh the official SEC data and all-company tracker coverage idempotently. KPI series are rebuilt automatically after each company’s facts are stored:
+
+```bash
+sudo docker compose -f infra/docker-compose.yml exec -T ingestion \
+  .venv/bin/python manage.py ingest_sec_companyfacts --all --limit 500
+```
+
+`build_companyfacts_kpis --all` remains available to rebuild from facts already stored in the database without making network requests.
+
+Companies outside the United States require equivalent connectors for their home regulator, exchange filings, and official investor-relations downloads. The same KPI dictionary and observation schema can ingest those sources while retaining their regulator and evidence links.
 
 Collect a permitted official CSV with `period_end`, `value`, and optional period/scope columns. Imported records remain inactive and non-comparable until analyst review:
 

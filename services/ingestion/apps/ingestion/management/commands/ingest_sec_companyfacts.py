@@ -7,6 +7,7 @@ from apps.ingestion.services.sec_companyfacts_client import (
     USEFUL_US_GAAP_CONCEPTS,
     ingest_sec_companyfacts_for_company,
 )
+from apps.ingestion.services.kpi_companyfacts_builder import build_companyfacts_kpis
 
 
 class Command(BaseCommand):
@@ -18,6 +19,7 @@ class Command(BaseCommand):
         parser.add_argument("--forms", default="10-K,10-Q")
         parser.add_argument("--concepts", default=",".join(USEFUL_US_GAAP_CONCEPTS))
         parser.add_argument("--limit", type=int, default=500, help="Maximum facts to store per company.")
+        parser.add_argument("--skip-kpi-build", action="store_true", help="Store facts without refreshing tracker series.")
 
     def handle(self, *args, **options):
         if bool(options["company"]) == bool(options["all"]):
@@ -58,9 +60,13 @@ class Command(BaseCommand):
                 limit=options["limit"],
                 job=job,
             )
+            if not options["skip_kpi_build"]:
+                kpi_counters = build_companyfacts_kpis(company)
+                counters["kpi_definitions"] = kpi_counters["definitions"]
+                counters["kpi_observations"] = kpi_counters["observations"]
             totals["companies"] += 1
             for key, value in counters.items():
-                totals[key] += value
+                totals[key] = totals.get(key, 0) + value
             self.stdout.write(self.style.SUCCESS(f"{company.slug}: {counters}"))
 
         self.stdout.write(self.style.SUCCESS(f"SEC companyfacts ingestion complete: {totals}"))

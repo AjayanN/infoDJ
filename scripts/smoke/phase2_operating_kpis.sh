@@ -33,4 +33,23 @@ assert len(data["evidence"]) >= 1
 print("Operating KPI Tracker ok")
 PY
 
+COMPANIES=(amazon american-tower apple caterpillar disney exxonmobil ford-motor-company freeport-mcmoran general-electric jpmorgan-chase microsoft netflix newmont nextera-energy pfizer prologis tesla unitedhealth-group visa walmart)
+echo "Checking Operating KPI coverage for ${#COMPANIES[@]} companies"
+for COMPANY in "${COMPANIES[@]}"; do
+  STATUS="$(curl -sS -o "/tmp/infodj_operating_kpis_${COMPANY}.json" -w "%{http_code}" "${BASE_URL}/companies/${COMPANY}/operating-kpis" -H "Authorization: Token ${TOKEN}")"
+  test "${STATUS}" = "200"
+  python3 - "${COMPANY}" <<'PY'
+import json
+import sys
+
+company = sys.argv[1]
+with open(f"/tmp/infodj_operating_kpis_{company}.json", encoding="utf-8") as handle:
+    data = json.load(handle)
+assert data["status"] == "available", company
+assert data["coverage"]["metric_count"] > 0, company
+assert data["coverage"]["observation_count"] > 0, company
+PY
+done
+echo "All-company Operating KPI coverage ok"
+
 echo "Operating KPI smoke test passed"

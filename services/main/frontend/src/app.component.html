@@ -963,6 +963,7 @@
                   <p class="section-kicker">Operating KPI Tracker · {{ kpiView.status }}</p>
                   <h2 id="operating-kpi-heading">{{ kpiView.company.name }} operating drivers</h2>
                   <p>{{ kpiView.selected_metric?.description || 'No reviewed operating KPI is available.' }}</p>
+                  <p class="formula-note" *ngIf="kpiView.selected_metric?.scope"><strong>Scope:</strong> {{ kpiView.selected_metric?.scope }}</p>
                 </div>
                 <div class="coverage-summary">
                   <strong>{{ kpiView.coverage.metric_count }}</strong><span>tracked metrics</span>
@@ -992,7 +993,7 @@
               <section class="kpi-summary-grid" aria-label="KPI dictionary">
                 <article class="panel kpi-summary-card" *ngFor="let metric of kpiView.dictionary" [class.selected]="metric.slug === kpiView.selected_metric?.slug">
                   <span>{{ metric.value_type }} · {{ metric.cadence }}</span><h3>{{ metric.name }}</h3>
-                  <strong>{{ metric.unit }}</strong><p>{{ metric.description }}</p>
+                  <strong>{{ metric.unit }}</strong><p>{{ metric.description }}</p><small>{{ metric.scope }}</small>
                   <button type="button" class="ghost-button" (click)="openOperatingKpis(kpiView.company.slug, metric.slug)">View series</button>
                 </article>
               </section>

@@ -41,6 +41,7 @@ def companies(_request: HttpRequest) -> JsonResponse:
         source_count=Count("source_documents", distinct=True),
         event_count=Count("business_events", distinct=True),
         turn_count=Count("strategic_turns", distinct=True),
+        kpi_count=Count("kpi_definitions", distinct=True),
     ).order_by("industry", "name"):
         rows.append(
             {
@@ -54,6 +55,7 @@ def companies(_request: HttpRequest) -> JsonResponse:
                 "source_count": company.source_count,
                 "event_count": company.event_count,
                 "strategic_turn_count": company.turn_count,
+                "kpi_count": company.kpi_count,
             }
         )
     return JsonResponse({"companies": rows})
@@ -270,7 +272,7 @@ def company_operating_kpis(request: HttpRequest, slug: str) -> JsonResponse:
     persist_operating_kpi_gaps(company, gaps, bool(definitions), bool(observations))
     events = list(BusinessEvent.objects.filter(company=company).exclude(actual_change="").order_by("event_date")[:100])
     sources, seen_sources = [], set()
-    for definition in definitions:
+    for definition in ([selected] if selected else []):
         for observation in definition.observations.all():
             if observation.source_document_id and observation.source_document_id not in seen_sources:
                 sources.append(serialize_profile_source(observation.source_document))
