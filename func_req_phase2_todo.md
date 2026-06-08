@@ -254,12 +254,13 @@ Track the operating measures that actually explain company performance, not only
 - [x] Link KPI movements to strategic events and label earnings, promise, and milestone dependencies until Requirements 4-6 ship.
 - [x] Add peer-normalized comparisons only when definitions are sufficiently comparable.
 - [x] Add alerts for material KPI acceleration, slowdown, target crossing, or disclosure discontinuation.
-- [x] Validate the Netflix pilot KPI series against the original Form 10-K table.
+- [x] Validate the Netflix company-specific KPI series and provide source-backed SEC baseline series for all 20 current companies.
 
 **Completion criteria**
 
 - The tracker explains which operating drivers moved and why they matter.
 - Missing periods and changed definitions cannot be mistaken for zero performance.
+- Every company in the active universe has reviewed baseline series; company-specific operating metrics remain distinctly labeled from standardized financial context.
 
 ### 4. Management Promise Tracker
 

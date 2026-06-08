@@ -21,6 +21,7 @@ from apps.ingestion.services.event_extractor import EventSignal, actual_change_f
 from apps.ingestion.services.company_profile_client import collect_official_company_profile, parse_official_profile_html
 from apps.ingestion.services.business_model_builder import build_business_model_from_profile, collect_business_model_page
 from apps.ingestion.services.kpi_collector import collect_kpi_csv, collect_kpi_html_table
+from apps.ingestion.services.kpi_companyfacts_builder import build_companyfacts_kpis
 from apps.ingestion.services.market_price_client import (
     parse_alpha_vantage_daily_csv,
     parse_fmp_historical_prices,
@@ -352,6 +353,34 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "unavailable")
         self.assertEqual(response.json()["series"], [])
+
+    def test_companyfacts_builder_creates_idempotent_annual_and_quarterly_series(self):
+        for filed, accession, value in (
+            (date(2024, 7, 20), "0001-24-000001", "100"),
+            (date(2024, 8, 1), "0001-24-000002", "105"),
+        ):
+            FinancialFact.objects.create(
+                company=self.netflix, taxonomy="us-gaap", concept="Revenues", label="Revenue", unit="USD",
+                fy=2024, fp="Q2", filed=filed, frame="CY2024Q2", value=value,
+                accession_number=accession, raw={"start": "2024-04-01", "end": "2024-06-30", "form": "10-Q"},
+            )
+        FinancialFact.objects.create(
+            company=self.netflix, taxonomy="us-gaap", concept="Revenues", label="Revenue", unit="USD",
+            fy=2023, fp="FY", filed=date(2024, 2, 1), frame="CY2023", value="400",
+            accession_number="0001-24-000003", raw={"start": "2023-01-01", "end": "2023-12-31", "form": "10-K"},
+        )
+
+        first = build_companyfacts_kpis(self.netflix)
+        second = build_companyfacts_kpis(self.netflix)
+
+        self.assertEqual(first["definitions"], 2)
+        self.assertEqual(second["definitions"], 2)
+        quarterly = KpiDefinition.objects.get(company=self.netflix, cadence="QUARTERLY", aliases__contains=["Revenues"])
+        self.assertEqual(quarterly.observations.count(), 1)
+        observation = quarterly.observations.get()
+        self.assertEqual(str(observation.value), "105.000000")
+        self.assertTrue(observation.is_restatement)
+        self.assertTrue(observation.is_non_comparable)
 
     def test_dashboard_data_returns_source_backed_surfaces(self):
         response = self.client.get("/dashboard-data")
