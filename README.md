@@ -324,6 +324,8 @@ sudo docker compose -f infra/docker-compose.yml run --rm main-frontend \
 
 The frontend test command executes TypeScript unit tests. The production build separately validates Angular templates, strict typing, and bundle generation.
 
+If the frontend reports `Ingestion data is currently unavailable`, verify `gateway`, `ingestion`, and `main-backend` are running. The dashboard proxy requests company coverage, jobs, and dashboard data concurrently; `/api/ingestion/companies` uses independent grouped counts to avoid cross-product timeouts as KPI coverage grows.
+
 Frontend smoke check:
 
 ```bash

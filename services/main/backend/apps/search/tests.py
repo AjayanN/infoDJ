@@ -30,8 +30,8 @@ class DashboardSearchApiTests(TestCase):
     @override_settings(INGESTION_API_URL="http://ingestion.test/api/ingestion")
     @patch("apps.search.api.requests.get")
     def test_dashboard_returns_grouped_sector_counts(self, get):
-        get.side_effect = [
-            json_response(
+        get.side_effect = dashboard_responses(
+            companies=json_response(
                 {
                     "companies": [
                         {
@@ -53,8 +53,8 @@ class DashboardSearchApiTests(TestCase):
                     ]
                 }
             ),
-            json_response({"jobs": [{"id": 1, "status": "SUCCEEDED"}]}),
-            json_response(
+            jobs=json_response({"jobs": [{"id": 1, "status": "SUCCEEDED"}]}),
+            dashboard=json_response(
                 {
                     "latest_events": [{"id": 10, "company": "Netflix"}],
                     "patterns": [{"pattern": "REVENUE_MODEL_EXPANSION", "sample_size": 2}],
@@ -125,7 +125,7 @@ class DashboardSearchApiTests(TestCase):
                     },
                 }
             ),
-        ]
+        )
 
         response = self.client.get("/api/app/dashboard?section=turn_impact&page=2&limit=25")
 
@@ -139,7 +139,8 @@ class DashboardSearchApiTests(TestCase):
         self.assertEqual(response.data["dashboards"]["patterns"][0]["pattern"], "REVENUE_MODEL_EXPANSION")
         self.assertEqual(response.data["dashboards"]["sections"]["latest_moves"]["status"], "available")
         self.assertIn("turn_impact", response.data["dashboards"]["sections"])
-        self.assertEqual(get.call_args_list[2].kwargs["params"], {"limit": "25", "section": "turn_impact", "page": "2"})
+        dashboard_call = next(call for call in get.call_args_list if call.args[0].endswith("/dashboard-data"))
+        self.assertEqual(dashboard_call.kwargs["params"], {"limit": "25", "section": "turn_impact", "page": "2"})
 
     @patch("apps.search.api.requests.get")
     def test_dashboard_handles_ingestion_failure(self, get):
@@ -156,7 +157,9 @@ class DashboardSearchApiTests(TestCase):
 
     @patch("apps.search.api.requests.get")
     def test_dashboard_reports_empty_source_backed_coverage_gap(self, get):
-        get.side_effect = [json_response({"companies": []}), json_response({"jobs": []}), json_response({})]
+        get.side_effect = dashboard_responses(
+            companies=json_response({"companies": []}), jobs=json_response({"jobs": []}), dashboard=json_response({})
+        )
 
         response = self.client.get("/api/app/dashboard")
 
@@ -167,8 +170,8 @@ class DashboardSearchApiTests(TestCase):
 
     @patch("apps.search.api.requests.get")
     def test_dashboard_reports_companies_missing_source_documents(self, get):
-        get.side_effect = [
-            json_response(
+        get.side_effect = dashboard_responses(
+            companies=json_response(
                 {
                     "companies": [
                         {
@@ -182,9 +185,9 @@ class DashboardSearchApiTests(TestCase):
                     ]
                 }
             ),
-            json_response({"jobs": []}),
-            json_response({}),
-        ]
+            jobs=json_response({"jobs": []}),
+            dashboard=json_response({}),
+        )
 
         response = self.client.get("/api/app/dashboard")
 
@@ -317,3 +320,16 @@ def json_response(payload: dict):
     response.json.return_value = payload
     response.raise_for_status.return_value = None
     return response
+
+
+def dashboard_responses(*, companies, jobs, dashboard):
+    def respond(url, **_kwargs):
+        if url.endswith("/companies"):
+            return companies
+        if url.endswith("/jobs"):
+            return jobs
+        if url.endswith("/dashboard-data"):
+            return dashboard
+        raise AssertionError(f"Unexpected dashboard URL: {url}")
+
+    return respond

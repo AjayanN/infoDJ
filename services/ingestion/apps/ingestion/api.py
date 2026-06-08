@@ -36,13 +36,12 @@ def health(_request: HttpRequest) -> JsonResponse:
 
 @require_GET
 def companies(_request: HttpRequest) -> JsonResponse:
+    source_counts = dict(SourceDocument.objects.values("company_id").annotate(count=Count("id")).values_list("company_id", "count"))
+    event_counts = dict(BusinessEvent.objects.values("company_id").annotate(count=Count("id")).values_list("company_id", "count"))
+    turn_counts = dict(StrategicTurn.objects.values("company_id").annotate(count=Count("id")).values_list("company_id", "count"))
+    kpi_counts = dict(KpiDefinition.objects.values("company_id").annotate(count=Count("id")).values_list("company_id", "count"))
     rows = []
-    for company in Company.objects.annotate(
-        source_count=Count("source_documents", distinct=True),
-        event_count=Count("business_events", distinct=True),
-        turn_count=Count("strategic_turns", distinct=True),
-        kpi_count=Count("kpi_definitions", distinct=True),
-    ).order_by("industry", "name"):
+    for company in Company.objects.order_by("industry", "name"):
         rows.append(
             {
                 "id": company.id,
@@ -52,10 +51,10 @@ def companies(_request: HttpRequest) -> JsonResponse:
                 "country": company.country,
                 "wikidata_id": company.wikidata_id,
                 "sec_cik": company.sec_cik,
-                "source_count": company.source_count,
-                "event_count": company.event_count,
-                "strategic_turn_count": company.turn_count,
-                "kpi_count": company.kpi_count,
+                "source_count": source_counts.get(company.id, 0),
+                "event_count": event_counts.get(company.id, 0),
+                "strategic_turn_count": turn_counts.get(company.id, 0),
+                "kpi_count": kpi_counts.get(company.id, 0),
             }
         )
     return JsonResponse({"companies": rows})
