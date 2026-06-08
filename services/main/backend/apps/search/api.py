@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urljoin
 
 import requests
@@ -16,14 +17,18 @@ INGESTION_TIMEOUT_SECONDS = 10
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def dashboard(request):
-    companies_response, companies_error = ingestion_get("companies")
-    jobs_response, jobs_error = ingestion_get("jobs", {"limit": 10})
     dashboard_params = {"limit": request.GET.get("limit") or 12}
     if request.GET.get("section"):
         dashboard_params["section"] = request.GET["section"]
     if request.GET.get("page"):
         dashboard_params["page"] = request.GET["page"]
-    dashboard_data_response, dashboard_data_error = ingestion_get("dashboard-data", dashboard_params)
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        companies_future = executor.submit(ingestion_get, "companies")
+        jobs_future = executor.submit(ingestion_get, "jobs", {"limit": 10})
+        dashboard_future = executor.submit(ingestion_get, "dashboard-data", dashboard_params)
+        companies_response, companies_error = companies_future.result()
+        jobs_response, jobs_error = jobs_future.result()
+        dashboard_data_response, dashboard_data_error = dashboard_future.result()
 
     companies = companies_response.get("companies", []) if companies_response else []
     jobs = jobs_response.get("jobs", []) if jobs_response else []

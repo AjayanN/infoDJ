@@ -616,6 +616,8 @@ class AppComponent {
         this.dashboardLoading.set(false);
         if (!response.ingestion.available) {
           this.error.set('Ingestion data is currently unavailable.');
+        } else if (this.error() === 'Ingestion data is currently unavailable.') {
+          this.error.set('');
         }
       },
       error: (response) => {
