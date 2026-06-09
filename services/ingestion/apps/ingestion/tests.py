@@ -26,6 +26,7 @@ from apps.ingestion.services.market_price_client import (
     parse_alpha_vantage_daily_csv,
     parse_fmp_historical_prices,
 )
+from apps.ingestion.services.sec_profile_builder import SecProfileData, apply_profile_fallbacks, parse_sec_profile_text
 from apps.ingestion.services.wikidata_client import normalize_company_entity
 
 
@@ -682,6 +683,36 @@ class EventClaimTextTests(TestCase):
 
 
 class CompanyProfileCollectorTests(TestCase):
+    def test_parse_sec_profile_text_extracts_functional_company_sections(self):
+        text = """
+        ITEM 1. Business Example Corp is a diversified services company with operations in three segments:
+        Entertainment, Sports and Experiences. ENTERTAINMENT The Entertainment segment produces film and episodic content.
+        •Direct-to-Consumer: Example+ offers subscription programming. •Content Sales/Licensing - Fees charged to
+        television distributors and subscribers. The revenues of Entertainment are as follows:
+        •Subscription fees - Fees charged to customers/subscribers for streaming services.
+        •Advertising - Sales of advertising time and space. The company has a 50% equity investment in Example Media.
+        Example Corp competes with television networks, streaming services and theatrical studios for audiences and talent.
+        Jane Doe, Chief Executive Officer, leads the company. ITEM 1A. Risk Factors
+        """
+
+        data = parse_sec_profile_text(text, "Example Corp", priorities=("Expand direct-to-consumer services.",))
+
+        self.assertEqual(data.segments, ("Entertainment", "Sports", "Experiences"))
+        self.assertIn("Subscription fees", data.revenue_sources)
+        self.assertIn("Advertising", data.revenue_sources)
+        self.assertIn("Example Media", data.subsidiaries)
+        self.assertIn("Jane Doe, Chief Executive Officer", data.leadership)
+        self.assertEqual(data.strategic_priorities, ("Expand direct-to-consumer services.",))
+
+    def test_reviewed_company_fallbacks_only_fill_missing_parser_fields(self):
+        empty = SecProfileData("", (), (), (), (), (), (), (), (), (), "filing evidence")
+
+        data = apply_profile_fallbacks(empty, "microsoft")
+
+        self.assertIn("Azure", data.brands)
+        self.assertIn("Intelligent Cloud", data.segments)
+        self.assertEqual(data.evidence_text, "filing evidence")
+
     def test_parse_official_profile_html_uses_structured_organization_data(self):
         html = """
         <html><head><title>ExampleCo</title>
