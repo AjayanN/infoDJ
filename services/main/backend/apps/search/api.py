@@ -18,10 +18,9 @@ INGESTION_TIMEOUT_SECONDS = 10
 @permission_classes([IsAuthenticated])
 def dashboard(request):
     dashboard_params = {"limit": request.GET.get("limit") or 12}
-    if request.GET.get("section"):
-        dashboard_params["section"] = request.GET["section"]
-    if request.GET.get("page"):
-        dashboard_params["page"] = request.GET["page"]
+    for key in ("section", "page", "company"):
+        if request.GET.get(key):
+            dashboard_params[key] = request.GET[key]
     with ThreadPoolExecutor(max_workers=3) as executor:
         companies_future = executor.submit(ingestion_get, "companies")
         jobs_future = executor.submit(ingestion_get, "jobs", {"limit": 10})
@@ -260,6 +259,7 @@ def empty_dashboard_data() -> dict:
         )
     }
     return {
+        "scope": None,
         "latest_events": [],
         "latest_turns": [],
         "patterns": [],

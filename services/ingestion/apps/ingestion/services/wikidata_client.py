@@ -23,6 +23,11 @@ class WikidataCompany:
     website: str = ""
     country: str = ""
     industry: str = ""
+    founded_date: date | None = None
+    subsidiaries: tuple[str, ...] = ()
+    brands: tuple[str, ...] = ()
+    products: tuple[str, ...] = ()
+    leadership: tuple[str, ...] = ()
     raw: Mapping[str, Any] = field(default_factory=dict)
 
 
@@ -93,7 +98,7 @@ class WikidataClient:
         ids = sorted(
             {
                 claim_id
-                for prop in ("P17", "P452")
+                for prop in ("P17", "P452", "P355", "P1056", "P1716", "P169")
                 for claim_id in _claim_entity_ids(entity, prop)
             }
         )
@@ -137,6 +142,11 @@ def normalize_company_entity(
         website=_claim_string(entity, "P856"),
         country=_first_label(country_ids, claim_labels),
         industry=_first_label(industry_ids, claim_labels),
+        founded_date=_claim_date(entity, "P571"),
+        subsidiaries=tuple(_labels_for_claim(entity, "P355", claim_labels)),
+        brands=tuple(_labels_for_claim(entity, "P1716", claim_labels)),
+        products=tuple(_labels_for_claim(entity, "P1056", claim_labels)),
+        leadership=tuple(_labels_for_claim(entity, "P169", claim_labels)),
         raw=entity,
     )
 
@@ -156,11 +166,17 @@ def update_company_from_wikidata(
     if details is None:
         raise LookupError(f"No Wikidata entity found for company {company.name!r}")
 
+    return _apply_company_details(company, details, save=save)
+
+
+def _apply_company_details(company: Any, details: WikidataCompany, *, save: bool) -> Any:
+
     company.wikidata_id = details.wikidata_id
     company.description = details.description or getattr(company, "description", "")
     company.website = details.website or getattr(company, "website", "")
     company.country = details.country or getattr(company, "country", "")
     company.industry = details.industry or getattr(company, "industry", "")
+    company.founded_date = details.founded_date or getattr(company, "founded_date", None)
     if details.aliases:
         company.aliases = list(details.aliases)
 
@@ -180,13 +196,13 @@ def sync_company_metadata(
 
     _mark_job_running(job, source="WIKIDATA")
     try:
-        updated_company = update_company_from_wikidata(
-            company,
-            client=client,
-            entity_id=entity_id,
-            save=True,
-        )
-        _persist_company_profile_snapshot(updated_company, client=client)
+        client = client or WikidataClient()
+        wikidata_id = entity_id or getattr(company, "wikidata_id", "") or None
+        details = client.get_company_details(wikidata_id) if wikidata_id else client.resolve_company(company.name)
+        if details is None:
+            raise LookupError(f"No Wikidata entity found for company {company.name!r}")
+        updated_company = _apply_company_details(company, details, save=True)
+        _persist_company_profile_snapshot(updated_company, details=details, client=client)
     except Exception as exc:
         _mark_job_failed(job, exc)
         raise
@@ -195,7 +211,12 @@ def sync_company_metadata(
     return updated_company
 
 
-def _persist_company_profile_snapshot(company: Any, *, client: WikidataClient | None) -> None:
+def _persist_company_profile_snapshot(
+    company: Any,
+    *,
+    details: WikidataCompany,
+    client: WikidataClient | None,
+) -> None:
     """Persist the source-backed Company 360 foundation after Wikidata sync."""
 
     if not hasattr(company, "profile_snapshots") or not getattr(company, "wikidata_id", ""):
@@ -227,7 +248,11 @@ def _persist_company_profile_snapshot(company: Any, *, client: WikidataClient | 
         defaults={
             "status": CompanyProfileStatus.REVIEWED,
             "summary": company.description,
+            "subsidiaries": list(details.subsidiaries),
+            "brands": list(details.brands),
+            "products": list(details.products),
             "geographies": [company.country] if company.country else [],
+            "leadership": list(details.leadership),
             "evidence_text": company.description,
             "confidence_score": "0.650",
         },
@@ -259,6 +284,22 @@ def _claim_string(entity: Mapping[str, Any], prop: str) -> str:
         return ""
     value = claims[0].get("mainsnak", {}).get("datavalue", {}).get("value", "")
     return str(value or "")
+
+
+def _claim_date(entity: Mapping[str, Any], prop: str) -> date | None:
+    claims = entity.get("claims", {}).get(prop, [])
+    if not claims:
+        return None
+    value = claims[0].get("mainsnak", {}).get("datavalue", {}).get("value", {})
+    raw_time = value.get("time", "") if isinstance(value, Mapping) else ""
+    try:
+        return date.fromisoformat(str(raw_time).lstrip("+")[:10])
+    except ValueError:
+        return None
+
+
+def _labels_for_claim(entity: Mapping[str, Any], prop: str, labels: Mapping[str, str]) -> list[str]:
+    return [labels[entity_id] for entity_id in _claim_entity_ids(entity, prop) if labels.get(entity_id)]
 
 
 def _first_label(entity_ids: list[str], labels: Mapping[str, str]) -> str:

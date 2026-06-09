@@ -61,6 +61,7 @@ class Command(BaseCommand):
                     "industry": seed.sector,
                     "country": seed.country,
                     "aliases": [seed.ticker],
+                    "website": seed.website,
                 },
             )
             if seed.ticker not in (company.aliases or []):
@@ -81,7 +82,8 @@ class Command(BaseCommand):
                     totals["wikidata_failed"] += 1
                 company.industry = seed.sector
                 company.country = company.country or seed.country
-                company.save(update_fields=["industry", "country", "updated_at"])
+                company.website = seed.website or company.website
+                company.save(update_fields=["industry", "country", "website", "updated_at"])
 
             if not options["skip_sec"]:
                 counters = None if self._should_skip(company, "SEC_EDGAR", options) else self._ingest_sec(company, seed.ticker, options)

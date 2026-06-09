@@ -127,7 +127,7 @@ class DashboardSearchApiTests(TestCase):
             ),
         )
 
-        response = self.client.get("/api/app/dashboard?section=turn_impact&page=2&limit=25")
+        response = self.client.get("/api/app/dashboard?section=turn_impact&page=2&limit=25&company=netflix")
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["summary"]["company_count"], 2)
@@ -140,7 +140,10 @@ class DashboardSearchApiTests(TestCase):
         self.assertEqual(response.data["dashboards"]["sections"]["latest_moves"]["status"], "available")
         self.assertIn("turn_impact", response.data["dashboards"]["sections"])
         dashboard_call = next(call for call in get.call_args_list if call.args[0].endswith("/dashboard-data"))
-        self.assertEqual(dashboard_call.kwargs["params"], {"limit": "25", "section": "turn_impact", "page": "2"})
+        self.assertEqual(
+            dashboard_call.kwargs["params"],
+            {"limit": "25", "section": "turn_impact", "page": "2", "company": "netflix"},
+        )
 
     @patch("apps.search.api.requests.get")
     def test_dashboard_handles_ingestion_failure(self, get):

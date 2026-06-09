@@ -265,8 +265,15 @@
                   <p class="section-kicker">Active dashboard</p>
                   <h2>{{ activeDashboardView().name }}</h2>
                   <p>{{ activeDashboardView().purpose }}</p>
+                  <p class="dashboard-scope" *ngIf="dash.dashboards.scope as scope">
+                    Showing company-specific results for <strong>{{ scope.company }}</strong>
+                    <span *ngIf="dashboardView() === 'companies-like-mine'"> and its {{ scope.sector || scope.country || 'available' }} peers</span>.
+                  </p>
                 </div>
-                <span class="status-pill" [class.available]="activeDashboardStatus() === 'available'">{{ activeDashboardStatus() }}</span>
+                <div class="dashboard-heading-actions">
+                  <button type="button" class="ghost-button" *ngIf="dash.dashboards.scope" (click)="clearDashboardCompanyScope()">Show all companies</button>
+                  <span class="status-pill" [class.available]="activeDashboardStatus() === 'available'">{{ activeDashboardStatus() }}</span>
+                </div>
               </section>
 
               <ng-container *ngIf="dashboardView() === 'company-intelligence'; else unavailableDashboard">
@@ -756,7 +763,10 @@
               <section class="company-profile-section-grid" aria-label="Company profile sections">
                 <article class="panel profile-section-card" *ngFor="let sectionKey of companyProfileSectionOrder" [id]="'company-section-' + sectionKey">
                   <div class="panel-header">
-                    <h3>{{ profileSectionLabel(sectionKey) }}</h3>
+                    <div>
+                      <h3>{{ profileSectionLabel(sectionKey) }}</h3>
+                      <small *ngIf="companyView.sections[sectionKey].source === 'business_model_map'">Summary from the reviewed Business Model Map</small>
+                    </div>
                     <span class="status-pill" [class.available]="companyView.sections[sectionKey].status === 'available'">{{ companyView.sections[sectionKey].status }}</span>
                   </div>
                   <p *ngIf="companyView.sections[sectionKey].text">{{ companyView.sections[sectionKey].text }}</p>

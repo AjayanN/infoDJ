@@ -52,7 +52,7 @@ docker compose -f infra/docker-compose.yml --profile jobs run --rm ingestion-dai
 The scheduler runs this command every day at 02:00 UTC:
 
 ```bash
-.venv/bin/python manage.py run_ingestion_api_with_scheduler --host 0.0.0.0 --port 8001 --scheduler-timezone UTC --limit 20 --batch-size 10 --include-gdelt --split-batches
+.venv/bin/python manage.py run_ingestion_api_with_scheduler --host 0.0.0.0 --port 8001 --scheduler-timezone UTC --limit 20 --batch-size 10 --include-gdelt --include-company-profiles --split-batches
 ```
 
 Default scheduler slots:
@@ -62,6 +62,8 @@ Default scheduler slots:
 04:00 UTC -> companies 11-20
 06:00 UTC -> retry failed source jobs
 ```
+
+Each company batch also refreshes Company 360 from Wikidata and the configured corporate website. Source failures are recorded independently, so a blocked official site does not discard available Wikidata or existing reviewed profile data.
 
 Gateway routes:
 

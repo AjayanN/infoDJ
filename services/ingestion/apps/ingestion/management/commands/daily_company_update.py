@@ -23,6 +23,7 @@ class Command(BaseCommand):
         parser.add_argument("--include-financial-facts", action="store_true")
         parser.add_argument("--include-macro-context", action="store_true")
         parser.add_argument("--include-quality-scoring", action="store_true")
+        parser.add_argument("--include-company-profiles", action="store_true")
 
     def handle(self, *args, **options):
         ingest_args = {
@@ -42,6 +43,16 @@ class Command(BaseCommand):
             "retry_failed_only": options["retry_failed_only"],
         }
         call_command("ingest_sector_companies", **ingest_args)
+
+        if options["include_company_profiles"]:
+            call_command(
+                "refresh_company_profiles",
+                limit=options["limit"],
+                offset=options["offset"],
+                batch_size=options["batch_size"],
+                daily_idempotent=True,
+                retry_failed_only=options["retry_failed_only"],
+            )
 
         if options["include_financial_facts"]:
             call_command("ingest_sec_companyfacts", all=True, limit=500)

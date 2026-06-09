@@ -469,6 +469,18 @@ button:disabled {
   margin: 8px 0 0;
 }
 
+.dashboard-surface-heading .dashboard-scope {
+  color: var(--text);
+}
+
+.dashboard-heading-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
 .dashboard-two-column {
   display: grid;
   gap: 18px;

@@ -75,7 +75,14 @@ def company_profile(request: HttpRequest, slug: str) -> JsonResponse:
         if row.status in {"PUBLISHED", "REVIEWED"} and (as_of is None or row.effective_date <= as_of)
     ]
     current = eligible_snapshots[0] if eligible_snapshots else None
-    previous = eligible_snapshots[1] if len(eligible_snapshots) > 1 else None
+    effective_dates = list(dict.fromkeys(snapshot.effective_date for snapshot in eligible_snapshots))
+    previous_date = effective_dates[1] if len(effective_dates) > 1 else None
+    business_model_snapshot = (
+        BusinessModelSnapshot.objects.filter(company=company, status__in=["PUBLISHED", "REVIEWED"])
+        .filter(Q(effective_date__lte=as_of) if as_of else Q())
+        .order_by("-effective_date", "-updated_at")
+        .first()
+    )
 
     events = list(
         BusinessEvent.objects.filter(company=company)
@@ -100,7 +107,15 @@ def company_profile(request: HttpRequest, slug: str) -> JsonResponse:
     )
     sources = list(SourceDocument.objects.filter(company=company).order_by("-published_date", "-updated_at")[:12])
 
-    section_values = profile_section_values(company, current)
+    section_values = profile_section_values_from_snapshots(company, eligible_snapshots, business_model_snapshot)
+    previous_sections = (
+        profile_section_values_from_snapshots(
+            company,
+            [snapshot for snapshot in eligible_snapshots if snapshot.effective_date <= previous_date],
+        )
+        if previous_date
+        else None
+    )
     missing_sections = [key for key, value in section_values.items() if not value]
     source_gaps = [
         {
@@ -133,7 +148,12 @@ def company_profile(request: HttpRequest, slug: str) -> JsonResponse:
                 if snapshot.status in {"PUBLISHED", "REVIEWED"}
             ],
             "sections": {
-                key: {"status": "available" if value else "unavailable", "items": value if isinstance(value, list) else [], "text": value if isinstance(value, str) else ""}
+                key: {
+                    "status": "available" if value else "unavailable",
+                    "items": value if isinstance(value, list) else [],
+                    "text": value if isinstance(value, str) else "",
+                    "source": "business_model_map" if key == "business_model" and business_model_snapshot else "company_profile",
+                }
                 for key, value in section_values.items()
             },
             "highlights": {
@@ -141,7 +161,7 @@ def company_profile(request: HttpRequest, slug: str) -> JsonResponse:
                 "latest_turns": [serialize_strategic_turn(turn, source_count=turn_source_counts.get(turn.id, 0)) for turn in turns],
                 "financial_facts": [serialize_financial_fact(fact) for fact in facts],
             },
-            "changes": profile_changes(current, previous),
+            "changes": profile_value_changes(section_values, previous_sections, effective_dates[0] if effective_dates else None, previous_date),
             "conflicts": profile_conflicts(current, snapshots),
             "evidence": [serialize_profile_source(source) for source in sources],
             "coverage": {
@@ -300,24 +320,32 @@ def dashboard_data(request: HttpRequest) -> JsonResponse:
     limit = bounded_limit(request, default=10, maximum=50)
     requested_section = (request.GET.get("section") or "").strip()
     requested_page = bounded_page(request)
+    company_slug = (request.GET.get("company") or "").strip()
+    scoped_company = get_company(company_slug) if company_slug else None
 
     def page_for(section: str) -> int:
         return requested_page if requested_section == section else 1
 
+    event_candidates = BusinessEvent.objects.select_related("company", "source_document")
+    turn_candidates = StrategicTurn.objects.select_related("company")
+    if scoped_company:
+        event_candidates = event_candidates.filter(company=scoped_company)
+        turn_candidates = turn_candidates.filter(company=scoped_company)
+
     latest_event_candidates = list(
-        BusinessEvent.objects.select_related("company", "source_document")
+        event_candidates
         .exclude(actual_change="")
         .order_by("-event_date", "-created_at")[:500]
     )
     latest_events = eligible_events(latest_event_candidates, 500)
     impact_event_candidates = list(
-        BusinessEvent.objects.select_related("company", "source_document")
+        event_candidates
         .filter(company_id__in=MarketPrice.objects.exclude(company_id__isnull=True).values("company_id"))
         .exclude(actual_change="")
         .order_by("-event_date", "-created_at")[:500]
     )
     impact_events = eligible_events(impact_event_candidates, 500)
-    latest_turn_candidates = list(StrategicTurn.objects.select_related("company").order_by("-start_date", "-created_at")[:500])
+    latest_turn_candidates = list(turn_candidates.order_by("-start_date", "-created_at")[:500])
     turn_source_counts = dict(
         StrategicTurnSource.objects.filter(strategic_turn__in=latest_turn_candidates)
         .values("strategic_turn_id")
@@ -327,21 +355,27 @@ def dashboard_data(request: HttpRequest) -> JsonResponse:
     latest_turns = eligible_turns(latest_turn_candidates, turn_source_counts, 500)
     pattern_rows = strategic_pattern_rows(500)
     risk_event_candidates = list(
-        BusinessEvent.objects.select_related("company", "source_document")
+        event_candidates
         .filter(event_type__in=RISK_EVENT_TYPES)
         .exclude(actual_change="")
         .order_by("-event_date", "-created_at")[:500]
     )
     risk_events = eligible_risk_events(risk_event_candidates, 500)
-    company_rows = list(
+    company_queryset = (
         Company.objects.annotate(
             source_count=Count("source_documents", distinct=True),
             event_count=Count("business_events", distinct=True),
             turn_count=Count("strategic_turns", distinct=True),
         )
         .filter(event_count__gt=0)
-        .order_by("-event_count", "name")[:500]
     )
+    if scoped_company:
+        if scoped_company.industry:
+            company_queryset = company_queryset.filter(industry=scoped_company.industry)
+        elif scoped_company.country:
+            company_queryset = company_queryset.filter(country=scoped_company.country)
+        company_queryset = company_queryset.exclude(id=scoped_company.id)
+    company_rows = list(company_queryset.order_by("-event_count", "name")[:500])
     compare_rows = compare_turn_rows(500)
     scorecard_rows = scorecard_candidate_rows(500)
     impact_rows = market_impact_rows(impact_events, 500)
@@ -433,7 +467,7 @@ def dashboard_data(request: HttpRequest) -> JsonResponse:
         ),
         "company_situations": section_payload(
             key="company_situations",
-            items=[serialize_company_situation(company) for company in company_rows_page],
+            items=[serialize_company_situation(company, scoped_company) for company in company_rows_page],
             raw_count=Company.objects.count(),
             eligible_count=len(company_rows),
             page=page_for("company_situations"),
@@ -448,6 +482,7 @@ def dashboard_data(request: HttpRequest) -> JsonResponse:
 
     return JsonResponse(
         {
+            "scope": serialize_dashboard_scope(scoped_company),
             "latest_events": [serialize_business_event(event) for event in latest_events],
             "latest_turns": [serialize_strategic_turn(turn, source_count=turn_source_counts.get(turn.id, 0)) for turn in latest_turns],
             "patterns": pattern_rows,
@@ -455,7 +490,7 @@ def dashboard_data(request: HttpRequest) -> JsonResponse:
             "turn_impact": impact_rows,
             "source_confidence": source_confidence_summary(),
             "scorecard_candidates": scorecard_rows,
-            "company_situations": [serialize_company_situation(company) for company in company_rows],
+            "company_situations": [serialize_company_situation(company, scoped_company) for company in company_rows],
             "compare_examples": compare_rows,
             "source_gaps": gaps,
             "sections": sections,
@@ -1153,7 +1188,17 @@ def serialize_risk_signal(event: BusinessEvent) -> dict[str, object]:
     return row
 
 
-def serialize_company_situation(company: Company) -> dict[str, object]:
+def serialize_company_situation(company: Company, anchor: Company | None = None) -> dict[str, object]:
+    match_dimensions = [value for value in [company.industry, company.country] if value]
+    if anchor:
+        match_dimensions = [
+            value
+            for value, matches in (
+                (company.industry, company.industry and company.industry == anchor.industry),
+                (company.country, company.country and company.country == anchor.country),
+            )
+            if matches
+        ]
     return {
         "id": company.id,
         "name": company.name,
@@ -1163,7 +1208,18 @@ def serialize_company_situation(company: Company) -> dict[str, object]:
         "source_count": company.source_count,
         "event_count": company.event_count,
         "strategic_turn_count": company.turn_count,
-        "match_dimensions": [value for value in [company.industry, company.country] if value],
+        "match_dimensions": match_dimensions,
+    }
+
+
+def serialize_dashboard_scope(company: Company | None) -> dict[str, object] | None:
+    if company is None:
+        return None
+    return {
+        "company": company.name,
+        "company_slug": company.slug,
+        "sector": company.industry,
+        "country": company.country,
     }
 
 
@@ -1304,10 +1360,14 @@ def serialize_company_detail(company: Company) -> dict[str, object]:
     return payload
 
 
-def profile_section_values(company: Company, snapshot: CompanyProfileSnapshot | None) -> dict[str, object]:
+def profile_section_values(
+    company: Company,
+    snapshot: CompanyProfileSnapshot | None,
+    business_model_snapshot: BusinessModelSnapshot | None = None,
+) -> dict[str, object]:
     return {
         "summary": snapshot.summary if snapshot and snapshot.summary else company.description,
-        "business_model": snapshot.business_model if snapshot else "",
+        "business_model": business_model_snapshot.summary if business_model_snapshot else (snapshot.business_model if snapshot else ""),
         "subsidiaries": snapshot.subsidiaries if snapshot else [],
         "brands": snapshot.brands if snapshot else [],
         "segments": snapshot.segments if snapshot else [],
@@ -1319,6 +1379,23 @@ def profile_section_values(company: Company, snapshot: CompanyProfileSnapshot | 
         "competitors": snapshot.competitors if snapshot else [],
         "strategic_priorities": snapshot.strategic_priorities if snapshot else [],
     }
+
+
+def profile_section_values_from_snapshots(
+    company: Company,
+    snapshots: list[CompanyProfileSnapshot],
+    business_model_snapshot: BusinessModelSnapshot | None = None,
+) -> dict[str, object]:
+    values = profile_section_values(company, None, business_model_snapshot)
+    for field in values:
+        if field == "business_model" and business_model_snapshot:
+            continue
+        for snapshot in snapshots:
+            value = getattr(snapshot, field)
+            if value:
+                values[field] = value
+                break
+    return values
 
 
 def serialize_profile_snapshot(snapshot: CompanyProfileSnapshot | None, sections: dict[str, object]) -> dict[str, object] | None:
@@ -1362,6 +1439,27 @@ def profile_changes(current: CompanyProfileSnapshot | None, previous: CompanyPro
         }
         for field in fields
         if getattr(previous, field) != getattr(current, field)
+    ]
+
+
+def profile_value_changes(
+    current: dict[str, object],
+    previous: dict[str, object] | None,
+    current_date: date | None,
+    previous_date: date | None,
+) -> list[dict[str, object]]:
+    if previous is None or current_date is None or previous_date is None:
+        return []
+    return [
+        {
+            "section": field,
+            "previous_effective_date": previous_date.isoformat(),
+            "current_effective_date": current_date.isoformat(),
+            "previous": previous.get(field),
+            "current": value,
+        }
+        for field, value in current.items()
+        if previous.get(field) != value
     ]
 
 

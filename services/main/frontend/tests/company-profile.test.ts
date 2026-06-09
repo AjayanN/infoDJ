@@ -7,6 +7,7 @@ import {
   companyProfileItemLabel,
   companyProfileSectionHasData,
   companyProfileSectionLabel,
+  dashboardRequestParams,
   kpiObservationFlags
 } from '../src/app/company-profile.utils';
 
@@ -29,6 +30,13 @@ test('detects available and unavailable Company 360 sections', () => {
   assert.equal(companyProfileSectionHasData({ text: '', items: [] }), false);
   assert.equal(companyProfileSectionHasData({ text: 'Subscription business', items: [] }), true);
   assert.equal(companyProfileSectionHasData({ text: '', items: ['Advertising'] }), true);
+});
+
+test('preserves company scope in dashboard requests and pagination', () => {
+  assert.deepEqual(dashboardRequestParams('risk_signals', 2, 12, 'netflix'), {
+    limit: '12', section: 'risk_signals', page: '2', company: 'netflix'
+  });
+  assert.deepEqual(dashboardRequestParams('', 1, 12, ''), { limit: '12' });
 });
 
 test('formats business-model components and relationships for accessible display', () => {

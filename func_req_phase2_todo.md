@@ -190,6 +190,20 @@ Provide the definitive starting page for understanding what a company is today, 
 - Every section exposes supporting evidence or an explicit data gap.
 - Current state, historical state, and recent changes are distinguishable.
 
+**Final completion validation**
+
+- [x] Define ownership boundaries: Dashboard is cross-company monitoring, Company 360 is the company summary, and dedicated Phase 2 features own canonical detail records.
+- [x] Use the reviewed, dated Business Model Map summary in Company 360 with profile text only as a fallback.
+- [x] Preserve company context when opening Latest Moves, Risk Signals, and Situation Benchmarks from Company 360.
+- [x] Keep company scope through dashboard pagination and provide an explicit return to global results.
+- [x] Add ingestion, product API, and frontend regression coverage for the ownership and scope contract.
+- [x] Add a source-backed Company 360 backfill and scheduled refresh for the configured 20-company universe.
+- [x] Combine reviewed Wikidata and permitted official-site profile fields without replacing populated sections with sparse refreshes.
+- [x] Run the complete ingestion backend test suite successfully.
+- [x] Run the complete main backend test suite successfully.
+- [x] Run the complete frontend test suite and production build successfully.
+- [x] Merge the validated Requirement 1 branch into `main` and mark Company 360 complete in the prioritized delivery plan.
+
 ### 2. Business Model Map
 
 **Purpose**
@@ -1556,7 +1570,7 @@ The order below reflects functional dependency and user value. It does not imply
 
 ### Wave 1: Company Understanding
 
-- [ ] Company 360 Profile.
+- [x] Company 360 Profile.
 - [ ] Business Model Map.
 - [ ] Operating KPI Tracker.
 - [ ] Product and Pricing History.

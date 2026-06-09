@@ -38,6 +38,7 @@ class Command(BaseCommand):
         parser.add_argument("--include-financial-facts", action="store_true")
         parser.add_argument("--include-macro-context", action="store_true")
         parser.add_argument("--include-quality-scoring", action="store_true")
+        parser.add_argument("--include-company-profiles", action="store_true")
         parser.add_argument("--skip-event-extraction", action="store_true")
         parser.add_argument("--retry-failed-only", action="store_true")
         parser.add_argument(
@@ -99,6 +100,7 @@ class Command(BaseCommand):
             "include_financial_facts": options["include_financial_facts"],
             "include_macro_context": options["include_macro_context"],
             "include_quality_scoring": options["include_quality_scoring"],
+            "include_company_profiles": options["include_company_profiles"],
             "skip_event_extraction": options["skip_event_extraction"],
             "event_filing_limit": options["event_filing_limit"],
             "retry_failed_only": slot.retry_failed_only,

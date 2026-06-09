@@ -2,6 +2,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 
 import { environment } from '../../environments/environment';
+import { dashboardRequestParams } from '../company-profile.utils';
 
 export type Subscription = {
   tier: string;
@@ -248,6 +249,12 @@ export type DashboardSections = {
 };
 
 export type DashboardData = {
+  scope: {
+    company: string;
+    company_slug: string;
+    sector: string;
+    country: string;
+  } | null;
   latest_events: DashboardEvent[];
   latest_turns: DashboardTurn[];
   patterns: PatternSummary[];
@@ -347,6 +354,7 @@ export type CompanyProfileSection = {
   status: 'available' | 'unavailable';
   items: unknown[];
   text: string;
+  source: 'company_profile' | 'business_model_map';
 };
 
 export type CompanyProfileSource = {
@@ -627,15 +635,10 @@ export class InfoDjApiService {
     });
   }
 
-  dashboard(token: string, section = '', page = 1, limit = 12) {
-    const params: Record<string, string> = { limit: String(limit) };
-    if (section) {
-      params['section'] = section;
-      params['page'] = String(page);
-    }
+  dashboard(token: string, section = '', page = 1, limit = 12, company = '') {
     return this.http.get<DashboardResponse>(`${this.apiBaseUrl}/dashboard`, {
       headers: this.authHeaders(token),
-      params
+      params: dashboardRequestParams(section, page, limit, company)
     });
   }
 
