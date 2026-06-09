@@ -8,6 +8,7 @@ from apps.companies.company_universe import CROSS_SECTOR_COMPANIES
 from apps.companies.models import Company
 from apps.ingestion.models import IngestionJob, IngestionJobStatus, IngestionJobType
 from apps.ingestion.services.company_profile_client import collect_official_company_profile
+from apps.ingestion.services.sec_profile_builder import build_sec_company_profile
 from apps.ingestion.services.wikidata_client import sync_company_metadata
 
 
@@ -16,10 +17,12 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("--limit", type=int, default=20)
+        parser.add_argument("--company", default="", help="Optional company slug")
         parser.add_argument("--offset", type=int, default=0)
         parser.add_argument("--batch-size", type=int, default=0)
         parser.add_argument("--skip-wikidata", action="store_true")
         parser.add_argument("--skip-official", action="store_true")
+        parser.add_argument("--skip-sec-profile", action="store_true")
         parser.add_argument("--daily-idempotent", action="store_true")
         parser.add_argument("--retry-failed-only", action="store_true")
 
@@ -27,6 +30,8 @@ class Command(BaseCommand):
         seeds = CROSS_SECTOR_COMPANIES[options["offset"] : options["limit"]]
         if options["batch_size"]:
             seeds = seeds[: options["batch_size"]]
+        if options["company"]:
+            seeds = tuple(seed for seed in seeds if slugify(seed.name) == slugify(options["company"]))
 
         totals = {
             "companies": 0,
@@ -34,6 +39,8 @@ class Command(BaseCommand):
             "wikidata_failed": 0,
             "official_ok": 0,
             "official_failed": 0,
+            "sec_profile_ok": 0,
+            "sec_profile_failed": 0,
             "skipped": 0,
         }
         for seed in seeds:
@@ -60,6 +67,9 @@ class Command(BaseCommand):
             company.save(update_fields=["industry", "country", "website", "updated_at"])
             if not options["skip_official"]:
                 result = self._refresh_official(company, options)
+                totals[result] += 1
+            if not options["skip_sec_profile"]:
+                result = self._refresh_sec_profile(company)
                 totals[result] += 1
 
             self.stdout.write(
@@ -110,6 +120,14 @@ class Command(BaseCommand):
         job.finished_at = timezone.now()
         job.save(update_fields=["status", "finished_at"])
         return "official_ok"
+
+    def _refresh_sec_profile(self, company) -> str:
+        try:
+            build_sec_company_profile(company)
+        except Exception as exc:
+            self.stderr.write(f"SEC profile build failed for {company.name}: {exc}")
+            return "sec_profile_failed"
+        return "sec_profile_ok"
 
     def _should_skip(self, company, source: str, options) -> bool:
         if not options["daily_idempotent"]:

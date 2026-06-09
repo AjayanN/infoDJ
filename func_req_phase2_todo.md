@@ -199,6 +199,8 @@ Provide the definitive starting page for understanding what a company is today, 
 - [x] Add ingestion, product API, and frontend regression coverage for the ownership and scope contract.
 - [x] Add a source-backed Company 360 backfill and scheduled refresh for the configured 20-company universe.
 - [x] Combine reviewed Wikidata and permitted official-site profile fields without replacing populated sections with sparse refreshes.
+- [x] Build functional Company 360 sections from complete extracted 10-K filings and reviewed company-specific normalization rules.
+- [x] Validate all 20 configured companies as available with 12 of 12 Company 360 sections.
 - [x] Run the complete ingestion backend test suite successfully.
 - [x] Run the complete main backend test suite successfully.
 - [x] Run the complete frontend test suite and production build successfully.

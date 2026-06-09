@@ -176,7 +176,9 @@ sudo docker compose -f infra/docker-compose.yml exec -T ingestion \
   .venv/bin/python manage.py refresh_company_profiles --limit 20
 ```
 
-The daily ingestion scheduler runs the same refresh in two batches. Corporate domains are pinned in the company universe so localized consumer URLs do not replace the reviewed source target. Wikidata contributes identity, founding date, subsidiaries, brands, products, leadership, and geography when those claims exist. Official pages contribute directly reported structured metadata. Company 360 combines the latest non-empty reviewed values across those sources and keeps unsupported sections as explicit gaps.
+The daily ingestion scheduler runs the same refresh in two batches. Corporate domains are pinned in the company universe so localized consumer URLs do not replace the reviewed source target. Wikidata contributes identity and organization claims, official pages contribute structured metadata, and the latest complete extracted 10-K contributes business model, segments, offerings, customers, revenue mechanisms, leadership, competition, and strategic context. Reviewed company-specific normalization fallbacks cover filing formats that cannot be normalized safely by generic rules. Company 360 combines the latest non-empty reviewed values across those sources.
+
+The configured 20-company universe is validated at `12 of 12` Company 360 sections. The refresh command supports a targeted repair with `--company <slug>` and independently reports Wikidata, official-site, and SEC-profile failures.
 
 Company 360 endpoints:
 
