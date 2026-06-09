@@ -23,6 +23,7 @@ class Command(BaseCommand):
         parser.add_argument("--include-financial-facts", action="store_true")
         parser.add_argument("--include-macro-context", action="store_true")
         parser.add_argument("--include-quality-scoring", action="store_true")
+        parser.add_argument("--include-company-profiles", action="store_true")
         parser.add_argument("--split-batches", action="store_true")
 
     def handle(self, *args, **options):
@@ -49,6 +50,8 @@ class Command(BaseCommand):
             scheduler_command.append("--include-macro-context")
         if options["include_quality_scoring"]:
             scheduler_command.append("--include-quality-scoring")
+        if options["include_company_profiles"]:
+            scheduler_command.append("--include-company-profiles")
         if options["split_batches"]:
             scheduler_command.append("--split-batches")
 

@@ -26,6 +26,7 @@ from apps.ingestion.services.market_price_client import (
     parse_alpha_vantage_daily_csv,
     parse_fmp_historical_prices,
 )
+from apps.ingestion.services.wikidata_client import normalize_company_entity
 
 
 class IngestionSearchApiTests(TestCase):
@@ -232,6 +233,104 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(payload["sections"]["business_model"]["text"], "Subscription streaming.")
         self.assertEqual(len(payload["snapshot_history"]), 2)
 
+    def test_company_profile_prefers_dated_reviewed_business_model_summary(self):
+        CompanyProfileSnapshot.objects.create(
+            company=self.netflix,
+            effective_date=date(2024, 12, 31),
+            source_document=self.source,
+            status="PUBLISHED",
+            summary="Netflix is a global entertainment service.",
+            business_model="Stale profile business model.",
+        )
+        BusinessModelSnapshot.objects.create(
+            company=self.netflix,
+            effective_date=date(2024, 6, 30),
+            source_document=self.source,
+            status="REVIEWED",
+            summary="Subscriptions and advertising fund streaming entertainment.",
+            confidence_score="0.900",
+        )
+        BusinessModelSnapshot.objects.create(
+            company=self.netflix,
+            effective_date=date(2025, 6, 30),
+            source_document=self.source,
+            status="REVIEWED",
+            summary="Future business model summary.",
+            confidence_score="0.900",
+        )
+
+        response = self.client.get("/companies/netflix/profile?as_of=2024-12-31")
+
+        self.assertEqual(response.status_code, 200)
+        section = response.json()["sections"]["business_model"]
+        self.assertEqual(section["text"], "Subscriptions and advertising fund streaming entertainment.")
+        self.assertEqual(section["source"], "business_model_map")
+
+    def test_company_profile_combines_latest_non_empty_reviewed_source_fields(self):
+        CompanyProfileSnapshot.objects.create(
+            company=self.netflix,
+            effective_date=date(2024, 12, 31),
+            source_document=self.source,
+            status="REVIEWED",
+            summary="Netflix is a global entertainment service.",
+            subsidiaries=["Netflix Studios"],
+            geographies=["United States", "International"],
+            confidence_score="0.650",
+        )
+        official_source = SourceDocument.objects.create(
+            company=self.netflix,
+            source_api="OFFICIAL_WEBSITE",
+            url="https://example.com/netflix",
+            title="Netflix official website",
+            publisher="Netflix",
+            language="en",
+        )
+        CompanyProfileSnapshot.objects.create(
+            company=self.netflix,
+            effective_date=date(2025, 1, 31),
+            source_document=official_source,
+            status="REVIEWED",
+            products=["Streaming plans", "Games"],
+            brands=["Netflix"],
+            confidence_score="0.600",
+        )
+
+        response = self.client.get("/companies/netflix/profile")
+
+        self.assertEqual(response.status_code, 200)
+        sections = response.json()["sections"]
+        self.assertEqual(sections["summary"]["text"], "Netflix is a global entertainment service.")
+        self.assertEqual(sections["subsidiaries"]["items"], ["Netflix Studios"])
+        self.assertEqual(sections["products"]["items"], ["Streaming plans", "Games"])
+
+    def test_company_profile_same_date_sources_do_not_create_false_changes(self):
+        for source_api, summary, products in (
+            ("WIKIDATA", "Example summary", []),
+            ("OFFICIAL_WEBSITE", "", ["Example product"]),
+        ):
+            source = SourceDocument.objects.create(
+                company=self.netflix,
+                source_api=source_api,
+                url=f"https://example.com/{source_api.lower()}",
+                title=source_api,
+                publisher=source_api,
+                language="en",
+            )
+            CompanyProfileSnapshot.objects.create(
+                company=self.netflix,
+                effective_date=date(2025, 1, 31),
+                source_document=source,
+                status="REVIEWED",
+                summary=summary,
+                products=products,
+                confidence_score="0.600",
+            )
+
+        response = self.client.get("/companies/netflix/profile")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["changes"], [])
+
     def test_company_profile_unknown_company_returns_404(self):
         response = self.client.get("/companies/unknown/profile")
 
@@ -431,6 +530,42 @@ class IngestionSearchApiTests(TestCase):
         self.assertFalse(section["has_next"])
         self.assertEqual(len(section["items"]), 1)
 
+    def test_dashboard_data_preserves_company_scope_and_returns_sector_peers(self):
+        peer = Company.objects.create(name="Disney", industry=self.netflix.industry, country="United States")
+        peer_source = SourceDocument.objects.create(
+            company=peer,
+            source_api="SEC",
+            url="https://example.com/disney-10k",
+            title="Disney 10-K",
+            publisher="SEC",
+            language="en",
+        )
+        for company, source, change in (
+            (self.netflix, self.source, "Netflix recorded a material performance decline in engagement."),
+            (peer, peer_source, "Disney recorded a material performance decline in subscribers."),
+        ):
+            BusinessEvent.objects.create(
+                company=company,
+                source_document=source,
+                event_type="PERFORMANCE_DECLINE",
+                event_date="2024-10-01",
+                decision_theme="PERFORMANCE_PRESSURE",
+                actual_change=change,
+                source_claim=change,
+                evidence_text=change,
+                confidence_score="0.850",
+                review_status="NEEDS_REVIEW",
+            )
+
+        response = self.client.get("/dashboard-data?section=risk_signals&company=netflix")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["scope"]["company_slug"], "netflix")
+        self.assertEqual({row["company_slug"] for row in payload["sections"]["latest_moves"]["items"]}, {"netflix"})
+        self.assertEqual({row["company_slug"] for row in payload["sections"]["risk_signals"]["items"]}, {"netflix"})
+        self.assertEqual([row["slug"] for row in payload["sections"]["company_situations"]["items"]], ["disney"])
+
     def test_rebuild_specific_turns_unlocks_pattern_scorecard_and_compare(self):
         BusinessEvent.objects.create(
             company=self.netflix,
@@ -454,6 +589,42 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(payload["sections"]["scorecards"]["status"], "available")
         self.assertEqual(payload["sections"]["compare"]["status"], "available")
         self.assertGreaterEqual(payload["sections"]["compare"]["items"][0]["sample_size"], 2)
+
+
+class WikidataCompanyProfileTests(TestCase):
+    def test_normalize_company_entity_extracts_profile_claims(self):
+        entity = {
+            "id": "Q1",
+            "labels": {"en": {"value": "Example Corp"}},
+            "descriptions": {"en": {"value": "An example company."}},
+            "aliases": {"en": [{"value": "Example"}]},
+            "claims": {
+                "P17": [{"mainsnak": {"datavalue": {"value": {"id": "Q30"}}}}],
+                "P452": [{"mainsnak": {"datavalue": {"value": {"id": "Q100"}}}}],
+                "P355": [{"mainsnak": {"datavalue": {"value": {"id": "Q200"}}}}],
+                "P1056": [{"mainsnak": {"datavalue": {"value": {"id": "Q300"}}}}],
+                "P1716": [{"mainsnak": {"datavalue": {"value": {"id": "Q400"}}}}],
+                "P169": [{"mainsnak": {"datavalue": {"value": {"id": "Q500"}}}}],
+                "P571": [{"mainsnak": {"datavalue": {"value": {"time": "+1999-01-15T00:00:00Z"}}}}],
+                "P856": [{"mainsnak": {"datavalue": {"value": "https://example.com"}}}],
+            },
+        }
+        labels = {
+            "Q30": "United States",
+            "Q100": "Technology",
+            "Q200": "Example Subsidiary",
+            "Q300": "Example Product",
+            "Q400": "Example Brand",
+            "Q500": "Example CEO",
+        }
+
+        company = normalize_company_entity(entity, claim_labels=labels)
+
+        self.assertEqual(company.founded_date, date(1999, 1, 15))
+        self.assertEqual(company.subsidiaries, ("Example Subsidiary",))
+        self.assertEqual(company.products, ("Example Product",))
+        self.assertEqual(company.brands, ("Example Brand",))
+        self.assertEqual(company.leadership, ("Example CEO",))
 
 
 class EventClaimTextTests(TestCase):
@@ -533,13 +704,13 @@ class CompanyProfileCollectorTests(TestCase):
         self.assertEqual(data.products, ("Analytics Platform",))
         self.assertEqual(data.geographies, ("United States",))
 
-    def test_collect_official_company_profile_persists_draft_evidence(self):
+    def test_collect_official_company_profile_persists_reviewed_structured_evidence(self):
         company = Company.objects.create(name="ExampleCo", website="https://example.com")
         session = FakeProfileSession()
 
         snapshot = collect_official_company_profile(company, session=session)
 
-        self.assertEqual(snapshot.status, "DRAFT")
+        self.assertEqual(snapshot.status, "REVIEWED")
         self.assertEqual(snapshot.summary, "ExampleCo provides business software.")
         self.assertEqual(snapshot.products, ["Analytics Platform"])
         self.assertEqual(snapshot.source_document.source_api, "OFFICIAL_WEBSITE")

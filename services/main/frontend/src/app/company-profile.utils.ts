@@ -17,6 +17,18 @@ export function companyProfileSectionHasData(section: { text: string; items: unk
   return Boolean(section.text.trim()) || section.items.length > 0;
 }
 
+export function dashboardRequestParams(section = '', page = 1, limit = 12, company = ''): Record<string, string> {
+  const params: Record<string, string> = { limit: String(limit) };
+  if (section) {
+    params['section'] = section;
+    params['page'] = String(page);
+  }
+  if (company) {
+    params['company'] = company;
+  }
+  return params;
+}
+
 export function businessModelComponentLabel(type: string): string {
   const labels: Record<string, string> = {
     PAYER: 'Who pays',

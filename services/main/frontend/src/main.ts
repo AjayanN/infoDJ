@@ -112,6 +112,7 @@ class AppComponent {
   authView = signal<AuthView>('login');
   activePage = signal<AppPage>('dashboard');
   dashboardView = signal<DashboardViewId>('company-intelligence');
+  dashboardCompanySlug = signal('');
   menuOpen = signal(false);
   token = signal(localStorage.getItem('infodj_token') || '');
   currentUser = signal<CurrentUser | null>(null);
@@ -191,8 +192,8 @@ class AppComponent {
   dashboardViews: DashboardView[] = [
     {
       id: 'company-intelligence',
-      name: 'Company Strategic Intelligence',
-      shortName: 'Company',
+      name: 'Company Coverage Overview',
+      shortName: 'Coverage',
       status: 'available',
       purpose: 'Company coverage, sector concentration, source refreshes, and evidence-backed search.',
       requiredData: ['Companies', 'Source documents', 'Business events', 'Strategic turns', 'Ingestion jobs'],
@@ -221,8 +222,8 @@ class AppComponent {
     },
     {
       id: 'companies-like-mine',
-      name: 'Companies Like Mine',
-      shortName: 'Like Mine',
+      name: 'Situation Benchmarks',
+      shortName: 'Benchmarks',
       status: 'available',
       purpose: 'Benchmark a company situation against similar historical situations.',
       requiredData: ['Industry', 'Stage', 'Revenue range', 'Business model', 'Pressure trigger'],
@@ -329,6 +330,7 @@ class AppComponent {
       this.loadHistory();
     }
     if (page === 'dashboard') {
+      this.dashboardCompanySlug.set('');
       this.loadDashboard();
     }
   }
@@ -339,6 +341,9 @@ class AppComponent {
 
   setDashboardView(view: DashboardViewId): void {
     this.dashboardView.set(view);
+    if (this.dashboardCompanySlug() && !this.supportsCompanyDashboardScope(view)) {
+      this.dashboardCompanySlug.set('');
+    }
     const sectionKey = this.dashboardSectionKey(view);
     if (sectionKey && this.dashboard()) {
       this.loadDashboard(sectionKey, this.dashboardPages()[sectionKey]);
@@ -347,6 +352,10 @@ class AppComponent {
 
   activeDashboardView(): DashboardView {
     return this.dashboardViews.find((view) => view.id === this.dashboardView()) || this.dashboardViews[0];
+  }
+
+  supportsCompanyDashboardScope(view: DashboardViewId): boolean {
+    return ['companies-like-mine', 'risk-signals', 'latest-moves', 'business-questions'].includes(view);
   }
 
   activeDashboardStatus(): DashboardAvailability {
@@ -610,7 +619,7 @@ class AppComponent {
       return;
     }
     this.dashboardLoading.set(true);
-    this.api.dashboard(this.token(), sectionKey, page).subscribe({
+    this.api.dashboard(this.token(), sectionKey, page, 12, this.dashboardCompanySlug()).subscribe({
       next: (response) => {
         this.dashboard.set(response);
         this.dashboardLoading.set(false);
@@ -739,8 +748,33 @@ class AppComponent {
   }
 
   openCompanyDashboard(view: DashboardViewId): void {
+    const company = this.companyProfile()?.company;
+    if (!company) {
+      return;
+    }
     this.dashboardView.set(view);
-    this.setActivePage('dashboard');
+    this.dashboardCompanySlug.set(company.slug);
+    this.dashboardPages.update((pages) => ({
+      ...pages,
+      latest_moves: 1,
+      risk_signals: 1,
+      company_situations: 1
+    }));
+    this.activePage.set('dashboard');
+    this.menuOpen.set(false);
+    this.message.set('');
+    this.error.set('');
+    const sectionKey = this.dashboardSectionKey(view);
+    this.loadDashboard(sectionKey || '', 1);
+  }
+
+  clearDashboardCompanyScope(): void {
+    const sectionKey = this.dashboardSectionKey(this.dashboardView());
+    this.dashboardCompanySlug.set('');
+    if (sectionKey) {
+      this.dashboardPages.update((pages) => ({ ...pages, [sectionKey]: 1 }));
+    }
+    this.loadDashboard(sectionKey || '', 1);
   }
 
   printCompanyProfile(): void {

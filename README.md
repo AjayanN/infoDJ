@@ -146,6 +146,10 @@ Company 360 includes:
 - profile completeness, freshness, historical changes, and same-date source conflicts
 - source evidence and explicit section-level gaps instead of placeholder content
 - historical snapshot selection, peer/dashboard entry points, and a printable company brief
+- canonical business-model summaries from the latest reviewed Business Model Map at the selected profile date, with profile text used only as a fallback
+- company-scoped Latest Moves and Risk Signals, plus sector/country Situation Benchmarks that preserve Company 360 context through pagination
+
+Dashboard ownership is intentionally separate from Company 360. `Company Coverage Overview` provides global cross-company coverage, while Company 360 provides one-company summaries and links into canonical detail features. Opening `Latest moves`, `Risk signals`, or `Compare peers` from Company 360 applies the selected company as dashboard scope; the dashboard visibly identifies that scope and provides a `Show all companies` action.
 
 Profile snapshots are dated and versioned. New snapshots do not overwrite historical company state. Wikidata metadata synchronization creates the initial source-backed profile foundation, and reviewed snapshots can enrich it from filings, investor materials, and permitted official company pages.
 
@@ -156,7 +160,7 @@ sudo docker compose -f infra/docker-compose.yml exec -T ingestion \
   .venv/bin/python manage.py seed_netflix
 ```
 
-Collect a draft snapshot from a permitted official company website:
+Collect a source-backed snapshot from a permitted official company website:
 
 ```bash
 sudo docker compose -f infra/docker-compose.yml exec -T ingestion \
@@ -165,12 +169,22 @@ sudo docker compose -f infra/docker-compose.yml exec -T ingestion \
 
 The collector checks `robots.txt`, reads structured organization metadata when available, stores the official page as evidence, and leaves unsupported sections unavailable for analyst review.
 
+Backfill the configured 20-company universe with Wikidata organization facts and permitted official-site metadata:
+
+```bash
+sudo docker compose -f infra/docker-compose.yml exec -T ingestion \
+  .venv/bin/python manage.py refresh_company_profiles --limit 20
+```
+
+The daily ingestion scheduler runs the same refresh in two batches. Corporate domains are pinned in the company universe so localized consumer URLs do not replace the reviewed source target. Wikidata contributes identity, founding date, subsidiaries, brands, products, leadership, and geography when those claims exist. Official pages contribute directly reported structured metadata. Company 360 combines the latest non-empty reviewed values across those sources and keeps unsupported sections as explicit gaps.
+
 Company 360 endpoints:
 
 ```text
 Ingestion:   GET /api/ingestion/companies/{slug}/profile
 Product API: GET /api/app/companies/{slug}/profile
 Historical:  GET /api/app/companies/{slug}/profile?as_of=YYYY-MM-DD
+Scoped feed: GET /api/app/dashboard?section={section}&company={slug}
 ```
 
 The Angular workspace opens Company 360 from company search results, autocomplete suggestions, and top-company dashboard rows.

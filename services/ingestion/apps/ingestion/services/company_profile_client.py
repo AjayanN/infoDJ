@@ -83,7 +83,7 @@ def collect_official_company_profile(company, *, session: requests.Session | Non
         effective_date=date.today(),
         source_document=source,
         defaults={
-            "status": CompanyProfileStatus.DRAFT,
+            "status": CompanyProfileStatus.REVIEWED,
             "summary": data.summary,
             "brands": list(data.brands),
             "products": list(data.products),
