@@ -8,6 +8,8 @@ from apps.companies.company_universe import CROSS_SECTOR_COMPANIES
 from apps.companies.models import Company
 from apps.ingestion.models import IngestionJob, IngestionJobStatus, IngestionJobType
 from apps.ingestion.services.company_profile_client import collect_official_company_profile
+from apps.ingestion.services.business_model_builder import build_business_model_from_profile
+from apps.ingestion.services.company_profile_quality import company_profile_quality_issues
 from apps.ingestion.services.sec_profile_builder import build_sec_company_profile
 from apps.ingestion.services.wikidata_client import sync_company_metadata
 
@@ -23,6 +25,8 @@ class Command(BaseCommand):
         parser.add_argument("--skip-wikidata", action="store_true")
         parser.add_argument("--skip-official", action="store_true")
         parser.add_argument("--skip-sec-profile", action="store_true")
+        parser.add_argument("--skip-business-model", action="store_true")
+        parser.add_argument("--skip-validation", action="store_true")
         parser.add_argument("--daily-idempotent", action="store_true")
         parser.add_argument("--retry-failed-only", action="store_true")
 
@@ -41,6 +45,10 @@ class Command(BaseCommand):
             "official_failed": 0,
             "sec_profile_ok": 0,
             "sec_profile_failed": 0,
+            "business_model_ok": 0,
+            "business_model_failed": 0,
+            "semantic_validation_ok": 0,
+            "semantic_validation_failed": 0,
             "skipped": 0,
         }
         for seed in seeds:
@@ -71,6 +79,16 @@ class Command(BaseCommand):
             if not options["skip_sec_profile"]:
                 result = self._refresh_sec_profile(company)
                 totals[result] += 1
+            if not options["skip_business_model"]:
+                result = self._refresh_business_model(company)
+                totals[result] += 1
+            if not options["skip_validation"]:
+                issues = company_profile_quality_issues(company)
+                if issues:
+                    totals["semantic_validation_failed"] += 1
+                    self.stderr.write(f"Semantic profile validation failed for {company.name}: {'; '.join(issues)}")
+                else:
+                    totals["semantic_validation_ok"] += 1
 
             self.stdout.write(
                 f"{company.name}: snapshots={company.profile_snapshots.count()} website={company.website or 'unavailable'}"
@@ -128,6 +146,14 @@ class Command(BaseCommand):
             self.stderr.write(f"SEC profile build failed for {company.name}: {exc}")
             return "sec_profile_failed"
         return "sec_profile_ok"
+
+    def _refresh_business_model(self, company) -> str:
+        try:
+            build_business_model_from_profile(company)
+        except Exception as exc:
+            self.stderr.write(f"Business-model build failed for {company.name}: {exc}")
+            return "business_model_failed"
+        return "business_model_ok"
 
     def _should_skip(self, company, source: str, options) -> bool:
         if not options["daily_idempotent"]:

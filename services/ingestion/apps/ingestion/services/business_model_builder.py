@@ -7,50 +7,93 @@ from bs4 import BeautifulSoup
 
 from apps.companies.models import (
     BusinessModelComponent,
+    BusinessModelComponentType,
     BusinessModelRelationship,
     BusinessModelSnapshot,
     CompanyProfileStatus,
 )
 from apps.ingestion.models import SourceDocument
 from apps.ingestion.services.company_profile_client import clean_text, robots_allows
+from apps.ingestion.services.company_profile_fallbacks import (
+    BUSINESS_MODEL_FALLBACKS,
+    PROFILE_FALLBACKS,
+    SECTOR_BUSINESS_MODEL_FALLBACKS,
+)
 from apps.ingestion.services.url_utils import url_hash
 from apps.ingestion.services.wikidata_client import DEFAULT_USER_AGENT
 
 
 def build_business_model_from_profile(company) -> BusinessModelSnapshot:
-    profile = (
+    profiles = list(
         company.profile_snapshots.filter(status__in=["PUBLISHED", "REVIEWED"])
         .select_related("source_document")
         .order_by("-effective_date", "-updated_at")
-        .first()
     )
-    if profile is None:
+    if not profiles:
         raise ValueError(f"{company.name} has no reviewed Company 360 profile")
+    values = aggregate_profile_values(profiles)
+    profile = profiles[0]
+    profile_fallbacks = PROFILE_FALLBACKS.get(company.slug, {})
+    for field in ("business_model", "products", "customer_groups", "revenue_sources", "geographies"):
+        if profile_fallbacks.get(field):
+            values[field] = profile_fallbacks[field]
+    component_values = {
+        "PAYER": values["customer_groups"],
+        "USER": values["customer_groups"],
+        "OFFERING": values["products"],
+        "REVENUE": values["revenue_sources"],
+        "GEOGRAPHY": values["geographies"],
+    }
+    reviewed_fallbacks = BUSINESS_MODEL_FALLBACKS.get(company.slug, {})
+    sector_fallbacks = SECTOR_BUSINESS_MODEL_FALLBACKS.get(company.industry, {})
+    for component_type, fallback_values in reviewed_fallbacks.items():
+        component_values[component_type] = fallback_values
+    for component_type, fallback_values in sector_fallbacks.items():
+        component_values.setdefault(component_type, fallback_values)
 
     snapshot, _created = BusinessModelSnapshot.objects.update_or_create(
         company=company,
         effective_date=profile.effective_date,
         source_document=profile.source_document,
         defaults={
-            "status": CompanyProfileStatus.DRAFT,
-            "summary": profile.business_model,
+            "status": CompanyProfileStatus.REVIEWED,
+            "summary": values["business_model"],
             "confidence_score": min(profile.confidence_score, 0.650),
         },
     )
     snapshot.components.all().delete()
 
-    users = create_components(snapshot, "USER", profile.customer_groups, profile.evidence_text, inferred=False)
-    offerings = create_components(snapshot, "OFFERING", profile.products, profile.evidence_text, inferred=False)
-    revenues = create_components(snapshot, "REVENUE", profile.revenue_sources, profile.evidence_text, inferred=False)
-    create_components(snapshot, "GEOGRAPHY", profile.geographies, profile.evidence_text, inferred=False)
+    components = {
+        component_type: create_components(
+            snapshot,
+            component_type,
+            component_values.get(component_type, []),
+            profile.evidence_text,
+            inferred=component_type in sector_fallbacks and component_type not in reviewed_fallbacks,
+        )
+        for component_type, _label in BusinessModelComponentType.choices
+    }
 
-    for user in users:
-        for offering in offerings:
+    for payer in components["PAYER"]:
+        for revenue in components["REVENUE"]:
+            create_relationship(snapshot, payer, revenue, "PAYS_THROUGH", "Reviewed profile categories connect payer groups to revenue mechanisms.")
+    for user in components["USER"]:
+        for offering in components["OFFERING"]:
             create_relationship(snapshot, user, offering, "USES", "Profile categories imply use; analyst review required.")
-    for offering in offerings:
-        for revenue in revenues:
+    for offering in components["OFFERING"]:
+        for revenue in components["REVENUE"]:
             create_relationship(snapshot, offering, revenue, "MONETIZED_BY", "Profile categories imply monetization; analyst review required.")
+        for channel in components["CHANNEL"]:
+            create_relationship(snapshot, offering, channel, "DELIVERED_THROUGH", "Reviewed operating context connects offerings to distribution channels.")
     return snapshot
+
+
+def aggregate_profile_values(profiles) -> dict[str, object]:
+    fields = ("business_model", "products", "customer_groups", "revenue_sources", "geographies")
+    values = {}
+    for field in fields:
+        values[field] = next((getattr(profile, field) for profile in profiles if getattr(profile, field)), "" if field == "business_model" else [])
+    return values
 
 
 def create_components(snapshot, component_type: str, values, evidence_text: str, *, inferred: bool):
