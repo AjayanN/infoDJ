@@ -284,8 +284,8 @@ Each feature below inherits the shared standards above. Feature sections only de
 - [x] Rerun the complete ingestion backend test suite after semantic profile and Business Model Map remediation.
 - [x] Rerun the complete main backend test suite after semantic profile and Business Model Map remediation.
 - [x] Rerun the complete frontend test suite and production build after semantic profile and Business Model Map remediation.
-- [ ] Merge the validated Requirement 1 branch into `main` only after all validation passes.
-- [ ] Mark Company 360 complete in the prioritized delivery plan only after merge and documentation are complete.
+- [x] Merge the validated Requirement 1 branch into `main` only after all validation passes.
+- [x] Mark Company 360 complete in the prioritized delivery plan only after merge and documentation are complete.
 
 **Acceptance criteria:**
 
@@ -1208,7 +1208,7 @@ This replaces the older “Immediate Starting Backlog” and reflects the actual
 - [x] Run complete main backend suite.
 - [x] Run complete frontend suite and production build.
 - [x] Update README with Company 360, Business Model Map, and KPI Tracker behavior, sources, endpoints, and verification commands.
-- [ ] Merge only after validation and documentation are complete.
+- [x] Merge only after validation and documentation are complete.
 
 ### 17.2 Prepare Wave 2 Definitions
 
