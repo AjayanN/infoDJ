@@ -380,6 +380,8 @@ Each feature below inherits the shared standards above. Feature sections only de
 - too early to judge
 - unverifiable
 
+**Current status:** baseline implemented and validated with a reviewed Netflix pilot, explicit unavailable states for uncovered companies, and analyst review required before publication.
+
 **Feature-specific requirements:**
 
 - Define promise versus aspiration, guidance, and general commentary.
@@ -391,13 +393,13 @@ Each feature below inherits the shared standards above. Feature sections only de
 
 **MVP tasks:**
 
-- [ ] Define promise, guidance, aspiration, strategic claim, and milestone distinctions.
-- [ ] Build promise register skeleton with status and deadline filters.
-- [ ] Build promise detail page with original statement and evidence.
-- [ ] Add progress updates and revision history.
-- [ ] Link promises to KPIs, milestones, earnings periods, and strategic turns.
-- [ ] Add due-soon and overdue views.
-- [ ] Add review workflow for achieved, missed, delayed, withdrawn, and contradiction labels.
+- [x] Define promise, guidance, aspiration, strategic claim, and milestone distinctions.
+- [x] Build promise register skeleton with status and deadline filters.
+- [x] Build promise detail page with original statement and evidence.
+- [x] Add progress updates and revision history.
+- [x] Link promises to available canonical KPIs and strategic turns; milestone and earnings links remain unavailable until Requirements 5 and 6 exist.
+- [x] Add due-soon and overdue views.
+- [x] Add review workflow for achieved, missed, delayed, withdrawn, and contradiction-sensitive labels.
 
 **Acceptance criteria:**
 
@@ -1064,7 +1066,7 @@ The order below reflects functional dependency and user value. It does not requi
 **Exit condition:** a user can compare management statements and expected execution with actual progress.
 
 - [ ] Earnings Intelligence.
-- [ ] Management Promise Tracker.
+- [x] Management Promise Tracker: baseline implemented.
 - [ ] Strategy Milestone Tracker.
 - [ ] Leadership Decision Record.
 
@@ -1212,15 +1214,15 @@ This replaces the older “Immediate Starting Backlog” and reflects the actual
 
 ### 17.2 Prepare Wave 2 Definitions
 
-- [ ] Define promise, guidance, aspiration, strategic claim, and milestone distinctions.
+- [x] Define promise, guidance, aspiration, strategic claim, and milestone distinctions.
 - [ ] Define the earnings brief format.
-- [ ] Define status and review rules for Management Promise Tracker.
+- [x] Define status and review rules for Management Promise Tracker.
 - [ ] Define milestone category, due-date, dependency, and status rules.
 - [ ] Define leadership decision and attribution boundaries.
 
 ### 17.3 Build Next Skeletons
 
-- [ ] Build Management Promise Tracker skeleton.
+- [x] Build Management Promise Tracker skeleton.
 - [ ] Build Earnings Intelligence skeleton.
 - [ ] Build Strategy Milestone Tracker skeleton.
 - [ ] Add dependency labels from KPI Tracker to Earnings and Promise features.

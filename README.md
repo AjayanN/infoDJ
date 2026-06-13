@@ -313,6 +313,46 @@ BASE_URL=http://localhost:8080/api/app \
   bash scripts/smoke/phase2_operating_kpis.sh
 ```
 
+## Management Promise Tracker
+
+Phase 2 Requirement 4 records measurable management commitments, guidance, targets, aspirations, and strategic claims without treating them as equivalent. Commitments and targets require a defined outcome or deadline; guidance describes an expected reporting result; aspirations remain non-binding; strategic claims describe management's intended direction. Execution steps belong to the Strategy Milestone Tracker rather than this register.
+
+The tracker includes:
+
+- original statement, speaker, role, statement date, target window, scope, conditions, and source evidence
+- announced, in-progress, achieved, partially achieved, missed, delayed, revised, withdrawn, no-longer-disclosed, too-early, and unverifiable states
+- append-only reviewed status updates and deadline revisions
+- visible evaluation rules, confidence, and links to canonical KPIs and strategic turns
+- status, promise-type, due-soon, overdue, and historical `as_of` filters
+- unpublished `NEEDS_REVIEW` candidates from source-backed KPI targets
+- explicit unavailable states when a company has no reviewed commitments
+
+Automated collection never publishes negative delivery classifications. Candidates remain unpublished until an analyst reviews the original statement, metric definition, conditions, deadline, and outcome evidence. Admin users can correct, reject, publish, and add reviewed status updates through the Django admin.
+
+Build candidates from existing source-backed KPI targets:
+
+```bash
+sudo docker compose -f infra/docker-compose.yml run --rm ingestion \
+  .venv/bin/python manage.py build_management_promises --company netflix
+```
+
+Management Promise endpoints:
+
+```text
+Ingestion: GET /companies/{slug}/management-promises
+Product:   GET /api/app/companies/{slug}/management-promises
+Filters:   ?status={status}&type={type}&due=due_soon|overdue&as_of=YYYY-MM-DD&promise={slug}
+```
+
+Open the tracker from `Management promise tracker` on Company 360. The Netflix pilot includes a reviewed launch commitment with its original statement, evaluation rule, evidence, linked strategic turn, and achieved status update.
+
+Authenticated smoke check:
+
+```bash
+BASE_URL=http://localhost:8080/api/app \
+  bash scripts/smoke/phase2_management_promises.sh
+```
+
 ## Test Commands
 
 Run tests inside Docker Compose:

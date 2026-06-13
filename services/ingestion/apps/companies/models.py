@@ -298,3 +298,111 @@ class KpiComparability(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["kpi", "comparable_kpi"], name="unique_kpi_comparability_pair")
         ]
+
+
+class PromiseType(models.TextChoices):
+    COMMITMENT = "COMMITMENT", "Commitment"
+    GUIDANCE = "GUIDANCE", "Guidance"
+    TARGET = "TARGET", "Target"
+    ASPIRATION = "ASPIRATION", "Aspiration"
+    STRATEGIC_CLAIM = "STRATEGIC_CLAIM", "Strategic claim"
+
+
+class PromiseStatus(models.TextChoices):
+    ANNOUNCED = "ANNOUNCED", "Announced"
+    IN_PROGRESS = "IN_PROGRESS", "In progress"
+    ACHIEVED = "ACHIEVED", "Achieved"
+    PARTIALLY_ACHIEVED = "PARTIALLY_ACHIEVED", "Partially achieved"
+    MISSED = "MISSED", "Missed"
+    DELAYED = "DELAYED", "Delayed"
+    REVISED = "REVISED", "Revised"
+    WITHDRAWN = "WITHDRAWN", "Withdrawn"
+    NO_LONGER_DISCLOSED = "NO_LONGER_DISCLOSED", "No longer disclosed"
+    TOO_EARLY = "TOO_EARLY", "Too early to judge"
+    UNVERIFIABLE = "UNVERIFIABLE", "Unverifiable"
+
+
+class PromiseReviewStatus(models.TextChoices):
+    DRAFT = "DRAFT", "Draft"
+    NEEDS_REVIEW = "NEEDS_REVIEW", "Needs review"
+    REVIEWED = "REVIEWED", "Reviewed"
+    REJECTED = "REJECTED", "Rejected"
+
+
+class ManagementPromise(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="management_promises")
+    slug = models.SlugField(max_length=180)
+    title = models.CharField(max_length=512)
+    promise_type = models.CharField(max_length=32, choices=PromiseType.choices, db_index=True)
+    original_statement = models.TextField()
+    speaker = models.CharField(max_length=255, blank=True)
+    speaker_role = models.CharField(max_length=255, blank=True)
+    statement_date = models.DateField(db_index=True)
+    target_start_date = models.DateField(null=True, blank=True)
+    target_end_date = models.DateField(null=True, blank=True, db_index=True)
+    metric_name = models.CharField(max_length=255, blank=True)
+    baseline_value = models.DecimalField(max_digits=24, decimal_places=6, null=True, blank=True)
+    target_value = models.DecimalField(max_digits=24, decimal_places=6, null=True, blank=True)
+    unit = models.CharField(max_length=64, blank=True)
+    scope = models.CharField(max_length=255, blank=True)
+    conditions = models.TextField(blank=True)
+    evaluation_rule = models.TextField(blank=True)
+    current_status = models.CharField(
+        max_length=32, choices=PromiseStatus.choices, default=PromiseStatus.ANNOUNCED, db_index=True
+    )
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument", null=True, blank=True, on_delete=models.SET_NULL, related_name="management_promises"
+    )
+    evidence_text = models.TextField(blank=True)
+    linked_kpi = models.ForeignKey(
+        KpiDefinition, null=True, blank=True, on_delete=models.SET_NULL, related_name="management_promises"
+    )
+    linked_strategic_turn = models.ForeignKey(
+        "curation.StrategicTurn", null=True, blank=True, on_delete=models.SET_NULL, related_name="management_promises"
+    )
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    review_status = models.CharField(
+        max_length=32, choices=PromiseReviewStatus.choices, default=PromiseReviewStatus.NEEDS_REVIEW, db_index=True
+    )
+    is_published = models.BooleanField(default=False, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["target_end_date", "-statement_date", "title"]
+        constraints = [models.UniqueConstraint(fields=["company", "slug"], name="unique_company_promise_slug")]
+        indexes = [
+            models.Index(fields=["company", "current_status"], name="company_promise_status_idx"),
+            models.Index(fields=["company", "target_end_date"], name="company_promise_due_idx"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.company}: {self.title}"
+
+
+class ManagementPromiseUpdate(models.Model):
+    promise = models.ForeignKey(ManagementPromise, on_delete=models.CASCADE, related_name="updates")
+    update_date = models.DateField(db_index=True)
+    status = models.CharField(max_length=32, choices=PromiseStatus.choices)
+    summary = models.TextField()
+    previous_target_end_date = models.DateField(null=True, blank=True)
+    revised_target_end_date = models.DateField(null=True, blank=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument", null=True, blank=True, on_delete=models.SET_NULL, related_name="promise_updates"
+    )
+    evidence_text = models.TextField(blank=True)
+    is_contradiction_candidate = models.BooleanField(default=False, db_index=True)
+    contradiction_note = models.TextField(blank=True)
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    review_status = models.CharField(
+        max_length=32, choices=PromiseReviewStatus.choices, default=PromiseReviewStatus.NEEDS_REVIEW
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["update_date", "created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["promise", "update_date", "status", "source_document"], name="unique_promise_status_update"
+            )
+        ]

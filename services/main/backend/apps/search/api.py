@@ -158,6 +158,19 @@ def company_operating_kpis(request, slug: str):
     return Response(payload)
 
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def company_management_promises(request, slug: str):
+    params = {}
+    for key in ("status", "type", "due", "as_of", "promise"):
+        if request.GET.get(key):
+            params[key] = request.GET[key]
+    payload, error = ingestion_get(f"companies/{slug}/management-promises", params or None)
+    if error:
+        return Response({"error": "management promises unavailable", "detail": error}, status=503)
+    return Response(payload)
+
+
 def ingestion_get(path: str, params: dict[str, object] | None = None) -> tuple[dict | None, str]:
     base_url = settings.INGESTION_API_URL.rstrip("/") + "/"
     url = urljoin(base_url, path)

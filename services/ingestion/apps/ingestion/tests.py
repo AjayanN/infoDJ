@@ -16,6 +16,9 @@ from apps.companies.models import (
     KpiDefinition,
     KpiDefinitionVersion,
     KpiObservation,
+    KpiTarget,
+    ManagementPromise,
+    ManagementPromiseUpdate,
 )
 from apps.curation.models import BusinessEvent, StrategicTurn, StrategicTurnSource
 from apps.ingestion.models import FinancialFact, MarketPrice, SourceDocument, SourceGap
@@ -26,6 +29,7 @@ from apps.ingestion.services.company_profile_quality import company_profile_qual
 from apps.ingestion.services.business_model_builder import build_business_model_from_profile, collect_business_model_page
 from apps.ingestion.services.kpi_collector import collect_kpi_csv, collect_kpi_html_table
 from apps.ingestion.services.kpi_companyfacts_builder import build_companyfacts_kpis
+from apps.ingestion.services.management_promise_builder import build_promise_candidates_from_kpi_targets
 from apps.ingestion.services.market_price_client import (
     parse_alpha_vantage_daily_csv,
     parse_fmp_historical_prices,
@@ -457,6 +461,71 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "unavailable")
         self.assertEqual(response.json()["series"], [])
+
+    def test_management_promises_returns_only_reviewed_published_records_with_history(self):
+        metric = KpiDefinition.objects.create(
+            company=self.netflix, slug="launch-markets", name="Launch markets", description="Markets launched.",
+            unit="countries", cadence="EVENT", value_type="REPORTED", scope="Ad-supported plan",
+        )
+        promise = ManagementPromise.objects.create(
+            company=self.netflix, slug="launch-basic-with-ads", title="Launch Basic with Ads in 12 countries",
+            promise_type="COMMITMENT", original_statement="Launch in 12 countries in November 2022.",
+            speaker="Netflix management", speaker_role="Company management", statement_date=date(2022, 10, 13),
+            target_end_date=date(2022, 11, 30), metric_name="Launch markets", target_value="12", unit="countries",
+            scope="Ad-supported plan", evaluation_rule="Available in all 12 announced countries.",
+            current_status="ACHIEVED", source_document=self.source, evidence_text="Source-backed announcement.",
+            linked_kpi=metric, confidence_score="0.9", review_status="REVIEWED", is_published=True,
+        )
+        ManagementPromiseUpdate.objects.create(
+            promise=promise, update_date=date(2022, 11, 3), status="ACHIEVED",
+            summary="The plan launched in the announced window.", source_document=self.source,
+            evidence_text="Launch evidence.", confidence_score="0.9", review_status="REVIEWED",
+        )
+        ManagementPromise.objects.create(
+            company=self.netflix, slug="unreviewed", title="Unreviewed claim", promise_type="ASPIRATION",
+            original_statement="Grow over time.", statement_date=date(2022, 10, 13), current_status="UNVERIFIABLE",
+            review_status="NEEDS_REVIEW", is_published=False,
+        )
+
+        response = self.client.get("/companies/netflix/management-promises?status=ACHIEVED&promise=launch-basic-with-ads")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "available")
+        self.assertEqual(len(payload["promises"]), 1)
+        self.assertEqual(payload["selected_promise"]["updates"][0]["status"], "ACHIEVED")
+        self.assertFalse(payload["selected_promise"]["updates"][0]["is_contradiction_candidate"])
+        self.assertIsNone(payload["selected_promise"]["baseline_value"])
+        self.assertEqual(payload["selected_promise"]["linked_kpi"]["slug"], "launch-markets")
+        self.assertEqual(payload["coverage"]["source_count"], 1)
+
+    def test_management_promises_reports_unavailable_without_reviewed_records(self):
+        response = self.client.get("/companies/netflix/management-promises")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "unavailable")
+        self.assertEqual(response.json()["promises"], [])
+        self.assertTrue(response.json()["source_gaps"])
+
+    def test_kpi_target_builder_creates_unpublished_review_candidate(self):
+        metric = KpiDefinition.objects.create(
+            company=self.netflix, slug="paid-memberships", name="Paid memberships", description="Members.",
+            unit="million", cadence="ANNUAL", value_type="REPORTED", scope="Global streaming",
+        )
+        KpiTarget.objects.create(
+            kpi=metric, target_date=date(2027, 12, 31), target_value="300",
+            condition="Reach 300 million paid memberships.", status="IN_PROGRESS", source_document=self.source,
+        )
+
+        first = build_promise_candidates_from_kpi_targets(self.netflix)
+        second = build_promise_candidates_from_kpi_targets(self.netflix)
+
+        self.assertEqual(first["created"], 1)
+        self.assertEqual(second["updated"], 1)
+        promise = ManagementPromise.objects.get(company=self.netflix)
+        self.assertEqual(promise.review_status, "NEEDS_REVIEW")
+        self.assertFalse(promise.is_published)
+        self.assertEqual(promise.linked_kpi, metric)
 
     def test_companyfacts_builder_creates_idempotent_annual_and_quarterly_series(self):
         for filed, accession, value in (

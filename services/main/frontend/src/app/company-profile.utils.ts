@@ -48,6 +48,10 @@ export function businessModelRelationshipLabel(type: string): string {
   return type.toLowerCase().replace(/_/g, ' ');
 }
 
+export function managementPromiseLabel(value: string): string {
+  return value.toLowerCase().replace(/_/g, ' ').replace(/(^|\s)\S/g, (letter) => letter.toUpperCase());
+}
+
 export function kpiObservationFlags(observation: {
   is_estimated: boolean; is_restatement: boolean; is_non_comparable: boolean; definition_changed: boolean;
 }): string[] {

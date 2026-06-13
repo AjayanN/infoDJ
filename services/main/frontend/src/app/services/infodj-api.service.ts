@@ -543,6 +543,37 @@ export type OperatingKpiResponse = {
   source_gaps: SourceGap[];
 };
 
+export type ManagementPromiseUpdate = {
+  id: number; update_date: string; status: string; summary: string;
+  previous_target_end_date: string | null; revised_target_end_date: string | null;
+  evidence_text: string; is_contradiction_candidate: boolean; contradiction_note: string;
+  confidence_score: number; review_status: string;
+  source: CompanyProfileSource | null;
+};
+
+export type ManagementPromise = {
+  id: number; slug: string; title: string; promise_type: string; original_statement: string;
+  speaker: string; speaker_role: string; statement_date: string; target_start_date: string | null;
+  target_end_date: string | null; metric_name: string; baseline_value: number | null;
+  target_value: number | null; unit: string; scope: string; conditions: string;
+  evaluation_rule: string; current_status: string; confidence_score: number; review_status: string;
+  evidence_text: string; source: CompanyProfileSource | null;
+  linked_kpi: { slug: string; name: string } | null;
+  linked_strategic_turn: { id: number; title: string } | null;
+  updates: ManagementPromiseUpdate[];
+};
+
+export type ManagementPromiseResponse = {
+  status: 'available' | 'unavailable';
+  company: CompanyProfileResponse['company'];
+  promises: ManagementPromise[];
+  selected_promise: ManagementPromise | null;
+  filters: { statuses: string[]; types: string[]; selected_status: string; selected_type: string; selected_due: string; selected_as_of: string };
+  coverage: { promise_count: number; due_soon_count: number; overdue_count: number; source_count: number; last_updated: string };
+  evidence: CompanyProfileSource[];
+  source_gaps: SourceGap[];
+};
+
 @Injectable({ providedIn: 'root' })
 export class InfoDjApiService {
   private readonly http = inject(HttpClient);
@@ -712,6 +743,18 @@ export class InfoDjApiService {
     if (end) params['end'] = end;
     if (comparableOnly) params['comparable_only'] = 'true';
     return this.http.get<OperatingKpiResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/operating-kpis`, {
+      headers: this.authHeaders(token), params
+    });
+  }
+
+  managementPromises(token: string, slug: string, status = '', type = '', due = '', asOf = '', promise = '') {
+    const params: Record<string, string> = {};
+    if (status) params['status'] = status;
+    if (type) params['type'] = type;
+    if (due) params['due'] = due;
+    if (asOf) params['as_of'] = asOf;
+    if (promise) params['promise'] = promise;
+    return this.http.get<ManagementPromiseResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/management-promises`, {
       headers: this.authHeaders(token), params
     });
   }

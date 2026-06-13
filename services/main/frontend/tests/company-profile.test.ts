@@ -8,7 +8,8 @@ import {
   companyProfileSectionHasData,
   companyProfileSectionLabel,
   dashboardRequestParams,
-  kpiObservationFlags
+  kpiObservationFlags,
+  managementPromiseLabel
 } from '../src/app/company-profile.utils';
 
 test('formats Company 360 section keys for display', () => {
@@ -44,4 +45,9 @@ test('formats business-model components and relationships for accessible display
   assert.equal(businessModelComponentLabel('ASSET'), 'Key assets');
   assert.equal(businessModelComponentLabel('GEOGRAPHY'), 'Where it operates');
   assert.equal(businessModelRelationshipLabel('DELIVERED_THROUGH'), 'delivered through');
+});
+
+test('formats management promise types and statuses for display', () => {
+  assert.equal(managementPromiseLabel('PARTIALLY_ACHIEVED'), 'Partially Achieved');
+  assert.equal(managementPromiseLabel('STRATEGIC_CLAIM'), 'Strategic Claim');
 });

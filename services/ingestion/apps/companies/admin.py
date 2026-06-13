@@ -19,6 +19,8 @@ from apps.companies.models import (
     KpiDefinitionVersion,
     KpiObservation,
     KpiTarget,
+    ManagementPromise,
+    ManagementPromiseUpdate,
 )
 
 
@@ -214,3 +216,24 @@ class KpiObservationAdmin(admin.ModelAdmin):
 admin.site.register(KpiDefinitionVersion)
 admin.site.register(KpiTarget)
 admin.site.register(KpiComparability)
+
+
+class ManagementPromiseUpdateInline(admin.TabularInline):
+    model = ManagementPromiseUpdate
+    extra = 0
+
+
+@admin.register(ManagementPromise)
+class ManagementPromiseAdmin(admin.ModelAdmin):
+    list_display = ("title", "company", "promise_type", "current_status", "target_end_date", "review_status", "is_published")
+    list_filter = ("promise_type", "current_status", "review_status", "is_published", "company")
+    search_fields = ("title", "original_statement", "speaker", "metric_name", "company__name")
+    prepopulated_fields = {"slug": ("title",)}
+    inlines = (ManagementPromiseUpdateInline,)
+
+
+@admin.register(ManagementPromiseUpdate)
+class ManagementPromiseUpdateAdmin(admin.ModelAdmin):
+    list_display = ("promise", "update_date", "status", "is_contradiction_candidate", "review_status")
+    list_filter = ("status", "is_contradiction_candidate", "review_status", "promise__company")
+    search_fields = ("promise__title", "summary", "evidence_text", "contradiction_note")
