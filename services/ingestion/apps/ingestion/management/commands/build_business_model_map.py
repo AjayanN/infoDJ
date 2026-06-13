@@ -5,7 +5,7 @@ from apps.ingestion.services.business_model_builder import build_business_model_
 
 
 class Command(BaseCommand):
-    help = "Build a draft business-model map from the latest reviewed Company 360 profile."
+    help = "Build a reviewed business-model map from the latest reviewed Company 360 profile."
 
     def add_arguments(self, parser):
         parser.add_argument("--company", required=True, help="Company slug")
@@ -21,6 +21,6 @@ class Command(BaseCommand):
             raise CommandError(str(exc)) from exc
         self.stdout.write(
             self.style.SUCCESS(
-                f"Built draft business-model map for {company.name} at {snapshot.effective_date}."
+                f"Built reviewed business-model map for {company.name} at {snapshot.effective_date}."
             )
         )

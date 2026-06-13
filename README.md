@@ -178,7 +178,16 @@ sudo docker compose -f infra/docker-compose.yml exec -T ingestion \
 
 The daily ingestion scheduler runs the same refresh in two batches. Corporate domains are pinned in the company universe so localized consumer URLs do not replace the reviewed source target. Wikidata contributes identity and organization claims, official pages contribute structured metadata, and the latest complete extracted 10-K contributes business model, segments, offerings, customers, revenue mechanisms, leadership, competition, and strategic context. Reviewed company-specific normalization fallbacks cover filing formats that cannot be normalized safely by generic rules. Company 360 combines the latest non-empty reviewed values across those sources.
 
-The configured 20-company universe is validated at `12 of 12` Company 360 sections. The refresh command supports a targeted repair with `--company <slug>` and independently reports Wikidata, official-site, and SEC-profile failures.
+The configured 20-company universe is evaluated with section-specific semantic checks rather than non-empty values alone. Reviewed core terminology prevents filing headers and parser fragments from being published as business models, brands, or products. The refresh command supports a targeted repair with `--company <slug>`, independently reports Wikidata, official-site, SEC-profile, business-model, and semantic-validation failures, and rebuilds reviewed Business Model Maps after profile refresh.
+
+Run the semantic gate independently with:
+
+```bash
+sudo docker compose -f infra/docker-compose.yml run --rm ingestion \
+  .venv/bin/python manage.py validate_company_profiles --limit 20
+```
+
+The gate requires all 12 Company 360 sections, a meaningful business-model summary without known filing boilerplate, normalized list labels, all nine reviewed Business Model Map component types, and at least one relationship.
 
 Company 360 endpoints:
 
@@ -211,7 +220,7 @@ The Business Model Map includes:
 - evidence links, completeness, freshness, and explicit missing-component gaps
 - an accessible component-column and relationship-list view instead of relying only on a visual graph
 
-The Netflix pilot seed creates reviewed 2011 and 2022 maps. A conservative draft can also be generated from the latest reviewed Company 360 profile:
+The Netflix pilot seed creates reviewed 2011 and 2022 maps. A reviewed current map can also be generated from the latest reviewed Company 360 profile:
 
 ```bash
 sudo docker compose -f infra/docker-compose.yml exec -T ingestion \

@@ -80,7 +80,7 @@ def apply_profile_fallbacks(data: SecProfileData, company_slug: str) -> SecProfi
     for field in SecProfileData.__dataclass_fields__:
         current = getattr(data, field)
         replacement = fallback.get(field)
-        if current or replacement is None:
+        if replacement is None:
             values[field] = current
         elif field in {"business_model", "evidence_text"}:
             values[field] = str(replacement)
@@ -167,8 +167,6 @@ def extract_business_labels(text: str) -> list[str]:
         text[:22000],
     ):
         values.append(clean_label(match.group(1)))
-    for match in re.finditer(r"Products and Services\s+(.{20,1200}?)(?:Customers|Competition|Seasonality|Employees)", text[:22000], re.IGNORECASE):
-        values.extend(re.findall(r"\b([A-Z][A-Za-z0-9+.-]{2,30})(?:®|™)?\b", match.group(1)))
     return unique_values(values)[:18]
 
 

@@ -4,7 +4,9 @@ from datetime import date
 
 from django.core.management import call_command
 from django.test import Client, TestCase
+from django.utils.text import slugify
 
+from apps.companies.company_universe import CROSS_SECTOR_COMPANIES
 from apps.companies.models import (
     BusinessModelComponent,
     BusinessModelRelationship,
@@ -19,6 +21,8 @@ from apps.curation.models import BusinessEvent, StrategicTurn, StrategicTurnSour
 from apps.ingestion.models import FinancialFact, MarketPrice, SourceDocument, SourceGap
 from apps.ingestion.services.event_extractor import EventSignal, actual_change_for, find_evidence_sentence
 from apps.ingestion.services.company_profile_client import collect_official_company_profile, parse_official_profile_html
+from apps.ingestion.services.company_profile_fallbacks import PROFILE_FALLBACKS
+from apps.ingestion.services.company_profile_quality import company_profile_quality_issues
 from apps.ingestion.services.business_model_builder import build_business_model_from_profile, collect_business_model_page
 from apps.ingestion.services.kpi_collector import collect_kpi_csv, collect_kpi_html_table
 from apps.ingestion.services.kpi_companyfacts_builder import build_companyfacts_kpis
@@ -683,6 +687,13 @@ class EventClaimTextTests(TestCase):
 
 
 class CompanyProfileCollectorTests(TestCase):
+    def test_configured_universe_has_reviewed_core_profile_normalization(self):
+        for seed in CROSS_SECTOR_COMPANIES:
+            fallback = PROFILE_FALLBACKS[slugify(seed.name)]
+            self.assertGreaterEqual(len(fallback["business_model"]), 80, seed.name)
+            self.assertTrue(fallback["brands"], seed.name)
+            self.assertTrue(fallback["products"], seed.name)
+
     def test_parse_sec_profile_text_extracts_functional_company_sections(self):
         text = """
         ITEM 1. Business Example Corp is a diversified services company with operations in three segments:
@@ -704,7 +715,7 @@ class CompanyProfileCollectorTests(TestCase):
         self.assertIn("Jane Doe, Chief Executive Officer", data.leadership)
         self.assertEqual(data.strategic_priorities, ("Expand direct-to-consumer services.",))
 
-    def test_reviewed_company_fallbacks_only_fill_missing_parser_fields(self):
+    def test_reviewed_company_fallbacks_replace_unvalidated_parser_fields(self):
         empty = SecProfileData("", (), (), (), (), (), (), (), (), (), "filing evidence")
 
         data = apply_profile_fallbacks(empty, "microsoft")
@@ -712,6 +723,55 @@ class CompanyProfileCollectorTests(TestCase):
         self.assertIn("Azure", data.brands)
         self.assertIn("Intelligent Cloud", data.segments)
         self.assertEqual(data.evidence_text, "filing evidence")
+
+        malformed = SecProfileData("", (), ("The", "Our", "Company"), (), ("The", "Resource"), (), (), (), (), (), "filing evidence")
+        caterpillar = apply_profile_fallbacks(malformed, "caterpillar")
+        self.assertEqual(caterpillar.brands, ("Caterpillar", "Cat"))
+        self.assertIn("Mining equipment", caterpillar.products)
+        self.assertNotIn("The", caterpillar.products)
+
+    def test_product_parser_does_not_publish_capitalized_prose_fragments(self):
+        text = """
+        ITEM 1. Business Products and Services The Resource Industries division
+        competes with Deere Construction and Forestry Company, Epiroc, Hitachi
+        Construction Machinery Ltd., Komatsu, Liebherr and Sandvik. Customers
+        purchase equipment through independent dealers. ITEM 1A. Risk Factors
+        """
+
+        data = parse_sec_profile_text(text, "Example Corp")
+
+        self.assertEqual(data.products, ())
+        self.assertEqual(data.brands, ())
+
+    def test_semantic_quality_rejects_filing_boilerplate_and_duplicate_labels(self):
+        company = Company.objects.create(name="Quality Corp", description="A reviewed company summary.")
+        source = SourceDocument.objects.create(
+            company=company, source_api="SEC", url="https://example.com/10-k", title="Quality Corp 10-K"
+        )
+        CompanyProfileSnapshot.objects.create(
+            company=company,
+            effective_date=date(2025, 12, 31),
+            source_document=source,
+            status="REVIEWED",
+            summary="A reviewed company summary.",
+            business_model="Documents Incorporated By Reference and other filing boilerplate that is not a business model.",
+            subsidiaries=["Quality Subsidiary"],
+            brands=["Quality Brand"],
+            segments=["Quality Segment"],
+            products=["Product Product"],
+            customer_groups=["Business customers"],
+            revenue_sources=["Product sales"],
+            geographies=["United States"],
+            leadership=["Chief Executive Officer"],
+            competitors=["Industry competitors"],
+            strategic_priorities=["Expand the product portfolio"],
+        )
+
+        issues = company_profile_quality_issues(company)
+
+        self.assertIn("business model summary contains filing boilerplate", issues)
+        self.assertIn("products contains duplicated words: Product Product", issues)
+        self.assertIn("reviewed Business Model Map unavailable", issues)
 
     def test_parse_official_profile_html_uses_structured_organization_data(self):
         html = """
@@ -770,10 +830,52 @@ class CompanyProfileCollectorTests(TestCase):
 
         snapshot = build_business_model_from_profile(company)
 
-        self.assertEqual(snapshot.status, "DRAFT")
-        self.assertEqual(snapshot.components.count(), 3)
-        self.assertEqual(snapshot.relationships.count(), 2)
+        self.assertEqual(snapshot.status, "REVIEWED")
+        self.assertEqual(snapshot.components.count(), 4)
+        self.assertEqual(snapshot.relationships.count(), 3)
         self.assertTrue(all(row.is_inferred for row in snapshot.relationships.all()))
+
+    def test_business_model_builder_creates_complete_reviewed_sector_map(self):
+        company = Company.objects.create(name="IndustrialCo", industry="Industrials")
+        source = SourceDocument.objects.create(company=company, source_api="SEC", url="https://example.com/10-k", title="IndustrialCo 10-K")
+        CompanyProfileSnapshot.objects.create(
+            company=company, effective_date=date(2025, 12, 31), source_document=source, status="REVIEWED",
+            business_model="IndustrialCo sells equipment and services.", products=["Equipment"],
+            customer_groups=["Industrial customers"], revenue_sources=["Equipment sales"], geographies=["United States"],
+            evidence_text="IndustrialCo 10-K business description.", confidence_score="0.800",
+        )
+
+        snapshot = build_business_model_from_profile(company)
+
+        self.assertEqual(snapshot.status, "REVIEWED")
+        self.assertEqual(set(snapshot.components.values_list("component_type", flat=True)), {
+            "PAYER", "USER", "OFFERING", "REVENUE", "CHANNEL", "GEOGRAPHY", "PARTNER", "COST", "ASSET"
+        })
+        self.assertTrue(snapshot.relationships.exists())
+
+    def test_business_model_builder_replaces_newer_boilerplate_with_reviewed_summary(self):
+        company = Company.objects.create(name="Microsoft", industry="Information Technology")
+        sec_source = SourceDocument.objects.create(
+            company=company, source_api="SEC", url="https://example.com/10-k", title="Microsoft 10-K"
+        )
+        current_source = SourceDocument.objects.create(
+            company=company, source_api="OFFICIAL_WEBSITE", url="https://example.com", title="Microsoft profile"
+        )
+        CompanyProfileSnapshot.objects.create(
+            company=company, effective_date=date(2025, 12, 31), source_document=sec_source, status="REVIEWED",
+            business_model="A valid older summary.", products=["Software"], customer_groups=["Businesses"],
+            revenue_sources=["Subscriptions"], geographies=["Worldwide"], evidence_text="10-K evidence."
+        )
+        CompanyProfileSnapshot.objects.create(
+            company=company, effective_date=date(2026, 1, 31), source_document=current_source, status="REVIEWED",
+            business_model="Securities registered pursuant to Section 12(b).", evidence_text="Current source."
+        )
+
+        snapshot = build_business_model_from_profile(company)
+
+        self.assertEqual(snapshot.effective_date, date(2026, 1, 31))
+        self.assertTrue(snapshot.summary.startswith("Microsoft develops and licenses software"))
+        self.assertIn("Microsoft 365", snapshot.components.filter(component_type="OFFERING").values_list("name", flat=True))
 
     def test_collect_business_model_page_persists_draft_historical_source(self):
         company = Company.objects.create(name="ArchiveCo", website="https://example.com")
