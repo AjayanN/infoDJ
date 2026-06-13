@@ -12,6 +12,7 @@ import {
   CompanyProfileResponse,
   BusinessModelResponse,
   OperatingKpiResponse,
+  ManagementPromiseResponse,
   DashboardSection,
   DashboardResponse,
   HistoryRow,
@@ -27,7 +28,8 @@ import {
   businessModelComponentLabel,
   businessModelRelationshipLabel,
   companyProfileItemLabel,
-  companyProfileSectionLabel
+  companyProfileSectionLabel,
+  managementPromiseLabel
 } from './app/company-profile.utils';
 
 declare global {
@@ -37,7 +39,7 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'profile' | 'subscription';
+type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'profile' | 'subscription';
 type DashboardViewId =
   | 'company-intelligence'
   | 'turn-impact'
@@ -121,6 +123,7 @@ class AppComponent {
   companyProfile = signal<CompanyProfileResponse | null>(null);
   businessModel = signal<BusinessModelResponse | null>(null);
   operatingKpis = signal<OperatingKpiResponse | null>(null);
+  managementPromises = signal<ManagementPromiseResponse | null>(null);
   searchResults = signal<SearchResponse | null>(null);
   searchPages = signal<Record<SearchResultGroup, number>>({
     companies: 1,
@@ -148,6 +151,7 @@ class AppComponent {
   companyLoading = signal(false);
   businessModelLoading = signal(false);
   operatingKpiLoading = signal(false);
+  managementPromiseLoading = signal(false);
   companyProfileDate = '';
   businessModelDate = '';
   businessModelCompareDate = '';
@@ -159,6 +163,11 @@ class AppComponent {
   operatingKpiStart = '';
   operatingKpiEnd = '';
   operatingKpiComparableOnly = false;
+  managementPromiseStatus = '';
+  managementPromiseType = '';
+  managementPromiseDue = '';
+  managementPromiseAsOf = '';
+  managementPromiseSlug = '';
   readonly companyProfileSectionOrder = [
     'summary',
     'business_model',
@@ -458,6 +467,9 @@ class AppComponent {
     if (this.activePage() === 'operating-kpis') {
       return `${this.operatingKpis()?.company.name || 'Company'} Operating KPIs`;
     }
+    if (this.activePage() === 'management-promises') {
+      return `${this.managementPromises()?.company.name || 'Company'} Management Promises`;
+    }
     if (this.activePage() === 'profile') {
       return 'Profile';
     }
@@ -476,6 +488,9 @@ class AppComponent {
     }
     if (this.activePage() === 'operating-kpis') {
       return 'Company-specific operating drivers, definitions, trends, quality flags, alerts, and source evidence.';
+    }
+    if (this.activePage() === 'management-promises') {
+      return 'Original management commitments, deadlines, evaluation rules, revisions, outcomes, and source evidence.';
     }
     if (this.activePage() === 'profile') {
       return 'Manage account details, avatar preview, and subscription access.';
@@ -832,6 +847,42 @@ class AppComponent {
   reloadOperatingKpis(): void {
     const company = this.operatingKpis()?.company;
     if (company) this.openOperatingKpis(company.slug, this.operatingKpiMetric);
+  }
+
+  openManagementPromises(slug: string, promise = ''): void {
+    if (!slug || !this.token()) return;
+    this.activePage.set('management-promises');
+    this.menuOpen.set(false);
+    this.managementPromiseLoading.set(true);
+    this.error.set('');
+    this.api.managementPromises(
+      this.token(), slug, this.managementPromiseStatus, this.managementPromiseType,
+      this.managementPromiseDue, this.managementPromiseAsOf, promise || this.managementPromiseSlug
+    ).subscribe({
+      next: (response) => {
+        this.managementPromises.set(response);
+        this.managementPromiseSlug = response.selected_promise?.slug || '';
+        this.managementPromiseLoading.set(false);
+      },
+      error: (response) => { this.managementPromiseLoading.set(false); this.showError(response); }
+    });
+  }
+
+  reloadManagementPromises(): void {
+    const company = this.managementPromises()?.company;
+    if (company) this.openManagementPromises(company.slug, this.managementPromiseSlug);
+  }
+
+  selectManagementPromise(slug: string): void {
+    const company = this.managementPromises()?.company;
+    if (company) {
+      this.managementPromiseSlug = slug;
+      this.openManagementPromises(company.slug, slug);
+    }
+  }
+
+  promiseLabel(value: string): string {
+    return managementPromiseLabel(value);
   }
 
   kpiBarWidth(value: number, series: { value: number }[]): number {

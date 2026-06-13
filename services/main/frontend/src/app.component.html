@@ -747,6 +747,7 @@
                 <div class="profile-control-actions">
                   <button type="button" class="ghost-button" (click)="openBusinessModel(companyView.company.slug)">Business model map</button>
                   <button type="button" class="ghost-button" (click)="openOperatingKpis(companyView.company.slug)">Operating KPI tracker</button>
+                  <button type="button" class="ghost-button" (click)="openManagementPromises(companyView.company.slug)">Management promise tracker</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('companies-like-mine')">Compare peers</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('latest-moves')">Latest moves</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('risk-signals')">Risk signals</button>
@@ -1062,6 +1063,98 @@
               <section class="panel">
                 <div class="panel-header"><div><p class="section-kicker">Sources and export</p><h2>KPI evidence</h2></div><span>{{ kpiView.export_rows.length }} export-ready rows</span></div>
                 <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of kpiView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+              </section>
+            </ng-container>
+          </section>
+
+          <section *ngSwitchCase="'management-promises'" class="company-profile-layout" aria-labelledby="management-promises-heading">
+            <div class="panel empty-state" *ngIf="managementPromiseLoading()" role="status">Loading reviewed management promises.</div>
+            <ng-container *ngIf="managementPromises() as promiseView">
+              <section class="panel company-profile-hero">
+                <div>
+                  <p class="section-kicker">Management Promise Tracker · {{ promiseView.status }}</p>
+                  <h2 id="management-promises-heading">{{ promiseView.company.name }}</h2>
+                  <p>Measurable commitments, guidance, targets, revisions, deadlines, and reviewed delivery outcomes.</p>
+                </div>
+                <div class="coverage-summary">
+                  <strong>{{ promiseView.coverage.promise_count }}</strong>
+                  <span>reviewed promises</span>
+                  <span>{{ promiseView.coverage.due_soon_count }} due soon · {{ promiseView.coverage.overdue_count }} overdue</span>
+                  <small>Updated {{ promiseView.coverage.last_updated | date:'medium' }}</small>
+                </div>
+              </section>
+
+              <section class="panel company-profile-controls" aria-label="Management promise filters">
+                <label>Status
+                  <select [(ngModel)]="managementPromiseStatus">
+                    <option value="">All statuses</option>
+                    <option *ngFor="let status of ['ANNOUNCED','IN_PROGRESS','ACHIEVED','PARTIALLY_ACHIEVED','MISSED','DELAYED','REVISED','WITHDRAWN','NO_LONGER_DISCLOSED','TOO_EARLY','UNVERIFIABLE']" [value]="status">{{ promiseLabel(status) }}</option>
+                  </select>
+                </label>
+                <label>Type
+                  <select [(ngModel)]="managementPromiseType">
+                    <option value="">All promise types</option>
+                    <option *ngFor="let type of ['COMMITMENT','GUIDANCE','TARGET','ASPIRATION','STRATEGIC_CLAIM']" [value]="type">{{ promiseLabel(type) }}</option>
+                  </select>
+                </label>
+                <label>Deadline
+                  <select [(ngModel)]="managementPromiseDue">
+                    <option value="">All deadlines</option><option value="due_soon">Due in 90 days</option><option value="overdue">Overdue</option>
+                  </select>
+                </label>
+                <label>Known by date<input type="date" [(ngModel)]="managementPromiseAsOf" /></label>
+                <button type="button" class="primary-button" (click)="reloadManagementPromises()">Apply filters</button>
+                <button type="button" class="ghost-button" (click)="openCompany(promiseView.company.slug)">Back to Company 360</button>
+              </section>
+
+              <section class="dashboard-two-column">
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Promise register</p><h2>Commitments and targets</h2></div></div>
+                  <div class="empty-state unavailable-state" *ngIf="promiseView.promises.length === 0">No reviewed management promises match these filters.</div>
+                  <div class="result-row" *ngFor="let promise of promiseView.promises" [class.selected]="promise.slug === promiseView.selected_promise?.slug">
+                    <strong>{{ promise.title }}</strong>
+                    <span>{{ promiseLabel(promise.promise_type) }} · {{ promiseLabel(promise.current_status) }}</span>
+                    <p>{{ promise.metric_name || promise.original_statement }}</p>
+                    <small>Statement {{ promise.statement_date }} · deadline {{ promise.target_end_date || 'not specified' }}</small>
+                    <button type="button" class="ghost-button" (click)="selectManagementPromise(promise.slug)">Open promise</button>
+                  </div>
+                </article>
+
+                <article class="panel" *ngIf="promiseView.selected_promise as promise; else noSelectedPromise">
+                  <div class="panel-header"><div><p class="section-kicker">Reviewed detail</p><h2>{{ promise.title }}</h2></div><span class="status-pill available">{{ promiseLabel(promise.current_status) }}</span></div>
+                  <p><strong>Original statement:</strong> {{ promise.original_statement }}</p>
+                  <dl class="account-grid">
+                    <div class="metric"><dt>Speaker</dt><dd>{{ promise.speaker || 'Not identified' }}</dd><small>{{ promise.speaker_role }}</small></div>
+                    <div class="metric"><dt>Target</dt><dd>{{ promise.target_value ?? 'Qualitative' }} {{ promise.unit }}</dd><small>{{ promise.metric_name }}</small></div>
+                    <div class="metric"><dt>Window</dt><dd>{{ promise.target_start_date || promise.statement_date }}</dd><small>through {{ promise.target_end_date || 'unspecified' }}</small></div>
+                    <div class="metric"><dt>Confidence</dt><dd>{{ promise.confidence_score | number:'1.2-2' }}</dd><small>{{ promise.review_status }}</small></div>
+                  </dl>
+                  <p *ngIf="promise.conditions"><strong>Conditions:</strong> {{ promise.conditions }}</p>
+                  <p><strong>Evaluation rule:</strong> {{ promise.evaluation_rule || 'No measurable evaluation rule is available.' }}</p>
+                  <p *ngIf="promise.linked_kpi"><strong>Linked KPI:</strong> {{ promise.linked_kpi.name }}</p>
+                  <p *ngIf="promise.linked_strategic_turn"><strong>Linked strategic turn:</strong> {{ promise.linked_strategic_turn.title }}</p>
+                  <a *ngIf="promise.source" [href]="promise.source.url" target="_blank" rel="noopener">Open original source</a>
+
+                  <h3>Status history</h3>
+                  <div class="empty-state" *ngIf="promise.updates.length === 0">No reviewed status updates yet.</div>
+                  <div class="result-row" *ngFor="let update of promise.updates">
+                    <strong>{{ promiseLabel(update.status) }}</strong><span>{{ update.update_date }}</span><p>{{ update.summary }}</p>
+                    <small *ngIf="update.revised_target_end_date">Deadline revised to {{ update.revised_target_end_date }}</small>
+                    <p class="conflict-row" *ngIf="update.is_contradiction_candidate"><strong>Possible contradiction requiring review:</strong> {{ update.contradiction_note || 'The later statement may materially differ from the original commitment.' }}</p>
+                    <a *ngIf="update.source" [href]="update.source.url" target="_blank" rel="noopener">Open update source</a>
+                  </div>
+                </article>
+                <ng-template #noSelectedPromise><article class="panel empty-state unavailable-state">Select a reviewed promise to inspect its evidence and history.</article></ng-template>
+              </section>
+
+              <section class="panel source-gap-panel" *ngIf="promiseView.source_gaps.length > 0">
+                <div class="panel-header"><h2>Unavailable promise evidence</h2></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of promiseView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Promise evidence</h2></div><span>{{ promiseView.coverage.source_count }} sources</span></div>
+                <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of promiseView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
               </section>
             </ng-container>
           </section>

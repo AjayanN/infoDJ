@@ -16,6 +16,7 @@ from apps.companies.models import (
     CompanyProfileSnapshot,
     KpiDefinition,
     KpiObservation,
+    ManagementPromise,
 )
 from apps.curation.models import BusinessEvent, StrategicTurn, StrategicTurnSource
 from apps.ingestion.models import FinancialFact, IngestionJob, MarketPrice, SourceDocument, SourceGap
@@ -312,6 +313,86 @@ def company_operating_kpis(request: HttpRequest, slug: str) -> JsonResponse:
         ],
         "coverage": {"metric_count": len(definitions), "observation_count": len(observations), "reported_count": sum(1 for row in definitions if row.value_type == "REPORTED"), "calculated_count": sum(1 for row in definitions if row.value_type == "CALCULATED"), "last_period": observations[-1].period_end.isoformat() if observations else None},
         "evidence": sources, "source_gaps": gaps,
+    })
+
+
+@require_GET
+def company_management_promises(request: HttpRequest, slug: str) -> JsonResponse:
+    company = get_company(slug)
+    as_of = parse_iso_date(request.GET.get("as_of"))
+    status_filter = (request.GET.get("status") or "").strip().upper()
+    type_filter = (request.GET.get("type") or "").strip().upper()
+    due_filter = (request.GET.get("due") or "").strip().lower()
+    selected_slug = (request.GET.get("promise") or "").strip()
+    today = date.today()
+    due_soon = today + timedelta(days=90)
+
+    queryset = (
+        ManagementPromise.objects.filter(company=company, is_published=True, review_status="REVIEWED")
+        .select_related("source_document", "linked_kpi", "linked_strategic_turn")
+        .prefetch_related("updates__source_document")
+    )
+    if as_of:
+        queryset = queryset.filter(statement_date__lte=as_of)
+    if status_filter:
+        queryset = queryset.filter(current_status=status_filter)
+    if type_filter:
+        queryset = queryset.filter(promise_type=type_filter)
+    if due_filter == "overdue":
+        queryset = queryset.filter(target_end_date__lt=today).exclude(
+            current_status__in=["ACHIEVED", "PARTIALLY_ACHIEVED", "MISSED", "WITHDRAWN"]
+        )
+    elif due_filter == "due_soon":
+        queryset = queryset.filter(target_end_date__gte=today, target_end_date__lte=due_soon).exclude(
+            current_status__in=["ACHIEVED", "PARTIALLY_ACHIEVED", "MISSED", "WITHDRAWN"]
+        )
+    promises = list(queryset.order_by("target_end_date", "-statement_date", "title"))
+    selected = next((row for row in promises if row.slug == selected_slug), promises[0] if promises else None)
+
+    gaps = []
+    if not promises:
+        gaps.append({
+            "key": "management_promises",
+            "label": "Reviewed management promises unavailable",
+            "reason": f"No reviewed management commitments match the selected filters for {company.name}.",
+            "source": "management-promise-tracker",
+            "next_action": "Review earnings calls, guidance, filings, presentations, and KPI targets for measurable commitments.",
+        })
+    persist_management_promise_gaps(company, gaps)
+    source_rows = []
+    seen_sources = set()
+    for promise in promises:
+        for source in [promise.source_document, *[update.source_document for update in promise.updates.all()]]:
+            if source and source.id not in seen_sources:
+                source_rows.append(serialize_profile_source(source))
+                seen_sources.add(source.id)
+
+    return JsonResponse({
+        "status": "available" if promises else "unavailable",
+        "company": serialize_company_detail(company),
+        "promises": [serialize_management_promise(row, include_updates=False) for row in promises],
+        "selected_promise": serialize_management_promise(selected, include_updates=True),
+        "filters": {
+            "statuses": sorted({row.current_status for row in promises}),
+            "types": sorted({row.promise_type for row in promises}),
+            "selected_status": status_filter,
+            "selected_type": type_filter,
+            "selected_due": due_filter,
+            "selected_as_of": as_of.isoformat() if as_of else "",
+        },
+        "coverage": {
+            "promise_count": len(promises),
+            "due_soon_count": sum(1 for row in promises if row.target_end_date and today <= row.target_end_date <= due_soon),
+            "overdue_count": sum(
+                1 for row in promises
+                if row.target_end_date and row.target_end_date < today
+                and row.current_status not in {"ACHIEVED", "PARTIALLY_ACHIEVED", "MISSED", "WITHDRAWN"}
+            ),
+            "source_count": len(source_rows),
+            "last_updated": max((row.updated_at for row in promises), default=company.updated_at).isoformat(),
+        },
+        "evidence": source_rows,
+        "source_gaps": gaps,
     })
 
 
@@ -1539,6 +1620,82 @@ def serialize_kpi_definition(kpi: KpiDefinition | None) -> dict[str, object] | N
         } for row in versions],
         "targets": [{"target_date": row.target_date.isoformat(), "target_value": decimal_to_float(row.target_value), "condition": row.condition, "status": row.status} for row in kpi.targets.all()],
     }
+
+
+def serialize_management_promise(promise: ManagementPromise | None, *, include_updates: bool) -> dict[str, object] | None:
+    if promise is None:
+        return None
+    payload = {
+        "id": promise.id,
+        "slug": promise.slug,
+        "title": promise.title,
+        "promise_type": promise.promise_type,
+        "original_statement": promise.original_statement,
+        "speaker": promise.speaker,
+        "speaker_role": promise.speaker_role,
+        "statement_date": promise.statement_date.isoformat(),
+        "target_start_date": promise.target_start_date.isoformat() if promise.target_start_date else None,
+        "target_end_date": promise.target_end_date.isoformat() if promise.target_end_date else None,
+        "metric_name": promise.metric_name,
+        "baseline_value": decimal_to_float(promise.baseline_value) if promise.baseline_value is not None else None,
+        "target_value": decimal_to_float(promise.target_value) if promise.target_value is not None else None,
+        "unit": promise.unit,
+        "scope": promise.scope,
+        "conditions": promise.conditions,
+        "evaluation_rule": promise.evaluation_rule,
+        "current_status": promise.current_status,
+        "confidence_score": decimal_to_float(promise.confidence_score),
+        "review_status": promise.review_status,
+        "evidence_text": promise.evidence_text,
+        "source": serialize_profile_source(promise.source_document) if promise.source_document else None,
+        "linked_kpi": {"slug": promise.linked_kpi.slug, "name": promise.linked_kpi.name} if promise.linked_kpi else None,
+        "linked_strategic_turn": {
+            "id": promise.linked_strategic_turn.id,
+            "title": promise.linked_strategic_turn.title,
+        } if promise.linked_strategic_turn else None,
+    }
+    payload["updates"] = [
+        {
+            "id": row.id,
+            "update_date": row.update_date.isoformat(),
+            "status": row.status,
+            "summary": row.summary,
+            "previous_target_end_date": row.previous_target_end_date.isoformat() if row.previous_target_end_date else None,
+            "revised_target_end_date": row.revised_target_end_date.isoformat() if row.revised_target_end_date else None,
+            "evidence_text": row.evidence_text,
+            "is_contradiction_candidate": row.is_contradiction_candidate,
+            "contradiction_note": row.contradiction_note,
+            "confidence_score": decimal_to_float(row.confidence_score),
+            "review_status": row.review_status,
+            "source": serialize_profile_source(row.source_document) if row.source_document else None,
+        }
+        for row in promise.updates.all()
+        if row.review_status == "REVIEWED"
+    ] if include_updates else []
+    return payload
+
+
+def persist_management_promise_gaps(company: Company, gaps: list[dict[str, str]]) -> None:
+    if gaps:
+        gap = gaps[0]
+        SourceGap.objects.update_or_create(
+            company=company,
+            dashboard="management_promises",
+            gap_type=gap["key"],
+            provider="management-promise-tracker",
+            defaults={
+                "reason": gap["reason"],
+                "next_ingestion_task": gap["next_action"],
+                "status": "OPEN",
+            },
+        )
+    else:
+        SourceGap.objects.filter(
+            company=company,
+            dashboard="management_promises",
+            gap_type="management_promises",
+            status__in=["OPEN", "IN_PROGRESS"],
+        ).update(status="RESOLVED")
 
 
 def serialize_kpi_observation(row: KpiObservation) -> dict[str, object]:

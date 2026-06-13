@@ -128,6 +128,8 @@ class Command(BaseCommand):
         kpi_definition = self._optional_model("companies", "KpiDefinition")
         kpi_definition_version = self._optional_model("companies", "KpiDefinitionVersion")
         kpi_observation = self._optional_model("companies", "KpiObservation")
+        management_promise = self._optional_model("companies", "ManagementPromise")
+        management_promise_update = self._optional_model("companies", "ManagementPromiseUpdate")
 
         with transaction.atomic():
             company = self._upsert_company(company_model)
@@ -152,6 +154,10 @@ class Command(BaseCommand):
             if all((kpi_definition, kpi_definition_version, kpi_observation, profile_source)):
                 self._upsert_operating_kpis(
                     kpi_definition, kpi_definition_version, kpi_observation, company, profile_source
+                )
+            if all((management_promise, management_promise_update, profile_source)):
+                self._upsert_management_promises(
+                    management_promise, management_promise_update, company, profile_source, turn
                 )
 
         self.stdout.write(self.style.SUCCESS("Seeded Netflix admin review data."))
@@ -380,6 +386,7 @@ class Command(BaseCommand):
                     "confidence_score": Decimal("0.95"),
                 },
             )
+
         growth, _created = definition_model.objects.update_or_create(
             company=company,
             slug="paid-membership-qoq-growth",
@@ -413,6 +420,47 @@ class Command(BaseCommand):
                     "confidence_score": Decimal("0.95"),
                 },
             )
+
+    def _upsert_management_promises(self, promise_model, update_model, company, source, turn):
+        promise, _created = promise_model.objects.update_or_create(
+            company=company,
+            slug="launch-basic-with-ads",
+            defaults={
+                "title": "Launch Basic with Ads in 12 countries",
+                "promise_type": "COMMITMENT",
+                "original_statement": "Netflix announced that Basic with Ads would launch in 12 countries in November 2022.",
+                "speaker": "Netflix management",
+                "speaker_role": "Company management",
+                "statement_date": date(2022, 10, 13),
+                "target_start_date": date(2022, 11, 1),
+                "target_end_date": date(2022, 11, 30),
+                "metric_name": "Launch markets",
+                "target_value": Decimal("12"),
+                "unit": "countries",
+                "scope": "Ad-supported streaming plan",
+                "conditions": "Launch timing and market availability as announced.",
+                "evaluation_rule": "Achieved when the ad-supported plan is available in all 12 announced launch countries.",
+                "current_status": "ACHIEVED",
+                "source_document": source,
+                "evidence_text": source.snippet,
+                "linked_strategic_turn": turn,
+                "confidence_score": Decimal("0.90"),
+                "review_status": "REVIEWED",
+                "is_published": True,
+            },
+        )
+        update_model.objects.update_or_create(
+            promise=promise,
+            update_date=date(2022, 11, 3),
+            status="ACHIEVED",
+            source_document=source,
+            defaults={
+                "summary": "Netflix launched Basic with Ads during the announced November 2022 window.",
+                "evidence_text": source.snippet,
+                "confidence_score": Decimal("0.90"),
+                "review_status": "REVIEWED",
+            },
+        )
 
     def _filter_model_values(self, model, values):
         return {key: value for key, value in values.items() if self._has_field(model, key)}

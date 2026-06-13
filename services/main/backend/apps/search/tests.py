@@ -317,6 +317,27 @@ class DashboardSearchApiTests(TestCase):
         response = APIClient().get("/api/app/companies/netflix/operating-kpis")
         self.assertEqual(response.status_code, 401)
 
+    @override_settings(INGESTION_API_URL="http://ingestion.test/api/ingestion")
+    @patch("apps.search.api.requests.get")
+    def test_management_promises_proxies_register_filters(self, get):
+        get.return_value = Mock(status_code=200, json=lambda: {"status": "available", "promises": []})
+        get.return_value.raise_for_status.return_value = None
+
+        response = self.client.get(
+            "/api/app/companies/netflix/management-promises?status=IN_PROGRESS&due=due_soon&promise=subscriber-target"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(get.call_args.args[0], "http://ingestion.test/api/ingestion/companies/netflix/management-promises")
+        self.assertEqual(get.call_args.kwargs["params"], {
+            "status": "IN_PROGRESS", "due": "due_soon", "promise": "subscriber-target"
+        })
+
+    def test_management_promises_requires_authentication(self):
+        response = APIClient().get("/api/app/companies/netflix/management-promises")
+
+        self.assertEqual(response.status_code, 401)
+
 
 def json_response(payload: dict):
     response = Mock()
