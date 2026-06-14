@@ -166,8 +166,8 @@
               <section class="panel search-panel workspace-search-panel" aria-labelledby="search-heading">
                 <div class="panel-header">
                   <div>
-                    <p class="section-kicker">Workspace search</p>
-                    <h2 id="search-heading">Global evidence search</h2>
+                    <p class="section-kicker">Company search</p>
+                    <h2 id="search-heading">Company and strategy search</h2>
                   </div>
                 </div>
                 <form class="search-form" (ngSubmit)="runSearch()">
@@ -179,7 +179,7 @@
                       [(ngModel)]="searchQuery"
                       (input)="updateSearchSuggestions()"
                       autocomplete="off"
-                      placeholder="Netflix advertising, pricing, expansion"
+                      placeholder="Search a company, strategic move, product, market, or risk"
                     />
                   </label>
                   <button type="submit" class="primary-button" [disabled]="searchLoading()" [attr.aria-disabled]="searchLoading()">Search</button>
@@ -597,10 +597,10 @@
                       <article class="pattern-card" *ngFor="let group of dashboardSection('compare-turns')?.items || []">
                         <div>
                           <strong>{{ group.turn_type }}</strong>
-                          <span>{{ group.sample_size }} candidate turns</span>
+                          <span>{{ group.sample_size }} eligible turns across {{ group.company_count }} companies</span>
                         </div>
                         <ul>
-                          <li *ngFor="let turn of group.turns">{{ turn.company }}: {{ turn.title }}</li>
+                          <li *ngFor="let turn of group.turns">{{ turn.company }} · {{ turn.start_date || 'Date unavailable' }}: {{ turn.title }}</li>
                         </ul>
                       </article>
                     </div>

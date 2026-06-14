@@ -75,6 +75,7 @@ class Command(BaseCommand):
                     verbosity=0,
                 )
                 call_command("recurate_events", company=company.slug, delete_old_turns=True, verbosity=0)
+                call_command("rebuild_specific_turns", company=company.slug, delete_generated=True, verbosity=0)
             except Exception as exc:
                 totals["failed"] += 1
                 self.stderr.write(f"{company.name}: extraction failed: {exc}")
