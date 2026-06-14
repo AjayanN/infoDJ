@@ -118,6 +118,7 @@
         <button type="button" *ngIf="companyProfile()" [class.active]="activePage() === 'company'" [attr.aria-current]="activePage() === 'company' ? 'page' : null" (click)="setActivePage('company')">Company 360</button>
         <button type="button" *ngIf="businessModel()" [class.active]="activePage() === 'business-model'" [attr.aria-current]="activePage() === 'business-model' ? 'page' : null" (click)="setActivePage('business-model')">Business Model</button>
         <button type="button" *ngIf="operatingKpis()" [class.active]="activePage() === 'operating-kpis'" [attr.aria-current]="activePage() === 'operating-kpis' ? 'page' : null" (click)="setActivePage('operating-kpis')">Operating KPIs</button>
+        <button type="button" *ngIf="earnings()" [class.active]="activePage() === 'earnings'" [attr.aria-current]="activePage() === 'earnings' ? 'page' : null" (click)="setActivePage('earnings')">Earnings</button>
         <button type="button" [class.active]="activePage() === 'profile'" [attr.aria-current]="activePage() === 'profile' ? 'page' : null" (click)="setActivePage('profile')">Profile</button>
         <button type="button" [class.active]="activePage() === 'subscription'" [attr.aria-current]="activePage() === 'subscription' ? 'page' : null" (click)="setActivePage('subscription')">Subscription</button>
       </nav>
@@ -748,6 +749,7 @@
                   <button type="button" class="ghost-button" (click)="openBusinessModel(companyView.company.slug)">Business model map</button>
                   <button type="button" class="ghost-button" (click)="openOperatingKpis(companyView.company.slug)">Operating KPI tracker</button>
                   <button type="button" class="ghost-button" (click)="openManagementPromises(companyView.company.slug)">Management promise tracker</button>
+                  <button type="button" class="ghost-button" (click)="openEarnings(companyView.company.slug)">Earnings intelligence</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('companies-like-mine')">Compare peers</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('latest-moves')">Latest moves</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('risk-signals')">Risk signals</button>
@@ -1155,6 +1157,117 @@
               <section class="panel">
                 <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Promise evidence</h2></div><span>{{ promiseView.coverage.source_count }} sources</span></div>
                 <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of promiseView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+              </section>
+            </ng-container>
+          </section>
+
+          <section *ngSwitchCase="'earnings'" class="company-profile-layout" aria-labelledby="earnings-heading">
+            <div class="panel empty-state" *ngIf="earningsLoading()" role="status">Loading quarterly earnings intelligence.</div>
+            <ng-container *ngIf="earnings() as earningsView">
+              <section class="panel company-profile-hero">
+                <div>
+                  <p class="section-kicker">Earnings Intelligence · {{ earningsView.status }}</p>
+                  <h2 id="earnings-heading">{{ earningsView.company.name }}</h2>
+                  <p>Measured quarterly results, period changes, management evidence, guidance, risks, and strategic context.</p>
+                </div>
+                <div class="coverage-summary">
+                  <strong>{{ earningsView.periods.length }}</strong><span>reviewed quarterly periods</span>
+                  <small *ngIf="earningsView.selected_period">Filed {{ earningsView.selected_period.filed_date }}</small>
+                </div>
+              </section>
+
+              <section class="panel company-profile-controls" aria-label="Earnings period controls">
+                <label>Reporting period
+                  <select [(ngModel)]="earningsPeriod">
+                    <option *ngFor="let period of earningsView.periods" [value]="period.key">{{ period.fiscal_period }} FY{{ period.fiscal_year }} · ended {{ period.period_end }}</option>
+                  </select>
+                </label>
+                <button type="button" class="primary-button" (click)="reloadEarnings()">Open period</button>
+                <button type="button" class="ghost-button" (click)="openCompany(earningsView.company.slug)">Back to Company 360</button>
+                <button type="button" class="ghost-button" (click)="printEarningsBrief()">Print one-page brief</button>
+              </section>
+
+              <ng-container *ngIf="earningsView.selected_period as period; else noEarningsPeriod">
+                <section class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Measured outcome</p><h2>{{ period.fiscal_period }} FY{{ period.fiscal_year }}</h2></div><span>Ended {{ period.period_end }}</span></div>
+                  <p>{{ period.headline }}</p>
+                  <div class="account-grid">
+                    <div class="metric" *ngFor="let metric of period.measured_results">
+                      <dt>{{ metric.label }}</dt><dd>{{ metric.value | number:'1.0-3' }} {{ metric.unit }}</dd>
+                      <small *ngIf="metric.comparison_status === 'available'">Previous {{ metric.previous_value | number:'1.0-3' }} · change {{ metric.change_pct | number:'1.1-1' }}%</small>
+                      <small *ngIf="metric.comparison_status !== 'available'">Prior comparable period unavailable</small>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="dashboard-two-column">
+                  <article class="panel">
+                    <div class="panel-header"><div><p class="section-kicker">Operating movement</p><h2>Canonical KPI changes</h2></div></div>
+                    <div class="empty-state" *ngIf="period.operating_kpis.length === 0">No canonical KPI observations align with this period.</div>
+                    <div class="result-row" *ngFor="let kpi of period.operating_kpis">
+                      <strong>{{ kpi.name }}</strong><span>{{ kpi.value | number:'1.0-3' }} {{ kpi.unit }} · {{ kpi.period_end }}</span>
+                      <small *ngIf="kpi.previous_value !== null">Previous {{ kpi.previous_value | number:'1.0-3' }} · change {{ kpi.change_pct | number:'1.1-1' }}%</small>
+                      <small *ngIf="kpi.quality_flags.length > 0">{{ kpi.quality_flags.join(' · ') }}</small>
+                    </div>
+                  </article>
+                  <article class="panel">
+                    <div class="panel-header"><div><p class="section-kicker">Management explanation</p><h2>What management said drove the period</h2></div></div>
+                    <p *ngIf="period.management_explanation; else managementGap">{{ period.management_explanation }}</p>
+                    <ng-template #managementGap><div class="empty-state unavailable-state">No reviewed earnings release, presentation, shareholder letter, or call explanation is linked yet.</div></ng-template>
+                    <h3>InfoDJ interpretation</h3>
+                    <p *ngIf="period.infodj_interpretation; else interpretationGap">{{ period.infodj_interpretation }}</p>
+                    <ng-template #interpretationGap><div class="empty-state">No reviewed InfoDJ interpretation. Measured results are shown without inferred causation.</div></ng-template>
+                  </article>
+                </section>
+
+                <section class="dashboard-two-column">
+                  <article class="panel">
+                    <div class="panel-header"><div><p class="section-kicker">Disclosure changes</p><h2>New and removed reported concepts</h2></div></div>
+                    <h3>Added since prior period</h3>
+                    <div class="result-row" *ngFor="let item of period.disclosure_changes.added"><strong>{{ item.label }}</strong><span>{{ item.unit }}</span></div>
+                    <div class="empty-state" *ngIf="period.disclosure_changes.added.length === 0">No newly reported SEC concepts identified.</div>
+                    <h3>Removed since prior period</h3>
+                    <div class="result-row" *ngFor="let item of period.disclosure_changes.removed"><strong>{{ item.label }}</strong><span>{{ item.unit }}</span></div>
+                    <div class="empty-state" *ngIf="period.disclosure_changes.removed.length === 0">No removed SEC concepts identified.</div>
+                  </article>
+                  <article class="panel">
+                    <div class="panel-header"><div><p class="section-kicker">Open questions</p><h2>What remains unanswered</h2></div></div>
+                    <div class="result-row" *ngFor="let question of period.unanswered_questions"><p>{{ question }}</p></div>
+                    <div class="empty-state" *ngIf="period.unanswered_questions.length === 0">No reviewed unanswered questions are recorded.</div>
+                  </article>
+                </section>
+
+                <section class="dashboard-two-column">
+                  <article class="panel">
+                    <div class="panel-header"><div><p class="section-kicker">Guidance and promises</p><h2>Introduced or updated this period</h2></div></div>
+                    <div class="empty-state unavailable-state" *ngIf="period.guidance_comparison.status === 'unavailable'">{{ period.guidance_comparison.reason }}</div>
+                    <div class="result-row" *ngFor="let comparison of period.guidance_comparison.items">
+                      <strong>{{ comparison.metric_name }} · {{ comparison.comparison_status }}</strong>
+                      <span>Forecast {{ comparison.forecast_value | number:'1.0-2' }} {{ comparison.unit }} · Actual {{ comparison.actual_value | number:'1.0-2' }} {{ comparison.unit }}</span>
+                      <p>{{ comparison.forecast_evidence }} {{ comparison.actual_evidence }}</p>
+                      <a [href]="comparison.forecast_source.url" target="_blank" rel="noopener">Forecast source</a>
+                      <a [href]="comparison.actual_source.url" target="_blank" rel="noopener">Actual source</a>
+                    </div>
+                    <div class="result-row" *ngFor="let promise of period.promises"><strong>{{ promise.title }}</strong><span>{{ promise.promise_type }} · {{ promise.current_status }}</span><p>{{ promise.original_statement }}</p></div>
+                  </article>
+                  <article class="panel">
+                    <div class="panel-header"><div><p class="section-kicker">Strategy and risk</p><h2>Changes linked to the quarter</h2></div></div>
+                    <div class="result-row" *ngFor="let turn of period.strategic_turns"><strong>{{ turn.title }}</strong><span>{{ turn.start_date }} · {{ turn.turn_type }}</span><p>{{ turn.summary }}</p></div>
+                    <div class="result-row conflict-row" *ngFor="let risk of period.risk_signals"><strong>{{ risk.event_type }}</strong><span>{{ risk.event_date }}</span><p>{{ risk.actual_change }}</p></div>
+                    <div class="empty-state" *ngIf="period.strategic_turns.length === 0 && period.risk_signals.length === 0">No eligible strategic turns or risk signals fall within this reporting period.</div>
+                  </article>
+                </section>
+
+                <section class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Document set</p><h2>Period evidence</h2></div></div>
+                  <div class="evidence-grid"><article class="evidence-card" *ngFor="let document of period.document_set"><strong>{{ document.document_type }}</strong><span>{{ document.source.title }}</span><a [href]="document.source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                </section>
+              </ng-container>
+              <ng-template #noEarningsPeriod><section class="panel empty-state unavailable-state">No reviewed earnings period is available.</section></ng-template>
+
+              <section class="panel source-gap-panel" *ngIf="earningsView.source_gaps.length > 0">
+                <div class="panel-header"><h2>Unavailable earnings evidence</h2></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of earningsView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
               </section>
             </ng-container>
           </section>

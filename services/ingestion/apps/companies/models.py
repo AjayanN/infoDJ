@@ -406,3 +406,85 @@ class ManagementPromiseUpdate(models.Model):
                 fields=["promise", "update_date", "status", "source_document"], name="unique_promise_status_update"
             )
         ]
+
+
+class EarningsPeriod(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="earnings_periods")
+    accession_number = models.CharField(max_length=64)
+    fiscal_year = models.IntegerField(db_index=True)
+    fiscal_period = models.CharField(max_length=16, db_index=True)
+    period_start = models.DateField(null=True, blank=True)
+    period_end = models.DateField(db_index=True)
+    filed_date = models.DateField(db_index=True)
+    headline = models.TextField()
+    management_explanation = models.TextField(blank=True)
+    infodj_interpretation = models.TextField(blank=True)
+    unanswered_questions = models.JSONField(default=list, blank=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument", on_delete=models.PROTECT, related_name="earnings_periods"
+    )
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    review_status = models.CharField(
+        max_length=32, choices=PromiseReviewStatus.choices, default=PromiseReviewStatus.NEEDS_REVIEW, db_index=True
+    )
+    is_published = models.BooleanField(default=False, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-period_end", "-filed_date"]
+        constraints = [
+            models.UniqueConstraint(fields=["company", "accession_number"], name="unique_company_earnings_accession")
+        ]
+        indexes = [models.Index(fields=["company", "period_end"], name="company_earnings_period_idx")]
+
+    def __str__(self) -> str:
+        return f"{self.company} {self.fiscal_period} FY{self.fiscal_year}"
+
+
+class EarningsPeriodDocument(models.Model):
+    period = models.ForeignKey(EarningsPeriod, on_delete=models.CASCADE, related_name="documents")
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument", on_delete=models.PROTECT, related_name="earnings_document_links"
+    )
+    document_type = models.CharField(max_length=32, db_index=True)
+    evidence_text = models.TextField(blank=True)
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    review_status = models.CharField(
+        max_length=32, choices=PromiseReviewStatus.choices, default=PromiseReviewStatus.NEEDS_REVIEW, db_index=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["document_type", "source_document_id"]
+        constraints = [
+            models.UniqueConstraint(fields=["period", "source_document"], name="unique_earnings_period_document")
+        ]
+
+
+class EarningsGuidanceComparison(models.Model):
+    period = models.ForeignKey(EarningsPeriod, on_delete=models.CASCADE, related_name="guidance_comparisons")
+    metric_name = models.CharField(max_length=255)
+    forecast_value = models.DecimalField(max_digits=24, decimal_places=6)
+    actual_value = models.DecimalField(max_digits=24, decimal_places=6)
+    unit = models.CharField(max_length=64)
+    comparison_status = models.CharField(max_length=32)
+    forecast_source = models.ForeignKey(
+        "ingestion.SourceDocument", on_delete=models.PROTECT, related_name="earnings_guidance_forecasts"
+    )
+    actual_source = models.ForeignKey(
+        "ingestion.SourceDocument", on_delete=models.PROTECT, related_name="earnings_guidance_actuals"
+    )
+    forecast_evidence = models.TextField()
+    actual_evidence = models.TextField()
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    review_status = models.CharField(
+        max_length=32, choices=PromiseReviewStatus.choices, default=PromiseReviewStatus.NEEDS_REVIEW, db_index=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["metric_name"]
+        constraints = [
+            models.UniqueConstraint(fields=["period", "metric_name"], name="unique_earnings_guidance_metric")
+        ]

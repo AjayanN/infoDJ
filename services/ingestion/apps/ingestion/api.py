@@ -15,6 +15,8 @@ from apps.companies.models import (
     BusinessModelSnapshot,
     Company,
     CompanyProfileSnapshot,
+    EarningsGuidanceComparison,
+    EarningsPeriod,
     KpiDefinition,
     KpiObservation,
     ManagementPromise,
@@ -395,6 +397,281 @@ def company_management_promises(request: HttpRequest, slug: str) -> JsonResponse
         "evidence": source_rows,
         "source_gaps": gaps,
     })
+
+
+@require_GET
+def company_earnings(request: HttpRequest, slug: str) -> JsonResponse:
+    company = get_company(slug)
+    periods = list(
+        EarningsPeriod.objects.filter(company=company, is_published=True, review_status="REVIEWED")
+        .select_related("source_document")
+        .order_by("-period_end", "-filed_date")
+    )
+    selected_key = (request.GET.get("period") or "").strip()
+    selected = next(
+        (row for row in periods if row.accession_number == selected_key or earnings_period_key(row) == selected_key),
+        periods[0] if periods else None,
+    )
+    previous = next((row for row in periods if selected and row.period_end < selected.period_end), None)
+    if selected is None:
+        return JsonResponse({
+            "status": "unavailable",
+            "company": serialize_company_detail(company),
+            "periods": [],
+            "selected_period": None,
+            "source_gaps": [{
+                "key": "earnings_periods",
+                "label": "Earnings Intelligence unavailable",
+                "reason": f"No reviewed quarterly earnings periods are available for {company.name}.",
+                "source": "sec-companyfacts",
+                "next_action": "Ingest SEC 10-Q filings and Company Facts, then build earnings periods.",
+            }],
+        })
+
+    metrics = earnings_metric_rows(company, selected, previous)
+    kpis = earnings_kpi_rows(company, selected, previous)
+    period_start = selected.period_start or (previous.period_end if previous else selected.period_end)
+    events = list(
+        BusinessEvent.objects.filter(company=company, event_date__gt=period_start, event_date__lte=selected.period_end)
+        .exclude(actual_change="")
+        .select_related("source_document")
+        .order_by("-event_date")[:12]
+    )
+    turns = list(
+        StrategicTurn.objects.filter(company=company, start_date__gt=period_start, start_date__lte=selected.period_end)
+        .order_by("-start_date")[:12]
+    )
+    promises = list(
+        ManagementPromise.objects.filter(
+            company=company,
+            is_published=True,
+            review_status="REVIEWED",
+        )
+        .filter(
+            Q(statement_date__gt=period_start, statement_date__lte=selected.filed_date)
+            | Q(target_end_date__gt=period_start, target_end_date__lte=selected.period_end)
+        )
+        .select_related("source_document")[:12]
+    )
+    risk_events = [row for row in events if row.event_type in RISK_EVENT_TYPES]
+    guidance = [row for row in promises if row.promise_type == "GUIDANCE"]
+    guidance_comparisons = list(
+        selected.guidance_comparisons.filter(review_status="REVIEWED")
+        .select_related("forecast_source", "actual_source")
+    )
+    reviewed_documents = list(
+        selected.documents.filter(review_status="REVIEWED").select_related("source_document")
+    )
+    reviewed_explanations = [row.evidence_text for row in reviewed_documents if row.evidence_text]
+    management_explanation = selected.management_explanation or " ".join(reviewed_explanations)
+    unanswered_questions = list(selected.unanswered_questions or [])
+    if not management_explanation:
+        unanswered_questions.append("Which operating and market factors did management identify as the main drivers of this period?")
+    if not guidance and not guidance_comparisons:
+        unanswered_questions.append("Did management introduce, maintain, raise, reduce, or withdraw comparable guidance?")
+    gaps = earnings_source_gaps(bool(management_explanation), bool(guidance or guidance_comparisons))
+    return JsonResponse({
+        "status": "available",
+        "company": serialize_company_detail(company),
+        "periods": [serialize_earnings_period(row) for row in periods],
+        "selected_period": {
+            **serialize_earnings_period(selected),
+            "previous_period": serialize_earnings_period(previous) if previous else None,
+            "measured_results": metrics,
+            "operating_kpis": kpis,
+            "management_explanation": management_explanation or None,
+            "infodj_interpretation": selected.infodj_interpretation or None,
+            "unanswered_questions": unanswered_questions,
+            "disclosure_changes": earnings_disclosure_changes(company, selected, previous),
+            "guidance_comparison": {
+                "status": "available" if guidance_comparisons else "unavailable",
+                "items": [serialize_guidance_comparison(row) for row in guidance_comparisons],
+                "linked_promises": [serialize_management_promise(row, include_updates=True) for row in guidance],
+                "reason": "No reviewed comparable numeric guidance was linked to this reporting period." if not guidance_comparisons else "",
+            },
+            "promises": [serialize_management_promise(row, include_updates=False) for row in promises],
+            "strategic_turns": [
+                serialize_strategic_turn(row, source_count=row.turn_sources.count()) for row in turns
+            ],
+            "risk_signals": [serialize_risk_signal(row) for row in risk_events],
+            "document_set": [
+                {"document_type": "SEC_10_Q", "source": serialize_profile_source(selected.source_document)},
+                *[
+                    {
+                        "document_type": row.document_type,
+                        "source": serialize_profile_source(row.source_document),
+                    }
+                    for row in reviewed_documents
+                ],
+            ],
+            "export_rows": metrics,
+        },
+        "source_gaps": gaps,
+    })
+
+
+def earnings_period_key(period: EarningsPeriod) -> str:
+    return f"FY{period.fiscal_year}-{period.fiscal_period}"
+
+
+def serialize_earnings_period(period: EarningsPeriod | None) -> dict[str, object] | None:
+    if period is None:
+        return None
+    return {
+        "id": period.id,
+        "key": earnings_period_key(period),
+        "accession_number": period.accession_number,
+        "fiscal_year": period.fiscal_year,
+        "fiscal_period": period.fiscal_period,
+        "period_start": period.period_start.isoformat() if period.period_start else None,
+        "period_end": period.period_end.isoformat(),
+        "filed_date": period.filed_date.isoformat(),
+        "headline": period.headline,
+        "confidence_score": decimal_to_float(period.confidence_score),
+        "source": serialize_profile_source(period.source_document),
+    }
+
+
+def earnings_metric_rows(company: Company, period: EarningsPeriod, previous: EarningsPeriod | None) -> list[dict[str, object]]:
+    from apps.ingestion.services.earnings_intelligence import KEY_CONCEPTS
+
+    filing_facts = list(FinancialFact.objects.filter(company=company, accession_number=period.accession_number))
+    rows = []
+    seen_labels = set()
+    for concept in KEY_CONCEPTS:
+        candidates = [
+            fact for fact in filing_facts
+            if fact.concept == concept and str((fact.raw or {}).get("end") or "") == period.period_end.isoformat()
+        ]
+        if not candidates:
+            continue
+        current = max(candidates, key=lambda fact: (bool(fact.frame), fact.id))
+        label = current.label or current.concept
+        normalized_label = label.lower()
+        if normalized_label in seen_labels:
+            continue
+        seen_labels.add(normalized_label)
+        prior = None
+        if previous:
+            prior_candidates = [
+                fact for fact in FinancialFact.objects.filter(
+                    company=company,
+                    accession_number=previous.accession_number,
+                    concept=current.concept,
+                    unit=current.unit,
+                )
+                if str((fact.raw or {}).get("end") or "") == previous.period_end.isoformat()
+            ]
+            prior = max(prior_candidates, key=lambda fact: (bool(fact.frame), fact.id), default=None)
+        prior_value = decimal_to_float(prior.value) if prior else None
+        current_value = decimal_to_float(current.value)
+        change_pct = pct_change(prior.value, current.value) if prior and prior.value else None
+        rows.append({
+            "concept": current.concept,
+            "label": label,
+            "unit": current.unit,
+            "value": current_value,
+            "previous_value": prior_value,
+            "change_pct": change_pct,
+            "comparison_status": "available" if prior else "unavailable",
+            "source": "SEC Company Facts",
+        })
+    return rows[:8]
+
+
+def earnings_kpi_rows(company: Company, period: EarningsPeriod, previous: EarningsPeriod | None) -> list[dict[str, object]]:
+    rows = []
+    definitions = KpiDefinition.objects.filter(company=company, is_active=True).prefetch_related("observations")
+    for definition in definitions:
+        observations = [row for row in definition.observations.all() if row.period_end <= period.period_end]
+        if not observations:
+            continue
+        current = max(observations, key=lambda row: row.period_end)
+        if current.period_end < period.period_end.replace(day=1):
+            continue
+        prior = None
+        if previous:
+            prior = max((row for row in observations if row.period_end <= previous.period_end), key=lambda row: row.period_end, default=None)
+        rows.append({
+            "slug": definition.slug,
+            "name": definition.name,
+            "unit": definition.unit,
+            "period_end": current.period_end.isoformat(),
+            "value": decimal_to_float(current.value),
+            "previous_value": decimal_to_float(prior.value) if prior else None,
+            "change_pct": pct_change(prior.value, current.value) if prior and prior.value else None,
+            "quality_flags": [
+                flag for flag, enabled in (
+                    ("estimated", current.is_estimated),
+                    ("restated", current.is_restatement),
+                    ("non-comparable", current.is_non_comparable),
+                    ("definition changed", current.definition_changed),
+                ) if enabled
+            ],
+        })
+    return rows[:8]
+
+
+def earnings_disclosure_changes(
+    company: Company, period: EarningsPeriod, previous: EarningsPeriod | None
+) -> dict[str, list[dict[str, str]]]:
+    current = {
+        (row.concept, row.unit): row.label or row.concept
+        for row in FinancialFact.objects.filter(company=company, accession_number=period.accession_number)
+    }
+    prior = {
+        (row.concept, row.unit): row.label or row.concept
+        for row in FinancialFact.objects.filter(company=company, accession_number=previous.accession_number)
+    } if previous else {}
+    added = [
+        {"concept": concept, "unit": unit, "label": current[(concept, unit)]}
+        for concept, unit in sorted(current.keys() - prior.keys())
+    ]
+    removed = [
+        {"concept": concept, "unit": unit, "label": prior[(concept, unit)]}
+        for concept, unit in sorted(prior.keys() - current.keys())
+    ]
+    return {"added": added[:20], "removed": removed[:20]}
+
+
+def earnings_source_gaps(has_management_explanation: bool, has_guidance: bool) -> list[dict[str, str]]:
+    gaps = []
+    if not has_management_explanation:
+        gaps.append({
+            "key": "management_explanation",
+            "label": "Management explanation unavailable",
+            "reason": "No reviewed earnings release, shareholder letter, presentation, or call excerpt is linked to this period.",
+            "source": "earnings-documents",
+            "next_action": "Collect and review company-issued earnings materials while preserving each document identity.",
+        })
+    if not has_guidance:
+        gaps.append({
+            "key": "guidance_comparison",
+            "label": "Actual-versus-guidance unavailable",
+            "reason": "No reviewed numeric guidance is linked to this reporting period.",
+            "source": "management-promises",
+            "next_action": "Review guidance statements and map comparable metrics, scope, units, and target periods.",
+        })
+    return gaps
+
+
+def serialize_guidance_comparison(row: EarningsGuidanceComparison) -> dict[str, object]:
+    forecast = decimal_to_float(row.forecast_value)
+    actual = decimal_to_float(row.actual_value)
+    variance = None if not forecast else round(((actual - forecast) / abs(forecast)) * 100, 2)
+    return {
+        "metric_name": row.metric_name,
+        "forecast_value": forecast,
+        "actual_value": actual,
+        "variance_pct": variance,
+        "unit": row.unit,
+        "comparison_status": row.comparison_status,
+        "forecast_evidence": row.forecast_evidence,
+        "actual_evidence": row.actual_evidence,
+        "confidence_score": decimal_to_float(row.confidence_score),
+        "forecast_source": serialize_profile_source(row.forecast_source),
+        "actual_source": serialize_profile_source(row.actual_source),
+    }
 
 
 @require_GET

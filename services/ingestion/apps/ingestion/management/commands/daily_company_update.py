@@ -81,6 +81,8 @@ class Command(BaseCommand):
                 reuse_extractions=True,
             )
 
+        call_command("build_earnings_intelligence", collect_exhibits=True)
+
         if options["include_quality_scoring"]:
             self.stdout.write(
                 self.style.WARNING(

@@ -13,6 +13,7 @@ import {
   BusinessModelResponse,
   OperatingKpiResponse,
   ManagementPromiseResponse,
+  EarningsResponse,
   DashboardSection,
   DashboardResponse,
   HistoryRow,
@@ -39,7 +40,7 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'profile' | 'subscription';
+type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'earnings' | 'profile' | 'subscription';
 type DashboardViewId =
   | 'company-intelligence'
   | 'turn-impact'
@@ -124,6 +125,7 @@ class AppComponent {
   businessModel = signal<BusinessModelResponse | null>(null);
   operatingKpis = signal<OperatingKpiResponse | null>(null);
   managementPromises = signal<ManagementPromiseResponse | null>(null);
+  earnings = signal<EarningsResponse | null>(null);
   searchResults = signal<SearchResponse | null>(null);
   searchPages = signal<Record<SearchResultGroup, number>>({
     companies: 1,
@@ -152,6 +154,7 @@ class AppComponent {
   businessModelLoading = signal(false);
   operatingKpiLoading = signal(false);
   managementPromiseLoading = signal(false);
+  earningsLoading = signal(false);
   companyProfileDate = '';
   businessModelDate = '';
   businessModelCompareDate = '';
@@ -168,6 +171,7 @@ class AppComponent {
   managementPromiseDue = '';
   managementPromiseAsOf = '';
   managementPromiseSlug = '';
+  earningsPeriod = '';
   readonly companyProfileSectionOrder = [
     'summary',
     'business_model',
@@ -470,6 +474,9 @@ class AppComponent {
     if (this.activePage() === 'management-promises') {
       return `${this.managementPromises()?.company.name || 'Company'} Management Promises`;
     }
+    if (this.activePage() === 'earnings') {
+      return `${this.earnings()?.company.name || 'Company'} Earnings Intelligence`;
+    }
     if (this.activePage() === 'profile') {
       return 'Profile';
     }
@@ -491,6 +498,9 @@ class AppComponent {
     }
     if (this.activePage() === 'management-promises') {
       return 'Original management commitments, deadlines, evaluation rules, revisions, outcomes, and source evidence.';
+    }
+    if (this.activePage() === 'earnings') {
+      return 'Quarterly measured results, period changes, linked strategy, guidance, risks, and source gaps.';
     }
     if (this.activePage() === 'profile') {
       return 'Manage account details, avatar preview, and subscription access.';
@@ -879,6 +889,31 @@ class AppComponent {
       this.managementPromiseSlug = slug;
       this.openManagementPromises(company.slug, slug);
     }
+  }
+
+  openEarnings(slug: string, period = ''): void {
+    if (!slug || !this.token()) return;
+    this.activePage.set('earnings');
+    this.menuOpen.set(false);
+    this.earningsLoading.set(true);
+    this.error.set('');
+    this.api.earnings(this.token(), slug, period || this.earningsPeriod).subscribe({
+      next: (response) => {
+        this.earnings.set(response);
+        this.earningsPeriod = response.selected_period?.key || '';
+        this.earningsLoading.set(false);
+      },
+      error: (response) => { this.earningsLoading.set(false); this.showError(response); }
+    });
+  }
+
+  reloadEarnings(): void {
+    const company = this.earnings()?.company;
+    if (company) this.openEarnings(company.slug, this.earningsPeriod);
+  }
+
+  printEarningsBrief(): void {
+    window.print();
   }
 
   promiseLabel(value: string): string {

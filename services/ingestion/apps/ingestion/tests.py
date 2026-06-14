@@ -13,6 +13,9 @@ from apps.companies.models import (
     BusinessModelSnapshot,
     Company,
     CompanyProfileSnapshot,
+    EarningsGuidanceComparison,
+    EarningsPeriod,
+    EarningsPeriodDocument,
     KpiDefinition,
     KpiDefinitionVersion,
     KpiObservation,
@@ -23,6 +26,14 @@ from apps.companies.models import (
 from apps.curation.models import BusinessEvent, StrategicTurn, StrategicTurnSource
 from apps.ingestion.models import ArticleExtraction, FinancialFact, MarketPrice, SourceDocument, SourceGap
 from apps.ingestion.services.event_extractor import EventSignal, actual_change_for, find_evidence_sentence
+from apps.ingestion.services.earnings_intelligence import (
+    build_earnings_periods,
+    earnings_quality_issues,
+    is_earnings_release,
+    is_exhibit_99,
+    management_driver_excerpt,
+    publish_reviewed_earnings_excerpt,
+)
 from apps.ingestion.services.company_profile_client import collect_official_company_profile, parse_official_profile_html
 from apps.ingestion.services.company_profile_fallbacks import PROFILE_FALLBACKS
 from apps.ingestion.services.company_profile_quality import company_profile_quality_issues
@@ -575,6 +586,158 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(result["skipped"], 1)
         self.assertFalse(ManagementPromise.objects.filter(company=self.netflix).exists())
         self.assertEqual(management_promise_quality_issues(self.netflix), ["no reviewed published management promise"])
+
+    def test_earnings_builder_creates_source_backed_period_and_api_separates_evidence_types(self):
+        quarterly_source = SourceDocument.objects.create(
+            company=self.netflix, source_api="SEC_EDGAR", url="https://example.com/000106528026000001",
+            title="Netflix 10-Q filing 2026-04-20 - 10-Q", publisher="SEC",
+            published_date="2026-04-20T00:00:00Z", language="en",
+        )
+        for concept, label, value in (("Revenues", "Revenue", "120"), ("NetIncomeLoss", "Net income", "25")):
+            FinancialFact.objects.create(
+                company=self.netflix, taxonomy="us-gaap", concept=concept, label=label, unit="USD",
+                fy=2026, fp="Q1", filed=date(2026, 4, 20), frame="CY2026Q1", value=value,
+                accession_number="0001065280-26-000001",
+                raw={"start": "2026-01-01", "end": "2026-03-31", "form": "10-Q", "fp": "Q1", "fy": 2026},
+            )
+
+        first = build_earnings_periods(self.netflix)
+        second = build_earnings_periods(self.netflix)
+        response = self.client.get("/companies/netflix/earnings")
+
+        self.assertEqual(first["created"], 1)
+        self.assertEqual(second["updated"], 1)
+        self.assertTrue(any("reviewed management explanation unavailable" in issue for issue in earnings_quality_issues(self.netflix)))
+        payload = response.json()
+        self.assertEqual(payload["status"], "available")
+        self.assertEqual(payload["selected_period"]["fiscal_period"], "Q1")
+        self.assertEqual(len(payload["selected_period"]["measured_results"]), 2)
+        self.assertIsNone(payload["selected_period"]["management_explanation"])
+        self.assertIsNone(payload["selected_period"]["infodj_interpretation"])
+        self.assertEqual(len(payload["selected_period"]["unanswered_questions"]), 2)
+        self.assertIn("disclosure_changes", payload["selected_period"])
+        self.assertEqual(payload["selected_period"]["document_set"][0]["source"]["id"], quarterly_source.id)
+        self.assertTrue(any(gap["key"] == "management_explanation" for gap in payload["source_gaps"]))
+
+    def test_earnings_api_reports_unavailable_without_reviewed_periods(self):
+        response = self.client.get("/companies/netflix/earnings")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "unavailable")
+        self.assertEqual(response.json()["periods"], [])
+
+    def test_management_driver_excerpt_keeps_driver_language_and_excludes_risk_boilerplate(self):
+        text = (
+            "Revenue increased primarily due to higher subscription volume and pricing across our core markets. "
+            "Operating income benefited from lower delivery costs and improved utilization during the quarter. "
+            "Forward-looking results may be adversely affected by competition and regulatory risk factors."
+        )
+
+        excerpt = management_driver_excerpt(text)
+
+        self.assertIn("primarily due to", excerpt)
+        self.assertIn("benefited from", excerpt)
+        self.assertNotIn("risk factors", excerpt)
+
+    def test_management_driver_excerpt_rejects_non_operating_boilerplate(self):
+        text = (
+            "The tax benefit was driven by the resolution of certain tax audits and tax regulations. "
+            "Dollar and percentage changes may not recalculate due to rounding. "
+            "Revenue increased 17% year over year, driven by customer demand and higher pricing."
+        )
+
+        excerpt = management_driver_excerpt(text)
+
+        self.assertEqual(excerpt, "Revenue increased 17% year over year, driven by customer demand and higher pricing.")
+
+    def test_earnings_exhibit_validation_rejects_non_earnings_exhibits(self):
+        extraction = ArticleExtraction(
+            extraction_status="SUCCEEDED",
+            word_count=150,
+            clean_text="The issuer discusses an offering and its effect on future earnings. " * 20,
+        )
+
+        self.assertTrue(is_exhibit_99("company-ex99_1.htm"))
+        self.assertFalse(is_exhibit_99("underwriting-ex1-1.htm"))
+        self.assertFalse(is_earnings_release(extraction))
+
+    def test_management_driver_excerpt_separates_guidance_and_reconciliation_text(self):
+        text = (
+            "Revenue grew 12%, driven by higher transaction volume and improved pricing. "
+            "We expect revenue growth next quarter to be driven by new products. "
+            "We calculate adjusted EBITDA by beginning with net earnings and reconciling non-GAAP items."
+        )
+
+        self.assertEqual(
+            management_driver_excerpt(text),
+            "Revenue grew 12%, driven by higher transaction volume and improved pricing.",
+        )
+
+    def test_review_catalog_publishes_exact_official_exhibit_text(self):
+        period = EarningsPeriod.objects.create(
+            company=self.netflix,
+            fiscal_year=2026,
+            fiscal_period="Q1",
+            period_end=date(2026, 3, 31),
+            filed_date=date(2026, 4, 20),
+            accession_number="0001065280-26-000001",
+            headline="Netflix reported first-quarter results.",
+            source_document=self.source,
+            review_status="REVIEWED",
+            is_published=True,
+        )
+        exhibit_source = SourceDocument.objects.create(
+            company=self.netflix,
+            source_api="SEC_EDGAR_EXHIBIT",
+            url="https://example.com/netflix-ex991",
+            title="Netflix earnings release",
+            publisher="SEC",
+        )
+        evidence = "Revenue in Q1 grew 16% year over year, driven primarily by membership growth, higher pricing, and increased ad revenue."
+        ArticleExtraction.objects.create(
+            source_document=exhibit_source,
+            clean_text=evidence,
+            word_count=120,
+            extraction_status="SUCCEEDED",
+        )
+        link = EarningsPeriodDocument.objects.create(period=period, source_document=exhibit_source)
+
+        result = publish_reviewed_earnings_excerpt(self.netflix)
+
+        link.refresh_from_db()
+        self.assertEqual(result["reviewed"], 1)
+        self.assertEqual(link.review_status, "REVIEWED")
+        self.assertEqual(link.evidence_text, evidence)
+
+    def test_earnings_api_keeps_forecast_and_actual_sources_separate(self):
+        period = EarningsPeriod.objects.create(
+            company=self.netflix, fiscal_year=2026, fiscal_period="Q1", period_end=date(2026, 3, 31),
+            filed_date=date(2026, 4, 20), accession_number="0001065280-26-000001",
+            headline="Netflix reported Q1 results.", source_document=self.source,
+            review_status="REVIEWED", is_published=True,
+        )
+        forecast_source = SourceDocument.objects.create(
+            company=self.netflix, source_api="SEC_EDGAR_EXHIBIT", url="https://example.com/q4-letter",
+            title="Prior shareholder letter", publisher="SEC",
+        )
+        actual_source = SourceDocument.objects.create(
+            company=self.netflix, source_api="SEC_EDGAR_EXHIBIT", url="https://example.com/q1-letter",
+            title="Current shareholder letter", publisher="SEC",
+        )
+        EarningsGuidanceComparison.objects.create(
+            period=period, metric_name="Revenue", forecast_value="12157", actual_value="12250",
+            unit="USD millions", comparison_status="ABOVE", forecast_source=forecast_source,
+            actual_source=actual_source, forecast_evidence="Forecast revenue was $12,157 million.",
+            actual_evidence="Reported revenue was $12,250 million.", confidence_score="0.950",
+            review_status="REVIEWED",
+        )
+
+        payload = self.client.get("/companies/netflix/earnings").json()["selected_period"]["guidance_comparison"]
+
+        self.assertEqual(payload["status"], "available")
+        self.assertEqual(payload["items"][0]["comparison_status"], "ABOVE")
+        self.assertEqual(payload["items"][0]["forecast_source"]["url"], forecast_source.url)
+        self.assertEqual(payload["items"][0]["actual_source"]["url"], actual_source.url)
 
     def test_companyfacts_builder_creates_idempotent_annual_and_quarterly_series(self):
         for filed, accession, value in (

@@ -575,6 +575,48 @@ export type ManagementPromiseResponse = {
   source_gaps: SourceGap[];
 };
 
+export type EarningsMetric = {
+  concept: string; label: string; unit: string; value: number; previous_value: number | null;
+  change_pct: number | null; comparison_status: 'available' | 'unavailable'; source: string;
+};
+
+export type EarningsGuidanceComparison = {
+  metric_name: string; forecast_value: number; actual_value: number; variance_pct: number | null;
+  unit: string; comparison_status: string; forecast_evidence: string; actual_evidence: string;
+  confidence_score: number; forecast_source: CompanyProfileSource; actual_source: CompanyProfileSource;
+};
+
+export type EarningsPeriodSummary = {
+  id: number; key: string; accession_number: string; fiscal_year: number; fiscal_period: string;
+  period_start: string | null; period_end: string; filed_date: string; headline: string;
+  confidence_score: number; source: CompanyProfileSource;
+};
+
+export type EarningsResponse = {
+  status: 'available' | 'unavailable';
+  company: CompanyProfileResponse['company'];
+  periods: EarningsPeriodSummary[];
+  selected_period: (EarningsPeriodSummary & {
+    previous_period: EarningsPeriodSummary | null;
+    measured_results: EarningsMetric[];
+    operating_kpis: { slug: string; name: string; unit: string; period_end: string; value: number; previous_value: number | null; change_pct: number | null; quality_flags: string[] }[];
+    management_explanation: string | null;
+    infodj_interpretation: string | null;
+    unanswered_questions: string[];
+    disclosure_changes: { added: { concept: string; unit: string; label: string }[]; removed: { concept: string; unit: string; label: string }[] };
+    guidance_comparison: {
+      status: 'available' | 'unavailable'; items: EarningsGuidanceComparison[];
+      linked_promises: ManagementPromise[]; reason: string;
+    };
+    promises: ManagementPromise[];
+    strategic_turns: DashboardTurn[];
+    risk_signals: DashboardEvent[];
+    document_set: { document_type: string; source: CompanyProfileSource }[];
+    export_rows: EarningsMetric[];
+  }) | null;
+  source_gaps: SourceGap[];
+};
+
 @Injectable({ providedIn: 'root' })
 export class InfoDjApiService {
   private readonly http = inject(HttpClient);
@@ -756,6 +798,14 @@ export class InfoDjApiService {
     if (asOf) params['as_of'] = asOf;
     if (promise) params['promise'] = promise;
     return this.http.get<ManagementPromiseResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/management-promises`, {
+      headers: this.authHeaders(token), params
+    });
+  }
+
+  earnings(token: string, slug: string, period = '') {
+    const params: Record<string, string> = {};
+    if (period) params['period'] = period;
+    return this.http.get<EarningsResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/earnings`, {
       headers: this.authHeaders(token), params
     });
   }
