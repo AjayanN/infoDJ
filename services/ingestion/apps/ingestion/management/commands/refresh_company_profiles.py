@@ -10,6 +10,10 @@ from apps.ingestion.models import IngestionJob, IngestionJobStatus, IngestionJob
 from apps.ingestion.services.company_profile_client import collect_official_company_profile
 from apps.ingestion.services.business_model_builder import build_business_model_from_profile
 from apps.ingestion.services.company_profile_quality import company_profile_quality_issues
+from apps.ingestion.services.reviewed_management_promises import (
+    build_reviewed_management_promise,
+    management_promise_quality_issues,
+)
 from apps.ingestion.services.sec_profile_builder import build_sec_company_profile
 from apps.ingestion.services.wikidata_client import sync_company_metadata
 
@@ -26,6 +30,7 @@ class Command(BaseCommand):
         parser.add_argument("--skip-official", action="store_true")
         parser.add_argument("--skip-sec-profile", action="store_true")
         parser.add_argument("--skip-business-model", action="store_true")
+        parser.add_argument("--skip-management-promises", action="store_true")
         parser.add_argument("--skip-validation", action="store_true")
         parser.add_argument("--daily-idempotent", action="store_true")
         parser.add_argument("--retry-failed-only", action="store_true")
@@ -47,6 +52,8 @@ class Command(BaseCommand):
             "sec_profile_failed": 0,
             "business_model_ok": 0,
             "business_model_failed": 0,
+            "management_promises_ok": 0,
+            "management_promises_failed": 0,
             "semantic_validation_ok": 0,
             "semantic_validation_failed": 0,
             "skipped": 0,
@@ -82,8 +89,11 @@ class Command(BaseCommand):
             if not options["skip_business_model"]:
                 result = self._refresh_business_model(company)
                 totals[result] += 1
+            if not options["skip_management_promises"]:
+                result = self._refresh_management_promises(company)
+                totals[result] += 1
             if not options["skip_validation"]:
-                issues = company_profile_quality_issues(company)
+                issues = company_profile_quality_issues(company) + management_promise_quality_issues(company)
                 if issues:
                     totals["semantic_validation_failed"] += 1
                     self.stderr.write(f"Semantic profile validation failed for {company.name}: {'; '.join(issues)}")
@@ -154,6 +164,13 @@ class Command(BaseCommand):
             self.stderr.write(f"Business-model build failed for {company.name}: {exc}")
             return "business_model_failed"
         return "business_model_ok"
+
+    def _refresh_management_promises(self, company) -> str:
+        result = build_reviewed_management_promise(company)
+        if result["skipped"]:
+            self.stderr.write(f"Management-promise build failed for {company.name}: {result['reason']}")
+            return "management_promises_failed"
+        return "management_promises_ok"
 
     def _should_skip(self, company, source: str, options) -> bool:
         if not options["daily_idempotent"]:

@@ -21,7 +21,7 @@ from apps.companies.models import (
     ManagementPromiseUpdate,
 )
 from apps.curation.models import BusinessEvent, StrategicTurn, StrategicTurnSource
-from apps.ingestion.models import FinancialFact, MarketPrice, SourceDocument, SourceGap
+from apps.ingestion.models import ArticleExtraction, FinancialFact, MarketPrice, SourceDocument, SourceGap
 from apps.ingestion.services.event_extractor import EventSignal, actual_change_for, find_evidence_sentence
 from apps.ingestion.services.company_profile_client import collect_official_company_profile, parse_official_profile_html
 from apps.ingestion.services.company_profile_fallbacks import PROFILE_FALLBACKS
@@ -30,6 +30,11 @@ from apps.ingestion.services.business_model_builder import build_business_model_
 from apps.ingestion.services.kpi_collector import collect_kpi_csv, collect_kpi_html_table
 from apps.ingestion.services.kpi_companyfacts_builder import build_companyfacts_kpis
 from apps.ingestion.services.management_promise_builder import build_promise_candidates_from_kpi_targets
+from apps.ingestion.services.reviewed_management_promises import (
+    REVIEWED_PROMISE_SPECS,
+    build_reviewed_management_promise,
+    management_promise_quality_issues,
+)
 from apps.ingestion.services.market_price_client import (
     parse_alpha_vantage_daily_csv,
     parse_fmp_historical_prices,
@@ -526,6 +531,50 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(promise.review_status, "NEEDS_REVIEW")
         self.assertFalse(promise.is_published)
         self.assertEqual(promise.linked_kpi, metric)
+
+    def test_reviewed_promise_catalog_covers_every_configured_company(self):
+        expected = {slugify(seed.name) for seed in CROSS_SECTOR_COMPANIES}
+
+        self.assertEqual(set(REVIEWED_PROMISE_SPECS), expected)
+
+    def test_reviewed_promise_builder_preserves_exact_filing_sentence_and_is_idempotent(self):
+        ArticleExtraction.objects.create(
+            source_document=self.source,
+            clean_text=(
+                "Our core strategy is to grow globally. "
+                "We aim to offer a range of pricing plans, including an ad-supported subscription plan, "
+                "to meet a variety of consumer needs."
+            ),
+            word_count=28,
+            extraction_status="SUCCEEDED",
+        )
+
+        first = build_reviewed_management_promise(self.netflix)
+        second = build_reviewed_management_promise(self.netflix)
+
+        self.assertEqual(first["created"], 1)
+        self.assertEqual(second["updated"], 1)
+        promise = ManagementPromise.objects.get(company=self.netflix)
+        self.assertEqual(promise.original_statement, promise.evidence_text)
+        self.assertIn("ad-supported subscription plan", promise.original_statement)
+        self.assertEqual(promise.source_document, self.source)
+        self.assertEqual(promise.review_status, "REVIEWED")
+        self.assertTrue(promise.is_published)
+        self.assertEqual(management_promise_quality_issues(self.netflix), [])
+
+    def test_reviewed_promise_builder_does_not_publish_when_reviewed_statement_is_absent(self):
+        ArticleExtraction.objects.create(
+            source_document=self.source,
+            clean_text="The filing describes current operations without the reviewed strategic statement.",
+            word_count=10,
+            extraction_status="SUCCEEDED",
+        )
+
+        result = build_reviewed_management_promise(self.netflix)
+
+        self.assertEqual(result["skipped"], 1)
+        self.assertFalse(ManagementPromise.objects.filter(company=self.netflix).exists())
+        self.assertEqual(management_promise_quality_issues(self.netflix), ["no reviewed published management promise"])
 
     def test_companyfacts_builder_creates_idempotent_annual_and_quarterly_series(self):
         for filed, accession, value in (

@@ -325,15 +325,18 @@ The tracker includes:
 - visible evaluation rules, confidence, and links to canonical KPIs and strategic turns
 - status, promise-type, due-soon, overdue, and historical `as_of` filters
 - unpublished `NEEDS_REVIEW` candidates from source-backed KPI targets
-- explicit unavailable states when a company has no reviewed commitments
+- explicit unavailable states when selected filters have no matching reviewed commitments
 
 Automated collection never publishes negative delivery classifications. Candidates remain unpublished until an analyst reviews the original statement, metric definition, conditions, deadline, and outcome evidence. Admin users can correct, reject, publish, and add reviewed status updates through the Django admin.
 
-Build candidates from existing source-backed KPI targets:
+Build reviewed filing-backed statements for the full configured universe, plus candidates from source-backed KPI targets:
 
 ```bash
 sudo docker compose -f infra/docker-compose.yml run --rm ingestion \
-  .venv/bin/python manage.py build_management_promises --company netflix
+  .venv/bin/python manage.py build_management_promises
+
+sudo docker compose -f infra/docker-compose.yml run --rm ingestion \
+  .venv/bin/python manage.py validate_management_promises
 ```
 
 Management Promise endpoints:
@@ -344,7 +347,11 @@ Product:   GET /api/app/companies/{slug}/management-promises
 Filters:   ?status={status}&type={type}&due=due_soon|overdue&as_of=YYYY-MM-DD&promise={slug}
 ```
 
-Open the tracker from `Management promise tracker` on Company 360. The Netflix pilot includes a reviewed launch commitment with its original statement, evaluation rule, evidence, linked strategic turn, and achieved status update.
+Open the tracker from `Management promise tracker` on Company 360. Every one of the 20 configured companies must have at least one reviewed, published, filing-backed management statement. The refresh scheduler rebuilds these records from the newest stored 10-K containing the reviewed statement, and semantic validation fails when any configured company lacks source evidence, original statement text, outcome evidence, or an evaluation rule.
+
+Company-facing functionality is accepted against the complete configured company universe, not a single-company pilot or sample. The authenticated Management Promise smoke test requests and validates all 20 companies.
+
+Requirement 4 verification: all 20 companies passed live source/evidence validation and authenticated API smoke checks on June 14, 2026. Full suites passed with 44 ingestion tests, 30 main-backend tests, 7 frontend tests, and a successful frontend production build.
 
 Authenticated smoke check:
 
