@@ -5,44 +5,36 @@ BASE_URL="${BASE_URL:-http://localhost:8080/api/app}"
 USERNAME="promise_tracker_$(date +%s)"
 EMAIL="${USERNAME}@example.com"
 PASSWORD="SmokePass123!"
+TMP_DIR="$(mktemp -d)"
+trap 'rm -rf "${TMP_DIR}"' EXIT
 
 echo "Creating Management Promise smoke user ${USERNAME}"
 SIGNUP_RESPONSE="$(curl -sS -X POST "${BASE_URL}/auth/signup" -H "Content-Type: application/json" -d "{\"username\":\"${USERNAME}\",\"email\":\"${EMAIL}\",\"password\":\"${PASSWORD}\"}")"
 TOKEN="$(printf '%s' "${SIGNUP_RESPONSE}" | python3 -c 'import json,sys; print(json.load(sys.stdin)["token"])')"
 
-echo "Checking reviewed Netflix promise register and detail"
-curl -fsS "${BASE_URL}/companies/netflix/management-promises?status=ACHIEVED&promise=launch-basic-with-ads" \
-  -H "Authorization: Token ${TOKEN}" -o /tmp/infodj_management_promises.json
-python3 - <<'PY'
+echo "Checking reviewed promise coverage for all configured companies"
+COMPANIES=(apple microsoft jpmorgan-chase visa unitedhealth-group pfizer amazon walmart exxonmobil nextera-energy ford-motor-company tesla caterpillar general-electric disney netflix prologis american-tower freeport-mcmoran newmont)
+for company in "${COMPANIES[@]}"; do
+  curl -fsS "${BASE_URL}/companies/${company}/management-promises" \
+    -H "Authorization: Token ${TOKEN}" -o "${TMP_DIR}/${company}.json"
+done
+python3 - "${TMP_DIR}" <<'PY'
 import json
+from pathlib import Path
+import sys
 
-with open("/tmp/infodj_management_promises.json", encoding="utf-8") as handle:
-    data = json.load(handle)
-
-assert data["status"] == "available"
-assert data["company"]["slug"] == "netflix"
-assert data["coverage"]["promise_count"] == 1
-assert data["selected_promise"]["slug"] == "launch-basic-with-ads"
-assert data["selected_promise"]["current_status"] == "ACHIEVED"
-assert data["selected_promise"]["evaluation_rule"]
-assert len(data["selected_promise"]["updates"]) == 1
-assert len(data["evidence"]) >= 1
-print("Reviewed promise workflow ok")
-PY
-
-echo "Checking explicit unavailable state"
-curl -fsS "${BASE_URL}/companies/caterpillar/management-promises" \
-  -H "Authorization: Token ${TOKEN}" -o /tmp/infodj_management_promises_unavailable.json
-python3 - <<'PY'
-import json
-
-with open("/tmp/infodj_management_promises_unavailable.json", encoding="utf-8") as handle:
-    data = json.load(handle)
-
-assert data["status"] == "unavailable"
-assert data["promises"] == []
-assert len(data["source_gaps"]) == 1
-print("Unavailable promise state ok")
+paths = sorted(Path(sys.argv[1]).glob("*.json"))
+assert len(paths) == 20, len(paths)
+for path in paths:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    assert data["status"] == "available", data["company"]["slug"]
+    assert data["coverage"]["promise_count"] >= 1, data["company"]["slug"]
+    promise = data["selected_promise"]
+    assert promise["source"], data["company"]["slug"]
+    assert promise["original_statement"], data["company"]["slug"]
+    assert promise["evidence_text"], data["company"]["slug"]
+    assert promise["evaluation_rule"], data["company"]["slug"]
+print("Reviewed all-company promise workflow ok")
 PY
 
 echo "Management Promise Tracker smoke test passed"

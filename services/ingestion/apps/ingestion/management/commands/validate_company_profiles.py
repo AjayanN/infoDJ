@@ -4,6 +4,7 @@ from django.utils.text import slugify
 from apps.companies.company_universe import CROSS_SECTOR_COMPANIES
 from apps.companies.models import Company
 from apps.ingestion.services.company_profile_quality import company_profile_quality_issues
+from apps.ingestion.services.reviewed_management_promises import management_promise_quality_issues
 
 
 class Command(BaseCommand):
@@ -21,7 +22,9 @@ class Command(BaseCommand):
         failures = {}
         for seed in seeds:
             company = Company.objects.filter(slug=slugify(seed.name)).first()
-            issues = ["company record unavailable"] if company is None else company_profile_quality_issues(company)
+            issues = ["company record unavailable"] if company is None else (
+                company_profile_quality_issues(company) + management_promise_quality_issues(company)
+            )
             if issues:
                 failures[seed.name] = issues
                 self.stderr.write(f"{seed.name}: FAILED - {'; '.join(issues)}")

@@ -380,7 +380,7 @@ Each feature below inherits the shared standards above. Feature sections only de
 - too early to judge
 - unverifiable
 
-**Current status:** baseline implemented and validated with a reviewed Netflix pilot, explicit unavailable states for uncovered companies, and analyst review required before publication.
+**Current status:** complete. Filing-backed coverage, scheduled refresh, dedicated validation, and authenticated API checks pass for all 20 configured companies. Publication requires source evidence; automated validation and smoke checks fail when any company is uncovered.
 
 **Feature-specific requirements:**
 
@@ -1066,7 +1066,7 @@ The order below reflects functional dependency and user value. It does not requi
 **Exit condition:** a user can compare management statements and expected execution with actual progress.
 
 - [ ] Earnings Intelligence.
-- [x] Management Promise Tracker: baseline implemented.
+- [x] Management Promise Tracker: complete with reviewed filing-backed coverage for all 20 configured companies.
 - [ ] Strategy Milestone Tracker.
 - [ ] Leadership Decision Record.
 
@@ -1223,6 +1223,8 @@ This replaces the older “Immediate Starting Backlog” and reflects the actual
 ### 17.3 Build Next Skeletons
 
 - [x] Build Management Promise Tracker skeleton.
+- [x] Add scheduled, idempotent Management Promise builds for all 20 configured companies.
+- [x] Pass all-company source, evidence, evaluation-rule, API, and smoke-test coverage before accepting the requirement.
 - [ ] Build Earnings Intelligence skeleton.
 - [ ] Build Strategy Milestone Tracker skeleton.
 - [ ] Add dependency labels from KPI Tracker to Earnings and Promise features.
