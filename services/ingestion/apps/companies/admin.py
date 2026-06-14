@@ -14,6 +14,9 @@ from apps.companies.models import (
     BusinessModelRelationship,
     BusinessModelSnapshot,
     CompanyProfileSnapshot,
+    EarningsGuidanceComparison,
+    EarningsPeriod,
+    EarningsPeriodDocument,
     KpiComparability,
     KpiDefinition,
     KpiDefinitionVersion,
@@ -237,3 +240,29 @@ class ManagementPromiseUpdateAdmin(admin.ModelAdmin):
     list_display = ("promise", "update_date", "status", "is_contradiction_candidate", "review_status")
     list_filter = ("status", "is_contradiction_candidate", "review_status", "promise__company")
     search_fields = ("promise__title", "summary", "evidence_text", "contradiction_note")
+
+
+@admin.register(EarningsPeriod)
+class EarningsPeriodAdmin(admin.ModelAdmin):
+    list_display = ("company", "fiscal_period", "fiscal_year", "period_end", "filed_date", "review_status", "is_published")
+    list_filter = ("fiscal_period", "review_status", "is_published", "company")
+    search_fields = ("company__name", "accession_number", "headline", "management_explanation")
+
+
+@admin.register(EarningsPeriodDocument)
+class EarningsPeriodDocumentAdmin(admin.ModelAdmin):
+    list_display = ("period", "document_type", "source_document", "review_status", "confidence_score")
+    list_filter = ("document_type", "review_status", "period__company")
+    search_fields = ("period__company__name", "source_document__title", "evidence_text")
+    actions = ("mark_reviewed",)
+
+    @admin.action(description="Mark selected earnings documents reviewed")
+    def mark_reviewed(self, request, queryset):
+        queryset.exclude(evidence_text="").update(review_status="REVIEWED")
+
+
+@admin.register(EarningsGuidanceComparison)
+class EarningsGuidanceComparisonAdmin(admin.ModelAdmin):
+    list_display = ("period", "metric_name", "forecast_value", "actual_value", "comparison_status", "review_status")
+    list_filter = ("comparison_status", "review_status", "period__company")
+    search_fields = ("period__company__name", "metric_name", "forecast_evidence", "actual_evidence")

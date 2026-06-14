@@ -429,19 +429,21 @@ Each feature below inherits the shared standards above. Feature sections only de
 
 **MVP tasks:**
 
-- [ ] Define standard earnings-period brief and terminology.
-- [ ] Build quarterly timeline and earnings detail skeleton.
-- [ ] Combine filing, release, presentation, and call evidence without merging source identities.
-- [ ] Add actual-versus-guidance and period-over-period comparisons.
-- [ ] Separate measured result, management explanation, InfoDJ interpretation, and unanswered questions.
-- [ ] Track new, changed, and removed disclosures.
-- [ ] Link earnings period to KPIs, promises, risks, products, and strategic turns.
-- [ ] Provide one-page earnings brief export.
+- [x] Define standard earnings-period brief and terminology.
+- [x] Build quarterly timeline and earnings detail skeleton.
+- [x] Combine reviewed filing and company-issued earnings evidence without merging source identities; presentation and call records remain independently addable when reviewed sources are available.
+- [x] Add actual-versus-guidance and period-over-period comparisons. Netflix Q1 2026 is the reviewed comparable-guidance pilot; unavailable states remain explicit elsewhere.
+- [x] Separate measured result, management explanation, InfoDJ interpretation, and unanswered questions.
+- [x] Track newly added and removed SEC fact disclosures between sequential periods; semantic definition changes remain linked to the KPI dictionary.
+- [x] Link earnings period to KPIs, promises, risks, and strategic turns; product links remain.
+- [x] Provide one-page earnings brief export.
 
 **Acceptance criteria:**
 
 - Users can understand what changed in the quarter and why without reading every source.
 - Management explanation is clearly separated from measured outcome and InfoDJ interpretation.
+
+**Current status:** complete. All 20 configured companies have reviewed SEC period facts and a distinct reviewed company-issued earnings explanation. Period comparisons, KPI movement, disclosure changes, linked promises/strategy/risks, evidence identities, unanswered questions, unavailable states, and print view are implemented. Netflix Q1 2026 validates separate-source forecast-versus-actual comparison; other companies do not imply guidance coverage where no comparable reviewed forecast is available. Validation on June 14, 2026 passed ingestion 52/52, main backend 32/32, frontend 7/7, production build, all-company quality validation, and authenticated 20-company smoke testing.
 
 ---
 
@@ -1065,7 +1067,7 @@ The order below reflects functional dependency and user value. It does not requi
 
 **Exit condition:** a user can compare management statements and expected execution with actual progress.
 
-- [ ] Earnings Intelligence.
+- [x] Earnings Intelligence: reviewed filing and earnings-release coverage for all 20 companies, with a separate-source comparable-guidance pilot and explicit unavailable states.
 - [x] Management Promise Tracker: complete with reviewed filing-backed coverage for all 20 configured companies.
 - [ ] Strategy Milestone Tracker.
 - [ ] Leadership Decision Record.
@@ -1222,7 +1224,7 @@ This replaces the older “Immediate Starting Backlog” and reflects the actual
 ### 17.2 Prepare Wave 2 Definitions
 
 - [x] Define promise, guidance, aspiration, strategic claim, and milestone distinctions.
-- [ ] Define the earnings brief format.
+- [x] Define the earnings brief format.
 - [x] Define status and review rules for Management Promise Tracker.
 - [ ] Define milestone category, due-date, dependency, and status rules.
 - [ ] Define leadership decision and attribution boundaries.
@@ -1232,7 +1234,9 @@ This replaces the older “Immediate Starting Backlog” and reflects the actual
 - [x] Build Management Promise Tracker skeleton.
 - [x] Add scheduled, idempotent Management Promise builds for all 20 configured companies.
 - [x] Pass all-company source, evidence, evaluation-rule, API, and smoke-test coverage before accepting the requirement.
-- [ ] Build Earnings Intelligence skeleton.
+- [x] Build Earnings Intelligence measured-results skeleton for all 20 companies.
+- [x] Publish reviewed earnings explanations for all 20 companies and validate distinct filing/release evidence identities.
+- [x] Add and validate the Netflix Q1 2026 forecast-versus-actual pilot without treating unavailable company guidance as zero.
 - [ ] Build Strategy Milestone Tracker skeleton.
 - [ ] Add dependency labels from KPI Tracker to Earnings and Promise features.
 - [ ] Run user review before expanding beyond pilot coverage.

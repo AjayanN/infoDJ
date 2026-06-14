@@ -338,6 +338,22 @@ class DashboardSearchApiTests(TestCase):
 
         self.assertEqual(response.status_code, 401)
 
+    @override_settings(INGESTION_API_URL="http://ingestion.test/api/ingestion")
+    @patch("apps.search.api.requests.get")
+    def test_earnings_proxies_period_filter(self, get):
+        get.return_value = json_response({"status": "available", "company": {"slug": "netflix"}, "periods": []})
+
+        response = self.client.get("/api/app/companies/netflix/earnings?period=FY2026-Q1")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(get.call_args.args[0], "http://ingestion.test/api/ingestion/companies/netflix/earnings")
+        self.assertEqual(get.call_args.kwargs["params"], {"period": "FY2026-Q1"})
+
+    def test_earnings_requires_authentication(self):
+        response = APIClient().get("/api/app/companies/netflix/earnings")
+
+        self.assertEqual(response.status_code, 401)
+
 
 def json_response(payload: dict):
     response = Mock()

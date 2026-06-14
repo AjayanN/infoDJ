@@ -374,6 +374,35 @@ BASE_URL=http://localhost:8080/api/app \
   bash scripts/smoke/phase2_management_promises.sh
 ```
 
+## Earnings Intelligence
+
+Phase 2 Requirement 5 provides a reviewed Earnings Intelligence baseline for all 20 configured companies. Each period preserves its SEC 10-Q source, groups filed Company Facts by accession and reporting period, shows selected metrics and prior-period changes, connects canonical KPI observations, and links reviewed promises, strategic turns, and risk signals within the period.
+
+Official SEC Exhibit 99 earnings releases or shareholder letters are collected for the latest period and remain `NEEDS_REVIEW` until exact operating-driver excerpts match the reviewed editorial catalog. Filing facts, management explanation, InfoDJ interpretation, and unanswered questions remain separate. Netflix also has a reviewed Q1 2026 forecast-versus-actual pilot with separate prior-quarter forecast and current-quarter actual sources; other companies show an explicit unavailable state when comparable reviewed numeric guidance has not been mapped.
+
+```bash
+sudo docker compose -f infra/docker-compose.yml exec -T ingestion \
+  .venv/bin/python manage.py build_earnings_intelligence --collect-exhibits
+
+sudo docker compose -f infra/docker-compose.yml exec -T ingestion \
+  .venv/bin/python manage.py publish_reviewed_earnings_excerpts
+
+sudo docker compose -f infra/docker-compose.yml exec -T ingestion \
+  .venv/bin/python manage.py validate_earnings_intelligence
+
+BASE_URL=http://localhost:8080/api/app \
+  bash scripts/smoke/phase2_earnings_intelligence.sh
+```
+
+```text
+Ingestion: GET /companies/{slug}/earnings?period=FY2026-Q1
+Product:   GET /api/app/companies/{slug}/earnings?period=FY2026-Q1
+```
+
+Open `Earnings intelligence` from Company 360 for the quarterly timeline, measured results, reviewed management drivers, KPI movement, forecast-versus-actual comparisons where available, linked strategy and risks, distinct evidence sources, evidence gaps, and print export.
+
+Requirement 5 verification on June 14, 2026: ingestion `52/52`, main backend `32/32`, frontend `7/7`, production build passed, all-company validator passed, and the authenticated gateway smoke test passed for all 20 companies.
+
 ## Test Commands
 
 Run tests inside Docker Compose:
