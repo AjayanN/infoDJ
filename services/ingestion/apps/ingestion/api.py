@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import defaultdict
 from datetime import date, timedelta
 
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector, TrigramSimilarity
@@ -1204,9 +1205,14 @@ def scorecard_candidate_rows(limit: int) -> list[dict[str, object]]:
                 "financial_facts": impact.get("financial_facts", []) if impact else [],
             }
         )
-        if len(rows) >= limit:
-            break
-    return rows
+    first_by_company = {}
+    additional_rows = []
+    for row in rows:
+        if row["company_slug"] not in first_by_company:
+            first_by_company[row["company_slug"]] = row
+        else:
+            additional_rows.append(row)
+    return [*first_by_company.values(), *additional_rows][:limit]
 
 
 def first_turn_event(turn: StrategicTurn) -> BusinessEvent | None:
@@ -1234,31 +1240,40 @@ def scorecard_reason(impact: dict[str, object] | None) -> str:
 
 
 def compare_turn_rows(limit: int) -> list[dict[str, object]]:
-    rows = []
-    for group in (
-        StrategicTurn.objects.values("turn_type")
+    source_counts = dict(
+        StrategicTurnSource.objects.values("strategic_turn_id")
         .annotate(count=Count("id"))
-        .filter(count__gte=2)
-        .order_by("-count", "turn_type")[:limit]
-    ):
-        turns = []
-        for turn in (
-            StrategicTurn.objects.select_related("company")
-            .filter(turn_type=group["turn_type"])
-            .order_by("-start_date", "company__name")[:4]
-        ):
-            if turn_eligibility(turn, source_count=StrategicTurnSource.objects.filter(strategic_turn=turn).count()).eligible:
-                turns.append(
+        .values_list("strategic_turn_id", "count")
+    )
+    grouped: dict[str, list[StrategicTurn]] = defaultdict(list)
+    for turn in StrategicTurn.objects.select_related("company").order_by("-start_date", "company__name"):
+        if turn_eligibility(turn, source_count=source_counts.get(turn.id, 0)).eligible:
+            grouped[turn.turn_type].append(turn)
+
+    rows = []
+    for turn_type, eligible_turns in grouped.items():
+        company_count = len({turn.company_id for turn in eligible_turns})
+        if len(eligible_turns) < 2 or company_count < 2:
+            continue
+        rows.append(
+            {
+                "turn_type": turn_type,
+                "sample_size": len(eligible_turns),
+                "company_count": company_count,
+                "turns": [
                     {
                         "id": turn.id,
                         "company": turn.company.name,
+                        "company_slug": turn.company.slug,
                         "title": turn.title,
+                        "turn_type": turn.turn_type,
                         "start_date": turn.start_date.isoformat() if turn.start_date else None,
                     }
-                )
-        if len(turns) >= 2:
-            rows.append({"turn_type": group["turn_type"], "sample_size": group["count"], "turns": turns})
-    return rows
+                    for turn in eligible_turns[:12]
+                ],
+            }
+        )
+    return sorted(rows, key=lambda row: (-row["company_count"], -row["sample_size"], row["turn_type"]))[:limit]
 
 
 def serialize_risk_signal(event: BusinessEvent) -> dict[str, object]:

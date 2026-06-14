@@ -690,6 +690,11 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual([row["slug"] for row in payload["sections"]["company_situations"]["items"]], ["disney"])
 
     def test_rebuild_specific_turns_unlocks_pattern_scorecard_and_compare(self):
+        peer = Company.objects.create(name="Example Streaming", industry=self.netflix.industry, country="United States")
+        peer_source = SourceDocument.objects.create(
+            company=peer, source_api="SEC", url="https://example.com/example-streaming-10k",
+            title="Example Streaming 10-K", publisher="SEC", language="en",
+        )
         BusinessEvent.objects.create(
             company=self.netflix,
             source_document=self.source,
@@ -702,8 +707,17 @@ class IngestionSearchApiTests(TestCase):
             confidence_score="0.850",
             review_status="NEEDS_REVIEW",
         )
+        BusinessEvent.objects.create(
+            company=peer, source_document=peer_source, event_type="REVENUE_MODEL_EXPANSION",
+            event_date="2023-04-01", decision_theme="AD_SUPPORTED_PLAN",
+            actual_change="Example Streaming launched an ad-supported subscription plan.",
+            source_claim="Example Streaming announced its advertising plan.",
+            evidence_text="Example Streaming launched an ad-supported plan in April 2023.",
+            confidence_score="0.850", review_status="NEEDS_REVIEW",
+        )
 
         call_command("rebuild_specific_turns", company="netflix")
+        call_command("rebuild_specific_turns", company=peer.slug)
         response = self.client.get("/dashboard-data")
         payload = response.json()
 
@@ -712,6 +726,11 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(payload["sections"]["scorecards"]["status"], "available")
         self.assertEqual(payload["sections"]["compare"]["status"], "available")
         self.assertGreaterEqual(payload["sections"]["compare"]["items"][0]["sample_size"], 2)
+        self.assertGreaterEqual(payload["sections"]["compare"]["items"][0]["company_count"], 2)
+        self.assertEqual(
+            {row["company"] for row in payload["sections"]["compare"]["items"][0]["turns"]},
+            {"Netflix", "Example Streaming"},
+        )
 
 
 class WikidataCompanyProfileTests(TestCase):

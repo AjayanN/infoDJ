@@ -56,7 +56,7 @@ These rules apply to every Phase 2 feature.
 - Users must be able to open the evidence behind important claims, classifications, and calculations.
 - Company-specific terminology must be preserved while also mapping it to comparable standard categories.
 - Every dashboard must support loading, available, partial, unavailable, stale, and conflicting-data states.
-- Every feature must work meaningfully for one deeply covered pilot company before broad rollout.
+- Every feature must work meaningfully for one deeply covered pilot before rollout, then pass functional validation for every configured company before being marked complete.
 
 ---
 
@@ -1169,6 +1169,7 @@ A feature is complete only when:
 - [ ] Inclusion, exclusion, classification, and calculation rules are documented.
 - [ ] Skeleton, empty states, partial states, and evidence views exist.
 - [ ] At least one pilot company has complete reviewed coverage.
+- [ ] Every configured company passes the feature's applicable data, API, frontend, and smoke-test acceptance checks.
 - [ ] Important facts and conclusions are source-backed.
 - [ ] Historical revisions and conflicts are preserved.
 - [ ] Related dashboards and company pages are connected.
@@ -1205,6 +1206,12 @@ This replaces the older “Immediate Starting Backlog” and reflects the actual
 ### 17.1 Stabilize Current Wave 1 Work
 
 - [x] Resolve Company 360 semantic validation gaps for all 20 configured companies.
+- [x] Replace Netflix-specific global-search wording with company-neutral search guidance.
+- [x] Make every configured company searchable through the authenticated product API.
+- [x] Rebuild specific source-backed strategic turns for all 20 companies during ingestion.
+- [x] Balance scorecards so every configured company is represented before additional company turns.
+- [x] Populate comparisons only from eligible turns spanning at least two distinct companies.
+- [x] Validate live dashboard coverage for all 20 companies and cross-company comparison availability.
 - [x] Confirm reviewed Business Model Map summaries are used before fallback profile text.
 - [x] Run complete ingestion backend suite.
 - [x] Run complete main backend suite.

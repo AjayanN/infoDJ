@@ -151,6 +151,20 @@ Company 360 includes:
 
 Dashboard ownership is intentionally separate from Company 360. `Company Coverage Overview` provides global cross-company coverage, while Company 360 provides one-company summaries and links into canonical detail features. Opening `Latest moves`, `Risk signals`, or `Compare peers` from Company 360 applies the selected company as dashboard scope; the dashboard visibly identifies that scope and provides a `Show all companies` action.
 
+Global search is company-neutral and searches companies, source-backed events, and eligible strategic turns. The dashboard scorecard feed is coverage-balanced: the best eligible turn from each configured company appears before additional turns. Comparison groups include only quality-gated turns from at least two distinct companies, with company and event-date context shown in the frontend.
+
+Daily event extraction now rebuilds specific source-backed turns after curation. Validate the complete dashboard universe with:
+
+```bash
+sudo docker compose -f infra/docker-compose.yml exec -T ingestion \
+  .venv/bin/python manage.py validate_dashboard_coverage
+
+BASE_URL=http://localhost:8080/api/app \
+  bash scripts/smoke/sprint1_dashboard_search.sh
+```
+
+Dashboard foundation verification on June 14, 2026 passed for all 20 configured companies: every company was searchable and represented in the scorecard feed, with 60 eligible scorecards and six cross-company comparison groups. Full suites passed with 44 ingestion tests, 30 main-backend tests, 7 frontend tests, and a successful frontend production build.
+
 Profile snapshots are dated and versioned. New snapshots do not overwrite historical company state. Wikidata metadata synchronization creates the initial source-backed profile foundation, and reviewed snapshots can enrich it from filings, investor materials, and permitted official company pages.
 
 Pilot data can be created with:

@@ -177,6 +177,7 @@ export type CompanySituation = DashboardCompany & {
 export type CompareExample = {
   turn_type: string;
   sample_size: number;
+  company_count: number;
   turns: DashboardTurn[];
 };
 
