@@ -118,6 +118,8 @@
         <button type="button" *ngIf="companyProfile()" [class.active]="activePage() === 'company'" [attr.aria-current]="activePage() === 'company' ? 'page' : null" (click)="setActivePage('company')">Company 360</button>
         <button type="button" *ngIf="businessModel()" [class.active]="activePage() === 'business-model'" [attr.aria-current]="activePage() === 'business-model' ? 'page' : null" (click)="setActivePage('business-model')">Business Model</button>
         <button type="button" *ngIf="operatingKpis()" [class.active]="activePage() === 'operating-kpis'" [attr.aria-current]="activePage() === 'operating-kpis' ? 'page' : null" (click)="setActivePage('operating-kpis')">Operating KPIs</button>
+        <button type="button" *ngIf="managementPromises()" [class.active]="activePage() === 'management-promises'" [attr.aria-current]="activePage() === 'management-promises' ? 'page' : null" (click)="setActivePage('management-promises')">Promises</button>
+        <button type="button" *ngIf="strategyMilestones()" [class.active]="activePage() === 'strategy-milestones'" [attr.aria-current]="activePage() === 'strategy-milestones' ? 'page' : null" (click)="setActivePage('strategy-milestones')">Milestones</button>
         <button type="button" *ngIf="earnings()" [class.active]="activePage() === 'earnings'" [attr.aria-current]="activePage() === 'earnings' ? 'page' : null" (click)="setActivePage('earnings')">Earnings</button>
         <button type="button" [class.active]="activePage() === 'profile'" [attr.aria-current]="activePage() === 'profile' ? 'page' : null" (click)="setActivePage('profile')">Profile</button>
         <button type="button" [class.active]="activePage() === 'subscription'" [attr.aria-current]="activePage() === 'subscription' ? 'page' : null" (click)="setActivePage('subscription')">Subscription</button>
@@ -749,6 +751,7 @@
                   <button type="button" class="ghost-button" (click)="openBusinessModel(companyView.company.slug)">Business model map</button>
                   <button type="button" class="ghost-button" (click)="openOperatingKpis(companyView.company.slug)">Operating KPI tracker</button>
                   <button type="button" class="ghost-button" (click)="openManagementPromises(companyView.company.slug)">Management promise tracker</button>
+                  <button type="button" class="ghost-button" (click)="openStrategyMilestones(companyView.company.slug)">Strategy milestone tracker</button>
                   <button type="button" class="ghost-button" (click)="openEarnings(companyView.company.slug)">Earnings intelligence</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('companies-like-mine')">Compare peers</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('latest-moves')">Latest moves</button>
@@ -1158,6 +1161,70 @@
                 <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Promise evidence</h2></div><span>{{ promiseView.coverage.source_count }} sources</span></div>
                 <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of promiseView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
               </section>
+            </ng-container>
+          </section>
+
+          <section *ngSwitchCase="'strategy-milestones'" class="company-profile-layout" aria-labelledby="strategy-milestones-heading">
+            <div class="panel empty-state" *ngIf="strategyMilestoneLoading()" role="status">Loading reviewed strategy milestones.</div>
+            <ng-container *ngIf="strategyMilestones() as milestoneView">
+              <section class="panel company-profile-hero">
+                <div>
+                  <p class="section-kicker">Strategy Milestone Tracker · {{ milestoneView.status }}</p>
+                  <h2 id="strategy-milestones-heading">{{ milestoneView.company.name }}</h2>
+                  <p>Expected execution steps, measurable success conditions, dependencies, blockers, and reviewed outcomes.</p>
+                </div>
+                <div class="coverage-summary">
+                  <strong>{{ milestoneView.coverage.milestone_count }}</strong><span>reviewed milestones</span>
+                  <span>{{ milestoneView.coverage.upcoming_count }} upcoming · {{ milestoneView.coverage.overdue_count }} overdue</span>
+                  <small>{{ milestoneView.coverage.completed_count }} completed · {{ milestoneView.coverage.unknown_date_count }} without a stated date</small>
+                </div>
+              </section>
+
+              <section class="panel company-profile-controls" aria-label="Strategy milestone filters">
+                <label>View<select [(ngModel)]="strategyMilestoneView"><option value="all">All milestones</option><option value="upcoming">Upcoming 180 days</option><option value="overdue">Overdue</option><option value="completed">Recently completed</option></select></label>
+                <label>Status<select [(ngModel)]="strategyMilestoneStatus"><option value="">All statuses</option><option *ngFor="let status of ['EXPECTED','STARTED','COMPLETED','DELAYED','CHANGED','CANCELLED','FAILED','UNKNOWN']" [value]="status">{{ promiseLabel(status) }}</option></select></label>
+                <label>Type<select [(ngModel)]="strategyMilestoneType"><option value="">All types</option><option *ngFor="let type of milestoneView.filters.types" [value]="type">{{ promiseLabel(type) }}</option></select></label>
+                <label>Origin<select [(ngModel)]="strategyMilestoneOrigin"><option value="">All origins</option><option *ngFor="let origin of ['MANAGEMENT_ANNOUNCED','REGULATOR_DEFINED','CONTRACTUAL','ANALYST_INFERRED']" [value]="origin">{{ promiseLabel(origin) }}</option></select></label>
+                <button type="button" class="primary-button" (click)="reloadStrategyMilestones()">Apply filters</button>
+                <button type="button" class="ghost-button" (click)="openCompany(milestoneView.company.slug)">Back to Company 360</button>
+              </section>
+
+              <section class="dashboard-two-column">
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Execution timeline</p><h2>Milestone register</h2></div></div>
+                  <div class="empty-state unavailable-state" *ngIf="milestoneView.milestones.length === 0">No reviewed milestones match these filters.</div>
+                  <div class="result-row" *ngFor="let milestone of milestoneView.milestones" [class.selected]="milestone.slug === milestoneView.selected_milestone?.slug">
+                    <strong>{{ milestone.title }}</strong><span>{{ promiseLabel(milestone.milestone_type) }} · {{ promiseLabel(milestone.current_status) }}</span>
+                    <p>{{ milestone.success_condition }}</p>
+                    <small>Due {{ milestone.expected_end_date || 'date not stated' }} · {{ promiseLabel(milestone.origin) }}</small>
+                    <button type="button" class="ghost-button" (click)="selectStrategyMilestone(milestone.slug)">Open milestone</button>
+                  </div>
+                </article>
+
+                <article class="panel" *ngIf="milestoneView.selected_milestone as milestone; else noSelectedMilestone">
+                  <div class="panel-header"><div><p class="section-kicker">Reviewed execution detail</p><h2>{{ milestone.title }}</h2></div><span class="status-pill available">{{ promiseLabel(milestone.current_status) }}</span></div>
+                  <p><strong>Success condition:</strong> {{ milestone.success_condition }}</p>
+                  <dl class="account-grid">
+                    <div class="metric"><dt>Origin</dt><dd>{{ promiseLabel(milestone.origin) }}</dd><small *ngIf="milestone.origin === 'ANALYST_INFERRED'">Reviewed inference, not a management commitment</small></div>
+                    <div class="metric"><dt>Owner</dt><dd>{{ milestone.owner || 'Not identified' }}</dd></div>
+                    <div class="metric"><dt>Expected window</dt><dd>{{ milestone.expected_start_date || 'Start not stated' }}</dd><small>through {{ milestone.expected_end_date || 'end not stated' }} · {{ milestone.date_precision }}</small></div>
+                    <div class="metric"><dt>Confidence</dt><dd>{{ milestone.confidence_score | number:'1.2-2' }}</dd><small>{{ milestone.review_status }}</small></div>
+                  </dl>
+                  <p *ngIf="milestone.blocker"><strong>Current blocker:</strong> {{ milestone.blocker }}</p>
+                  <p><strong>Outcome review:</strong> {{ milestone.outcome_review }}</p>
+                  <p *ngIf="milestone.linked_promise"><strong>Linked promise:</strong> {{ milestone.linked_promise.title }}</p>
+                  <p *ngIf="milestone.linked_kpi"><strong>Linked KPI:</strong> {{ milestone.linked_kpi.name }}</p>
+                  <p *ngIf="milestone.linked_strategic_turn"><strong>Linked strategic turn:</strong> {{ milestone.linked_strategic_turn.title }}</p>
+                  <div *ngFor="let dependency of milestone.dependencies"><strong>Depends on:</strong> {{ dependency.title }} · {{ dependency.relationship }}<p>{{ dependency.description }}</p></div>
+                  <a [href]="milestone.source.url" target="_blank" rel="noopener">Open milestone source</a>
+                  <h3>Status history</h3>
+                  <div class="result-row" *ngFor="let update of milestone.status_history"><strong>{{ promiseLabel(update.status) }}</strong><span>{{ update.status_date }}</span><p>{{ update.summary }}</p><p *ngIf="update.blocker">Blocker: {{ update.blocker }}</p><a [href]="update.source.url" target="_blank" rel="noopener">Open status source</a></div>
+                </article>
+                <ng-template #noSelectedMilestone><article class="panel empty-state unavailable-state">Select a reviewed milestone to inspect its execution history.</article></ng-template>
+              </section>
+
+              <section class="panel source-gap-panel" *ngIf="milestoneView.source_gaps.length > 0"><div class="panel-header"><h2>Unavailable milestone evidence</h2></div><div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of milestoneView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div></section>
+              <section class="panel"><div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Milestone evidence</h2></div><span>{{ milestoneView.coverage.source_count }} sources</span></div><div class="evidence-grid"><article class="evidence-card" *ngFor="let source of milestoneView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div></section>
             </ng-container>
           </section>
 

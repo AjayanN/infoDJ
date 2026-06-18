@@ -22,6 +22,7 @@ from apps.companies.models import (
     KpiTarget,
     ManagementPromise,
     ManagementPromiseUpdate,
+    StrategyMilestone,
 )
 from apps.curation.models import BusinessEvent, StrategicTurn, StrategicTurnSource
 from apps.ingestion.models import ArticleExtraction, FinancialFact, MarketPrice, SourceDocument, SourceGap
@@ -45,6 +46,11 @@ from apps.ingestion.services.reviewed_management_promises import (
     REVIEWED_PROMISE_SPECS,
     build_reviewed_management_promise,
     management_promise_quality_issues,
+)
+from apps.ingestion.services.reviewed_strategy_milestones import (
+    REVIEWED_MILESTONE_SPECS,
+    build_reviewed_strategy_milestone,
+    strategy_milestone_quality_issues,
 )
 from apps.ingestion.services.market_price_client import (
     parse_alpha_vantage_daily_csv,
@@ -586,6 +592,73 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(result["skipped"], 1)
         self.assertFalse(ManagementPromise.objects.filter(company=self.netflix).exists())
         self.assertEqual(management_promise_quality_issues(self.netflix), ["no reviewed published management promise"])
+
+    def test_reviewed_milestone_catalog_covers_every_configured_company(self):
+        expected = {slugify(seed.name) for seed in CROSS_SECTOR_COMPANIES}
+
+        self.assertEqual(set(REVIEWED_MILESTONE_SPECS), expected)
+
+    def test_reviewed_milestone_builder_preserves_unknown_date_and_status_history(self):
+        promise = ManagementPromise.objects.create(
+            company=self.netflix, slug="offer-ad-plan", title="Offer an ad-supported plan",
+            promise_type="COMMITMENT", original_statement="We aim to offer an ad-supported plan.",
+            statement_date=date(2026, 1, 1), current_status="IN_PROGRESS", source_document=self.source,
+            evidence_text="We aim to offer an ad-supported plan.", review_status="REVIEWED", is_published=True,
+        )
+
+        first = build_reviewed_strategy_milestone(self.netflix)
+        second = build_reviewed_strategy_milestone(self.netflix)
+        milestone = StrategyMilestone.objects.get(company=self.netflix)
+
+        self.assertEqual(first["created"], 1)
+        self.assertEqual(second["updated"], 1)
+        self.assertEqual(milestone.current_status, "STARTED")
+        self.assertIsNone(milestone.expected_end_date)
+        self.assertEqual(milestone.date_precision, "UNKNOWN")
+        self.assertEqual(milestone.linked_promise, promise)
+        self.assertEqual(milestone.status_updates.count(), 1)
+        self.assertEqual(strategy_milestone_quality_issues(self.netflix), [])
+
+    def test_reviewed_milestone_builder_carries_reviewed_promise_updates(self):
+        promise = ManagementPromise.objects.create(
+            company=self.netflix, slug="launch-basic-with-ads", title="Launch Basic with Ads in 12 countries",
+            promise_type="COMMITMENT", original_statement="We will launch Basic with Ads in 12 countries.",
+            statement_date=date(2022, 10, 13), target_end_date=date(2022, 11, 30),
+            current_status="ACHIEVED", source_document=self.source, evidence_text="We will launch Basic with Ads in 12 countries.",
+            review_status="REVIEWED", is_published=True,
+        )
+        ManagementPromiseUpdate.objects.create(
+            promise=promise, update_date=date(2022, 11, 3), status="ACHIEVED",
+            summary="Netflix launched Basic with Ads during the announced window.", source_document=self.source,
+            evidence_text="Netflix launched Basic with Ads on November 3, 2022.", confidence_score="0.900",
+            review_status="REVIEWED",
+        )
+
+        build_reviewed_strategy_milestone(self.netflix)
+        milestone = StrategyMilestone.objects.get(company=self.netflix)
+
+        self.assertEqual(milestone.current_status, "COMPLETED")
+        self.assertEqual(list(milestone.status_updates.values_list("status", flat=True)), ["EXPECTED", "COMPLETED"])
+        self.assertEqual(milestone.status_updates.last().status_date, date(2022, 11, 3))
+
+    def test_strategy_milestone_api_exposes_history_and_does_not_mark_unknown_date_overdue(self):
+        ManagementPromise.objects.create(
+            company=self.netflix, slug="offer-ad-plan", title="Offer an ad-supported plan",
+            promise_type="COMMITMENT", original_statement="We aim to offer an ad-supported plan.",
+            statement_date=date(2026, 1, 1), current_status="IN_PROGRESS", source_document=self.source,
+            evidence_text="We aim to offer an ad-supported plan.", review_status="REVIEWED", is_published=True,
+        )
+        build_reviewed_strategy_milestone(self.netflix)
+
+        payload = self.client.get("/companies/netflix/strategy-milestones").json()
+        overdue = self.client.get("/companies/netflix/strategy-milestones?view=overdue").json()
+
+        self.assertEqual(payload["status"], "available")
+        self.assertEqual(payload["coverage"]["unknown_date_count"], 1)
+        self.assertEqual(payload["coverage"]["overdue_count"], 0)
+        self.assertEqual(payload["selected_milestone"]["origin"], "MANAGEMENT_ANNOUNCED")
+        self.assertEqual(len(payload["selected_milestone"]["status_history"]), 1)
+        self.assertEqual(overdue["status"], "unavailable")
 
     def test_earnings_builder_creates_source_backed_period_and_api_separates_evidence_types(self):
         quarterly_source = SourceDocument.objects.create(

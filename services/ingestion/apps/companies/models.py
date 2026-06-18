@@ -488,3 +488,119 @@ class EarningsGuidanceComparison(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["period", "metric_name"], name="unique_earnings_guidance_metric")
         ]
+
+
+class MilestoneType(models.TextChoices):
+    LAUNCH = "LAUNCH", "Launch"
+    REGULATORY_APPROVAL = "REGULATORY_APPROVAL", "Regulatory approval"
+    MARKET_ENTRY = "MARKET_ENTRY", "Market entry"
+    CUSTOMER_TARGET = "CUSTOMER_TARGET", "Customer or user target"
+    CAPACITY_TARGET = "CAPACITY_TARGET", "Capacity or production target"
+    INTEGRATION = "INTEGRATION", "Integration step"
+    COST_SYNERGY = "COST_SYNERGY", "Cost or synergy target"
+    PROFITABILITY = "PROFITABILITY", "Profitability or cash-flow target"
+    HIRING_RESTRUCTURING = "HIRING_RESTRUCTURING", "Hiring or restructuring step"
+    PARTNERSHIP = "PARTNERSHIP", "Partnership delivery"
+    PRODUCT_ADOPTION = "PRODUCT_ADOPTION", "Product adoption target"
+    STRATEGIC_EXECUTION = "STRATEGIC_EXECUTION", "Strategic execution"
+
+
+class MilestoneOrigin(models.TextChoices):
+    MANAGEMENT = "MANAGEMENT_ANNOUNCED", "Management announced"
+    REGULATOR = "REGULATOR_DEFINED", "Regulator defined"
+    CONTRACTUAL = "CONTRACTUAL", "Contractual"
+    ANALYST_INFERRED = "ANALYST_INFERRED", "Analyst inferred"
+
+
+class MilestoneStatus(models.TextChoices):
+    EXPECTED = "EXPECTED", "Expected"
+    STARTED = "STARTED", "Started"
+    COMPLETED = "COMPLETED", "Completed"
+    DELAYED = "DELAYED", "Delayed"
+    CHANGED = "CHANGED", "Changed"
+    CANCELLED = "CANCELLED", "Cancelled"
+    FAILED = "FAILED", "Failed"
+    UNKNOWN = "UNKNOWN", "Unknown"
+
+
+class StrategyMilestone(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="strategy_milestones")
+    slug = models.SlugField(max_length=180)
+    title = models.CharField(max_length=512)
+    milestone_type = models.CharField(max_length=32, choices=MilestoneType.choices, db_index=True)
+    origin = models.CharField(max_length=32, choices=MilestoneOrigin.choices, db_index=True)
+    current_status = models.CharField(max_length=32, choices=MilestoneStatus.choices, db_index=True)
+    expected_start_date = models.DateField(null=True, blank=True)
+    expected_end_date = models.DateField(null=True, blank=True, db_index=True)
+    date_precision = models.CharField(max_length=16, default="UNKNOWN")
+    owner = models.CharField(max_length=255, blank=True)
+    success_condition = models.TextField()
+    blocker = models.TextField(blank=True)
+    outcome_review = models.TextField(blank=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument", on_delete=models.PROTECT, related_name="strategy_milestones"
+    )
+    evidence_text = models.TextField()
+    linked_promise = models.ForeignKey(
+        ManagementPromise, null=True, blank=True, on_delete=models.SET_NULL, related_name="strategy_milestones"
+    )
+    linked_kpi = models.ForeignKey(
+        KpiDefinition, null=True, blank=True, on_delete=models.SET_NULL, related_name="strategy_milestones"
+    )
+    linked_strategic_turn = models.ForeignKey(
+        "curation.StrategicTurn", null=True, blank=True, on_delete=models.SET_NULL, related_name="milestones"
+    )
+    related_entities = models.JSONField(default=list, blank=True)
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    review_status = models.CharField(
+        max_length=32, choices=PromiseReviewStatus.choices, default=PromiseReviewStatus.NEEDS_REVIEW, db_index=True
+    )
+    is_published = models.BooleanField(default=False, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["expected_end_date", "title"]
+        constraints = [models.UniqueConstraint(fields=["company", "slug"], name="unique_company_milestone_slug")]
+        indexes = [
+            models.Index(fields=["company", "current_status"], name="company_milestone_status_idx"),
+            models.Index(fields=["company", "expected_end_date"], name="company_milestone_due_idx"),
+        ]
+
+
+class StrategyMilestoneStatusUpdate(models.Model):
+    milestone = models.ForeignKey(StrategyMilestone, on_delete=models.CASCADE, related_name="status_updates")
+    status_date = models.DateField(db_index=True)
+    status = models.CharField(max_length=32, choices=MilestoneStatus.choices)
+    summary = models.TextField()
+    blocker = models.TextField(blank=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument", on_delete=models.PROTECT, related_name="milestone_status_updates"
+    )
+    evidence_text = models.TextField()
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    review_status = models.CharField(
+        max_length=32, choices=PromiseReviewStatus.choices, default=PromiseReviewStatus.NEEDS_REVIEW
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["status_date", "created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["milestone", "status_date", "status", "source_document"],
+                name="unique_milestone_status_update",
+            )
+        ]
+
+
+class StrategyMilestoneDependency(models.Model):
+    milestone = models.ForeignKey(StrategyMilestone, on_delete=models.CASCADE, related_name="dependencies")
+    depends_on = models.ForeignKey(StrategyMilestone, on_delete=models.CASCADE, related_name="dependents")
+    relationship = models.CharField(max_length=32, default="REQUIRES")
+    description = models.TextField(blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["milestone", "depends_on"], name="unique_milestone_dependency")
+        ]

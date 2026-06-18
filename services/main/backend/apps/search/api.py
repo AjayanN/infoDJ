@@ -173,6 +173,19 @@ def company_management_promises(request, slug: str):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+def company_strategy_milestones(request, slug: str):
+    params = {}
+    for key in ("status", "type", "origin", "view", "milestone"):
+        if request.GET.get(key):
+            params[key] = request.GET[key]
+    payload, error = ingestion_get(f"companies/{slug}/strategy-milestones", params or None)
+    if error:
+        return Response({"error": "strategy milestones unavailable", "detail": error}, status=503)
+    return Response(payload)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def company_earnings(request, slug: str):
     params = {"period": request.GET["period"]} if request.GET.get("period") else None
     payload, error = ingestion_get(f"companies/{slug}/earnings", params)

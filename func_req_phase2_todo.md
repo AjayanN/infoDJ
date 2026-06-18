@@ -469,18 +469,20 @@ Each feature below inherits the shared standards above. Feature sections only de
 
 **MVP tasks:**
 
-- [ ] Define milestone categories, statuses, dependencies, and evidence requirements.
-- [ ] Distinguish management-announced, regulator-defined, contractual, and analyst-inferred milestones.
-- [ ] Build milestone timeline on strategic-turn pages.
-- [ ] Add due dates, ranges, dependencies, owners, and measurable success conditions.
-- [ ] Add status history: expected, started, completed, delayed, changed, cancelled, failed, unknown.
-- [ ] Link milestones to promises, KPIs, products, acquisitions, and regulatory events.
-- [ ] Add upcoming, overdue, and recently completed views.
+- [x] Define milestone categories, statuses, dependencies, and evidence requirements.
+- [x] Distinguish management-announced, regulator-defined, contractual, and analyst-inferred milestones.
+- [x] Build milestone timeline in the Company 360 workflow with optional strategic-turn links when reviewed links exist.
+- [x] Add due dates, ranges, dependencies, owners, and measurable success conditions.
+- [x] Add status history: expected, started, completed, delayed, changed, cancelled, failed, unknown.
+- [x] Link milestones to promises and KPIs where reviewed links exist; product, acquisition, and regulatory links remain explicit related-entity slots until those owner features ship.
+- [x] Add upcoming, overdue, and recently completed views.
 
 **Acceptance criteria:**
 
 - Users can see how a strategy was expected to unfold and what has actually happened.
 - Inferred milestones are visibly labeled and reviewed before publication.
+
+**Current status:** complete. All 20 configured companies have at least one reviewed, source-backed milestone derived from reviewed management evidence. The tracker exposes origin, type, current status, due-date precision, owner, success condition, blocker, outcome review, dependencies, status history, linked promise/KPI/strategic-turn context, evidence source, unavailable states, and lifecycle filters. Netflix Basic with Ads validates completed execution history with expected and completed status updates. Validation on June 18, 2026 passed ingestion 56/56, main backend 34/34, frontend 7/7, production build, all-company quality validation, and authenticated 20-company smoke testing.
 
 ---
 
@@ -1069,7 +1071,7 @@ The order below reflects functional dependency and user value. It does not requi
 
 - [x] Earnings Intelligence: reviewed filing and earnings-release coverage for all 20 companies, with a separate-source comparable-guidance pilot and explicit unavailable states.
 - [x] Management Promise Tracker: complete with reviewed filing-backed coverage for all 20 configured companies.
-- [ ] Strategy Milestone Tracker.
+- [x] Strategy Milestone Tracker: reviewed all-company milestone baseline with status history, source-backed success conditions, and lifecycle filters.
 - [ ] Leadership Decision Record.
 
 ### Wave 3: Resource and Market Position
@@ -1237,7 +1239,9 @@ This replaces the older “Immediate Starting Backlog” and reflects the actual
 - [x] Build Earnings Intelligence measured-results skeleton for all 20 companies.
 - [x] Publish reviewed earnings explanations for all 20 companies and validate distinct filing/release evidence identities.
 - [x] Add and validate the Netflix Q1 2026 forecast-versus-actual pilot without treating unavailable company guidance as zero.
-- [ ] Build Strategy Milestone Tracker skeleton.
+- [x] Build Strategy Milestone Tracker skeleton.
+- [x] Add scheduled, idempotent Strategy Milestone builds for all 20 configured companies.
+- [x] Pass all-company milestone source, success-condition, status-history, API, and smoke-test coverage before accepting the requirement.
 - [ ] Add dependency labels from KPI Tracker to Earnings and Promise features.
 - [ ] Run user review before expanding beyond pilot coverage.
 

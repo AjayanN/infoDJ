@@ -12,5 +12,6 @@ urlpatterns = [
     path("companies/<slug:slug>/business-model", api.company_business_model, name="app-company-business-model"),
     path("companies/<slug:slug>/operating-kpis", api.company_operating_kpis, name="app-company-operating-kpis"),
     path("companies/<slug:slug>/management-promises", api.company_management_promises, name="app-company-management-promises"),
+    path("companies/<slug:slug>/strategy-milestones", api.company_strategy_milestones, name="app-company-strategy-milestones"),
     path("companies/<slug:slug>/earnings", api.company_earnings, name="app-company-earnings"),
 ]

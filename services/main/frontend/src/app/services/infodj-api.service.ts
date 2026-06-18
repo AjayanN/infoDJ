@@ -575,6 +575,41 @@ export type ManagementPromiseResponse = {
   source_gaps: SourceGap[];
 };
 
+export type StrategyMilestoneStatusUpdate = {
+  status_date: string; status: string; summary: string; blocker: string; evidence_text: string;
+  confidence_score: number; source: CompanyProfileSource;
+};
+
+export type StrategyMilestone = {
+  id: number; slug: string; title: string; milestone_type: string; origin: string; current_status: string;
+  expected_start_date: string | null; expected_end_date: string | null; date_precision: string; owner: string;
+  success_condition: string; blocker: string; outcome_review: string; evidence_text: string;
+  confidence_score: number; review_status: string; source: CompanyProfileSource;
+  linked_promise: { slug: string; title: string } | null;
+  linked_kpi: { slug: string; name: string } | null;
+  linked_strategic_turn: { id: number; title: string } | null;
+  related_entities: { type: string; label: string; id?: string }[];
+  dependencies: { slug: string; title: string; relationship: string; description: string }[];
+  status_history: StrategyMilestoneStatusUpdate[];
+};
+
+export type StrategyMilestoneResponse = {
+  status: 'available' | 'unavailable';
+  company: CompanyProfileResponse['company'];
+  milestones: StrategyMilestone[];
+  selected_milestone: StrategyMilestone | null;
+  filters: {
+    statuses: string[]; types: string[]; origins: string[]; selected_status: string;
+    selected_type: string; selected_origin: string; selected_view: string;
+  };
+  coverage: {
+    milestone_count: number; upcoming_count: number; overdue_count: number;
+    completed_count: number; unknown_date_count: number; source_count: number;
+  };
+  evidence: CompanyProfileSource[];
+  source_gaps: SourceGap[];
+};
+
 export type EarningsMetric = {
   concept: string; label: string; unit: string; value: number; previous_value: number | null;
   change_pct: number | null; comparison_status: 'available' | 'unavailable'; source: string;
@@ -798,6 +833,18 @@ export class InfoDjApiService {
     if (asOf) params['as_of'] = asOf;
     if (promise) params['promise'] = promise;
     return this.http.get<ManagementPromiseResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/management-promises`, {
+      headers: this.authHeaders(token), params
+    });
+  }
+
+  strategyMilestones(token: string, slug: string, status = '', type = '', origin = '', view = 'all', milestone = '') {
+    const params: Record<string, string> = {};
+    if (status) params['status'] = status;
+    if (type) params['type'] = type;
+    if (origin) params['origin'] = origin;
+    if (view && view !== 'all') params['view'] = view;
+    if (milestone) params['milestone'] = milestone;
+    return this.http.get<StrategyMilestoneResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/strategy-milestones`, {
       headers: this.authHeaders(token), params
     });
   }
