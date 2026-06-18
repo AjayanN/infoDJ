@@ -13,6 +13,7 @@ import {
   BusinessModelResponse,
   OperatingKpiResponse,
   ManagementPromiseResponse,
+  StrategyMilestoneResponse,
   EarningsResponse,
   DashboardSection,
   DashboardResponse,
@@ -40,7 +41,7 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'earnings' | 'profile' | 'subscription';
+type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'profile' | 'subscription';
 type DashboardViewId =
   | 'company-intelligence'
   | 'turn-impact'
@@ -125,6 +126,7 @@ class AppComponent {
   businessModel = signal<BusinessModelResponse | null>(null);
   operatingKpis = signal<OperatingKpiResponse | null>(null);
   managementPromises = signal<ManagementPromiseResponse | null>(null);
+  strategyMilestones = signal<StrategyMilestoneResponse | null>(null);
   earnings = signal<EarningsResponse | null>(null);
   searchResults = signal<SearchResponse | null>(null);
   searchPages = signal<Record<SearchResultGroup, number>>({
@@ -154,6 +156,7 @@ class AppComponent {
   businessModelLoading = signal(false);
   operatingKpiLoading = signal(false);
   managementPromiseLoading = signal(false);
+  strategyMilestoneLoading = signal(false);
   earningsLoading = signal(false);
   companyProfileDate = '';
   businessModelDate = '';
@@ -171,6 +174,11 @@ class AppComponent {
   managementPromiseDue = '';
   managementPromiseAsOf = '';
   managementPromiseSlug = '';
+  strategyMilestoneStatus = '';
+  strategyMilestoneType = '';
+  strategyMilestoneOrigin = '';
+  strategyMilestoneView = 'all';
+  strategyMilestoneSlug = '';
   earningsPeriod = '';
   readonly companyProfileSectionOrder = [
     'summary',
@@ -474,6 +482,9 @@ class AppComponent {
     if (this.activePage() === 'management-promises') {
       return `${this.managementPromises()?.company.name || 'Company'} Management Promises`;
     }
+    if (this.activePage() === 'strategy-milestones') {
+      return `${this.strategyMilestones()?.company.name || 'Company'} Strategy Milestones`;
+    }
     if (this.activePage() === 'earnings') {
       return `${this.earnings()?.company.name || 'Company'} Earnings Intelligence`;
     }
@@ -498,6 +509,9 @@ class AppComponent {
     }
     if (this.activePage() === 'management-promises') {
       return 'Original management commitments, deadlines, evaluation rules, revisions, outcomes, and source evidence.';
+    }
+    if (this.activePage() === 'strategy-milestones') {
+      return 'Expected execution steps, due dates, dependencies, blockers, status history, outcomes, and evidence.';
     }
     if (this.activePage() === 'earnings') {
       return 'Quarterly measured results, period changes, linked strategy, guidance, risks, and source gaps.';
@@ -888,6 +902,38 @@ class AppComponent {
     if (company) {
       this.managementPromiseSlug = slug;
       this.openManagementPromises(company.slug, slug);
+    }
+  }
+
+  openStrategyMilestones(slug: string, milestone = ''): void {
+    if (!slug || !this.token()) return;
+    this.activePage.set('strategy-milestones');
+    this.menuOpen.set(false);
+    this.strategyMilestoneLoading.set(true);
+    this.error.set('');
+    this.api.strategyMilestones(
+      this.token(), slug, this.strategyMilestoneStatus, this.strategyMilestoneType,
+      this.strategyMilestoneOrigin, this.strategyMilestoneView, milestone || this.strategyMilestoneSlug
+    ).subscribe({
+      next: (response) => {
+        this.strategyMilestones.set(response);
+        this.strategyMilestoneSlug = response.selected_milestone?.slug || '';
+        this.strategyMilestoneLoading.set(false);
+      },
+      error: (response) => { this.strategyMilestoneLoading.set(false); this.showError(response); }
+    });
+  }
+
+  reloadStrategyMilestones(): void {
+    const company = this.strategyMilestones()?.company;
+    if (company) this.openStrategyMilestones(company.slug, this.strategyMilestoneSlug);
+  }
+
+  selectStrategyMilestone(slug: string): void {
+    const company = this.strategyMilestones()?.company;
+    if (company) {
+      this.strategyMilestoneSlug = slug;
+      this.openStrategyMilestones(company.slug, slug);
     }
   }
 

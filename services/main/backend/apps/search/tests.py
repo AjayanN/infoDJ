@@ -340,6 +340,27 @@ class DashboardSearchApiTests(TestCase):
 
     @override_settings(INGESTION_API_URL="http://ingestion.test/api/ingestion")
     @patch("apps.search.api.requests.get")
+    def test_strategy_milestones_proxies_filters(self, get):
+        get.return_value = json_response({"status": "available", "company": {"slug": "netflix"}, "milestones": []})
+
+        response = self.client.get(
+            "/api/app/companies/netflix/strategy-milestones?status=STARTED&type=LAUNCH&origin=MANAGEMENT_ANNOUNCED&view=upcoming&milestone=ad-plan"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(get.call_args.args[0], "http://ingestion.test/api/ingestion/companies/netflix/strategy-milestones")
+        self.assertEqual(get.call_args.kwargs["params"], {
+            "status": "STARTED", "type": "LAUNCH", "origin": "MANAGEMENT_ANNOUNCED",
+            "view": "upcoming", "milestone": "ad-plan",
+        })
+
+    def test_strategy_milestones_requires_authentication(self):
+        response = APIClient().get("/api/app/companies/netflix/strategy-milestones")
+
+        self.assertEqual(response.status_code, 401)
+
+    @override_settings(INGESTION_API_URL="http://ingestion.test/api/ingestion")
+    @patch("apps.search.api.requests.get")
     def test_earnings_proxies_period_filter(self, get):
         get.return_value = json_response({"status": "available", "company": {"slug": "netflix"}, "periods": []})
 

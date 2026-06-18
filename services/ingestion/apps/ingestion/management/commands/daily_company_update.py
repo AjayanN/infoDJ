@@ -82,6 +82,7 @@ class Command(BaseCommand):
             )
 
         call_command("build_earnings_intelligence", collect_exhibits=True)
+        call_command("build_strategy_milestones")
 
         if options["include_quality_scoring"]:
             self.stdout.write(

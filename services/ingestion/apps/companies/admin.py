@@ -24,6 +24,9 @@ from apps.companies.models import (
     KpiTarget,
     ManagementPromise,
     ManagementPromiseUpdate,
+    StrategyMilestone,
+    StrategyMilestoneDependency,
+    StrategyMilestoneStatusUpdate,
 )
 
 
@@ -266,3 +269,27 @@ class EarningsGuidanceComparisonAdmin(admin.ModelAdmin):
     list_display = ("period", "metric_name", "forecast_value", "actual_value", "comparison_status", "review_status")
     list_filter = ("comparison_status", "review_status", "period__company")
     search_fields = ("period__company__name", "metric_name", "forecast_evidence", "actual_evidence")
+
+
+class StrategyMilestoneStatusUpdateInline(admin.TabularInline):
+    model = StrategyMilestoneStatusUpdate
+    extra = 0
+
+
+class StrategyMilestoneDependencyInline(admin.TabularInline):
+    model = StrategyMilestoneDependency
+    fk_name = "milestone"
+    extra = 0
+
+
+@admin.register(StrategyMilestone)
+class StrategyMilestoneAdmin(admin.ModelAdmin):
+    list_display = ("title", "company", "milestone_type", "origin", "current_status", "expected_end_date", "review_status", "is_published")
+    list_filter = ("milestone_type", "origin", "current_status", "review_status", "is_published", "company")
+    search_fields = ("title", "success_condition", "evidence_text", "company__name")
+    prepopulated_fields = {"slug": ("title",)}
+    inlines = (StrategyMilestoneStatusUpdateInline, StrategyMilestoneDependencyInline)
+
+
+admin.site.register(StrategyMilestoneStatusUpdate)
+admin.site.register(StrategyMilestoneDependency)

@@ -403,6 +403,33 @@ Open `Earnings intelligence` from Company 360 for the quarterly timeline, measur
 
 Requirement 5 verification on June 14, 2026: ingestion `52/52`, main backend `32/32`, frontend `7/7`, production build passed, all-company validator passed, and the authenticated gateway smoke test passed for all 20 companies.
 
+## Strategy Milestone Tracker
+
+Phase 2 Requirement 6 turns reviewed management commitments into execution milestones with explicit origin, status, due-date precision, success conditions, blockers, status history, and source evidence. The baseline covers all 20 configured companies and does not infer due dates when management did not provide one.
+
+Milestone origins are separated as management-announced, regulator-defined, contractual, or analyst-inferred. Inferred milestones must be reviewed before publication. Status history is append-only and supports expected, started, completed, delayed, changed, cancelled, failed, and unknown states. Netflix's Basic with Ads launch is the completed-history pilot: the tracker records the expected milestone from the October 13, 2022 announcement and the reviewed completed update on November 3, 2022.
+
+```bash
+sudo docker compose -f infra/docker-compose.yml exec -T ingestion \
+  .venv/bin/python manage.py build_strategy_milestones
+
+sudo docker compose -f infra/docker-compose.yml exec -T ingestion \
+  .venv/bin/python manage.py validate_strategy_milestones
+
+BASE_URL=http://localhost:8080/api/app \
+  bash scripts/smoke/phase2_strategy_milestones.sh
+```
+
+```text
+Ingestion: GET /companies/{slug}/strategy-milestones
+Product:   GET /api/app/companies/{slug}/strategy-milestones
+Filters:   ?status={status}&type={type}&origin={origin}&view=all|upcoming|overdue|completed&milestone={slug}
+```
+
+Open `Strategy milestone tracker` from Company 360 for the milestone register, lifecycle filters, selected milestone detail, linked promise/KPI/strategic-turn context, dependencies, evidence sources, and unavailable states.
+
+Requirement 6 verification on June 18, 2026: ingestion `56/56`, main backend `34/34`, frontend `7/7`, production build passed, all-company validator passed, and the authenticated gateway smoke test passed for all 20 companies. `makemigrations --check --dry-run` still reports the pre-existing ingestion index/job-type drift unrelated to this requirement; company milestone migrations are applied and consistent.
+
 ## Test Commands
 
 Run tests inside Docker Compose:

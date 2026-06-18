@@ -20,6 +20,8 @@ from apps.companies.models import (
     KpiDefinition,
     KpiObservation,
     ManagementPromise,
+    MilestoneStatus,
+    StrategyMilestone,
 )
 from apps.curation.models import BusinessEvent, StrategicTurn, StrategicTurnSource
 from apps.ingestion.models import FinancialFact, IngestionJob, MarketPrice, SourceDocument, SourceGap
@@ -395,6 +397,87 @@ def company_management_promises(request: HttpRequest, slug: str) -> JsonResponse
             "last_updated": max((row.updated_at for row in promises), default=company.updated_at).isoformat(),
         },
         "evidence": source_rows,
+        "source_gaps": gaps,
+    })
+
+
+@require_GET
+def company_strategy_milestones(request: HttpRequest, slug: str) -> JsonResponse:
+    company = get_company(slug)
+    status_filter = (request.GET.get("status") or "").strip().upper()
+    type_filter = (request.GET.get("type") or "").strip().upper()
+    origin_filter = (request.GET.get("origin") or "").strip().upper()
+    view = (request.GET.get("view") or "all").strip().lower()
+    selected_slug = (request.GET.get("milestone") or "").strip()
+    today = date.today()
+    upcoming_end = today + timedelta(days=180)
+    recent_start = today - timedelta(days=180)
+    terminal = [MilestoneStatus.COMPLETED, MilestoneStatus.CANCELLED, MilestoneStatus.FAILED]
+
+    queryset = (
+        StrategyMilestone.objects.filter(company=company, is_published=True, review_status="REVIEWED")
+        .select_related("source_document", "linked_promise", "linked_kpi", "linked_strategic_turn")
+        .prefetch_related("status_updates__source_document", "dependencies__depends_on")
+    )
+    if status_filter:
+        queryset = queryset.filter(current_status=status_filter)
+    if type_filter:
+        queryset = queryset.filter(milestone_type=type_filter)
+    if origin_filter:
+        queryset = queryset.filter(origin=origin_filter)
+    if view == "upcoming":
+        queryset = queryset.filter(expected_end_date__gte=today, expected_end_date__lte=upcoming_end).exclude(current_status__in=terminal)
+    elif view == "overdue":
+        queryset = queryset.filter(expected_end_date__lt=today).exclude(current_status__in=terminal)
+    elif view == "completed":
+        queryset = queryset.filter(current_status=MilestoneStatus.COMPLETED, status_updates__status_date__gte=recent_start).distinct()
+    milestones = list(queryset.order_by("expected_end_date", "title"))
+    selected = next((row for row in milestones if row.slug == selected_slug), milestones[0] if milestones else None)
+
+    gaps = []
+    if not milestones:
+        gaps.append({
+            "key": "strategy_milestones",
+            "label": "Reviewed strategy milestones unavailable",
+            "reason": f"No reviewed milestones match the selected filters for {company.name}.",
+            "source": "strategy-milestone-tracker",
+            "next_action": "Review management commitments, regulatory deadlines, contracts, and execution evidence.",
+        })
+    persist_strategy_milestone_gaps(company, gaps)
+    sources = []
+    seen_sources = set()
+    for milestone in milestones:
+        for source in [milestone.source_document, *[update.source_document for update in milestone.status_updates.all()]]:
+            if source.id not in seen_sources:
+                sources.append(serialize_profile_source(source))
+                seen_sources.add(source.id)
+    all_reviewed = list(
+        StrategyMilestone.objects.filter(company=company, is_published=True, review_status="REVIEWED")
+        .prefetch_related("status_updates")
+    )
+    return JsonResponse({
+        "status": "available" if milestones else "unavailable",
+        "company": serialize_company_detail(company),
+        "milestones": [serialize_strategy_milestone(row, include_history=False) for row in milestones],
+        "selected_milestone": serialize_strategy_milestone(selected, include_history=True),
+        "filters": {
+            "statuses": sorted({row.current_status for row in all_reviewed}),
+            "types": sorted({row.milestone_type for row in all_reviewed}),
+            "origins": sorted({row.origin for row in all_reviewed}),
+            "selected_status": status_filter,
+            "selected_type": type_filter,
+            "selected_origin": origin_filter,
+            "selected_view": view,
+        },
+        "coverage": {
+            "milestone_count": len(all_reviewed),
+            "upcoming_count": sum(1 for row in all_reviewed if row.expected_end_date and today <= row.expected_end_date <= upcoming_end and row.current_status not in terminal),
+            "overdue_count": sum(1 for row in all_reviewed if row.expected_end_date and row.expected_end_date < today and row.current_status not in terminal),
+            "completed_count": sum(1 for row in all_reviewed if row.current_status == MilestoneStatus.COMPLETED),
+            "unknown_date_count": sum(1 for row in all_reviewed if row.expected_end_date is None),
+            "source_count": len(sources),
+        },
+        "evidence": sources,
         "source_gaps": gaps,
     })
 
@@ -1967,6 +2050,52 @@ def serialize_management_promise(promise: ManagementPromise | None, *, include_u
     return payload
 
 
+def serialize_strategy_milestone(milestone: StrategyMilestone | None, *, include_history: bool) -> dict[str, object] | None:
+    if milestone is None:
+        return None
+    payload = {
+        "id": milestone.id,
+        "slug": milestone.slug,
+        "title": milestone.title,
+        "milestone_type": milestone.milestone_type,
+        "origin": milestone.origin,
+        "current_status": milestone.current_status,
+        "expected_start_date": milestone.expected_start_date.isoformat() if milestone.expected_start_date else None,
+        "expected_end_date": milestone.expected_end_date.isoformat() if milestone.expected_end_date else None,
+        "date_precision": milestone.date_precision,
+        "owner": milestone.owner,
+        "success_condition": milestone.success_condition,
+        "blocker": milestone.blocker,
+        "outcome_review": milestone.outcome_review,
+        "evidence_text": milestone.evidence_text,
+        "confidence_score": decimal_to_float(milestone.confidence_score),
+        "review_status": milestone.review_status,
+        "source": serialize_profile_source(milestone.source_document),
+        "linked_promise": {"slug": milestone.linked_promise.slug, "title": milestone.linked_promise.title} if milestone.linked_promise else None,
+        "linked_kpi": {"slug": milestone.linked_kpi.slug, "name": milestone.linked_kpi.name} if milestone.linked_kpi else None,
+        "linked_strategic_turn": {"id": milestone.linked_strategic_turn.id, "title": milestone.linked_strategic_turn.title} if milestone.linked_strategic_turn else None,
+        "related_entities": milestone.related_entities if isinstance(milestone.related_entities, list) else [],
+        "dependencies": [
+            {"slug": row.depends_on.slug, "title": row.depends_on.title, "relationship": row.relationship, "description": row.description}
+            for row in milestone.dependencies.all()
+        ],
+    }
+    payload["status_history"] = [
+        {
+            "status_date": row.status_date.isoformat(),
+            "status": row.status,
+            "summary": row.summary,
+            "blocker": row.blocker,
+            "evidence_text": row.evidence_text,
+            "confidence_score": decimal_to_float(row.confidence_score),
+            "source": serialize_profile_source(row.source_document),
+        }
+        for row in milestone.status_updates.all()
+        if row.review_status == "REVIEWED"
+    ] if include_history else []
+    return payload
+
+
 def persist_management_promise_gaps(company: Company, gaps: list[dict[str, str]]) -> None:
     if gaps:
         gap = gaps[0]
@@ -1986,6 +2115,25 @@ def persist_management_promise_gaps(company: Company, gaps: list[dict[str, str]]
             company=company,
             dashboard="management_promises",
             gap_type="management_promises",
+            status__in=["OPEN", "IN_PROGRESS"],
+        ).update(status="RESOLVED")
+
+
+def persist_strategy_milestone_gaps(company: Company, gaps: list[dict[str, str]]) -> None:
+    if gaps:
+        gap = gaps[0]
+        SourceGap.objects.update_or_create(
+            company=company,
+            dashboard="strategy_milestones",
+            gap_type=gap["key"],
+            provider="strategy-milestone-tracker",
+            defaults={"reason": gap["reason"], "next_ingestion_task": gap["next_action"], "status": "OPEN"},
+        )
+    else:
+        SourceGap.objects.filter(
+            company=company,
+            dashboard="strategy_milestones",
+            gap_type="strategy_milestones",
             status__in=["OPEN", "IN_PROGRESS"],
         ).update(status="RESOLVED")
 
