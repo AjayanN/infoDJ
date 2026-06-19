@@ -728,6 +728,66 @@ export type CapitalAllocationResponse = {
   source_gaps: SourceGap[];
 };
 
+export type CompetitivePeer = {
+  id: number;
+  peer_name: string;
+  peer_company: DashboardCompany | null;
+  relationship_type: string;
+  relationship_label: string;
+  scope: string;
+  geography: string;
+  product_overlap: string[];
+  customer_overlap: string[];
+  evidence_text: string;
+  is_in_universe: boolean;
+  confidence_score: number;
+};
+
+export type CompetitiveDimension = {
+  id: number;
+  dimension_type: string;
+  dimension_label: string;
+  label: string;
+  description: string;
+  evidence_text: string;
+  peer_id: number | null;
+  peer_name: string;
+  confidence_score: number;
+  source: CompanyProfileSource | null;
+};
+
+export type CompetitivePositionResponse = {
+  status: 'available' | 'partial' | 'unavailable';
+  company: CompanyProfileResponse['company'];
+  snapshot: {
+    id: number;
+    effective_date: string;
+    status: string;
+    summary: string;
+    methodology: string;
+    confidence_score: number;
+    source: CompanyProfileSource | null;
+  } | null;
+  snapshot_history: { id: number; effective_date: string; status: string; confidence_score: number; peer_count: number; selected: boolean }[];
+  peer_map: CompetitivePeer[];
+  comparison: Record<string, CompetitiveDimension[]>;
+  competitive_actions: DashboardEvent[];
+  market_share: { status: 'available' | 'unavailable'; series: unknown[]; reason: string };
+  moat_evidence: CompetitiveDimension[];
+  opposing_evidence: CompetitiveDimension[];
+  filters: { relationships: string[]; selected_relationship: string; as_of: string };
+  coverage: {
+    peer_count: number;
+    in_universe_peer_count: number;
+    dimension_count: number;
+    competitive_action_count: number;
+    source_count: number;
+    last_updated: string;
+  };
+  evidence: CompanyProfileSource[];
+  source_gaps: SourceGap[];
+};
+
 @Injectable({ providedIn: 'root' })
 export class InfoDjApiService {
   private readonly http = inject(HttpClient);
@@ -937,6 +997,15 @@ export class InfoDjApiService {
     const params: Record<string, string> = {};
     if (period) params['period'] = period;
     return this.http.get<CapitalAllocationResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/capital-allocation`, {
+      headers: this.authHeaders(token), params
+    });
+  }
+
+  competitivePosition(token: string, slug: string, asOf = '', relationship = '') {
+    const params: Record<string, string> = {};
+    if (asOf) params['as_of'] = asOf;
+    if (relationship) params['relationship'] = relationship;
+    return this.http.get<CompetitivePositionResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/competitive-position`, {
       headers: this.authHeaders(token), params
     });
   }

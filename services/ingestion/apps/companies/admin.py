@@ -16,6 +16,9 @@ from apps.companies.models import (
     CapitalAllocationItem,
     CapitalAllocationPeriod,
     CompanyProfileSnapshot,
+    CompetitiveDimension,
+    CompetitivePeer,
+    CompetitivePositionSnapshot,
     EarningsGuidanceComparison,
     EarningsPeriod,
     EarningsPeriodDocument,
@@ -316,3 +319,36 @@ class CapitalAllocationItemAdmin(admin.ModelAdmin):
     list_display = ("period", "category", "label", "value", "unit", "is_context", "is_calculated", "review_status")
     list_filter = ("category", "is_context", "is_calculated", "review_status", "period__company")
     search_fields = ("period__company__name", "label", "concept", "evidence_text")
+
+
+class CompetitivePeerInline(admin.TabularInline):
+    model = CompetitivePeer
+    extra = 0
+
+
+class CompetitiveDimensionInline(admin.TabularInline):
+    model = CompetitiveDimension
+    extra = 0
+
+
+@admin.register(CompetitivePositionSnapshot)
+class CompetitivePositionSnapshotAdmin(admin.ModelAdmin):
+    list_display = ("company", "effective_date", "status", "confidence_score", "source_document", "updated_at")
+    list_filter = ("status", "effective_date", "company")
+    search_fields = ("company__name", "summary", "methodology")
+    readonly_fields = ("created_at", "updated_at")
+    inlines = (CompetitivePeerInline, CompetitiveDimensionInline)
+
+
+@admin.register(CompetitivePeer)
+class CompetitivePeerAdmin(admin.ModelAdmin):
+    list_display = ("snapshot", "peer_name", "relationship_type", "scope", "geography", "is_in_universe", "confidence_score")
+    list_filter = ("relationship_type", "is_in_universe", "snapshot__company")
+    search_fields = ("snapshot__company__name", "peer_name", "scope", "evidence_text")
+
+
+@admin.register(CompetitiveDimension)
+class CompetitiveDimensionAdmin(admin.ModelAdmin):
+    list_display = ("snapshot", "peer", "dimension_type", "label", "confidence_score")
+    list_filter = ("dimension_type", "snapshot__company")
+    search_fields = ("snapshot__company__name", "peer__peer_name", "label", "description", "evidence_text")

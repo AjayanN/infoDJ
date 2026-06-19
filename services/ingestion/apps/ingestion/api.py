@@ -18,6 +18,9 @@ from apps.companies.models import (
     CapitalAllocationPeriod,
     Company,
     CompanyProfileSnapshot,
+    CompetitiveDimensionType,
+    CompetitivePeer,
+    CompetitivePositionSnapshot,
     EarningsGuidanceComparison,
     EarningsPeriod,
     KpiDefinition,
@@ -692,6 +695,82 @@ def company_capital_allocation(request: HttpRequest, slug: str) -> JsonResponse:
     })
 
 
+@require_GET
+def company_competitive_position(request: HttpRequest, slug: str) -> JsonResponse:
+    company = get_company(slug)
+    snapshots = list(
+        CompetitivePositionSnapshot.objects.filter(company=company, status__in=["PUBLISHED", "REVIEWED"])
+        .select_related("source_document")
+        .prefetch_related("peers__peer_company", "peers__dimensions__source_document", "dimensions__source_document")
+        .order_by("-effective_date", "-updated_at")
+    )
+    as_of = parse_iso_date(request.GET.get("as_of"))
+    eligible = [row for row in snapshots if as_of is None or row.effective_date <= as_of]
+    current = eligible[0] if eligible else None
+    if current is None:
+        gaps = [{
+            "key": "competitive_position_snapshot",
+            "label": "Competitive Position unavailable",
+            "reason": f"No reviewed competitive-position snapshot is available for {company.name}.",
+            "source": "company-profile",
+            "next_action": "Refresh reviewed Company 360 profiles and run build_competitive_positions.",
+        }]
+        persist_competitive_position_gaps(company, gaps)
+        return JsonResponse({
+            "status": "unavailable",
+            "company": serialize_company_detail(company),
+            "snapshot": None,
+            "snapshot_history": [],
+            "source_gaps": gaps,
+        })
+
+    peers = list(current.peers.all())
+    relationship_filter = (request.GET.get("relationship") or "").strip().upper()
+    if relationship_filter:
+        peers = [row for row in peers if row.relationship_type == relationship_filter]
+    dimension_groups = competitive_dimension_groups(current, peers)
+    action_events = list(
+        BusinessEvent.objects.filter(company=company, event_type__in=["COMPETITIVE_RESPONSE", "PRICING_CHANGE", "PRODUCT_EXPANSION"])
+        .exclude(actual_change="")
+        .select_related("source_document")
+        .order_by("-event_date", "-created_at")[:12]
+    )
+    gaps = competitive_position_source_gaps(company, current, peers, dimension_groups)
+    persist_competitive_position_gaps(company, gaps)
+    evidence = competitive_position_evidence(current, peers)
+    return JsonResponse({
+        "status": "available" if peers else "partial",
+        "company": serialize_company_detail(company),
+        "snapshot": serialize_competitive_position_snapshot(current),
+        "snapshot_history": [serialize_competitive_position_history(row, current) for row in snapshots],
+        "peer_map": [serialize_competitive_peer(row) for row in peers],
+        "comparison": dimension_groups,
+        "competitive_actions": [serialize_business_event(row) for row in action_events],
+        "market_share": {
+            "status": "unavailable",
+            "series": [],
+            "reason": "No reviewed market-share series with source and methodology labels is available yet.",
+        },
+        "moat_evidence": dimension_groups.get(CompetitiveDimensionType.MOAT_EVIDENCE, []),
+        "opposing_evidence": dimension_groups.get(CompetitiveDimensionType.OPPOSING_EVIDENCE, []),
+        "filters": {
+            "relationships": sorted({row.relationship_type for row in current.peers.all()}),
+            "selected_relationship": relationship_filter,
+            "as_of": as_of.isoformat() if as_of else "",
+        },
+        "coverage": {
+            "peer_count": len(peers),
+            "in_universe_peer_count": sum(1 for row in peers if row.is_in_universe),
+            "dimension_count": sum(len(rows) for rows in dimension_groups.values()),
+            "competitive_action_count": len(action_events),
+            "source_count": len(evidence),
+            "last_updated": current.updated_at.isoformat(),
+        },
+        "evidence": evidence,
+        "source_gaps": gaps,
+    })
+
+
 def earnings_period_key(period: EarningsPeriod) -> str:
     return f"FY{period.fiscal_year}-{period.fiscal_period}"
 
@@ -961,6 +1040,142 @@ def pct_ratio(value, denominator) -> float | None:
         return round((float(value) / abs(float(denominator))) * 100, 2)
     except (TypeError, ValueError, ZeroDivisionError):
         return None
+
+
+def serialize_competitive_position_snapshot(snapshot: CompetitivePositionSnapshot) -> dict[str, object]:
+    return {
+        "id": snapshot.id,
+        "effective_date": snapshot.effective_date.isoformat(),
+        "status": snapshot.status,
+        "summary": snapshot.summary,
+        "methodology": snapshot.methodology,
+        "confidence_score": decimal_to_float(snapshot.confidence_score),
+        "source": serialize_profile_source(snapshot.source_document) if snapshot.source_document_id else None,
+    }
+
+
+def serialize_competitive_position_history(
+    snapshot: CompetitivePositionSnapshot,
+    current: CompetitivePositionSnapshot,
+) -> dict[str, object]:
+    return {
+        "id": snapshot.id,
+        "effective_date": snapshot.effective_date.isoformat(),
+        "status": snapshot.status,
+        "confidence_score": decimal_to_float(snapshot.confidence_score),
+        "peer_count": snapshot.peers.count(),
+        "selected": snapshot.id == current.id,
+    }
+
+
+def serialize_competitive_peer(peer: CompetitivePeer) -> dict[str, object]:
+    return {
+        "id": peer.id,
+        "peer_name": peer.peer_name,
+        "peer_company": serialize_company(peer.peer_company) if peer.peer_company_id else None,
+        "relationship_type": peer.relationship_type,
+        "relationship_label": peer.get_relationship_type_display(),
+        "scope": peer.scope,
+        "geography": peer.geography,
+        "product_overlap": peer.product_overlap if isinstance(peer.product_overlap, list) else [],
+        "customer_overlap": peer.customer_overlap if isinstance(peer.customer_overlap, list) else [],
+        "evidence_text": peer.evidence_text,
+        "is_in_universe": peer.is_in_universe,
+        "confidence_score": decimal_to_float(peer.confidence_score),
+    }
+
+
+def competitive_dimension_groups(
+    snapshot: CompetitivePositionSnapshot,
+    peers: list[CompetitivePeer],
+) -> dict[str, list[dict[str, object]]]:
+    peer_ids = {row.id for row in peers}
+    rows = []
+    for dimension in snapshot.dimensions.all():
+        if dimension.peer_id and dimension.peer_id not in peer_ids:
+            continue
+        rows.append({
+            "id": dimension.id,
+            "dimension_type": dimension.dimension_type,
+            "dimension_label": dimension.get_dimension_type_display(),
+            "label": dimension.label,
+            "description": dimension.description,
+            "evidence_text": dimension.evidence_text,
+            "peer_id": dimension.peer_id,
+            "peer_name": dimension.peer.peer_name if dimension.peer_id else "",
+            "confidence_score": decimal_to_float(dimension.confidence_score),
+            "source": serialize_profile_source(dimension.source_document) if dimension.source_document_id else None,
+        })
+    grouped: dict[str, list[dict[str, object]]] = defaultdict(list)
+    for row in rows:
+        grouped[str(row["dimension_type"])].append(row)
+    return dict(grouped)
+
+
+def competitive_position_evidence(
+    snapshot: CompetitivePositionSnapshot,
+    peers: list[CompetitivePeer],
+) -> list[dict[str, object]]:
+    sources = []
+    seen = set()
+    if snapshot.source_document_id:
+        sources.append(serialize_profile_source(snapshot.source_document))
+        seen.add(snapshot.source_document_id)
+    for peer in peers:
+        for dimension in peer.dimensions.all():
+            if dimension.source_document_id and dimension.source_document_id not in seen:
+                sources.append(serialize_profile_source(dimension.source_document))
+                seen.add(dimension.source_document_id)
+    return sources
+
+
+def competitive_position_source_gaps(
+    company: Company,
+    snapshot: CompetitivePositionSnapshot,
+    peers: list[CompetitivePeer],
+    dimension_groups: dict[str, list[dict[str, object]]],
+) -> list[dict[str, str]]:
+    gaps = []
+    if not peers:
+        gaps.append({
+            "key": "competitive_peers",
+            "label": "Competitive peers unavailable",
+            "reason": f"No reviewed competitor or benchmark peer records are available for {company.name}.",
+            "source": "competitive-position",
+            "next_action": "Review Company 360 competitor disclosures and same-sector peer mappings.",
+        })
+    for dimension_type, label in (
+        (CompetitiveDimensionType.PRODUCT_OVERLAP, "Product overlap"),
+        (CompetitiveDimensionType.GEOGRAPHIC_OVERLAP, "Geographic overlap"),
+        (CompetitiveDimensionType.CUSTOMER_OVERLAP, "Customer overlap"),
+        (CompetitiveDimensionType.SCALE_COMPARISON, "Scale comparison"),
+        (CompetitiveDimensionType.MOAT_EVIDENCE, "Moat evidence"),
+        (CompetitiveDimensionType.OPPOSING_EVIDENCE, "Opposing evidence"),
+    ):
+        if not dimension_groups.get(dimension_type):
+            gaps.append({
+                "key": f"competitive_{dimension_type.lower()}",
+                "label": f"{label} unavailable",
+                "reason": f"No reviewed {label.lower()} dimension is available for the selected competitive snapshot.",
+                "source": "competitive-position",
+                "next_action": "Collect and review company filings, investor materials, and permitted industry sources for this dimension.",
+            })
+    gaps.append({
+        "key": "competitive_market_share",
+        "label": "Market-share series unavailable",
+        "reason": "No reviewed market-share series with source and methodology labels is available yet.",
+        "source": "competitive-position",
+        "next_action": "Add a licensed or official market-share source and record methodology, geography, period, and denominator.",
+    })
+    if not snapshot.source_document_id:
+        gaps.append({
+            "key": "competitive_source_document",
+            "label": "Source document unavailable",
+            "reason": "The selected competitive snapshot is not linked to a source document.",
+            "source": "competitive-position",
+            "next_action": "Rebuild from reviewed Company 360 profiles with source documents.",
+        })
+    return gaps
 
 
 def serialize_guidance_comparison(row: EarningsGuidanceComparison) -> dict[str, object]:
@@ -2387,6 +2602,33 @@ def persist_capital_allocation_gaps(company: Company, gaps: list[dict[str, str]]
             dashboard="capital_allocation",
             gap_type=gap["key"],
             provider=gap.get("source", "capital-allocation-dashboard"),
+            defaults={
+                "reason": gap["reason"],
+                "next_ingestion_task": gap.get("next_action", ""),
+                "status": "OPEN",
+                "metadata": {"label": gap.get("label", "")},
+            },
+        )
+
+
+def persist_competitive_position_gaps(company: Company, gaps: list[dict[str, str]]) -> None:
+    active_keys = [gap["key"] for gap in gaps]
+    if active_keys:
+        SourceGap.objects.filter(company=company, dashboard="competitive_position").exclude(
+            gap_type__in=active_keys
+        ).update(status="RESOLVED")
+    else:
+        SourceGap.objects.filter(
+            company=company,
+            dashboard="competitive_position",
+            status__in=["OPEN", "IN_PROGRESS"],
+        ).update(status="RESOLVED")
+    for gap in gaps:
+        SourceGap.objects.update_or_create(
+            company=company,
+            dashboard="competitive_position",
+            gap_type=gap["key"],
+            provider=gap.get("source", "competitive-position"),
             defaults={
                 "reason": gap["reason"],
                 "next_ingestion_task": gap.get("next_action", ""),

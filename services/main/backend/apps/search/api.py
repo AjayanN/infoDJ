@@ -204,6 +204,19 @@ def company_capital_allocation(request, slug: str):
     return Response(payload)
 
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def company_competitive_position(request, slug: str):
+    params = {}
+    for key in ("as_of", "relationship"):
+        if request.GET.get(key):
+            params[key] = request.GET[key]
+    payload, error = ingestion_get(f"companies/{slug}/competitive-position", params or None)
+    if error:
+        return Response({"error": "competitive position unavailable", "detail": error}, status=503)
+    return Response(payload)
+
+
 def ingestion_get(path: str, params: dict[str, object] | None = None) -> tuple[dict | None, str]:
     base_url = settings.INGESTION_API_URL.rstrip("/") + "/"
     url = urljoin(base_url, path)

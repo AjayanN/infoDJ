@@ -122,6 +122,7 @@
         <button type="button" *ngIf="strategyMilestones()" [class.active]="activePage() === 'strategy-milestones'" [attr.aria-current]="activePage() === 'strategy-milestones' ? 'page' : null" (click)="setActivePage('strategy-milestones')">Milestones</button>
         <button type="button" *ngIf="earnings()" [class.active]="activePage() === 'earnings'" [attr.aria-current]="activePage() === 'earnings' ? 'page' : null" (click)="setActivePage('earnings')">Earnings</button>
         <button type="button" *ngIf="capitalAllocation()" [class.active]="activePage() === 'capital-allocation'" [attr.aria-current]="activePage() === 'capital-allocation' ? 'page' : null" (click)="setActivePage('capital-allocation')">Capital</button>
+        <button type="button" *ngIf="competitivePosition()" [class.active]="activePage() === 'competitive-position'" [attr.aria-current]="activePage() === 'competitive-position' ? 'page' : null" (click)="setActivePage('competitive-position')">Competition</button>
         <button type="button" [class.active]="activePage() === 'profile'" [attr.aria-current]="activePage() === 'profile' ? 'page' : null" (click)="setActivePage('profile')">Profile</button>
         <button type="button" [class.active]="activePage() === 'subscription'" [attr.aria-current]="activePage() === 'subscription' ? 'page' : null" (click)="setActivePage('subscription')">Subscription</button>
       </nav>
@@ -755,6 +756,7 @@
                   <button type="button" class="ghost-button" (click)="openStrategyMilestones(companyView.company.slug)">Strategy milestone tracker</button>
                   <button type="button" class="ghost-button" (click)="openEarnings(companyView.company.slug)">Earnings intelligence</button>
                   <button type="button" class="ghost-button" (click)="openCapitalAllocation(companyView.company.slug)">Capital allocation dashboard</button>
+                  <button type="button" class="ghost-button" (click)="openCompetitivePosition(companyView.company.slug)">Competitive position dashboard</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('companies-like-mine')">Compare peers</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('latest-moves')">Latest moves</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('risk-signals')">Risk signals</button>
@@ -1435,6 +1437,103 @@
               <section class="panel source-gap-panel" *ngIf="allocationView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable capital allocation data</h2></div>
                 <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of allocationView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+              </section>
+            </ng-container>
+          </section>
+
+          <section *ngSwitchCase="'competitive-position'" class="company-profile-layout" aria-labelledby="competitive-position-heading">
+            <div class="panel empty-state" *ngIf="competitivePositionLoading()" role="status">Loading reviewed competitive position.</div>
+            <ng-container *ngIf="competitivePosition() as competitiveView">
+              <section class="panel company-profile-hero">
+                <div>
+                  <p class="section-kicker">Competitive Position Dashboard · {{ competitiveView.status }}</p>
+                  <h2 id="competitive-position-heading">{{ competitiveView.company.name }}</h2>
+                  <p *ngIf="competitiveView.snapshot; else noCompetitiveSummary">{{ competitiveView.snapshot.summary }}</p>
+                  <ng-template #noCompetitiveSummary><p>No reviewed competitive-position summary is available.</p></ng-template>
+                </div>
+                <div class="coverage-summary">
+                  <strong>{{ competitiveView.coverage.peer_count }}</strong><span>reviewed peer links</span>
+                  <small>{{ competitiveView.coverage.dimension_count }} comparison dimensions</small>
+                  <small>Updated {{ competitiveView.coverage.last_updated | date:'medium' }}</small>
+                </div>
+              </section>
+
+              <section class="panel company-profile-controls" aria-label="Competitive position controls">
+                <label>Snapshot
+                  <select [(ngModel)]="competitivePositionDate">
+                    <option *ngFor="let snapshot of competitiveView.snapshot_history" [value]="snapshot.effective_date">{{ snapshot.effective_date }} · {{ snapshot.peer_count }} peers</option>
+                  </select>
+                </label>
+                <label>Relationship
+                  <select [(ngModel)]="competitiveRelationship">
+                    <option value="">All relationships</option>
+                    <option *ngFor="let relationship of competitiveView.filters.relationships" [value]="relationship">{{ promiseLabel(relationship) }}</option>
+                  </select>
+                </label>
+                <button type="button" class="primary-button" (click)="reloadCompetitivePosition()">Apply filters</button>
+                <button type="button" class="ghost-button" (click)="openCompany(competitiveView.company.slug)">Back to Company 360</button>
+                <button type="button" class="ghost-button" (click)="printCompetitivePositionBrief()">Print one-page brief</button>
+              </section>
+
+              <ng-container *ngIf="competitiveView.snapshot as snapshot; else noCompetitiveSnapshot">
+                <section class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Methodology</p><h2>What this comparison owns</h2></div><span>Confidence {{ snapshot.confidence_score | number:'1.2-2' }}</span></div>
+                  <p>{{ snapshot.methodology }}</p>
+                  <a *ngIf="snapshot.source" [href]="snapshot.source.url" target="_blank" rel="noopener">Open source</a>
+                </section>
+
+                <section class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Competitor map</p><h2>Peers and relationship types</h2></div><span>{{ competitiveView.coverage.in_universe_peer_count }} configured peers</span></div>
+                  <div class="result-row" *ngFor="let peer of competitiveView.peer_map">
+                    <strong>{{ peer.peer_name }} · {{ peer.relationship_label }}</strong>
+                    <span>{{ peer.scope }} · {{ peer.geography || 'Geography unavailable' }} · confidence {{ peer.confidence_score | number:'1.2-2' }}</span>
+                    <p>{{ peer.evidence_text }}</p>
+                    <small *ngIf="peer.product_overlap.length > 0">Product overlap: {{ peer.product_overlap.join(' · ') }}</small>
+                    <small *ngIf="peer.customer_overlap.length > 0">Customer overlap: {{ peer.customer_overlap.join(' · ') }}</small>
+                  </div>
+                  <div class="empty-state unavailable-state" *ngIf="competitiveView.peer_map.length === 0">No reviewed competitive peers match the selected filters.</div>
+                </section>
+
+                <section class="dashboard-two-column">
+                  <article class="panel">
+                    <div class="panel-header"><div><p class="section-kicker">Comparison</p><h2>Product, customer, geography, and scale</h2></div></div>
+                    <ng-container *ngFor="let group of ['PRODUCT_OVERLAP','CUSTOMER_OVERLAP','GEOGRAPHIC_OVERLAP','SCALE_COMPARISON','PRICING_POSITION']">
+                      <h3>{{ promiseLabel(group) }}</h3>
+                      <div class="result-row" *ngFor="let item of competitiveView.comparison[group] || []"><strong>{{ item.peer_name || item.label }}</strong><p>{{ item.description }}</p></div>
+                      <div class="empty-state" *ngIf="!(competitiveView.comparison[group] || []).length">No reviewed {{ promiseLabel(group) | lowercase }} dimension is available.</div>
+                    </ng-container>
+                  </article>
+                  <article class="panel">
+                    <div class="panel-header"><div><p class="section-kicker">Market share</p><h2>Series and methodology</h2></div></div>
+                    <div class="empty-state unavailable-state" *ngIf="competitiveView.market_share.status === 'unavailable'">{{ competitiveView.market_share.reason }}</div>
+                    <div class="result-row" *ngFor="let action of competitiveView.competitive_actions"><strong>{{ action.event_type }}</strong><span>{{ action.event_date }}</span><p>{{ action.actual_change }}</p></div>
+                    <div class="empty-state" *ngIf="competitiveView.competitive_actions.length === 0">No reviewed competitive actions are available for this company yet.</div>
+                  </article>
+                </section>
+
+                <section class="dashboard-two-column">
+                  <article class="panel">
+                    <div class="panel-header"><div><p class="section-kicker">Moat evidence</p><h2>Supporting evidence</h2></div></div>
+                    <div class="result-row" *ngFor="let item of competitiveView.moat_evidence"><strong>{{ item.peer_name || item.label }}</strong><p>{{ item.description }}</p></div>
+                    <div class="empty-state" *ngIf="competitiveView.moat_evidence.length === 0">No reviewed moat evidence is available.</div>
+                  </article>
+                  <article class="panel">
+                    <div class="panel-header"><div><p class="section-kicker">Opposing evidence</p><h2>Pressure and uncertainty</h2></div></div>
+                    <div class="result-row conflict-row" *ngFor="let item of competitiveView.opposing_evidence"><strong>{{ item.peer_name || item.label }}</strong><p>{{ item.description }}</p></div>
+                    <div class="empty-state" *ngIf="competitiveView.opposing_evidence.length === 0">No reviewed opposing evidence is available.</div>
+                  </article>
+                </section>
+
+                <section class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Competitive evidence</h2></div><span>{{ competitiveView.evidence.length }} sources</span></div>
+                  <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of competitiveView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                </section>
+              </ng-container>
+              <ng-template #noCompetitiveSnapshot><section class="panel empty-state unavailable-state">No reviewed competitive position snapshot is available.</section></ng-template>
+
+              <section class="panel source-gap-panel" *ngIf="competitiveView.source_gaps.length > 0">
+                <div class="panel-header"><h2>Unavailable competitive data</h2></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of competitiveView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
               </section>
             </ng-container>
           </section>

@@ -536,15 +536,22 @@ Each feature below inherits the shared standards above. Feature sections only de
 
 **MVP tasks:**
 
-- [ ] Define competitor relationship types and effective date ranges.
-- [ ] Build competitor map and comparison table.
-- [ ] Allow company-wide and product-level competitor sets.
-- [ ] Add evidence explaining why each company is considered a competitor.
-- [ ] Add product, pricing, geography, customer, and scale comparisons.
-- [ ] Create timeline of competitive actions and responses.
-- [ ] Add market-share series with source and methodology labels.
-- [ ] Add moat evidence categories and opposing evidence.
-- [ ] Add peer-set version history.
+- [x] Define competitor relationship types and effective date ranges.
+- [x] Build competitor map and comparison table.
+- [x] Allow company-wide and product-level competitor sets through relationship scope and product-overlap dimensions.
+- [x] Add evidence explaining why each company is considered a competitor.
+- [x] Add product, geography, customer, and scale comparisons; pricing position is exposed with an unavailable state until reviewed pricing sources are added.
+- [x] Create timeline of competitive actions and responses from reviewed event records.
+- [x] Add market-share surface with explicit source/methodology unavailable state; reviewed series remains deferred until an allowed market-share source is added.
+- [x] Add moat evidence categories and opposing evidence.
+- [x] Add peer-set version history through dated competitive-position snapshots.
+
+**Implementation notes:**
+
+- Backend: added `CompetitivePositionSnapshot`, `CompetitivePeer`, and `CompetitiveDimension`, a reviewed builder, ingestion API endpoint, source-gap persistence, and authenticated main-backend proxy.
+- Frontend: added Company 360 action, left-nav page, snapshot and relationship controls, peer map, comparison dimensions, action timeline, moat/opposing evidence, market-share unavailable state, evidence cards, and source gaps.
+- Data acquisition: builds from reviewed Company 360 profiles, same-sector configured companies, and reviewed fallback peer sets for sectors with only one configured company.
+- Validation completed: all-company database coverage check, authenticated gateway smoke with `scripts/smoke/phase2_competitive_position.sh`, full ingestion backend, main backend, frontend test suite, and frontend production build passed.
 
 **Acceptance criteria:**
 
@@ -1086,7 +1093,7 @@ The order below reflects functional dependency and user value. It does not requi
 **Exit condition:** a user can understand where resources are committed and how competitive and operational dependencies are changing.
 
 - [x] Capital Allocation Dashboard: SEC-backed all-company baseline implemented with period views, deployment/context separation, source gaps, Company 360 entry point, and authenticated all-company smoke validation.
-- [ ] Competitive Position Dashboard.
+- [x] Competitive Position Dashboard: all-company peer-map baseline implemented with relationship types, overlap dimensions, source gaps, Company 360 entry point, and authenticated all-company smoke validation.
 - [ ] Acquisition Lifecycle Tracker.
 - [ ] Customer and Supplier Dependency.
 - [ ] Geographic Expansion Map.

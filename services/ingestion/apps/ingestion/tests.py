@@ -15,6 +15,8 @@ from apps.companies.models import (
     CapitalAllocationPeriod,
     Company,
     CompanyProfileSnapshot,
+    CompetitivePeer,
+    CompetitivePositionSnapshot,
     EarningsGuidanceComparison,
     EarningsPeriod,
     EarningsPeriodDocument,
@@ -31,6 +33,10 @@ from apps.ingestion.models import ArticleExtraction, FinancialFact, MarketPrice,
 from apps.ingestion.services.capital_allocation import (
     build_capital_allocation_periods,
     capital_allocation_quality_issues,
+)
+from apps.ingestion.services.competitive_position import (
+    build_competitive_position,
+    competitive_position_quality_issues,
 )
 from apps.ingestion.services.event_extractor import EventSignal, actual_change_for, find_evidence_sentence
 from apps.ingestion.services.earnings_intelligence import (
@@ -867,6 +873,54 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(payload["selected_period"]["deployment_items"], [])
         self.assertIsNone(payload["selected_period"]["cash_flow_context"]["total_deployment"])
         self.assertTrue(any(gap["key"] == "capital_deployment_items" for gap in payload["source_gaps"]))
+
+    def test_competitive_position_builder_creates_peer_map_and_dimensions(self):
+        disney = Company.objects.create(name="Disney", industry="Communication Services", country="United States")
+        CompanyProfileSnapshot.objects.create(
+            company=self.netflix,
+            effective_date=date(2026, 1, 1),
+            source_document=self.source,
+            status="REVIEWED",
+            summary="Netflix distributes entertainment.",
+            products=["Subscription video streaming", "Advertising-supported streaming"],
+            customer_groups=["Streaming members", "Advertisers"],
+            geographies=["United States", "International markets"],
+            competitors=["Disney", "Prime Video"],
+            confidence_score="0.900",
+        )
+
+        first = build_competitive_position(self.netflix)
+        second = build_competitive_position(self.netflix)
+        snapshot = CompetitivePositionSnapshot.objects.get(company=self.netflix)
+
+        self.assertEqual(first["snapshots_created"], 1)
+        self.assertEqual(second["snapshots_updated"], 1)
+        self.assertTrue(CompetitivePeer.objects.filter(snapshot=snapshot, peer_company=disney, relationship_type="DIRECT").exists())
+        self.assertTrue(snapshot.dimensions.filter(dimension_type="PRODUCT_OVERLAP").exists())
+        self.assertEqual(competitive_position_quality_issues(self.netflix), [])
+
+    def test_competitive_position_api_exposes_market_share_gap_without_causation_claim(self):
+        CompanyProfileSnapshot.objects.create(
+            company=self.netflix,
+            effective_date=date(2026, 1, 1),
+            source_document=self.source,
+            status="REVIEWED",
+            summary="Netflix distributes entertainment.",
+            products=["Subscription video streaming"],
+            customer_groups=["Streaming members"],
+            geographies=["United States"],
+            competitors=["Disney+"],
+            confidence_score="0.900",
+        )
+        build_competitive_position(self.netflix)
+
+        payload = self.client.get("/companies/netflix/competitive-position").json()
+
+        self.assertEqual(payload["status"], "available")
+        self.assertGreaterEqual(payload["coverage"]["peer_count"], 1)
+        self.assertEqual(payload["market_share"]["status"], "unavailable")
+        self.assertTrue(any(gap["key"] == "competitive_market_share" for gap in payload["source_gaps"]))
+        self.assertIn("does not imply causation", payload["snapshot"]["methodology"])
 
     def test_companyfacts_builder_creates_idempotent_annual_and_quarterly_series(self):
         for filed, accession, value in (

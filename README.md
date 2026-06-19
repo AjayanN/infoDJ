@@ -453,6 +453,29 @@ BASE_URL=http://localhost:8080/api/app scripts/smoke/phase2_capital_allocation.s
 
 Requirement 7 verification on June 19, 2026: SEC Company Facts ingestion populated all 20 configured companies with 1,397 reviewed capital allocation periods and 5,925 allocation items; direct database coverage confirmed every company has a latest reviewed period with operating cash-flow context; authenticated gateway smoke passed for all 20 companies; ingestion backend `58/58`, main backend `34/34`, frontend `7/7`, and frontend production build passed.
 
+## Competitive Position Dashboard
+
+Phase 2 Requirement 8 adds a reviewed Competitive Position Dashboard for each configured company. It owns competitor relationships, peer-map context, product/customer/geographic overlap, scale and moat evidence categories, opposing evidence, competitive action timelines, and explicit market-share source gaps.
+
+The baseline is generated from reviewed Company 360 profiles, configured same-sector peers, and reviewed fallback peer sets for single-company sectors. It separates direct competitors, category competitors, substitutes, platform competitors, supplier/customer overlap, and peer benchmarks. The methodology explicitly states that competitive context is descriptive and does not imply causation.
+
+Competitive Position endpoints:
+
+```bash
+GET /api/ingestion/companies/<slug>/competitive-position
+GET /api/app/companies/<slug>/competitive-position
+```
+
+Open `Competitive position dashboard` from Company 360 for snapshot controls, relationship filters, peer map, comparison dimensions, competitive actions, moat evidence, opposing evidence, market-share unavailable state, evidence cards, and source gaps.
+
+Competitive Position smoke check:
+
+```bash
+BASE_URL=http://localhost:8080/api/app scripts/smoke/phase2_competitive_position.sh
+```
+
+Requirement 8 verification on June 19, 2026: competitive-position builder populated all 20 configured companies with reviewed snapshots, at least one peer link, and comparison dimensions; direct database coverage confirmed `20/20`; authenticated gateway smoke passed for all 20 companies; ingestion backend `60/60`, main backend `34/34`, frontend `7/7`, and frontend production build passed.
+
 ## Test Commands
 
 Run tests inside Docker Compose:
