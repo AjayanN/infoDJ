@@ -8,6 +8,7 @@ from django.utils.text import slugify
 
 from apps.companies.company_universe import CROSS_SECTOR_COMPANIES
 from apps.companies.models import (
+    AcquisitionLifecycleDeal,
     BusinessModelComponent,
     BusinessModelRelationship,
     BusinessModelSnapshot,
@@ -43,6 +44,10 @@ from apps.ingestion.services.competitive_position import (
 from apps.ingestion.services.product_pricing_history import (
     build_product_pricing_history,
     product_pricing_quality_issues,
+)
+from apps.ingestion.services.acquisition_lifecycle import (
+    build_acquisition_lifecycle,
+    acquisition_lifecycle_quality_issues,
 )
 from apps.ingestion.services.event_extractor import EventSignal, actual_change_for, find_evidence_sentence
 from apps.ingestion.services.earnings_intelligence import (
@@ -984,6 +989,50 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(payload["price_context"]["status"], "unavailable")
         self.assertTrue(any(gap["key"] == "product_list_prices" for gap in payload["source_gaps"]))
         self.assertIn("Announcement dates and effective dates are stored separately", payload["snapshot"]["chronology_note"])
+
+    def test_acquisition_lifecycle_builder_creates_deal_from_event(self):
+        BusinessEvent.objects.create(
+            company=self.netflix,
+            source_document=self.source,
+            event_type="ACQUISITION",
+            event_date=date(2024, 2, 1),
+            decision="Acquire Spry Fox to expand internal game development.",
+            actual_change="Netflix acquired Spry Fox and began integrating game development capabilities.",
+            outcome="Integration remains under review.",
+            source_claim="Netflix acquired Spry Fox.",
+            evidence_text="Netflix acquired Spry Fox.",
+            confidence_score="0.900",
+        )
+
+        first = build_acquisition_lifecycle(self.netflix)
+        second = build_acquisition_lifecycle(self.netflix)
+        deal = AcquisitionLifecycleDeal.objects.get(company=self.netflix, target_name="Spry Fox")
+
+        self.assertEqual(first["deals_created"], 1)
+        self.assertEqual(second["deals_updated"], 1)
+        self.assertEqual(deal.current_stage, "INTEGRATING")
+        self.assertTrue(deal.stage_events.exists())
+        self.assertNotIn("no reviewed acquisition lifecycle deals", acquisition_lifecycle_quality_issues(self.netflix))
+
+    def test_acquisition_lifecycle_api_exposes_source_gaps(self):
+        CompanyProfileSnapshot.objects.create(
+            company=self.netflix,
+            effective_date=date(2026, 1, 1),
+            source_document=self.source,
+            status="REVIEWED",
+            brands=["Netflix"],
+            confidence_score="0.900",
+        )
+        build_acquisition_lifecycle(self.netflix)
+
+        payload = self.client.get("/companies/netflix/acquisition-lifecycle").json()
+
+        self.assertIn(payload["status"], {"available", "partial"})
+        self.assertGreaterEqual(payload["coverage"]["deal_count"], 0)
+        if payload["selected_deal"]:
+            self.assertTrue(any(gap["key"] == "acquisition_deal_terms" for gap in payload["source_gaps"]))
+        else:
+            self.assertTrue(any(gap["key"] == "acquisition_deals" for gap in payload["source_gaps"]))
 
     def test_companyfacts_builder_creates_idempotent_annual_and_quarterly_series(self):
         for filed, accession, value in (

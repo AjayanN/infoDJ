@@ -499,6 +499,29 @@ BASE_URL=http://localhost:8080/api/app scripts/smoke/phase2_product_pricing.sh
 
 Requirement 9 verification on June 19, 2026: product/pricing builder populated all 20 configured companies with reviewed catalog snapshots, 182 offerings, and 52 timeline changes; direct database coverage confirmed `20/20`; authenticated gateway smoke passed for all 20 companies; ingestion backend `62/62`, main backend `34/34`, frontend `7/7`, and frontend production build passed.
 
+## Acquisition Lifecycle Tracker
+
+Phase 2 Requirement 10 adds an Acquisition Lifecycle Tracker for reviewed acquisition and subsidiary/portfolio evidence. It tracks deal stage, transaction type, outcome category, announcement/close dates, deal consideration, approvals, management rationale, promised synergies, integration notes, outcome review, lifecycle events, evidence, and source gaps.
+
+The baseline builder uses reviewed acquisition business events when they name a specific target, and reviewed Company 360 subsidiary context as conservative portfolio evidence. Generic acquisition/divestiture summaries are ignored so they do not become fake deal targets. Missing purchase price, payment form, approvals, synergies, and outcome reviews are shown as unavailable source gaps rather than estimates.
+
+Acquisition Lifecycle endpoints:
+
+```bash
+GET /api/ingestion/companies/<slug>/acquisition-lifecycle
+GET /api/app/companies/<slug>/acquisition-lifecycle
+```
+
+Open `Acquisition lifecycle tracker` from Company 360 for stage/type/outcome filters, portfolio list, selected deal detail, lifecycle timeline, evidence cards, and source gaps.
+
+Acquisition Lifecycle smoke check:
+
+```bash
+BASE_URL=http://localhost:8080/api/app scripts/smoke/phase2_acquisition_lifecycle.sh
+```
+
+Requirement 10 verification on June 19, 2026: acquisition lifecycle builder validated all 20 configured companies; companies with reviewed subsidiary/acquired-entity context expose lifecycle rows and companies without reviewed targets expose acquisition source gaps; authenticated gateway smoke passed for all 20 companies; ingestion backend `64/64`, main backend `34/34`, frontend `7/7`, and frontend production build passed.
+
 ## Test Commands
 
 Run tests inside Docker Compose:

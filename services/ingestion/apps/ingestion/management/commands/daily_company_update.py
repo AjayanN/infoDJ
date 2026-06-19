@@ -85,6 +85,7 @@ class Command(BaseCommand):
         call_command("build_strategy_milestones")
         call_command("build_competitive_positions", all=True)
         call_command("build_product_pricing_history", all=True)
+        call_command("build_acquisition_lifecycles", all=True)
 
         if options["include_quality_scoring"]:
             self.stdout.write(

@@ -11,6 +11,11 @@ from django.http import Http404, HttpRequest, JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 
 from apps.companies.models import (
+    AcquisitionLifecycleDeal,
+    AcquisitionLifecycleEvent,
+    AcquisitionOutcomeCategory,
+    AcquisitionStage,
+    AcquisitionTransactionType,
     BusinessModelComponentType,
     BusinessModelSnapshot,
     CapitalAllocationCategory,
@@ -837,6 +842,63 @@ def company_product_pricing(request: HttpRequest, slug: str) -> JsonResponse:
     })
 
 
+@require_GET
+def company_acquisition_lifecycle(request: HttpRequest, slug: str) -> JsonResponse:
+    company = get_company(slug)
+    deals_qs = (
+        AcquisitionLifecycleDeal.objects.filter(company=company, is_published=True, review_status="REVIEWED")
+        .select_related("source_document", "target_company", "linked_event", "linked_strategic_turn")
+        .prefetch_related("stage_events__source_document", "stage_events__linked_milestone", "stage_events__linked_product_change")
+        .order_by("-announcement_date", "target_name")
+    )
+    stage_filter = (request.GET.get("stage") or "").strip().upper()
+    transaction_filter = (request.GET.get("transaction_type") or "").strip().upper()
+    outcome_filter = (request.GET.get("outcome") or "").strip().upper()
+    if stage_filter:
+        deals_qs = deals_qs.filter(current_stage=stage_filter)
+    if transaction_filter:
+        deals_qs = deals_qs.filter(transaction_type=transaction_filter)
+    if outcome_filter:
+        deals_qs = deals_qs.filter(outcome_category=outcome_filter)
+    deals = list(deals_qs)
+    selected_slug = (request.GET.get("deal") or "").strip()
+    selected = next((row for row in deals if row.slug == selected_slug), deals[0] if deals else None)
+    if selected is None:
+        gaps = acquisition_lifecycle_source_gaps(company, [], None)
+        persist_acquisition_lifecycle_gaps(company, gaps)
+        return JsonResponse({
+            "status": "partial",
+            "company": serialize_company_detail(company),
+            "deals": [],
+            "selected_deal": None,
+            "filters": acquisition_lifecycle_filters(company, stage_filter, transaction_filter, outcome_filter, selected_slug),
+            "coverage": {"deal_count": 0, "stage_event_count": 0, "source_count": 0, "last_updated": None},
+            "evidence": [],
+            "source_gaps": gaps,
+        })
+    stage_events = list(selected.stage_events.all())
+    gaps = acquisition_lifecycle_source_gaps(company, deals, selected)
+    persist_acquisition_lifecycle_gaps(company, gaps)
+    evidence = acquisition_lifecycle_evidence(deals, stage_events)
+    return JsonResponse({
+        "status": "available" if deals else "partial",
+        "company": serialize_company_detail(company),
+        "deals": [serialize_acquisition_deal(row, include_events=False) for row in deals],
+        "selected_deal": serialize_acquisition_deal(selected, include_events=True),
+        "portfolio": acquisition_portfolio_summary(deals),
+        "filters": acquisition_lifecycle_filters(company, stage_filter, transaction_filter, outcome_filter, selected.slug),
+        "coverage": {
+            "deal_count": len(deals),
+            "stage_event_count": sum(row.stage_events.count() for row in deals),
+            "deal_term_count": sum(1 for row in deals if row.purchase_price is not None or row.payment_form),
+            "source_count": len(evidence),
+            "last_updated": max(row.updated_at for row in deals).isoformat(),
+        },
+        "evidence": evidence,
+        "source_gaps": gaps,
+    })
+
+
 def earnings_period_key(period: EarningsPeriod) -> str:
     return f"FY{period.fiscal_year}-{period.fiscal_period}"
 
@@ -1374,6 +1436,144 @@ def product_pricing_source_gaps(
         gaps.append({"key": "product_list_prices", "label": "List prices unavailable", "reason": "No reviewed list-price observations with full context are available. Missing prices are not estimated or treated as zero.", "source": "product-pricing-history", "next_action": "Collect official pricing pages or filings with currency, geography, billing period, tax, promotion, and customer-segment context."})
     if not snapshot.source_document_id:
         gaps.append({"key": "product_catalog_source", "label": "Catalog source unavailable", "reason": "The selected product catalog snapshot is not linked to a source document.", "source": "product-pricing-history", "next_action": "Rebuild from reviewed Company 360 profiles with source documents."})
+    return gaps
+
+
+def serialize_acquisition_deal(deal: AcquisitionLifecycleDeal, *, include_events: bool) -> dict[str, object]:
+    payload = {
+        "id": deal.id,
+        "slug": deal.slug,
+        "target_name": deal.target_name,
+        "target_company": serialize_company(deal.target_company) if deal.target_company_id else None,
+        "transaction_type": deal.transaction_type,
+        "transaction_type_label": deal.get_transaction_type_display(),
+        "current_stage": deal.current_stage,
+        "current_stage_label": deal.get_current_stage_display(),
+        "outcome_category": deal.outcome_category,
+        "outcome_category_label": deal.get_outcome_category_display(),
+        "announcement_date": deal.announcement_date.isoformat() if deal.announcement_date else None,
+        "expected_close_date": deal.expected_close_date.isoformat() if deal.expected_close_date else None,
+        "close_date": deal.close_date.isoformat() if deal.close_date else None,
+        "purchase_price": decimal_to_float_or_none(deal.purchase_price),
+        "currency": deal.currency,
+        "payment_form": deal.payment_form,
+        "approvals": deal.approvals if isinstance(deal.approvals, list) else [],
+        "conditions": deal.conditions if isinstance(deal.conditions, list) else [],
+        "management_rationale": deal.management_rationale,
+        "promised_synergies": deal.promised_synergies,
+        "integration_summary": deal.integration_summary,
+        "outcome_review": deal.outcome_review,
+        "confidence_score": decimal_to_float(deal.confidence_score),
+        "review_status": deal.review_status,
+        "source": serialize_profile_source(deal.source_document) if deal.source_document_id else None,
+        "linked_event": serialize_business_event(deal.linked_event) if deal.linked_event_id else None,
+        "linked_strategic_turn": {
+            "id": deal.linked_strategic_turn_id,
+            "title": deal.linked_strategic_turn.title,
+            "turn_type": deal.linked_strategic_turn.turn_type,
+        } if deal.linked_strategic_turn_id else None,
+        "updated_at": deal.updated_at.isoformat(),
+        "stage_event_count": deal.stage_events.count(),
+    }
+    if include_events:
+        payload["stage_events"] = [serialize_acquisition_event(row) for row in deal.stage_events.all()]
+    return payload
+
+
+def serialize_acquisition_event(event: AcquisitionLifecycleEvent) -> dict[str, object]:
+    return {
+        "id": event.id,
+        "stage": event.stage,
+        "stage_label": event.get_stage_display(),
+        "event_date": event.event_date.isoformat() if event.event_date else None,
+        "title": event.title,
+        "description": event.description,
+        "price_revision": decimal_to_float_or_none(event.price_revision),
+        "currency": event.currency,
+        "evidence_text": event.evidence_text,
+        "confidence_score": decimal_to_float(event.confidence_score),
+        "review_status": event.review_status,
+        "source": serialize_profile_source(event.source_document) if event.source_document_id else None,
+        "linked_milestone": {
+            "id": event.linked_milestone_id,
+            "slug": event.linked_milestone.slug,
+            "title": event.linked_milestone.title,
+            "current_status": event.linked_milestone.current_status,
+        } if event.linked_milestone_id else None,
+        "linked_product_change": {
+            "id": event.linked_product_change_id,
+            "title": event.linked_product_change.title,
+            "change_type": event.linked_product_change.change_type,
+        } if event.linked_product_change_id else None,
+    }
+
+
+def acquisition_portfolio_summary(deals: list[AcquisitionLifecycleDeal]) -> dict[str, object]:
+    by_stage = defaultdict(int)
+    by_outcome = defaultdict(int)
+    by_type = defaultdict(int)
+    for deal in deals:
+        by_stage[deal.current_stage] += 1
+        by_outcome[deal.outcome_category] += 1
+        by_type[deal.transaction_type] += 1
+    return {
+        "by_stage": [{"key": key, "label": dict(AcquisitionStage.choices).get(key, key), "count": value} for key, value in sorted(by_stage.items())],
+        "by_outcome": [{"key": key, "label": dict(AcquisitionOutcomeCategory.choices).get(key, key), "count": value} for key, value in sorted(by_outcome.items())],
+        "by_transaction_type": [{"key": key, "label": dict(AcquisitionTransactionType.choices).get(key, key), "count": value} for key, value in sorted(by_type.items())],
+    }
+
+
+def acquisition_lifecycle_filters(
+    company: Company,
+    selected_stage: str,
+    selected_transaction_type: str,
+    selected_outcome: str,
+    selected_deal: str,
+) -> dict[str, object]:
+    all_deals = AcquisitionLifecycleDeal.objects.filter(company=company, is_published=True, review_status="REVIEWED")
+    return {
+        "stages": sorted({row.current_stage for row in all_deals}),
+        "transaction_types": sorted({row.transaction_type for row in all_deals}),
+        "outcomes": sorted({row.outcome_category for row in all_deals}),
+        "selected_stage": selected_stage,
+        "selected_transaction_type": selected_transaction_type,
+        "selected_outcome": selected_outcome,
+        "selected_deal": selected_deal,
+    }
+
+
+def acquisition_lifecycle_evidence(
+    deals: list[AcquisitionLifecycleDeal],
+    stage_events: list[AcquisitionLifecycleEvent],
+) -> list[dict[str, object]]:
+    sources = []
+    seen = set()
+    for row in [*deals, *stage_events]:
+        if row.source_document_id and row.source_document_id not in seen:
+            sources.append(serialize_profile_source(row.source_document))
+            seen.add(row.source_document_id)
+    return sources
+
+
+def acquisition_lifecycle_source_gaps(
+    company: Company,
+    deals: list[AcquisitionLifecycleDeal],
+    selected: AcquisitionLifecycleDeal | None,
+) -> list[dict[str, str]]:
+    gaps = []
+    if not deals:
+        gaps.append({"key": "acquisition_deals", "label": "Acquisition deals unavailable", "reason": f"No reviewed acquisition lifecycle deal is available for {company.name}.", "source": "acquisition-lifecycle", "next_action": "Review acquisition events, annual filings, investor materials, and current portfolio disclosures before creating lifecycle records."})
+        return gaps
+    if selected and selected.purchase_price is None and not selected.payment_form:
+        gaps.append({"key": "acquisition_deal_terms", "label": "Deal consideration unavailable", "reason": "No reviewed purchase price or payment-form evidence is linked to the selected deal.", "source": "acquisition-lifecycle", "next_action": "Review announcement releases, merger agreements, and annual filing acquisition footnotes."})
+    if selected and not selected.approvals:
+        gaps.append({"key": "acquisition_approvals", "label": "Approvals unavailable", "reason": "No reviewed regulatory, shareholder, board, or court approval timeline is linked to the selected deal.", "source": "acquisition-lifecycle", "next_action": "Add approval milestones only after source-backed review."})
+    if selected and not selected.promised_synergies:
+        gaps.append({"key": "acquisition_promised_synergies", "label": "Promised synergies unavailable", "reason": "No reviewed management synergy target is linked to the selected deal.", "source": "acquisition-lifecycle", "next_action": "Capture management promises from deal announcements or investor presentations without treating them as achieved outcomes."})
+    if selected and not selected.stage_events.exists():
+        gaps.append({"key": "acquisition_stage_events", "label": "Lifecycle timeline unavailable", "reason": "No reviewed stage events are linked to the selected deal.", "source": "acquisition-lifecycle", "next_action": "Add announcement, approval, close, integration, impairment, divestiture, or review events."})
+    if selected and not selected.outcome_review:
+        gaps.append({"key": "acquisition_outcome_review", "label": "Outcome review unavailable", "reason": "No reviewed post-close outcome assessment is available for the selected deal.", "source": "acquisition-lifecycle", "next_action": "Review later filings and operating evidence before classifying the outcome."})
     return gaps
 
 
@@ -2855,6 +3055,33 @@ def persist_product_pricing_gaps(company: Company, gaps: list[dict[str, str]]) -
             dashboard="product_pricing_history",
             gap_type=gap["key"],
             provider=gap.get("source", "product-pricing-history"),
+            defaults={
+                "reason": gap["reason"],
+                "next_ingestion_task": gap.get("next_action", ""),
+                "status": "OPEN",
+                "metadata": {"label": gap.get("label", "")},
+            },
+        )
+
+
+def persist_acquisition_lifecycle_gaps(company: Company, gaps: list[dict[str, str]]) -> None:
+    active_keys = [gap["key"] for gap in gaps]
+    if active_keys:
+        SourceGap.objects.filter(company=company, dashboard="acquisition_lifecycle").exclude(
+            gap_type__in=active_keys
+        ).update(status="RESOLVED")
+    else:
+        SourceGap.objects.filter(
+            company=company,
+            dashboard="acquisition_lifecycle",
+            status__in=["OPEN", "IN_PROGRESS"],
+        ).update(status="RESOLVED")
+    for gap in gaps:
+        SourceGap.objects.update_or_create(
+            company=company,
+            dashboard="acquisition_lifecycle",
+            gap_type=gap["key"],
+            provider=gap.get("source", "acquisition-lifecycle"),
             defaults={
                 "reason": gap["reason"],
                 "next_ingestion_task": gap.get("next_action", ""),
