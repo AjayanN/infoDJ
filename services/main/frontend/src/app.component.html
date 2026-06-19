@@ -124,6 +124,7 @@
         <button type="button" *ngIf="capitalAllocation()" [class.active]="activePage() === 'capital-allocation'" [attr.aria-current]="activePage() === 'capital-allocation' ? 'page' : null" (click)="setActivePage('capital-allocation')">Capital</button>
         <button type="button" *ngIf="competitivePosition()" [class.active]="activePage() === 'competitive-position'" [attr.aria-current]="activePage() === 'competitive-position' ? 'page' : null" (click)="setActivePage('competitive-position')">Competition</button>
         <button type="button" *ngIf="productPricing()" [class.active]="activePage() === 'product-pricing'" [attr.aria-current]="activePage() === 'product-pricing' ? 'page' : null" (click)="setActivePage('product-pricing')">Products</button>
+        <button type="button" *ngIf="acquisitionLifecycle()" [class.active]="activePage() === 'acquisition-lifecycle'" [attr.aria-current]="activePage() === 'acquisition-lifecycle' ? 'page' : null" (click)="setActivePage('acquisition-lifecycle')">Acquisitions</button>
         <button type="button" [class.active]="activePage() === 'profile'" [attr.aria-current]="activePage() === 'profile' ? 'page' : null" (click)="setActivePage('profile')">Profile</button>
         <button type="button" [class.active]="activePage() === 'subscription'" [attr.aria-current]="activePage() === 'subscription' ? 'page' : null" (click)="setActivePage('subscription')">Subscription</button>
       </nav>
@@ -759,6 +760,7 @@
                   <button type="button" class="ghost-button" (click)="openCapitalAllocation(companyView.company.slug)">Capital allocation dashboard</button>
                   <button type="button" class="ghost-button" (click)="openCompetitivePosition(companyView.company.slug)">Competitive position dashboard</button>
                   <button type="button" class="ghost-button" (click)="openProductPricing(companyView.company.slug)">Product and pricing history</button>
+                  <button type="button" class="ghost-button" (click)="openAcquisitionLifecycle(companyView.company.slug)">Acquisition lifecycle tracker</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('companies-like-mine')">Compare peers</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('latest-moves')">Latest moves</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('risk-signals')">Risk signals</button>
@@ -1628,6 +1630,102 @@
               <section class="panel source-gap-panel" *ngIf="productView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable product and pricing data</h2></div>
                 <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of productView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+              </section>
+            </ng-container>
+          </section>
+
+          <section *ngSwitchCase="'acquisition-lifecycle'" class="company-profile-layout" aria-labelledby="acquisition-lifecycle-heading">
+            <div class="loading-panel" *ngIf="acquisitionLifecycleLoading()">Loading acquisition lifecycle...</div>
+            <ng-container *ngIf="!acquisitionLifecycleLoading() && acquisitionLifecycle() as acquisitionView">
+              <section class="panel company-hero">
+                <div>
+                  <p class="section-kicker">Acquisition Lifecycle Tracker · {{ acquisitionView.status }}</p>
+                  <h2 id="acquisition-lifecycle-heading">{{ acquisitionView.company.name }}</h2>
+                  <p>Tracks target, deal stage, management rationale, approvals, integration progress, promised synergies, and outcome evidence without filling missing facts with estimates.</p>
+                </div>
+                <div class="profile-score-card">
+                  <strong>{{ acquisitionView.coverage.deal_count }}</strong>
+                  <span>deals</span>
+                  <small>{{ acquisitionView.coverage.stage_event_count }} lifecycle events</small>
+                  <small>Updated {{ acquisitionView.coverage.last_updated ? (acquisitionView.coverage.last_updated | date:'medium') : 'unavailable' }}</small>
+                </div>
+              </section>
+
+              <section class="panel company-profile-controls" aria-label="Acquisition lifecycle controls">
+                <label>Stage
+                  <select [(ngModel)]="acquisitionStage">
+                    <option value="">All stages</option>
+                    <option *ngFor="let stage of acquisitionView.filters.stages" [value]="stage">{{ promiseLabel(stage) }}</option>
+                  </select>
+                </label>
+                <label>Transaction
+                  <select [(ngModel)]="acquisitionTransactionType">
+                    <option value="">All transaction types</option>
+                    <option *ngFor="let type of acquisitionView.filters.transaction_types" [value]="type">{{ promiseLabel(type) }}</option>
+                  </select>
+                </label>
+                <label>Outcome
+                  <select [(ngModel)]="acquisitionOutcome">
+                    <option value="">All outcomes</option>
+                    <option *ngFor="let outcome of acquisitionView.filters.outcomes" [value]="outcome">{{ promiseLabel(outcome) }}</option>
+                  </select>
+                </label>
+                <div class="profile-control-actions">
+                  <button type="button" class="primary-button" (click)="reloadAcquisitionLifecycle()">Update filters</button>
+                  <button type="button" class="ghost-button" (click)="openCompany(acquisitionView.company.slug)">Back to Company 360</button>
+                  <button type="button" class="ghost-button" (click)="printAcquisitionLifecycleBrief()">Print deal brief</button>
+                </div>
+              </section>
+
+              <section class="dashboard-two-column">
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Portfolio</p><h2>Tracked deals</h2></div></div>
+                  <div class="result-row" *ngFor="let deal of acquisitionView.deals">
+                    <button type="button" class="link-button" (click)="selectAcquisitionDeal(deal.slug)"><strong>{{ deal.target_name }}</strong></button>
+                    <span>{{ deal.transaction_type_label }} · {{ deal.current_stage_label }} · {{ deal.outcome_category_label }}</span>
+                    <p>{{ deal.management_rationale || deal.integration_summary || 'Reviewed rationale unavailable.' }}</p>
+                  </div>
+                  <div class="empty-state unavailable-state" *ngIf="acquisitionView.deals.length === 0">No reviewed acquisition lifecycle deals are available.</div>
+                </article>
+
+                <article class="panel" *ngIf="acquisitionView.selected_deal as deal">
+                  <div class="panel-header"><div><p class="section-kicker">Selected deal</p><h2>{{ deal.target_name }}</h2></div><span>{{ deal.current_stage_label }}</span></div>
+                  <dl class="account-grid">
+                    <div class="metric"><dt>Announced</dt><dd>{{ deal.announcement_date || 'Unavailable' }}</dd></div>
+                    <div class="metric"><dt>Closed</dt><dd>{{ deal.close_date || 'Unavailable' }}</dd></div>
+                    <div class="metric"><dt>Consideration</dt><dd><ng-container *ngIf="deal.purchase_price !== null; else noDealPrice">{{ deal.purchase_price | number:'1.0-2' }} {{ deal.currency }}</ng-container><ng-template #noDealPrice>{{ deal.payment_form || 'Unavailable' }}</ng-template></dd></div>
+                    <div class="metric"><dt>Outcome</dt><dd>{{ deal.outcome_category_label }}</dd></div>
+                  </dl>
+                  <h3>Management rationale</h3>
+                  <p>{{ deal.management_rationale || 'Reviewed management rationale unavailable.' }}</p>
+                  <h3>Promised synergies</h3>
+                  <p>{{ deal.promised_synergies || 'No reviewed synergy promise is linked.' }}</p>
+                  <h3>Integration and outcome</h3>
+                  <p>{{ deal.integration_summary || 'Reviewed integration status unavailable.' }}</p>
+                  <p>{{ deal.outcome_review || 'Reviewed outcome assessment unavailable.' }}</p>
+                </article>
+              </section>
+
+              <section class="dashboard-two-column" *ngIf="acquisitionView.selected_deal as deal">
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Timeline</p><h2>Lifecycle events</h2></div></div>
+                  <div class="result-row" *ngFor="let event of deal.stage_events || []">
+                    <strong>{{ event.title }}</strong>
+                    <span>{{ event.stage_label }} · {{ event.event_date || 'date unavailable' }}</span>
+                    <p>{{ event.description || event.evidence_text }}</p>
+                    <a *ngIf="event.source" [href]="event.source.url" target="_blank" rel="noopener">Open source</a>
+                  </div>
+                  <div class="empty-state" *ngIf="!deal.stage_events || deal.stage_events.length === 0">No reviewed lifecycle stage events are linked to this deal.</div>
+                </article>
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Deal evidence</h2></div><span>{{ acquisitionView.evidence.length }} sources</span></div>
+                  <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of acquisitionView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                </article>
+              </section>
+
+              <section class="panel source-gap-panel" *ngIf="acquisitionView.source_gaps.length > 0">
+                <div class="panel-header"><h2>Unavailable acquisition data</h2></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of acquisitionView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
               </section>
             </ng-container>
           </section>

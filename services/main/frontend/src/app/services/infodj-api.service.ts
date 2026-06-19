@@ -825,6 +825,44 @@ export type ProductPricingResponse = {
   source_gaps: SourceGap[];
 };
 
+export type AcquisitionLifecycleEvent = {
+  id: number; stage: string; stage_label: string; event_date: string | null; title: string; description: string;
+  price_revision: number | null; currency: string; evidence_text: string; confidence_score: number; review_status: string;
+  source: CompanyProfileSource | null;
+  linked_milestone: { id: number; slug: string; title: string; current_status: string } | null;
+  linked_product_change: { id: number; title: string; change_type: string } | null;
+};
+
+export type AcquisitionLifecycleDeal = {
+  id: number; slug: string; target_name: string; target_company: DashboardCompany | null;
+  transaction_type: string; transaction_type_label: string; current_stage: string; current_stage_label: string;
+  outcome_category: string; outcome_category_label: string; announcement_date: string | null; expected_close_date: string | null;
+  close_date: string | null; purchase_price: number | null; currency: string; payment_form: string; approvals: string[];
+  conditions: string[]; management_rationale: string; promised_synergies: string; integration_summary: string;
+  outcome_review: string; confidence_score: number; review_status: string; source: CompanyProfileSource | null;
+  linked_event: DashboardEvent | null; linked_strategic_turn: { id: number; title: string; turn_type: string } | null;
+  updated_at: string; stage_event_count: number; stage_events?: AcquisitionLifecycleEvent[];
+};
+
+export type AcquisitionLifecycleResponse = {
+  status: 'available' | 'partial' | 'unavailable';
+  company: CompanyProfileResponse['company'];
+  deals: AcquisitionLifecycleDeal[];
+  selected_deal: AcquisitionLifecycleDeal | null;
+  portfolio?: {
+    by_stage: { key: string; label: string; count: number }[];
+    by_outcome: { key: string; label: string; count: number }[];
+    by_transaction_type: { key: string; label: string; count: number }[];
+  };
+  filters: {
+    stages: string[]; transaction_types: string[]; outcomes: string[];
+    selected_stage: string; selected_transaction_type: string; selected_outcome: string; selected_deal: string;
+  };
+  coverage: { deal_count: number; stage_event_count: number; deal_term_count: number; source_count: number; last_updated: string | null };
+  evidence: CompanyProfileSource[];
+  source_gaps: SourceGap[];
+};
+
 @Injectable({ providedIn: 'root' })
 export class InfoDjApiService {
   private readonly http = inject(HttpClient);
@@ -1052,6 +1090,17 @@ export class InfoDjApiService {
     if (asOf) params['as_of'] = asOf;
     if (type) params['type'] = type;
     return this.http.get<ProductPricingResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/product-pricing`, {
+      headers: this.authHeaders(token), params
+    });
+  }
+
+  acquisitionLifecycle(token: string, slug: string, stage = '', transactionType = '', outcome = '', deal = '') {
+    const params: Record<string, string> = {};
+    if (stage) params['stage'] = stage;
+    if (transactionType) params['transaction_type'] = transactionType;
+    if (outcome) params['outcome'] = outcome;
+    if (deal) params['deal'] = deal;
+    return this.http.get<AcquisitionLifecycleResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/acquisition-lifecycle`, {
       headers: this.authHeaders(token), params
     });
   }

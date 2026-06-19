@@ -18,6 +18,7 @@ import {
   CapitalAllocationResponse,
   CompetitivePositionResponse,
   ProductPricingResponse,
+  AcquisitionLifecycleResponse,
   DashboardSection,
   DashboardResponse,
   HistoryRow,
@@ -44,7 +45,7 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'profile' | 'subscription';
+type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'profile' | 'subscription';
 type DashboardViewId =
   | 'company-intelligence'
   | 'turn-impact'
@@ -134,6 +135,7 @@ class AppComponent {
   capitalAllocation = signal<CapitalAllocationResponse | null>(null);
   competitivePosition = signal<CompetitivePositionResponse | null>(null);
   productPricing = signal<ProductPricingResponse | null>(null);
+  acquisitionLifecycle = signal<AcquisitionLifecycleResponse | null>(null);
   searchResults = signal<SearchResponse | null>(null);
   searchPages = signal<Record<SearchResultGroup, number>>({
     companies: 1,
@@ -167,6 +169,7 @@ class AppComponent {
   capitalAllocationLoading = signal(false);
   competitivePositionLoading = signal(false);
   productPricingLoading = signal(false);
+  acquisitionLifecycleLoading = signal(false);
   companyProfileDate = '';
   businessModelDate = '';
   businessModelCompareDate = '';
@@ -194,6 +197,10 @@ class AppComponent {
   competitiveRelationship = '';
   productPricingDate = '';
   productOfferingType = '';
+  acquisitionStage = '';
+  acquisitionTransactionType = '';
+  acquisitionOutcome = '';
+  acquisitionDeal = '';
   readonly companyProfileSectionOrder = [
     'summary',
     'business_model',
@@ -511,6 +518,9 @@ class AppComponent {
     if (this.activePage() === 'product-pricing') {
       return `${this.productPricing()?.company.name || 'Company'} Product and Pricing`;
     }
+    if (this.activePage() === 'acquisition-lifecycle') {
+      return `${this.acquisitionLifecycle()?.company.name || 'Company'} Acquisition Lifecycle`;
+    }
     if (this.activePage() === 'profile') {
       return 'Profile';
     }
@@ -547,6 +557,9 @@ class AppComponent {
     }
     if (this.activePage() === 'product-pricing') {
       return 'Product catalog, plan and feature history, packaging changes, price context, chronology, and source gaps.';
+    }
+    if (this.activePage() === 'acquisition-lifecycle') {
+      return 'Acquisition portfolio, deal stages, management rationale, approvals, integration progress, outcomes, and source gaps.';
     }
     if (this.activePage() === 'profile') {
       return 'Manage account details, avatar preview, and subscription access.';
@@ -1068,6 +1081,48 @@ class AppComponent {
   }
 
   printProductPricingBrief(): void {
+    window.print();
+  }
+
+  openAcquisitionLifecycle(slug: string, stage = '', transactionType = '', outcome = '', deal = ''): void {
+    if (!slug || !this.token()) return;
+    this.activePage.set('acquisition-lifecycle');
+    this.menuOpen.set(false);
+    this.acquisitionLifecycleLoading.set(true);
+    this.error.set('');
+    this.api.acquisitionLifecycle(
+      this.token(),
+      slug,
+      stage || this.acquisitionStage,
+      transactionType || this.acquisitionTransactionType,
+      outcome || this.acquisitionOutcome,
+      deal || this.acquisitionDeal
+    ).subscribe({
+      next: (response) => {
+        this.acquisitionLifecycle.set(response);
+        this.acquisitionStage = response.filters?.selected_stage || '';
+        this.acquisitionTransactionType = response.filters?.selected_transaction_type || '';
+        this.acquisitionOutcome = response.filters?.selected_outcome || '';
+        this.acquisitionDeal = response.selected_deal?.slug || '';
+        this.acquisitionLifecycleLoading.set(false);
+      },
+      error: (response) => { this.acquisitionLifecycleLoading.set(false); this.showError(response); }
+    });
+  }
+
+  reloadAcquisitionLifecycle(): void {
+    const company = this.acquisitionLifecycle()?.company;
+    if (company) {
+      this.openAcquisitionLifecycle(company.slug, this.acquisitionStage, this.acquisitionTransactionType, this.acquisitionOutcome, this.acquisitionDeal);
+    }
+  }
+
+  selectAcquisitionDeal(slug: string): void {
+    const company = this.acquisitionLifecycle()?.company;
+    if (company) this.openAcquisitionLifecycle(company.slug, this.acquisitionStage, this.acquisitionTransactionType, this.acquisitionOutcome, slug);
+  }
+
+  printAcquisitionLifecycleBrief(): void {
     window.print();
   }
 

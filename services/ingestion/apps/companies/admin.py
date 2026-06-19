@@ -10,6 +10,8 @@ from apps.ingestion.services.query_generator import generate_query_strings
 from apps.ingestion.services.sec_edgar_client import discover_sec_filings_for_company
 from apps.ingestion.services.wikidata_client import sync_company_metadata
 from apps.companies.models import (
+    AcquisitionLifecycleDeal,
+    AcquisitionLifecycleEvent,
     BusinessModelComponent,
     BusinessModelRelationship,
     BusinessModelSnapshot,
@@ -396,3 +398,24 @@ class PriceObservationAdmin(admin.ModelAdmin):
     list_display = ("offering", "amount", "currency", "billing_period", "geography", "customer_segment", "is_promotional")
     list_filter = ("currency", "billing_period", "is_promotional", "offering__snapshot__company")
     search_fields = ("offering__name", "offering__snapshot__company__name", "evidence_text")
+
+
+class AcquisitionLifecycleEventInline(admin.TabularInline):
+    model = AcquisitionLifecycleEvent
+    extra = 0
+
+
+@admin.register(AcquisitionLifecycleDeal)
+class AcquisitionLifecycleDealAdmin(admin.ModelAdmin):
+    list_display = ("company", "target_name", "transaction_type", "current_stage", "outcome_category", "announcement_date", "close_date", "review_status")
+    list_filter = ("transaction_type", "current_stage", "outcome_category", "review_status", "company")
+    search_fields = ("company__name", "target_name", "management_rationale", "promised_synergies", "integration_summary", "outcome_review")
+    readonly_fields = ("created_at", "updated_at")
+    inlines = (AcquisitionLifecycleEventInline,)
+
+
+@admin.register(AcquisitionLifecycleEvent)
+class AcquisitionLifecycleEventAdmin(admin.ModelAdmin):
+    list_display = ("deal", "stage", "event_date", "title", "review_status", "source_document")
+    list_filter = ("stage", "review_status", "deal__company")
+    search_fields = ("deal__company__name", "deal__target_name", "title", "description", "evidence_text")

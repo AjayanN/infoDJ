@@ -930,3 +930,148 @@ class PriceObservation(models.Model):
                 name="unique_price_observation",
             )
         ]
+
+
+class AcquisitionStage(models.TextChoices):
+    RUMORED_REPORTED = "RUMORED_REPORTED", "Rumored or reported"
+    ANNOUNCED = "ANNOUNCED", "Announced"
+    UNDER_REVIEW = "UNDER_REVIEW", "Under review"
+    APPROVED = "APPROVED", "Approved"
+    BLOCKED_ABANDONED = "BLOCKED_ABANDONED", "Blocked or abandoned"
+    CLOSED = "CLOSED", "Closed"
+    INTEGRATING = "INTEGRATING", "Integrating"
+    INTEGRATED = "INTEGRATED", "Integrated"
+    DIVESTED = "DIVESTED", "Divested"
+    IMPAIRED_WRITTEN_DOWN = "IMPAIRED_WRITTEN_DOWN", "Impaired or written down"
+    OUTCOME_REVIEWED = "OUTCOME_REVIEWED", "Outcome reviewed"
+
+
+class AcquisitionTransactionType(models.TextChoices):
+    ACQUISITION = "ACQUISITION", "Acquisition"
+    MERGER = "MERGER", "Merger"
+    ASSET_PURCHASE = "ASSET_PURCHASE", "Asset purchase"
+    MINORITY_INVESTMENT = "MINORITY_INVESTMENT", "Minority investment"
+    JOINT_VENTURE = "JOINT_VENTURE", "Joint venture"
+    DIVESTITURE = "DIVESTITURE", "Divestiture"
+
+
+class AcquisitionOutcomeCategory(models.TextChoices):
+    TOO_EARLY = "TOO_EARLY", "Too early to assess"
+    ON_TRACK = "ON_TRACK", "On track"
+    INTEGRATED = "INTEGRATED", "Integrated"
+    DELAYED = "DELAYED", "Delayed"
+    REVISED = "REVISED", "Revised"
+    IMPAIRED = "IMPAIRED", "Impaired"
+    DIVESTED = "DIVESTED", "Divested"
+    ABANDONED = "ABANDONED", "Abandoned"
+    VALUE_UNCLEAR = "VALUE_UNCLEAR", "Value unclear"
+
+
+class AcquisitionLifecycleDeal(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="acquisition_lifecycle_deals")
+    slug = models.SlugField(max_length=255)
+    target_name = models.CharField(max_length=255)
+    target_company = models.ForeignKey(
+        Company,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="acquisition_target_mentions",
+    )
+    transaction_type = models.CharField(max_length=32, choices=AcquisitionTransactionType.choices, db_index=True)
+    current_stage = models.CharField(max_length=32, choices=AcquisitionStage.choices, db_index=True)
+    outcome_category = models.CharField(max_length=32, choices=AcquisitionOutcomeCategory.choices, db_index=True)
+    announcement_date = models.DateField(null=True, blank=True, db_index=True)
+    expected_close_date = models.DateField(null=True, blank=True, db_index=True)
+    close_date = models.DateField(null=True, blank=True, db_index=True)
+    purchase_price = models.DecimalField(max_digits=24, decimal_places=6, null=True, blank=True)
+    currency = models.CharField(max_length=16, blank=True)
+    payment_form = models.CharField(max_length=128, blank=True)
+    approvals = models.JSONField(default=list, blank=True)
+    conditions = models.JSONField(default=list, blank=True)
+    management_rationale = models.TextField(blank=True)
+    promised_synergies = models.TextField(blank=True)
+    integration_summary = models.TextField(blank=True)
+    outcome_review = models.TextField(blank=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="acquisition_lifecycle_deals",
+    )
+    linked_event = models.ForeignKey(
+        "curation.BusinessEvent",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="acquisition_lifecycle_deals",
+    )
+    linked_strategic_turn = models.ForeignKey(
+        "curation.StrategicTurn",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="acquisition_lifecycle_deals",
+    )
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    review_status = models.CharField(
+        max_length=32, choices=PromiseReviewStatus.choices, default=PromiseReviewStatus.NEEDS_REVIEW, db_index=True
+    )
+    is_published = models.BooleanField(default=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-announcement_date", "target_name"]
+        constraints = [models.UniqueConstraint(fields=["company", "slug"], name="unique_acquisition_lifecycle_deal")]
+        indexes = [
+            models.Index(fields=["company", "current_stage"], name="company_acq_stage_idx"),
+            models.Index(fields=["company", "outcome_category"], name="company_acq_outcome_idx"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.company} acquisition lifecycle: {self.target_name}"
+
+
+class AcquisitionLifecycleEvent(models.Model):
+    deal = models.ForeignKey(AcquisitionLifecycleDeal, on_delete=models.CASCADE, related_name="stage_events")
+    stage = models.CharField(max_length=32, choices=AcquisitionStage.choices, db_index=True)
+    event_date = models.DateField(null=True, blank=True, db_index=True)
+    title = models.CharField(max_length=512)
+    description = models.TextField(blank=True)
+    price_revision = models.DecimalField(max_digits=24, decimal_places=6, null=True, blank=True)
+    currency = models.CharField(max_length=16, blank=True)
+    evidence_text = models.TextField(blank=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="acquisition_lifecycle_events",
+    )
+    linked_milestone = models.ForeignKey(
+        StrategyMilestone,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="acquisition_lifecycle_events",
+    )
+    linked_product_change = models.ForeignKey(
+        ProductChange,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="acquisition_lifecycle_events",
+    )
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    review_status = models.CharField(
+        max_length=32, choices=PromiseReviewStatus.choices, default=PromiseReviewStatus.NEEDS_REVIEW, db_index=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["event_date", "created_at"]
+        constraints = [
+            models.UniqueConstraint(fields=["deal", "stage", "title", "event_date"], name="unique_acquisition_lifecycle_event")
+        ]

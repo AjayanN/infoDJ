@@ -612,13 +612,20 @@ Each feature below inherits the shared standards above. Feature sections only de
 
 **MVP tasks:**
 
-- [ ] Define acquisition stages, transaction types, and outcome categories.
-- [ ] Build acquisition portfolio and deal detail page.
-- [ ] Capture target, price, payment form, announcement date, close date, and approvals.
-- [ ] Capture management rationale and promised synergies without presenting them as facts.
-- [ ] Add integration milestones and leadership/product effects.
-- [ ] Track price revisions, delays, conditions, impairments, divestitures, and write-downs.
-- [ ] Classify outcomes only after review period and sufficient evidence.
+- [x] Define acquisition stages, transaction types, and outcome categories.
+- [x] Build acquisition portfolio and deal detail page.
+- [x] Capture target, price, payment form, announcement date, close date, and approvals.
+- [x] Capture management rationale and promised synergies without presenting them as facts.
+- [x] Add integration milestone and product-change link slots, with unavailable gaps until reviewed evidence exists.
+- [x] Track price revisions, delays, conditions, impairments, divestitures, and write-downs as lifecycle event fields.
+- [x] Classify outcomes only after review period and sufficient evidence; otherwise use value-unclear or source-gap states.
+
+**Implementation notes:**
+
+- Backend: added `AcquisitionLifecycleDeal` and `AcquisitionLifecycleEvent`, acquisition stage/type/outcome enums, reviewed builder, ingestion API endpoint, source-gap persistence, main-backend proxy, admin registration, and daily scheduler hook.
+- Frontend: added Company 360 action, left-nav page, stage/type/outcome filters, acquisition portfolio, selected deal detail, timeline, evidence cards, and source-gap states.
+- Data acquisition: builds from reviewed acquisition business events with named targets and reviewed Company 360 subsidiary context; generic acquisition/divestiture summaries are ignored to avoid fake target names.
+- Validation completed: all-company authenticated gateway smoke with `scripts/smoke/phase2_acquisition_lifecycle.sh`, full ingestion backend, main backend, frontend test suite, and frontend production build passed.
 
 **Acceptance criteria:**
 
@@ -1101,7 +1108,7 @@ The order below reflects functional dependency and user value. It does not requi
 
 - [x] Capital Allocation Dashboard: SEC-backed all-company baseline implemented with period views, deployment/context separation, source gaps, Company 360 entry point, and authenticated all-company smoke validation.
 - [x] Competitive Position Dashboard: all-company peer-map baseline implemented with relationship types, overlap dimensions, source gaps, Company 360 entry point, and authenticated all-company smoke validation.
-- [ ] Acquisition Lifecycle Tracker.
+- [x] Acquisition Lifecycle Tracker: all-company endpoint implemented with reviewed acquisition/subsidiary lifecycle rows where available, explicit source gaps otherwise, Company 360 entry point, and authenticated all-company smoke validation.
 - [ ] Customer and Supplier Dependency.
 - [ ] Geographic Expansion Map.
 
