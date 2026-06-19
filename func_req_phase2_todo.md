@@ -506,13 +506,20 @@ Each feature below inherits the shared standards above. Feature sections only de
 
 **MVP tasks:**
 
-- [ ] Define allocation categories and double-counting rules.
-- [ ] Build annual and quarterly allocation views.
-- [ ] Show absolute value, share of available cash, and trend where meaningful.
-- [ ] Link allocations to management rationale and strategic priorities.
-- [ ] Add acquisition, buyback, dividend, capex, R&D, debt, and restructuring drilldowns.
-- [ ] Compare with operating cash flow and free cash flow.
-- [ ] Validate adjusted and reported figures and currency conversions.
+- [x] Define allocation categories and double-counting rules: deployment items are separated from cash, operating cash flow, debt issuance, and calculated free cash flow context.
+- [x] Build annual and quarterly allocation views from reviewed SEC Company Facts periods.
+- [x] Show absolute value, share of operating cash flow, share of cash where available, and category mix for the selected period.
+- [x] Link allocations to nearby reviewed management promises and strategic turns as rationale/context without duplicating their ownership.
+- [x] Add acquisition/investment, buyback, dividend, capex, R&D, debt, restructuring, and content/inventory drilldown categories with unavailable gaps when source data is missing.
+- [x] Compare with operating cash flow and calculated free cash flow when the required SEC facts are present.
+- [ ] Validate adjusted and reported figures and currency conversions beyond USD SEC Company Facts.
+
+**Implementation notes:**
+
+- Backend: added `CapitalAllocationPeriod` and `CapitalAllocationItem`, reviewed builder from `FinancialFact`, ingestion API endpoint, source-gap persistence, and authenticated main-backend proxy.
+- Frontend: added a Company 360 action, left-nav page, period selector, deployment/context cards, item drilldowns, linked strategy/promises, evidence, and source-gap states.
+- Data acquisition: expanded SEC Company Facts concept collection for capex, R&D, buybacks, dividends, acquisitions/investments, debt issuance/repayment, restructuring, cash, and operating cash flow.
+- Validation completed: full ingestion backend, main backend, frontend test/build, direct all-company database coverage check, and `scripts/smoke/phase2_capital_allocation.sh` passed against all 20 companies.
 
 **Acceptance criteria:**
 
@@ -1078,7 +1085,7 @@ The order below reflects functional dependency and user value. It does not requi
 
 **Exit condition:** a user can understand where resources are committed and how competitive and operational dependencies are changing.
 
-- [ ] Capital Allocation Dashboard.
+- [x] Capital Allocation Dashboard: SEC-backed all-company baseline implemented with period views, deployment/context separation, source gaps, Company 360 entry point, and authenticated all-company smoke validation.
 - [ ] Competitive Position Dashboard.
 - [ ] Acquisition Lifecycle Tracker.
 - [ ] Customer and Supplier Dependency.

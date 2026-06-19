@@ -7,6 +7,7 @@ from apps.ingestion.services.sec_companyfacts_client import (
     USEFUL_US_GAAP_CONCEPTS,
     ingest_sec_companyfacts_for_company,
 )
+from apps.ingestion.services.capital_allocation import build_capital_allocation_periods
 from apps.ingestion.services.kpi_companyfacts_builder import build_companyfacts_kpis
 
 
@@ -20,6 +21,7 @@ class Command(BaseCommand):
         parser.add_argument("--concepts", default=",".join(USEFUL_US_GAAP_CONCEPTS))
         parser.add_argument("--limit", type=int, default=500, help="Maximum facts to store per company.")
         parser.add_argument("--skip-kpi-build", action="store_true", help="Store facts without refreshing tracker series.")
+        parser.add_argument("--skip-capital-allocation-build", action="store_true", help="Store facts without refreshing capital allocation periods.")
 
     def handle(self, *args, **options):
         if bool(options["company"]) == bool(options["all"]):
@@ -64,6 +66,12 @@ class Command(BaseCommand):
                 kpi_counters = build_companyfacts_kpis(company)
                 counters["kpi_definitions"] = kpi_counters["definitions"]
                 counters["kpi_observations"] = kpi_counters["observations"]
+            if not options["skip_capital_allocation_build"]:
+                allocation_counters = build_capital_allocation_periods(company)
+                counters["capital_allocation_periods_created"] = allocation_counters["periods_created"]
+                counters["capital_allocation_periods_updated"] = allocation_counters["periods_updated"]
+                counters["capital_allocation_items_created"] = allocation_counters["items_created"]
+                counters["capital_allocation_items_updated"] = allocation_counters["items_updated"]
             totals["companies"] += 1
             for key, value in counters.items():
                 totals[key] = totals.get(key, 0) + value

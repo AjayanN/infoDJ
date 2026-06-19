@@ -604,3 +604,88 @@ class StrategyMilestoneDependency(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["milestone", "depends_on"], name="unique_milestone_dependency")
         ]
+
+
+class CapitalAllocationCategory(models.TextChoices):
+    ACQUISITION_INVESTMENT = "ACQUISITION_INVESTMENT", "Acquisitions and investments"
+    CAPEX = "CAPEX", "Capital expenditure"
+    R_AND_D = "R_AND_D", "Research and development"
+    BUYBACK = "BUYBACK", "Share repurchases"
+    DIVIDEND = "DIVIDEND", "Dividends"
+    DEBT_ISSUANCE = "DEBT_ISSUANCE", "Debt issuance"
+    DEBT_REPAYMENT = "DEBT_REPAYMENT", "Debt repayment"
+    RESTRUCTURING = "RESTRUCTURING", "Restructuring"
+    CONTENT_INVENTORY = "CONTENT_INVENTORY", "Content and inventory investment"
+    INTERNAL_PROGRAM = "INTERNAL_PROGRAM", "Internal strategic programs"
+    OPERATING_CASH_FLOW = "OPERATING_CASH_FLOW", "Operating cash flow context"
+    CASH_CONTEXT = "CASH_CONTEXT", "Cash balance context"
+    FREE_CASH_FLOW = "FREE_CASH_FLOW", "Free cash flow context"
+
+
+class CapitalAllocationPeriod(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="capital_allocation_periods")
+    fiscal_year = models.IntegerField(db_index=True)
+    fiscal_period = models.CharField(max_length=16, db_index=True)
+    period_start = models.DateField(null=True, blank=True)
+    period_end = models.DateField(db_index=True)
+    filed_date = models.DateField(null=True, blank=True, db_index=True)
+    accession_number = models.CharField(max_length=64, blank=True)
+    cadence = models.CharField(max_length=16, choices=KpiCadence.choices, default=KpiCadence.QUARTERLY)
+    headline = models.TextField(blank=True)
+    total_deployment = models.DecimalField(max_digits=24, decimal_places=6, null=True, blank=True)
+    operating_cash_flow = models.DecimalField(max_digits=24, decimal_places=6, null=True, blank=True)
+    cash_balance = models.DecimalField(max_digits=24, decimal_places=6, null=True, blank=True)
+    free_cash_flow = models.DecimalField(max_digits=24, decimal_places=6, null=True, blank=True)
+    calculation_note = models.TextField(blank=True)
+    review_status = models.CharField(
+        max_length=32, choices=PromiseReviewStatus.choices, default=PromiseReviewStatus.NEEDS_REVIEW, db_index=True
+    )
+    is_published = models.BooleanField(default=False, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-period_end", "-filed_date"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["company", "fiscal_year", "fiscal_period", "period_end"],
+                name="unique_capital_allocation_period",
+            )
+        ]
+        indexes = [models.Index(fields=["company", "period_end"], name="company_cap_alloc_period_idx")]
+
+    def __str__(self) -> str:
+        return f"{self.company} capital allocation {self.fiscal_period} FY{self.fiscal_year}"
+
+
+class CapitalAllocationItem(models.Model):
+    period = models.ForeignKey(CapitalAllocationPeriod, on_delete=models.CASCADE, related_name="items")
+    category = models.CharField(max_length=32, choices=CapitalAllocationCategory.choices, db_index=True)
+    label = models.CharField(max_length=255)
+    value = models.DecimalField(max_digits=24, decimal_places=6)
+    unit = models.CharField(max_length=64, default="USD")
+    concept = models.CharField(max_length=255, blank=True, db_index=True)
+    source_fact = models.ForeignKey(
+        "ingestion.FinancialFact", null=True, blank=True, on_delete=models.SET_NULL, related_name="capital_allocation_items"
+    )
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument", null=True, blank=True, on_delete=models.SET_NULL, related_name="capital_allocation_items"
+    )
+    evidence_text = models.TextField(blank=True)
+    is_context = models.BooleanField(default=False, db_index=True)
+    is_calculated = models.BooleanField(default=False)
+    calculation_method = models.TextField(blank=True)
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    review_status = models.CharField(
+        max_length=32, choices=PromiseReviewStatus.choices, default=PromiseReviewStatus.NEEDS_REVIEW, db_index=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["is_context", "category", "label"]
+        constraints = [
+            models.UniqueConstraint(fields=["period", "category", "label", "concept"], name="unique_capital_allocation_item")
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.period}: {self.label}"

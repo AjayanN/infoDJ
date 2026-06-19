@@ -13,6 +13,8 @@ from apps.companies.models import (
     BusinessModelComponent,
     BusinessModelRelationship,
     BusinessModelSnapshot,
+    CapitalAllocationItem,
+    CapitalAllocationPeriod,
     CompanyProfileSnapshot,
     EarningsGuidanceComparison,
     EarningsPeriod,
@@ -293,3 +295,24 @@ class StrategyMilestoneAdmin(admin.ModelAdmin):
 
 admin.site.register(StrategyMilestoneStatusUpdate)
 admin.site.register(StrategyMilestoneDependency)
+
+
+class CapitalAllocationItemInline(admin.TabularInline):
+    model = CapitalAllocationItem
+    extra = 0
+    readonly_fields = ("source_fact", "source_document")
+
+
+@admin.register(CapitalAllocationPeriod)
+class CapitalAllocationPeriodAdmin(admin.ModelAdmin):
+    list_display = ("company", "fiscal_period", "fiscal_year", "period_end", "total_deployment", "operating_cash_flow", "review_status", "is_published")
+    list_filter = ("fiscal_period", "cadence", "review_status", "is_published", "company")
+    search_fields = ("company__name", "accession_number", "headline", "calculation_note")
+    inlines = (CapitalAllocationItemInline,)
+
+
+@admin.register(CapitalAllocationItem)
+class CapitalAllocationItemAdmin(admin.ModelAdmin):
+    list_display = ("period", "category", "label", "value", "unit", "is_context", "is_calculated", "review_status")
+    list_filter = ("category", "is_context", "is_calculated", "review_status", "period__company")
+    search_fields = ("period__company__name", "label", "concept", "evidence_text")
