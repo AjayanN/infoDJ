@@ -123,6 +123,7 @@
         <button type="button" *ngIf="earnings()" [class.active]="activePage() === 'earnings'" [attr.aria-current]="activePage() === 'earnings' ? 'page' : null" (click)="setActivePage('earnings')">Earnings</button>
         <button type="button" *ngIf="capitalAllocation()" [class.active]="activePage() === 'capital-allocation'" [attr.aria-current]="activePage() === 'capital-allocation' ? 'page' : null" (click)="setActivePage('capital-allocation')">Capital</button>
         <button type="button" *ngIf="competitivePosition()" [class.active]="activePage() === 'competitive-position'" [attr.aria-current]="activePage() === 'competitive-position' ? 'page' : null" (click)="setActivePage('competitive-position')">Competition</button>
+        <button type="button" *ngIf="productPricing()" [class.active]="activePage() === 'product-pricing'" [attr.aria-current]="activePage() === 'product-pricing' ? 'page' : null" (click)="setActivePage('product-pricing')">Products</button>
         <button type="button" [class.active]="activePage() === 'profile'" [attr.aria-current]="activePage() === 'profile' ? 'page' : null" (click)="setActivePage('profile')">Profile</button>
         <button type="button" [class.active]="activePage() === 'subscription'" [attr.aria-current]="activePage() === 'subscription' ? 'page' : null" (click)="setActivePage('subscription')">Subscription</button>
       </nav>
@@ -757,6 +758,7 @@
                   <button type="button" class="ghost-button" (click)="openEarnings(companyView.company.slug)">Earnings intelligence</button>
                   <button type="button" class="ghost-button" (click)="openCapitalAllocation(companyView.company.slug)">Capital allocation dashboard</button>
                   <button type="button" class="ghost-button" (click)="openCompetitivePosition(companyView.company.slug)">Competitive position dashboard</button>
+                  <button type="button" class="ghost-button" (click)="openProductPricing(companyView.company.slug)">Product and pricing history</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('companies-like-mine')">Compare peers</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('latest-moves')">Latest moves</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('risk-signals')">Risk signals</button>
@@ -1534,6 +1536,98 @@
               <section class="panel source-gap-panel" *ngIf="competitiveView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable competitive data</h2></div>
                 <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of competitiveView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+              </section>
+            </ng-container>
+          </section>
+
+          <section *ngSwitchCase="'product-pricing'" class="company-profile-layout" aria-labelledby="product-pricing-heading">
+            <div class="panel empty-state" *ngIf="productPricingLoading()" role="status">Loading reviewed product and pricing history.</div>
+            <ng-container *ngIf="productPricing() as productView">
+              <section class="panel company-profile-hero">
+                <div>
+                  <p class="section-kicker">Product and Pricing History · {{ productView.status }}</p>
+                  <h2 id="product-pricing-heading">{{ productView.company.name }}</h2>
+                  <p *ngIf="productView.snapshot; else noProductSummary">{{ productView.snapshot.summary }}</p>
+                  <ng-template #noProductSummary><p>No reviewed product catalog summary is available.</p></ng-template>
+                </div>
+                <div class="coverage-summary">
+                  <strong>{{ productView.coverage.offering_count }}</strong><span>reviewed offerings</span>
+                  <small>{{ productView.coverage.change_count }} timeline changes</small>
+                  <small>Updated {{ productView.coverage.last_updated | date:'medium' }}</small>
+                </div>
+              </section>
+
+              <section class="panel company-profile-controls" aria-label="Product and pricing controls">
+                <label>Snapshot
+                  <select [(ngModel)]="productPricingDate">
+                    <option *ngFor="let snapshot of productView.snapshot_history" [value]="snapshot.effective_date">{{ snapshot.effective_date }} · {{ snapshot.offering_count }} offerings</option>
+                  </select>
+                </label>
+                <label>Offering type
+                  <select [(ngModel)]="productOfferingType">
+                    <option value="">All types</option>
+                    <option *ngFor="let type of productView.filters.types" [value]="type">{{ promiseLabel(type) }}</option>
+                  </select>
+                </label>
+                <button type="button" class="primary-button" (click)="reloadProductPricing()">Apply filters</button>
+                <button type="button" class="ghost-button" (click)="openCompany(productView.company.slug)">Back to Company 360</button>
+                <button type="button" class="ghost-button" (click)="printProductPricingBrief()">Print one-page brief</button>
+              </section>
+
+              <ng-container *ngIf="productView.snapshot as snapshot; else noProductSnapshot">
+                <section class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Chronology rule</p><h2>Announcement and effective dates stay separate</h2></div><span>Confidence {{ snapshot.confidence_score | number:'1.2-2' }}</span></div>
+                  <p>{{ snapshot.chronology_note }}</p>
+                  <a *ngIf="snapshot.source" [href]="snapshot.source.url" target="_blank" rel="noopener">Open source</a>
+                </section>
+
+                <section class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Catalog</p><h2>Products, plans, features, and families</h2></div></div>
+                  <div class="result-row" *ngFor="let offering of productView.offerings">
+                    <strong>{{ offering.name }} · {{ offering.offering_type_label }}</strong>
+                    <span>{{ offering.availability }} · {{ offering.geography || 'Geography unavailable' }}</span>
+                    <p>{{ offering.description }}</p>
+                    <small>{{ offering.customer_segment || 'Customer segment unavailable' }} · {{ offering.price_count }} reviewed prices</small>
+                  </div>
+                  <div class="empty-state unavailable-state" *ngIf="productView.offerings.length === 0">No reviewed offerings match the selected filters.</div>
+                </section>
+
+                <section class="dashboard-two-column">
+                  <article class="panel">
+                    <div class="panel-header"><div><p class="section-kicker">Timeline</p><h2>Launches, updates, packaging, and pricing changes</h2></div></div>
+                    <div class="result-row" *ngFor="let change of productView.changes">
+                      <strong>{{ change.title }}</strong>
+                      <span>{{ change.change_type_label }} · announced {{ change.announcement_date || 'date unavailable' }} · effective {{ change.effective_date || 'date unavailable' }}</span>
+                      <p>{{ change.evidence_text }}</p>
+                      <a *ngIf="change.source" [href]="change.source.url" target="_blank" rel="noopener">Open source</a>
+                    </div>
+                    <div class="empty-state unavailable-state" *ngIf="productView.changes.length === 0">No reviewed product or pricing timeline changes are available.</div>
+                  </article>
+                  <article class="panel">
+                    <div class="panel-header"><div><p class="section-kicker">Price context</p><h2>List prices and packaging</h2></div></div>
+                    <div class="empty-state unavailable-state" *ngIf="productView.price_context.status === 'unavailable'">{{ productView.price_context.reason }}</div>
+                    <p>{{ productView.price_context.promotion_policy }}</p>
+                    <div class="result-row" *ngFor="let price of productView.price_observations"><strong>{{ price.offering_name }}</strong><span>{{ price.amount | number:'1.0-2' }} {{ price.currency }} · {{ price.billing_period || 'period unavailable' }} · {{ price.geography || 'geography unavailable' }}</span><p>{{ price.evidence_text }}</p></div>
+                  </article>
+                </section>
+
+                <section class="dashboard-two-column">
+                  <article class="panel">
+                    <div class="panel-header"><div><p class="section-kicker">Before and after</p><h2>Product and plan comparisons</h2></div></div>
+                    <div class="result-row" *ngFor="let row of productView.comparison"><strong>{{ row.title }}</strong><span>{{ row.change_type }} · {{ row.effective_date || row.announcement_date || 'date unavailable' }}</span><p><strong>Before:</strong> {{ row.before || 'Unavailable' }}</p><p><strong>After:</strong> {{ row.after || 'Unavailable' }}</p></div>
+                    <div class="empty-state" *ngIf="productView.comparison.length === 0">No before-and-after product comparison is available.</div>
+                  </article>
+                  <article class="panel">
+                    <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Product evidence</h2></div><span>{{ productView.evidence.length }} sources</span></div>
+                    <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of productView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                  </article>
+                </section>
+              </ng-container>
+              <ng-template #noProductSnapshot><section class="panel empty-state unavailable-state">No reviewed product catalog snapshot is available.</section></ng-template>
+
+              <section class="panel source-gap-panel" *ngIf="productView.source_gaps.length > 0">
+                <div class="panel-header"><h2>Unavailable product and pricing data</h2></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of productView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
               </section>
             </ng-container>
           </section>

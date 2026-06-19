@@ -17,6 +17,7 @@ import {
   EarningsResponse,
   CapitalAllocationResponse,
   CompetitivePositionResponse,
+  ProductPricingResponse,
   DashboardSection,
   DashboardResponse,
   HistoryRow,
@@ -43,7 +44,7 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'profile' | 'subscription';
+type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'profile' | 'subscription';
 type DashboardViewId =
   | 'company-intelligence'
   | 'turn-impact'
@@ -132,6 +133,7 @@ class AppComponent {
   earnings = signal<EarningsResponse | null>(null);
   capitalAllocation = signal<CapitalAllocationResponse | null>(null);
   competitivePosition = signal<CompetitivePositionResponse | null>(null);
+  productPricing = signal<ProductPricingResponse | null>(null);
   searchResults = signal<SearchResponse | null>(null);
   searchPages = signal<Record<SearchResultGroup, number>>({
     companies: 1,
@@ -164,6 +166,7 @@ class AppComponent {
   earningsLoading = signal(false);
   capitalAllocationLoading = signal(false);
   competitivePositionLoading = signal(false);
+  productPricingLoading = signal(false);
   companyProfileDate = '';
   businessModelDate = '';
   businessModelCompareDate = '';
@@ -189,6 +192,8 @@ class AppComponent {
   capitalAllocationPeriod = '';
   competitivePositionDate = '';
   competitiveRelationship = '';
+  productPricingDate = '';
+  productOfferingType = '';
   readonly companyProfileSectionOrder = [
     'summary',
     'business_model',
@@ -503,6 +508,9 @@ class AppComponent {
     if (this.activePage() === 'competitive-position') {
       return `${this.competitivePosition()?.company.name || 'Company'} Competitive Position`;
     }
+    if (this.activePage() === 'product-pricing') {
+      return `${this.productPricing()?.company.name || 'Company'} Product and Pricing`;
+    }
     if (this.activePage() === 'profile') {
       return 'Profile';
     }
@@ -536,6 +544,9 @@ class AppComponent {
     }
     if (this.activePage() === 'competitive-position') {
       return 'Competitor sets, overlap dimensions, competitive actions, moat evidence, opposing evidence, and source gaps.';
+    }
+    if (this.activePage() === 'product-pricing') {
+      return 'Product catalog, plan and feature history, packaging changes, price context, chronology, and source gaps.';
     }
     if (this.activePage() === 'profile') {
       return 'Manage account details, avatar preview, and subscription access.';
@@ -1031,6 +1042,32 @@ class AppComponent {
   }
 
   printCompetitivePositionBrief(): void {
+    window.print();
+  }
+
+  openProductPricing(slug: string, asOf = '', type = ''): void {
+    if (!slug || !this.token()) return;
+    this.activePage.set('product-pricing');
+    this.menuOpen.set(false);
+    this.productPricingLoading.set(true);
+    this.error.set('');
+    this.api.productPricing(this.token(), slug, asOf || this.productPricingDate, type || this.productOfferingType).subscribe({
+      next: (response) => {
+        this.productPricing.set(response);
+        this.productPricingDate = response.snapshot?.effective_date || '';
+        this.productOfferingType = response.filters?.selected_type || '';
+        this.productPricingLoading.set(false);
+      },
+      error: (response) => { this.productPricingLoading.set(false); this.showError(response); }
+    });
+  }
+
+  reloadProductPricing(): void {
+    const company = this.productPricing()?.company;
+    if (company) this.openProductPricing(company.slug, this.productPricingDate, this.productOfferingType);
+  }
+
+  printProductPricingBrief(): void {
     window.print();
   }
 

@@ -29,6 +29,10 @@ from apps.companies.models import (
     KpiTarget,
     ManagementPromise,
     ManagementPromiseUpdate,
+    PriceObservation,
+    ProductCatalogSnapshot,
+    ProductChange,
+    ProductOffering,
     StrategyMilestone,
     StrategyMilestoneDependency,
     StrategyMilestoneStatusUpdate,
@@ -352,3 +356,43 @@ class CompetitiveDimensionAdmin(admin.ModelAdmin):
     list_display = ("snapshot", "peer", "dimension_type", "label", "confidence_score")
     list_filter = ("dimension_type", "snapshot__company")
     search_fields = ("snapshot__company__name", "peer__peer_name", "label", "description", "evidence_text")
+
+
+class ProductOfferingInline(admin.TabularInline):
+    model = ProductOffering
+    extra = 0
+
+
+class ProductChangeInline(admin.TabularInline):
+    model = ProductChange
+    extra = 0
+
+
+@admin.register(ProductCatalogSnapshot)
+class ProductCatalogSnapshotAdmin(admin.ModelAdmin):
+    list_display = ("company", "effective_date", "status", "confidence_score", "source_document", "updated_at")
+    list_filter = ("status", "effective_date", "company")
+    search_fields = ("company__name", "summary", "chronology_note")
+    readonly_fields = ("created_at", "updated_at")
+    inlines = (ProductOfferingInline, ProductChangeInline)
+
+
+@admin.register(ProductOffering)
+class ProductOfferingAdmin(admin.ModelAdmin):
+    list_display = ("snapshot", "offering_type", "name", "availability", "geography", "customer_segment")
+    list_filter = ("offering_type", "snapshot__company")
+    search_fields = ("snapshot__company__name", "name", "description", "evidence_text")
+
+
+@admin.register(ProductChange)
+class ProductChangeAdmin(admin.ModelAdmin):
+    list_display = ("snapshot", "change_type", "title", "announcement_date", "effective_date", "source_document")
+    list_filter = ("change_type", "snapshot__company")
+    search_fields = ("snapshot__company__name", "title", "before_state", "after_state", "evidence_text")
+
+
+@admin.register(PriceObservation)
+class PriceObservationAdmin(admin.ModelAdmin):
+    list_display = ("offering", "amount", "currency", "billing_period", "geography", "customer_segment", "is_promotional")
+    list_filter = ("currency", "billing_period", "is_promotional", "offering__snapshot__company")
+    search_fields = ("offering__name", "offering__snapshot__company__name", "evidence_text")

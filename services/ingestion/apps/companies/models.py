@@ -797,3 +797,136 @@ class CompetitiveDimension(models.Model):
 
     def __str__(self) -> str:
         return f"{self.snapshot.company}: {self.label}"
+
+
+class ProductOfferingType(models.TextChoices):
+    FAMILY = "FAMILY", "Product family"
+    PRODUCT = "PRODUCT", "Product"
+    EDITION = "EDITION", "Edition"
+    PLAN = "PLAN", "Plan"
+    FEATURE = "FEATURE", "Feature"
+    ADD_ON = "ADD_ON", "Add-on"
+
+
+class ProductChangeType(models.TextChoices):
+    LAUNCH = "LAUNCH", "Launch"
+    UPDATE = "UPDATE", "Update"
+    RENAME = "RENAME", "Rename"
+    BUNDLE = "BUNDLE", "Bundle"
+    DISCONTINUATION = "DISCONTINUATION", "Discontinuation"
+    MIGRATION = "MIGRATION", "Migration"
+    PRICE_CHANGE = "PRICE_CHANGE", "Price change"
+    PACKAGING_CHANGE = "PACKAGING_CHANGE", "Packaging change"
+
+
+class ProductCatalogSnapshot(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="product_catalog_snapshots")
+    effective_date = models.DateField(db_index=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="product_catalog_snapshots",
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=CompanyProfileStatus.choices,
+        default=CompanyProfileStatus.DRAFT,
+        db_index=True,
+    )
+    summary = models.TextField(blank=True)
+    chronology_note = models.TextField(blank=True)
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-effective_date", "-created_at"]
+        constraints = [
+            models.UniqueConstraint(fields=["company", "effective_date"], name="unique_product_catalog_snapshot")
+        ]
+        indexes = [models.Index(fields=["company", "status", "effective_date"], name="company_prod_cat_status_idx")]
+
+
+class ProductOffering(models.Model):
+    snapshot = models.ForeignKey(ProductCatalogSnapshot, on_delete=models.CASCADE, related_name="offerings")
+    parent = models.ForeignKey("self", null=True, blank=True, on_delete=models.SET_NULL, related_name="children")
+    offering_type = models.CharField(max_length=16, choices=ProductOfferingType.choices, db_index=True)
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    availability = models.CharField(max_length=255, blank=True)
+    geography = models.CharField(max_length=255, blank=True)
+    customer_segment = models.CharField(max_length=255, blank=True)
+    evidence_text = models.TextField(blank=True)
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+
+    class Meta:
+        ordering = ["offering_type", "name"]
+        constraints = [
+            models.UniqueConstraint(fields=["snapshot", "offering_type", "name"], name="unique_product_offering")
+        ]
+
+
+class ProductChange(models.Model):
+    snapshot = models.ForeignKey(ProductCatalogSnapshot, on_delete=models.CASCADE, related_name="changes")
+    offering = models.ForeignKey(ProductOffering, null=True, blank=True, on_delete=models.SET_NULL, related_name="changes")
+    change_type = models.CharField(max_length=32, choices=ProductChangeType.choices, db_index=True)
+    title = models.CharField(max_length=512)
+    announcement_date = models.DateField(null=True, blank=True, db_index=True)
+    effective_date = models.DateField(null=True, blank=True, db_index=True)
+    before_state = models.TextField(blank=True)
+    after_state = models.TextField(blank=True)
+    evidence_text = models.TextField(blank=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="product_changes",
+    )
+    linked_event = models.ForeignKey(
+        "curation.BusinessEvent",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="product_changes",
+    )
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+
+    class Meta:
+        ordering = ["-effective_date", "-announcement_date", "title"]
+        constraints = [
+            models.UniqueConstraint(fields=["snapshot", "title", "change_type", "announcement_date"], name="unique_product_change")
+        ]
+
+
+class PriceObservation(models.Model):
+    offering = models.ForeignKey(ProductOffering, on_delete=models.CASCADE, related_name="price_observations")
+    observed_date = models.DateField(db_index=True)
+    effective_date = models.DateField(null=True, blank=True, db_index=True)
+    amount = models.DecimalField(max_digits=18, decimal_places=6)
+    currency = models.CharField(max_length=16)
+    billing_period = models.CharField(max_length=32, blank=True)
+    geography = models.CharField(max_length=255, blank=True)
+    customer_segment = models.CharField(max_length=255, blank=True)
+    tax_treatment = models.CharField(max_length=255, blank=True)
+    is_promotional = models.BooleanField(default=False, db_index=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="price_observations",
+    )
+    evidence_text = models.TextField(blank=True)
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+
+    class Meta:
+        ordering = ["-effective_date", "-observed_date"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["offering", "observed_date", "currency", "geography", "customer_segment", "billing_period"],
+                name="unique_price_observation",
+            )
+        ]

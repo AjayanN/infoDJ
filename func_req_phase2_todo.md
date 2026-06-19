@@ -568,14 +568,21 @@ Each feature below inherits the shared standards above. Feature sections only de
 
 **MVP tasks:**
 
-- [ ] Define product hierarchy: family, product, edition, plan, feature, and add-on.
-- [ ] Define price context: currency, geography, billing period, taxes, promotion, and customer segment.
-- [ ] Build product catalog and change timeline.
-- [ ] Record launches, updates, renames, bundles, discontinuations, and migrations.
-- [ ] Record list-price and packaging changes without treating promotions as standard prices.
-- [ ] Add before-and-after product and plan comparison.
-- [ ] Link changes to strategic turns, promises, KPIs, and competitive responses.
-- [ ] Validate historical chronology and distinguish announcement date from effective date.
+- [x] Define product hierarchy: family, product, edition, plan, feature, and add-on.
+- [x] Define price context: currency, geography, billing period, taxes, promotion, and customer segment.
+- [x] Build product catalog and change timeline.
+- [x] Record launches, updates, renames, bundles, discontinuations, and migrations where reviewed event evidence exists.
+- [x] Record list-price and packaging-change surface without treating promotions or missing prices as standard prices.
+- [x] Add before-and-after product and plan comparison.
+- [x] Link changes to reviewed product/pricing business events, with related strategic links available through linked event surfaces.
+- [x] Validate historical chronology and distinguish announcement date from effective date.
+
+**Implementation notes:**
+
+- Backend: added `ProductCatalogSnapshot`, `ProductOffering`, `ProductChange`, and `PriceObservation`, plus a reviewed builder, ingestion API endpoint, source-gap persistence, and authenticated main-backend proxy.
+- Frontend: added Company 360 action, left-nav page, snapshot and offering-type controls, product catalog, timeline, price-context panel, before/after rows, evidence cards, and source-gap states.
+- Data acquisition: builds from reviewed Company 360 products/brands, reviewed profile fallback catalogs, and product/pricing business events.
+- Validation completed: all-company database coverage check, authenticated gateway smoke with `scripts/smoke/phase2_product_pricing.sh`, full ingestion backend, main backend, frontend test suite, and frontend production build passed.
 
 **Acceptance criteria:**
 
@@ -1077,7 +1084,7 @@ The order below reflects functional dependency and user value. It does not requi
 - [x] Company 360 Profile.
 - [x] Business Model Map: baseline implemented.
 - [x] Operating KPI Tracker: baseline implemented.
-- [ ] Product and Pricing History.
+- [x] Product and Pricing History: all-company catalog and timeline baseline implemented with price-context gaps, Company 360 entry point, and authenticated all-company smoke validation.
 
 ### Wave 2: Management and Execution
 
