@@ -26,6 +26,8 @@ from apps.companies.models import (
     KpiTarget,
     ManagementPromise,
     ManagementPromiseUpdate,
+    ProductCatalogSnapshot,
+    ProductOffering,
     StrategyMilestone,
 )
 from apps.curation.models import BusinessEvent, StrategicTurn, StrategicTurnSource
@@ -37,6 +39,10 @@ from apps.ingestion.services.capital_allocation import (
 from apps.ingestion.services.competitive_position import (
     build_competitive_position,
     competitive_position_quality_issues,
+)
+from apps.ingestion.services.product_pricing_history import (
+    build_product_pricing_history,
+    product_pricing_quality_issues,
 )
 from apps.ingestion.services.event_extractor import EventSignal, actual_change_for, find_evidence_sentence
 from apps.ingestion.services.earnings_intelligence import (
@@ -921,6 +927,63 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(payload["market_share"]["status"], "unavailable")
         self.assertTrue(any(gap["key"] == "competitive_market_share" for gap in payload["source_gaps"]))
         self.assertIn("does not imply causation", payload["snapshot"]["methodology"])
+
+    def test_product_pricing_builder_creates_catalog_and_timeline(self):
+        CompanyProfileSnapshot.objects.create(
+            company=self.netflix,
+            effective_date=date(2026, 1, 1),
+            source_document=self.source,
+            status="REVIEWED",
+            summary="Netflix distributes entertainment.",
+            brands=["Netflix"],
+            products=["Subscription video streaming", "Advertising-supported plan"],
+            customer_groups=["Streaming members", "Advertisers"],
+            geographies=["United States"],
+            confidence_score="0.900",
+        )
+        BusinessEvent.objects.create(
+            company=self.netflix,
+            source_document=self.source,
+            event_type="PRICING_CHANGE",
+            event_date=date(2022, 11, 3),
+            actual_change="Netflix launched its advertising-supported plan.",
+            before_state="Netflix had subscription streaming plans without an ad-supported tier.",
+            after_state="Netflix added an advertising-supported plan.",
+            source_claim="Netflix launched Basic with Ads.",
+            evidence_text="Netflix launched Basic with Ads.",
+            confidence_score="0.900",
+        )
+
+        first = build_product_pricing_history(self.netflix)
+        second = build_product_pricing_history(self.netflix)
+        snapshot = ProductCatalogSnapshot.objects.get(company=self.netflix)
+
+        self.assertEqual(first["snapshots_created"], 1)
+        self.assertEqual(second["snapshots_updated"], 1)
+        self.assertTrue(ProductOffering.objects.filter(snapshot=snapshot, name="Advertising-supported plan").exists())
+        self.assertTrue(snapshot.changes.filter(change_type="PRICE_CHANGE").exists())
+        self.assertEqual(product_pricing_quality_issues(self.netflix), [])
+
+    def test_product_pricing_api_keeps_missing_prices_unavailable(self):
+        CompanyProfileSnapshot.objects.create(
+            company=self.netflix,
+            effective_date=date(2026, 1, 1),
+            source_document=self.source,
+            status="REVIEWED",
+            products=["Subscription video streaming"],
+            customer_groups=["Streaming members"],
+            geographies=["United States"],
+            confidence_score="0.900",
+        )
+        build_product_pricing_history(self.netflix)
+
+        payload = self.client.get("/companies/netflix/product-pricing").json()
+
+        self.assertEqual(payload["status"], "available")
+        self.assertGreaterEqual(payload["coverage"]["offering_count"], 1)
+        self.assertEqual(payload["price_context"]["status"], "unavailable")
+        self.assertTrue(any(gap["key"] == "product_list_prices" for gap in payload["source_gaps"]))
+        self.assertIn("Announcement dates and effective dates are stored separately", payload["snapshot"]["chronology_note"])
 
     def test_companyfacts_builder_creates_idempotent_annual_and_quarterly_series(self):
         for filed, accession, value in (

@@ -476,6 +476,29 @@ BASE_URL=http://localhost:8080/api/app scripts/smoke/phase2_competitive_position
 
 Requirement 8 verification on June 19, 2026: competitive-position builder populated all 20 configured companies with reviewed snapshots, at least one peer link, and comparison dimensions; direct database coverage confirmed `20/20`; authenticated gateway smoke passed for all 20 companies; ingestion backend `60/60`, main backend `34/34`, frontend `7/7`, and frontend production build passed.
 
+## Product and Pricing History
+
+Phase 2 Requirement 9 adds a reviewed Product and Pricing History baseline for each configured company. It owns the product hierarchy, current catalog snapshot, dated product and pricing-change timeline, before/after comparison rows, price context, promotion policy, evidence, and source gaps.
+
+The baseline is generated from reviewed Company 360 product and brand data, reviewed profile fallbacks, and product/pricing business events. List-price observations require explicit source-backed amount, currency, geography, billing period, tax, promotion, and customer-segment context. Missing prices are shown as unavailable and are not estimated or treated as zero.
+
+Product and Pricing endpoints:
+
+```bash
+GET /api/ingestion/companies/<slug>/product-pricing
+GET /api/app/companies/<slug>/product-pricing
+```
+
+Open `Product and pricing history` from Company 360 for snapshot controls, offering-type filters, product catalog, launch/update/packaging/pricing timeline, list-price context, before/after rows, evidence cards, and source gaps.
+
+Product and Pricing smoke check:
+
+```bash
+BASE_URL=http://localhost:8080/api/app scripts/smoke/phase2_product_pricing.sh
+```
+
+Requirement 9 verification on June 19, 2026: product/pricing builder populated all 20 configured companies with reviewed catalog snapshots, 182 offerings, and 52 timeline changes; direct database coverage confirmed `20/20`; authenticated gateway smoke passed for all 20 companies; ingestion backend `62/62`, main backend `34/34`, frontend `7/7`, and frontend production build passed.
+
 ## Test Commands
 
 Run tests inside Docker Compose:

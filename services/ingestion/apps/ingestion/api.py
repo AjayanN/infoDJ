@@ -27,6 +27,10 @@ from apps.companies.models import (
     KpiObservation,
     ManagementPromise,
     MilestoneStatus,
+    PriceObservation,
+    ProductCatalogSnapshot,
+    ProductChange,
+    ProductOffering,
     StrategyMilestone,
 )
 from apps.curation.models import BusinessEvent, StrategicTurn, StrategicTurnSource
@@ -771,6 +775,68 @@ def company_competitive_position(request: HttpRequest, slug: str) -> JsonRespons
     })
 
 
+@require_GET
+def company_product_pricing(request: HttpRequest, slug: str) -> JsonResponse:
+    company = get_company(slug)
+    snapshots = list(
+        ProductCatalogSnapshot.objects.filter(company=company, status__in=["PUBLISHED", "REVIEWED"])
+        .select_related("source_document")
+        .prefetch_related("offerings__price_observations__source_document", "changes__source_document", "changes__linked_event")
+        .order_by("-effective_date", "-updated_at")
+    )
+    as_of = parse_iso_date(request.GET.get("as_of"))
+    eligible = [row for row in snapshots if as_of is None or row.effective_date <= as_of]
+    current = eligible[0] if eligible else None
+    if current is None:
+        gaps = [{
+            "key": "product_catalog_snapshot",
+            "label": "Product and Pricing History unavailable",
+            "reason": f"No reviewed product catalog snapshot is available for {company.name}.",
+            "source": "company-profile",
+            "next_action": "Refresh reviewed Company 360 profiles and run build_product_pricing_history.",
+        }]
+        persist_product_pricing_gaps(company, gaps)
+        return JsonResponse({"status": "unavailable", "company": serialize_company_detail(company), "snapshot": None, "snapshot_history": [], "source_gaps": gaps})
+    offering_type = (request.GET.get("type") or "").strip().upper()
+    offerings = list(current.offerings.all())
+    if offering_type:
+        offerings = [row for row in offerings if row.offering_type == offering_type]
+    changes = list(current.changes.all())
+    prices = [price for offering in offerings for price in offering.price_observations.all()]
+    gaps = product_pricing_source_gaps(company, current, offerings, changes, prices)
+    persist_product_pricing_gaps(company, gaps)
+    evidence = product_pricing_evidence(current, offerings, changes, prices)
+    return JsonResponse({
+        "status": "available" if offerings else "partial",
+        "company": serialize_company_detail(company),
+        "snapshot": serialize_product_catalog_snapshot(current),
+        "snapshot_history": [serialize_product_catalog_history(row, current) for row in snapshots],
+        "offerings": [serialize_product_offering(row) for row in offerings],
+        "changes": [serialize_product_change(row) for row in changes],
+        "price_observations": [serialize_price_observation(row) for row in prices],
+        "price_context": {
+            "status": "available" if prices else "unavailable",
+            "reason": "" if prices else "No reviewed list-price observations with currency, geography, billing period, tax, promotion, and customer-segment context are available yet.",
+            "promotion_policy": "Promotional prices are stored separately and are not treated as standard list prices.",
+        },
+        "comparison": product_before_after_rows(changes),
+        "filters": {
+            "types": sorted({row.offering_type for row in current.offerings.all()}),
+            "selected_type": offering_type,
+            "as_of": as_of.isoformat() if as_of else "",
+        },
+        "coverage": {
+            "offering_count": len(offerings),
+            "change_count": len(changes),
+            "price_observation_count": len(prices),
+            "source_count": len(evidence),
+            "last_updated": current.updated_at.isoformat(),
+        },
+        "evidence": evidence,
+        "source_gaps": gaps,
+    })
+
+
 def earnings_period_key(period: EarningsPeriod) -> str:
     return f"FY{period.fiscal_year}-{period.fiscal_period}"
 
@@ -1175,6 +1241,139 @@ def competitive_position_source_gaps(
             "source": "competitive-position",
             "next_action": "Rebuild from reviewed Company 360 profiles with source documents.",
         })
+    return gaps
+
+
+def serialize_product_catalog_snapshot(snapshot: ProductCatalogSnapshot) -> dict[str, object]:
+    return {
+        "id": snapshot.id,
+        "effective_date": snapshot.effective_date.isoformat(),
+        "status": snapshot.status,
+        "summary": snapshot.summary,
+        "chronology_note": snapshot.chronology_note,
+        "confidence_score": decimal_to_float(snapshot.confidence_score),
+        "source": serialize_profile_source(snapshot.source_document) if snapshot.source_document_id else None,
+    }
+
+
+def serialize_product_catalog_history(snapshot: ProductCatalogSnapshot, current: ProductCatalogSnapshot) -> dict[str, object]:
+    return {
+        "id": snapshot.id,
+        "effective_date": snapshot.effective_date.isoformat(),
+        "status": snapshot.status,
+        "confidence_score": decimal_to_float(snapshot.confidence_score),
+        "offering_count": snapshot.offerings.count(),
+        "change_count": snapshot.changes.count(),
+        "selected": snapshot.id == current.id,
+    }
+
+
+def serialize_product_offering(offering: ProductOffering) -> dict[str, object]:
+    return {
+        "id": offering.id,
+        "parent_id": offering.parent_id,
+        "offering_type": offering.offering_type,
+        "offering_type_label": offering.get_offering_type_display(),
+        "name": offering.name,
+        "description": offering.description,
+        "availability": offering.availability,
+        "geography": offering.geography,
+        "customer_segment": offering.customer_segment,
+        "evidence_text": offering.evidence_text,
+        "confidence_score": decimal_to_float(offering.confidence_score),
+        "price_count": offering.price_observations.count(),
+    }
+
+
+def serialize_product_change(change: ProductChange) -> dict[str, object]:
+    return {
+        "id": change.id,
+        "offering_id": change.offering_id,
+        "offering_name": change.offering.name if change.offering_id else "",
+        "change_type": change.change_type,
+        "change_type_label": change.get_change_type_display(),
+        "title": change.title,
+        "announcement_date": change.announcement_date.isoformat() if change.announcement_date else None,
+        "effective_date": change.effective_date.isoformat() if change.effective_date else None,
+        "before_state": change.before_state,
+        "after_state": change.after_state,
+        "evidence_text": change.evidence_text,
+        "confidence_score": decimal_to_float(change.confidence_score),
+        "source": serialize_profile_source(change.source_document) if change.source_document_id else None,
+        "linked_event": serialize_business_event(change.linked_event) if change.linked_event_id else None,
+    }
+
+
+def serialize_price_observation(price: PriceObservation) -> dict[str, object]:
+    return {
+        "id": price.id,
+        "offering_id": price.offering_id,
+        "offering_name": price.offering.name,
+        "observed_date": price.observed_date.isoformat(),
+        "effective_date": price.effective_date.isoformat() if price.effective_date else None,
+        "amount": decimal_to_float(price.amount),
+        "currency": price.currency,
+        "billing_period": price.billing_period,
+        "geography": price.geography,
+        "customer_segment": price.customer_segment,
+        "tax_treatment": price.tax_treatment,
+        "is_promotional": price.is_promotional,
+        "evidence_text": price.evidence_text,
+        "confidence_score": decimal_to_float(price.confidence_score),
+        "source": serialize_profile_source(price.source_document) if price.source_document_id else None,
+    }
+
+
+def product_before_after_rows(changes: list[ProductChange]) -> list[dict[str, object]]:
+    return [
+        {
+            "change_id": change.id,
+            "title": change.title,
+            "change_type": change.change_type,
+            "announcement_date": change.announcement_date.isoformat() if change.announcement_date else None,
+            "effective_date": change.effective_date.isoformat() if change.effective_date else None,
+            "before": change.before_state,
+            "after": change.after_state,
+        }
+        for change in changes
+        if change.before_state or change.after_state
+    ]
+
+
+def product_pricing_evidence(
+    snapshot: ProductCatalogSnapshot,
+    offerings: list[ProductOffering],
+    changes: list[ProductChange],
+    prices: list[PriceObservation],
+) -> list[dict[str, object]]:
+    sources = []
+    seen = set()
+    if snapshot.source_document_id:
+        sources.append(serialize_profile_source(snapshot.source_document))
+        seen.add(snapshot.source_document_id)
+    for row in [*changes, *prices]:
+        if row.source_document_id and row.source_document_id not in seen:
+            sources.append(serialize_profile_source(row.source_document))
+            seen.add(row.source_document_id)
+    return sources
+
+
+def product_pricing_source_gaps(
+    company: Company,
+    snapshot: ProductCatalogSnapshot,
+    offerings: list[ProductOffering],
+    changes: list[ProductChange],
+    prices: list[PriceObservation],
+) -> list[dict[str, str]]:
+    gaps = []
+    if not offerings:
+        gaps.append({"key": "product_offerings", "label": "Product catalog unavailable", "reason": f"No reviewed product offerings are available for {company.name}.", "source": "product-pricing-history", "next_action": "Review Company 360 products and official product pages."})
+    if not changes:
+        gaps.append({"key": "product_change_timeline", "label": "Product timeline unavailable", "reason": "No reviewed launch, update, rename, bundle, discontinuation, migration, or packaging events are available.", "source": "product-pricing-history", "next_action": "Review product/pricing events and official announcements."})
+    if not prices:
+        gaps.append({"key": "product_list_prices", "label": "List prices unavailable", "reason": "No reviewed list-price observations with full context are available. Missing prices are not estimated or treated as zero.", "source": "product-pricing-history", "next_action": "Collect official pricing pages or filings with currency, geography, billing period, tax, promotion, and customer-segment context."})
+    if not snapshot.source_document_id:
+        gaps.append({"key": "product_catalog_source", "label": "Catalog source unavailable", "reason": "The selected product catalog snapshot is not linked to a source document.", "source": "product-pricing-history", "next_action": "Rebuild from reviewed Company 360 profiles with source documents."})
     return gaps
 
 
@@ -2629,6 +2828,33 @@ def persist_competitive_position_gaps(company: Company, gaps: list[dict[str, str
             dashboard="competitive_position",
             gap_type=gap["key"],
             provider=gap.get("source", "competitive-position"),
+            defaults={
+                "reason": gap["reason"],
+                "next_ingestion_task": gap.get("next_action", ""),
+                "status": "OPEN",
+                "metadata": {"label": gap.get("label", "")},
+            },
+        )
+
+
+def persist_product_pricing_gaps(company: Company, gaps: list[dict[str, str]]) -> None:
+    active_keys = [gap["key"] for gap in gaps]
+    if active_keys:
+        SourceGap.objects.filter(company=company, dashboard="product_pricing_history").exclude(
+            gap_type__in=active_keys
+        ).update(status="RESOLVED")
+    else:
+        SourceGap.objects.filter(
+            company=company,
+            dashboard="product_pricing_history",
+            status__in=["OPEN", "IN_PROGRESS"],
+        ).update(status="RESOLVED")
+    for gap in gaps:
+        SourceGap.objects.update_or_create(
+            company=company,
+            dashboard="product_pricing_history",
+            gap_type=gap["key"],
+            provider=gap.get("source", "product-pricing-history"),
             defaults={
                 "reason": gap["reason"],
                 "next_ingestion_task": gap.get("next_action", ""),

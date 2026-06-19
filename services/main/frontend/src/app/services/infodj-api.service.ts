@@ -788,6 +788,43 @@ export type CompetitivePositionResponse = {
   source_gaps: SourceGap[];
 };
 
+export type ProductOffering = {
+  id: number; parent_id: number | null; offering_type: string; offering_type_label: string;
+  name: string; description: string; availability: string; geography: string; customer_segment: string;
+  evidence_text: string; confidence_score: number; price_count: number;
+};
+
+export type ProductChange = {
+  id: number; offering_id: number | null; offering_name: string; change_type: string; change_type_label: string;
+  title: string; announcement_date: string | null; effective_date: string | null; before_state: string; after_state: string;
+  evidence_text: string; confidence_score: number; source: CompanyProfileSource | null; linked_event: DashboardEvent | null;
+};
+
+export type PriceObservation = {
+  id: number; offering_id: number; offering_name: string; observed_date: string; effective_date: string | null;
+  amount: number; currency: string; billing_period: string; geography: string; customer_segment: string;
+  tax_treatment: string; is_promotional: boolean; evidence_text: string; confidence_score: number; source: CompanyProfileSource | null;
+};
+
+export type ProductPricingResponse = {
+  status: 'available' | 'partial' | 'unavailable';
+  company: CompanyProfileResponse['company'];
+  snapshot: {
+    id: number; effective_date: string; status: string; summary: string; chronology_note: string;
+    confidence_score: number; source: CompanyProfileSource | null;
+  } | null;
+  snapshot_history: { id: number; effective_date: string; status: string; confidence_score: number; offering_count: number; change_count: number; selected: boolean }[];
+  offerings: ProductOffering[];
+  changes: ProductChange[];
+  price_observations: PriceObservation[];
+  price_context: { status: 'available' | 'unavailable'; reason: string; promotion_policy: string };
+  comparison: { change_id: number; title: string; change_type: string; announcement_date: string | null; effective_date: string | null; before: string; after: string }[];
+  filters: { types: string[]; selected_type: string; as_of: string };
+  coverage: { offering_count: number; change_count: number; price_observation_count: number; source_count: number; last_updated: string };
+  evidence: CompanyProfileSource[];
+  source_gaps: SourceGap[];
+};
+
 @Injectable({ providedIn: 'root' })
 export class InfoDjApiService {
   private readonly http = inject(HttpClient);
@@ -1006,6 +1043,15 @@ export class InfoDjApiService {
     if (asOf) params['as_of'] = asOf;
     if (relationship) params['relationship'] = relationship;
     return this.http.get<CompetitivePositionResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/competitive-position`, {
+      headers: this.authHeaders(token), params
+    });
+  }
+
+  productPricing(token: string, slug: string, asOf = '', type = '') {
+    const params: Record<string, string> = {};
+    if (asOf) params['as_of'] = asOf;
+    if (type) params['type'] = type;
+    return this.http.get<ProductPricingResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/product-pricing`, {
       headers: this.authHeaders(token), params
     });
   }
