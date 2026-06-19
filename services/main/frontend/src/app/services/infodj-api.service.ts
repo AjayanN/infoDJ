@@ -652,6 +652,82 @@ export type EarningsResponse = {
   source_gaps: SourceGap[];
 };
 
+export type CapitalAllocationItem = {
+  id: number;
+  category: string;
+  category_label: string;
+  label: string;
+  value: number | null;
+  unit: string;
+  concept: string;
+  evidence_text: string;
+  is_context: boolean;
+  is_calculated: boolean;
+  calculation_method: string;
+  confidence_score: number;
+  share_of_total_deployment: number | null;
+  share_of_operating_cash_flow: number | null;
+  source: CompanyProfileSource | null;
+  source_fact: { id: number; concept: string; label: string; accession_number: string } | null;
+};
+
+export type CapitalAllocationPeriod = {
+  id: number;
+  key: string;
+  fiscal_year: number;
+  fiscal_period: string;
+  period_start: string | null;
+  period_end: string;
+  filed_date: string | null;
+  accession_number: string;
+  cadence: string;
+  headline: string;
+  total_deployment: number | null;
+  operating_cash_flow: number | null;
+  cash_balance: number | null;
+  free_cash_flow: number | null;
+  calculation_note: string;
+  review_status: string;
+};
+
+export type CapitalAllocationResponse = {
+  status: 'available' | 'partial' | 'unavailable';
+  company: CompanyProfileResponse['company'];
+  periods: CapitalAllocationPeriod[];
+  selected_period: (CapitalAllocationPeriod & {
+    deployment_items: CapitalAllocationItem[];
+    context_items: CapitalAllocationItem[];
+    category_totals: {
+      category: string; category_label: string; value: number; item_count: number; share_of_total_deployment: number | null;
+    }[];
+    allocation_mix: {
+      category: string; category_label: string; value: number; share_of_total_deployment: number | null;
+    }[];
+    cash_flow_context: {
+      operating_cash_flow: number | null;
+      cash_balance: number | null;
+      free_cash_flow: number | null;
+      total_deployment: number | null;
+      deployment_to_operating_cash_flow_pct: number | null;
+      deployment_to_cash_balance_pct: number | null;
+    };
+    related_strategy: {
+      strategic_turns: DashboardTurn[];
+      management_promises: ManagementPromise[];
+    };
+  }) | null;
+  filters: { selected_period: string; categories: string[] };
+  coverage: {
+    period_count: number;
+    deployment_item_count: number;
+    context_item_count: number;
+    missing_category_count: number;
+    last_updated: string;
+  };
+  evidence: CompanyProfileSource[];
+  source_gaps: SourceGap[];
+};
+
 @Injectable({ providedIn: 'root' })
 export class InfoDjApiService {
   private readonly http = inject(HttpClient);
@@ -853,6 +929,14 @@ export class InfoDjApiService {
     const params: Record<string, string> = {};
     if (period) params['period'] = period;
     return this.http.get<EarningsResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/earnings`, {
+      headers: this.authHeaders(token), params
+    });
+  }
+
+  capitalAllocation(token: string, slug: string, period = '') {
+    const params: Record<string, string> = {};
+    if (period) params['period'] = period;
+    return this.http.get<CapitalAllocationResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/capital-allocation`, {
       headers: this.authHeaders(token), params
     });
   }

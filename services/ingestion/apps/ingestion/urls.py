@@ -12,6 +12,7 @@ urlpatterns = [
     path("companies/<slug:slug>/management-promises", api.company_management_promises, name="ingestion-company-management-promises"),
     path("companies/<slug:slug>/strategy-milestones", api.company_strategy_milestones, name="ingestion-company-strategy-milestones"),
     path("companies/<slug:slug>/earnings", api.company_earnings, name="ingestion-company-earnings"),
+    path("companies/<slug:slug>/capital-allocation", api.company_capital_allocation, name="ingestion-company-capital-allocation"),
     path("dashboard-data", api.dashboard_data, name="ingestion-dashboard-data"),
     path("search", api.search, name="ingestion-search"),
     path("search/suggest", api.search_suggest, name="ingestion-search-suggest"),

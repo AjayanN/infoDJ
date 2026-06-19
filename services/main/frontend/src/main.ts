@@ -15,6 +15,7 @@ import {
   ManagementPromiseResponse,
   StrategyMilestoneResponse,
   EarningsResponse,
+  CapitalAllocationResponse,
   DashboardSection,
   DashboardResponse,
   HistoryRow,
@@ -41,7 +42,7 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'profile' | 'subscription';
+type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'profile' | 'subscription';
 type DashboardViewId =
   | 'company-intelligence'
   | 'turn-impact'
@@ -128,6 +129,7 @@ class AppComponent {
   managementPromises = signal<ManagementPromiseResponse | null>(null);
   strategyMilestones = signal<StrategyMilestoneResponse | null>(null);
   earnings = signal<EarningsResponse | null>(null);
+  capitalAllocation = signal<CapitalAllocationResponse | null>(null);
   searchResults = signal<SearchResponse | null>(null);
   searchPages = signal<Record<SearchResultGroup, number>>({
     companies: 1,
@@ -158,6 +160,7 @@ class AppComponent {
   managementPromiseLoading = signal(false);
   strategyMilestoneLoading = signal(false);
   earningsLoading = signal(false);
+  capitalAllocationLoading = signal(false);
   companyProfileDate = '';
   businessModelDate = '';
   businessModelCompareDate = '';
@@ -180,6 +183,7 @@ class AppComponent {
   strategyMilestoneView = 'all';
   strategyMilestoneSlug = '';
   earningsPeriod = '';
+  capitalAllocationPeriod = '';
   readonly companyProfileSectionOrder = [
     'summary',
     'business_model',
@@ -488,6 +492,9 @@ class AppComponent {
     if (this.activePage() === 'earnings') {
       return `${this.earnings()?.company.name || 'Company'} Earnings Intelligence`;
     }
+    if (this.activePage() === 'capital-allocation') {
+      return `${this.capitalAllocation()?.company.name || 'Company'} Capital Allocation`;
+    }
     if (this.activePage() === 'profile') {
       return 'Profile';
     }
@@ -515,6 +522,9 @@ class AppComponent {
     }
     if (this.activePage() === 'earnings') {
       return 'Quarterly measured results, period changes, linked strategy, guidance, risks, and source gaps.';
+    }
+    if (this.activePage() === 'capital-allocation') {
+      return 'Where management deployed capital across capex, R&D, buybacks, dividends, debt, acquisitions, and cash-flow context.';
     }
     if (this.activePage() === 'profile') {
       return 'Manage account details, avatar preview, and subscription access.';
@@ -959,6 +969,31 @@ class AppComponent {
   }
 
   printEarningsBrief(): void {
+    window.print();
+  }
+
+  openCapitalAllocation(slug: string, period = ''): void {
+    if (!slug || !this.token()) return;
+    this.activePage.set('capital-allocation');
+    this.menuOpen.set(false);
+    this.capitalAllocationLoading.set(true);
+    this.error.set('');
+    this.api.capitalAllocation(this.token(), slug, period || this.capitalAllocationPeriod).subscribe({
+      next: (response) => {
+        this.capitalAllocation.set(response);
+        this.capitalAllocationPeriod = response.selected_period?.key || '';
+        this.capitalAllocationLoading.set(false);
+      },
+      error: (response) => { this.capitalAllocationLoading.set(false); this.showError(response); }
+    });
+  }
+
+  reloadCapitalAllocation(): void {
+    const company = this.capitalAllocation()?.company;
+    if (company) this.openCapitalAllocation(company.slug, this.capitalAllocationPeriod);
+  }
+
+  printCapitalAllocationBrief(): void {
     window.print();
   }
 

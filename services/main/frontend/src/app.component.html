@@ -121,6 +121,7 @@
         <button type="button" *ngIf="managementPromises()" [class.active]="activePage() === 'management-promises'" [attr.aria-current]="activePage() === 'management-promises' ? 'page' : null" (click)="setActivePage('management-promises')">Promises</button>
         <button type="button" *ngIf="strategyMilestones()" [class.active]="activePage() === 'strategy-milestones'" [attr.aria-current]="activePage() === 'strategy-milestones' ? 'page' : null" (click)="setActivePage('strategy-milestones')">Milestones</button>
         <button type="button" *ngIf="earnings()" [class.active]="activePage() === 'earnings'" [attr.aria-current]="activePage() === 'earnings' ? 'page' : null" (click)="setActivePage('earnings')">Earnings</button>
+        <button type="button" *ngIf="capitalAllocation()" [class.active]="activePage() === 'capital-allocation'" [attr.aria-current]="activePage() === 'capital-allocation' ? 'page' : null" (click)="setActivePage('capital-allocation')">Capital</button>
         <button type="button" [class.active]="activePage() === 'profile'" [attr.aria-current]="activePage() === 'profile' ? 'page' : null" (click)="setActivePage('profile')">Profile</button>
         <button type="button" [class.active]="activePage() === 'subscription'" [attr.aria-current]="activePage() === 'subscription' ? 'page' : null" (click)="setActivePage('subscription')">Subscription</button>
       </nav>
@@ -753,6 +754,7 @@
                   <button type="button" class="ghost-button" (click)="openManagementPromises(companyView.company.slug)">Management promise tracker</button>
                   <button type="button" class="ghost-button" (click)="openStrategyMilestones(companyView.company.slug)">Strategy milestone tracker</button>
                   <button type="button" class="ghost-button" (click)="openEarnings(companyView.company.slug)">Earnings intelligence</button>
+                  <button type="button" class="ghost-button" (click)="openCapitalAllocation(companyView.company.slug)">Capital allocation dashboard</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('companies-like-mine')">Compare peers</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('latest-moves')">Latest moves</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('risk-signals')">Risk signals</button>
@@ -1335,6 +1337,104 @@
               <section class="panel source-gap-panel" *ngIf="earningsView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable earnings evidence</h2></div>
                 <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of earningsView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+              </section>
+            </ng-container>
+          </section>
+
+          <section *ngSwitchCase="'capital-allocation'" class="company-profile-layout" aria-labelledby="capital-allocation-heading">
+            <div class="panel empty-state" *ngIf="capitalAllocationLoading()" role="status">Loading reviewed capital allocation data.</div>
+            <ng-container *ngIf="capitalAllocation() as allocationView">
+              <section class="panel company-profile-hero">
+                <div>
+                  <p class="section-kicker">Capital Allocation Dashboard · {{ allocationView.status }}</p>
+                  <h2 id="capital-allocation-heading">{{ allocationView.company.name }}</h2>
+                  <p>Source-backed view of where management deployed resources, with cash-flow context and explicit unavailable categories.</p>
+                </div>
+                <div class="coverage-summary">
+                  <strong>{{ allocationView.coverage.deployment_item_count }}</strong><span>deployment items</span>
+                  <small>{{ allocationView.coverage.period_count }} reviewed periods</small>
+                  <small>Updated {{ allocationView.coverage.last_updated | date:'medium' }}</small>
+                </div>
+              </section>
+
+              <section class="panel company-profile-controls" aria-label="Capital allocation period controls">
+                <label>Reporting period
+                  <select [(ngModel)]="capitalAllocationPeriod">
+                    <option *ngFor="let period of allocationView.periods" [value]="period.key">{{ period.fiscal_period }} FY{{ period.fiscal_year }} · ended {{ period.period_end }}</option>
+                  </select>
+                </label>
+                <button type="button" class="primary-button" (click)="reloadCapitalAllocation()">Open period</button>
+                <button type="button" class="ghost-button" (click)="openCompany(allocationView.company.slug)">Back to Company 360</button>
+                <button type="button" class="ghost-button" (click)="printCapitalAllocationBrief()">Print one-page brief</button>
+              </section>
+
+              <ng-container *ngIf="allocationView.selected_period as period; else noCapitalAllocationPeriod">
+                <section class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Resource deployment</p><h2>{{ period.fiscal_period }} FY{{ period.fiscal_year }}</h2></div><span>Ended {{ period.period_end }}</span></div>
+                  <p>{{ period.headline }}</p>
+                  <p>{{ period.calculation_note }}</p>
+                  <div class="account-grid">
+                    <div class="metric"><dt>Total deployment</dt><dd>{{ period.cash_flow_context.total_deployment | number:'1.0-0' }}</dd><small>Excludes cash and operating-cash-flow context</small></div>
+                    <div class="metric"><dt>Operating cash flow</dt><dd>{{ period.cash_flow_context.operating_cash_flow | number:'1.0-0' }}</dd><small>{{ period.cash_flow_context.deployment_to_operating_cash_flow_pct ?? 'n/a' }}% deployed against OCF</small></div>
+                    <div class="metric"><dt>Cash balance</dt><dd>{{ period.cash_flow_context.cash_balance | number:'1.0-0' }}</dd><small>{{ period.cash_flow_context.deployment_to_cash_balance_pct ?? 'n/a' }}% deployed against cash</small></div>
+                    <div class="metric"><dt>Free cash flow</dt><dd>{{ period.cash_flow_context.free_cash_flow | number:'1.0-0' }}</dd><small>Calculated only when capex is available</small></div>
+                  </div>
+                </section>
+
+                <section class="dashboard-two-column">
+                  <article class="panel">
+                    <div class="panel-header"><div><p class="section-kicker">Allocation mix</p><h2>Deployment by category</h2></div></div>
+                    <div class="result-row" *ngFor="let row of period.allocation_mix">
+                      <strong>{{ row.category_label }}</strong>
+                      <span>{{ row.value | number:'1.0-0' }} · {{ row.share_of_total_deployment ?? 'n/a' }}% of deployment</span>
+                    </div>
+                    <div class="empty-state unavailable-state" *ngIf="period.allocation_mix.length === 0">No reviewed deployment category is available for this period.</div>
+                  </article>
+                  <article class="panel">
+                    <div class="panel-header"><div><p class="section-kicker">Context lines</p><h2>Cash-flow and balance context</h2></div></div>
+                    <div class="result-row" *ngFor="let item of period.context_items">
+                      <strong>{{ item.category_label }}</strong>
+                      <span>{{ item.value | number:'1.0-0' }} {{ item.unit }} · {{ item.concept }}</span>
+                      <p>{{ item.evidence_text }}</p>
+                    </div>
+                    <div class="empty-state" *ngIf="period.context_items.length === 0">No reviewed context facts are available.</div>
+                  </article>
+                </section>
+
+                <section class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Drilldown</p><h2>Source-backed allocation items</h2></div></div>
+                  <div class="result-row" *ngFor="let item of period.deployment_items">
+                    <strong>{{ item.category_label }} · {{ item.label }}</strong>
+                    <span>{{ item.value | number:'1.0-0' }} {{ item.unit }} · {{ item.share_of_operating_cash_flow ?? 'n/a' }}% of operating cash flow</span>
+                    <p>{{ item.evidence_text }}</p>
+                    <a *ngIf="item.source" [href]="item.source.url" target="_blank" rel="noopener">Open source</a>
+                  </div>
+                  <div class="empty-state unavailable-state" *ngIf="period.deployment_items.length === 0">No reviewed deployment items are available. Missing categories are listed below rather than treated as zero.</div>
+                </section>
+
+                <section class="dashboard-two-column">
+                  <article class="panel">
+                    <div class="panel-header"><div><p class="section-kicker">Linked rationale</p><h2>Related strategy</h2></div></div>
+                    <div class="result-row" *ngFor="let turn of period.related_strategy.strategic_turns"><strong>{{ turn.title }}</strong><span>{{ turn.start_date }} · {{ turn.turn_type }}</span><p>{{ turn.summary }}</p></div>
+                    <div class="empty-state" *ngIf="period.related_strategy.strategic_turns.length === 0">No reviewed strategic turn is linked to this period.</div>
+                  </article>
+                  <article class="panel">
+                    <div class="panel-header"><div><p class="section-kicker">Management claims</p><h2>Promises near this period</h2></div></div>
+                    <div class="result-row" *ngFor="let promise of period.related_strategy.management_promises"><strong>{{ promise.title }}</strong><span>{{ promise.promise_type }} · {{ promise.current_status }}</span><p>{{ promise.original_statement }}</p></div>
+                    <div class="empty-state" *ngIf="period.related_strategy.management_promises.length === 0">No reviewed promise is linked to this period.</div>
+                  </article>
+                </section>
+
+                <section class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Capital allocation evidence</h2></div><span>{{ allocationView.evidence.length }} sources</span></div>
+                  <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of allocationView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                </section>
+              </ng-container>
+              <ng-template #noCapitalAllocationPeriod><section class="panel empty-state unavailable-state">No reviewed capital allocation period is available.</section></ng-template>
+
+              <section class="panel source-gap-panel" *ngIf="allocationView.source_gaps.length > 0">
+                <div class="panel-header"><h2>Unavailable capital allocation data</h2></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of allocationView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
               </section>
             </ng-container>
           </section>

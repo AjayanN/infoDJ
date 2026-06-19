@@ -11,6 +11,8 @@ from apps.companies.models import (
     BusinessModelComponent,
     BusinessModelRelationship,
     BusinessModelSnapshot,
+    CapitalAllocationItem,
+    CapitalAllocationPeriod,
     Company,
     CompanyProfileSnapshot,
     EarningsGuidanceComparison,
@@ -26,6 +28,10 @@ from apps.companies.models import (
 )
 from apps.curation.models import BusinessEvent, StrategicTurn, StrategicTurnSource
 from apps.ingestion.models import ArticleExtraction, FinancialFact, MarketPrice, SourceDocument, SourceGap
+from apps.ingestion.services.capital_allocation import (
+    build_capital_allocation_periods,
+    capital_allocation_quality_issues,
+)
 from apps.ingestion.services.event_extractor import EventSignal, actual_change_for, find_evidence_sentence
 from apps.ingestion.services.earnings_intelligence import (
     build_earnings_periods,
@@ -811,6 +817,56 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(payload["items"][0]["comparison_status"], "ABOVE")
         self.assertEqual(payload["items"][0]["forecast_source"]["url"], forecast_source.url)
         self.assertEqual(payload["items"][0]["actual_source"]["url"], actual_source.url)
+
+    def test_capital_allocation_builder_creates_source_backed_period_and_free_cash_flow(self):
+        filing_source = SourceDocument.objects.create(
+            company=self.netflix, source_api="SEC_EDGAR", url="https://example.com/000106528026000001",
+            title="Netflix 10-Q filing 2026-04-20 - 10-Q", publisher="SEC",
+            published_date="2026-04-20T00:00:00Z", language="en",
+        )
+        for concept, label, value in (
+            ("NetCashProvidedByUsedInOperatingActivities", "Net cash provided by operating activities", "280"),
+            ("PaymentsToAcquirePropertyPlantAndEquipment", "Purchases of property and equipment", "40"),
+            ("ResearchAndDevelopmentExpense", "Technology and development", "75"),
+            ("CashAndCashEquivalentsAtCarryingValue", "Cash and cash equivalents", "900"),
+        ):
+            FinancialFact.objects.create(
+                company=self.netflix, taxonomy="us-gaap", concept=concept, label=label, unit="USD",
+                fy=2026, fp="Q1", filed=date(2026, 4, 20), frame="CY2026Q1", value=value,
+                accession_number="0001065280-26-000001",
+                raw={"start": "2026-01-01", "end": "2026-03-31", "form": "10-Q", "fp": "Q1", "fy": 2026},
+            )
+
+        first = build_capital_allocation_periods(self.netflix)
+        second = build_capital_allocation_periods(self.netflix)
+        period = CapitalAllocationPeriod.objects.get(company=self.netflix)
+
+        self.assertEqual(first["periods_created"], 1)
+        self.assertEqual(second["periods_updated"], 1)
+        self.assertEqual(period.source_documents.count() if hasattr(period, "source_documents") else 0, 0)
+        self.assertEqual(period.items.filter(category="CAPEX").count(), 1)
+        self.assertEqual(period.items.filter(category="FREE_CASH_FLOW", is_calculated=True).count(), 1)
+        self.assertEqual(str(period.free_cash_flow), "240.000000")
+        self.assertEqual(str(period.total_deployment), "115.000000")
+        self.assertEqual(CapitalAllocationItem.objects.get(category="CAPEX").source_document, filing_source)
+        self.assertEqual(capital_allocation_quality_issues(self.netflix), [])
+
+    def test_capital_allocation_api_marks_missing_categories_as_gaps_not_zero(self):
+        FinancialFact.objects.create(
+            company=self.netflix, taxonomy="us-gaap", concept="NetCashProvidedByUsedInOperatingActivities",
+            label="Net cash provided by operating activities", unit="USD", fy=2026, fp="Q1",
+            filed=date(2026, 4, 20), frame="CY2026Q1", value="280",
+            accession_number="0001065280-26-000001",
+            raw={"start": "2026-01-01", "end": "2026-03-31", "form": "10-Q", "fp": "Q1", "fy": 2026},
+        )
+        build_capital_allocation_periods(self.netflix)
+
+        payload = self.client.get("/companies/netflix/capital-allocation").json()
+
+        self.assertEqual(payload["status"], "partial")
+        self.assertEqual(payload["selected_period"]["deployment_items"], [])
+        self.assertIsNone(payload["selected_period"]["cash_flow_context"]["total_deployment"])
+        self.assertTrue(any(gap["key"] == "capital_deployment_items" for gap in payload["source_gaps"]))
 
     def test_companyfacts_builder_creates_idempotent_annual_and_quarterly_series(self):
         for filed, accession, value in (

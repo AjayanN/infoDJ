@@ -430,6 +430,29 @@ Open `Strategy milestone tracker` from Company 360 for the milestone register, l
 
 Requirement 6 verification on June 18, 2026: ingestion `56/56`, main backend `34/34`, frontend `7/7`, production build passed, all-company validator passed, and the authenticated gateway smoke test passed for all 20 companies. `makemigrations --check --dry-run` still reports the pre-existing ingestion index/job-type drift unrelated to this requirement; company milestone migrations are applied and consistent.
 
+## Capital Allocation Dashboard
+
+Phase 2 Requirement 7 adds a source-backed Capital Allocation Dashboard for each configured company. It shows where management deployed resources across capex, R&D, acquisitions/investments, buybacks, dividends, debt, restructuring, and content/inventory investment, while keeping cash balances, operating cash flow, and calculated free cash flow as context rather than deployment.
+
+The dashboard uses SEC Company Facts as the structured baseline. `ingest_sec_companyfacts` now collects additional capital allocation concepts and rebuilds reviewed `CapitalAllocationPeriod` and `CapitalAllocationItem` records after each companyfacts run. Missing categories are stored and displayed as source gaps; they are not treated as zero. Free cash flow is calculated only when operating cash flow and capex are both available for the same period.
+
+Capital Allocation endpoints:
+
+```bash
+GET /api/ingestion/companies/<slug>/capital-allocation
+GET /api/app/companies/<slug>/capital-allocation
+```
+
+Open `Capital allocation dashboard` from Company 360 for period selection, deployment totals, cash-flow context, category mix, source-backed item drilldowns, linked strategy/promises, evidence cards, and unavailable category gaps.
+
+Capital Allocation smoke check:
+
+```bash
+BASE_URL=http://localhost:8080/api/app scripts/smoke/phase2_capital_allocation.sh
+```
+
+Requirement 7 verification on June 19, 2026: SEC Company Facts ingestion populated all 20 configured companies with 1,397 reviewed capital allocation periods and 5,925 allocation items; direct database coverage confirmed every company has a latest reviewed period with operating cash-flow context; authenticated gateway smoke passed for all 20 companies; ingestion backend `58/58`, main backend `34/34`, frontend `7/7`, and frontend production build passed.
+
 ## Test Commands
 
 Run tests inside Docker Compose:

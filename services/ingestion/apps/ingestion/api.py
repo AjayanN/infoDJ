@@ -13,6 +13,9 @@ from django.views.decorators.http import require_GET, require_POST
 from apps.companies.models import (
     BusinessModelComponentType,
     BusinessModelSnapshot,
+    CapitalAllocationCategory,
+    CapitalAllocationItem,
+    CapitalAllocationPeriod,
     Company,
     CompanyProfileSnapshot,
     EarningsGuidanceComparison,
@@ -34,6 +37,7 @@ from apps.ingestion.services.dashboard_quality import (
     source_gap_dict,
     turn_eligibility,
 )
+from apps.ingestion.services.capital_allocation import DEPLOYMENT_CATEGORIES
 
 
 def health(_request: HttpRequest) -> JsonResponse:
@@ -593,6 +597,101 @@ def company_earnings(request: HttpRequest, slug: str) -> JsonResponse:
     })
 
 
+@require_GET
+def company_capital_allocation(request: HttpRequest, slug: str) -> JsonResponse:
+    company = get_company(slug)
+    periods = list(
+        CapitalAllocationPeriod.objects.filter(company=company, is_published=True, review_status="REVIEWED")
+        .prefetch_related("items__source_document", "items__source_fact")
+        .order_by("-period_end", "-filed_date")
+    )
+    selected_key = (request.GET.get("period") or "").strip()
+    selected = next((row for row in periods if capital_allocation_period_key(row) == selected_key), periods[0] if periods else None)
+    if selected is None:
+        gaps = [{
+            "key": "capital_allocation_periods",
+            "label": "Capital Allocation unavailable",
+            "reason": f"No reviewed SEC-backed capital allocation periods are available for {company.name}.",
+            "source": "sec-companyfacts",
+            "next_action": "Ingest SEC Company Facts for operating cash flow, capex, R&D, buybacks, dividends, debt, acquisitions, and cash context.",
+        }]
+        persist_capital_allocation_gaps(company, gaps)
+        return JsonResponse({
+            "status": "unavailable",
+            "company": serialize_company_detail(company),
+            "periods": [],
+            "selected_period": None,
+            "source_gaps": gaps,
+        })
+
+    items = list(selected.items.filter(review_status="REVIEWED").order_by("is_context", "category", "label"))
+    deployment_items = [row for row in items if row.category in DEPLOYMENT_CATEGORIES and not row.is_context]
+    context_items = [row for row in items if row.is_context or row.category not in DEPLOYMENT_CATEGORIES]
+    missing_categories = [
+        category
+        for category, _label in CapitalAllocationCategory.choices
+        if category not in {row.category for row in items}
+        and category not in {CapitalAllocationCategory.FREE_CASH_FLOW, CapitalAllocationCategory.INTERNAL_PROGRAM}
+    ]
+    gaps = capital_allocation_source_gaps(company, missing_categories, selected, deployment_items)
+    persist_capital_allocation_gaps(company, gaps)
+    category_totals = capital_allocation_category_totals(deployment_items, selected)
+    related_turns = list(
+        StrategicTurn.objects.filter(company=company, start_date__lte=selected.period_end)
+        .order_by("-start_date", "-created_at")[:6]
+    )
+    related_promises = list(
+        ManagementPromise.objects.filter(company=company, is_published=True, review_status="REVIEWED", statement_date__lte=selected.period_end)
+        .select_related("source_document")
+        .order_by("-statement_date")[:6]
+    )
+    return JsonResponse({
+        "status": "available" if deployment_items else "partial",
+        "company": serialize_company_detail(company),
+        "periods": [serialize_capital_allocation_period(row, include_items=False) for row in periods],
+        "selected_period": {
+            **serialize_capital_allocation_period(selected, include_items=False),
+            "deployment_items": [serialize_capital_allocation_item(row, selected) for row in deployment_items],
+            "context_items": [serialize_capital_allocation_item(row, selected) for row in context_items],
+            "category_totals": category_totals,
+            "allocation_mix": [
+                {
+                    "category": row["category"],
+                    "category_label": row["category_label"],
+                    "value": row["value"],
+                    "share_of_total_deployment": row["share_of_total_deployment"],
+                }
+                for row in category_totals
+            ],
+            "cash_flow_context": {
+                "operating_cash_flow": decimal_to_float_or_none(selected.operating_cash_flow),
+                "cash_balance": decimal_to_float_or_none(selected.cash_balance),
+                "free_cash_flow": decimal_to_float_or_none(selected.free_cash_flow),
+                "total_deployment": decimal_to_float_or_none(selected.total_deployment),
+                "deployment_to_operating_cash_flow_pct": pct_ratio(selected.total_deployment, selected.operating_cash_flow),
+                "deployment_to_cash_balance_pct": pct_ratio(selected.total_deployment, selected.cash_balance),
+            },
+            "related_strategy": {
+                "strategic_turns": [serialize_strategic_turn(row, source_count=row.turn_sources.count()) for row in related_turns],
+                "management_promises": [serialize_management_promise(row, include_updates=False) for row in related_promises],
+            },
+        },
+        "filters": {
+            "selected_period": capital_allocation_period_key(selected),
+            "categories": [category for category, _label in CapitalAllocationCategory.choices],
+        },
+        "coverage": {
+            "period_count": len(periods),
+            "deployment_item_count": len(deployment_items),
+            "context_item_count": len(context_items),
+            "missing_category_count": len(missing_categories),
+            "last_updated": selected.updated_at.isoformat(),
+        },
+        "evidence": capital_allocation_evidence(items),
+        "source_gaps": gaps,
+    })
+
+
 def earnings_period_key(period: EarningsPeriod) -> str:
     return f"FY{period.fiscal_year}-{period.fiscal_period}"
 
@@ -736,6 +835,132 @@ def earnings_source_gaps(has_management_explanation: bool, has_guidance: bool) -
             "next_action": "Review guidance statements and map comparable metrics, scope, units, and target periods.",
         })
     return gaps
+
+
+def capital_allocation_period_key(period: CapitalAllocationPeriod) -> str:
+    return f"FY{period.fiscal_year}-{period.fiscal_period}-{period.period_end.isoformat()}"
+
+
+def serialize_capital_allocation_period(period: CapitalAllocationPeriod, *, include_items: bool) -> dict[str, object]:
+    payload = {
+        "id": period.id,
+        "key": capital_allocation_period_key(period),
+        "fiscal_year": period.fiscal_year,
+        "fiscal_period": period.fiscal_period,
+        "period_start": period.period_start.isoformat() if period.period_start else None,
+        "period_end": period.period_end.isoformat(),
+        "filed_date": period.filed_date.isoformat() if period.filed_date else None,
+        "accession_number": period.accession_number,
+        "cadence": period.cadence,
+        "headline": period.headline,
+        "total_deployment": decimal_to_float_or_none(period.total_deployment),
+        "operating_cash_flow": decimal_to_float_or_none(period.operating_cash_flow),
+        "cash_balance": decimal_to_float_or_none(period.cash_balance),
+        "free_cash_flow": decimal_to_float_or_none(period.free_cash_flow),
+        "calculation_note": period.calculation_note,
+        "review_status": period.review_status,
+    }
+    if include_items:
+        payload["items"] = [serialize_capital_allocation_item(row, period) for row in period.items.all()]
+    return payload
+
+
+def serialize_capital_allocation_item(item: CapitalAllocationItem, period: CapitalAllocationPeriod) -> dict[str, object]:
+    return {
+        "id": item.id,
+        "category": item.category,
+        "category_label": dict(CapitalAllocationCategory.choices).get(item.category, item.category),
+        "label": item.label,
+        "value": decimal_to_float_or_none(item.value),
+        "unit": item.unit,
+        "concept": item.concept,
+        "evidence_text": item.evidence_text,
+        "is_context": item.is_context,
+        "is_calculated": item.is_calculated,
+        "calculation_method": item.calculation_method,
+        "confidence_score": decimal_to_float(item.confidence_score),
+        "share_of_total_deployment": pct_ratio(item.value, period.total_deployment) if not item.is_context else None,
+        "share_of_operating_cash_flow": pct_ratio(item.value, period.operating_cash_flow),
+        "source": serialize_profile_source(item.source_document) if item.source_document_id else None,
+        "source_fact": {
+            "id": item.source_fact_id,
+            "concept": item.source_fact.concept,
+            "label": item.source_fact.label,
+            "accession_number": item.source_fact.accession_number,
+        } if item.source_fact_id else None,
+    }
+
+
+def capital_allocation_category_totals(items: list[CapitalAllocationItem], period: CapitalAllocationPeriod) -> list[dict[str, object]]:
+    totals = defaultdict(lambda: {"value": 0.0, "item_count": 0})
+    labels = dict(CapitalAllocationCategory.choices)
+    for item in items:
+        totals[item.category]["value"] += decimal_to_float(item.value) or 0
+        totals[item.category]["item_count"] += 1
+    return [
+        {
+            "category": category,
+            "category_label": labels.get(category, category),
+            "value": round(row["value"], 6),
+            "item_count": row["item_count"],
+            "share_of_total_deployment": pct_ratio(row["value"], period.total_deployment),
+        }
+        for category, row in sorted(totals.items(), key=lambda item: item[0])
+    ]
+
+
+def capital_allocation_evidence(items: list[CapitalAllocationItem]) -> list[dict[str, object]]:
+    sources = []
+    seen = set()
+    for item in items:
+        if item.source_document_id and item.source_document_id not in seen:
+            sources.append(serialize_profile_source(item.source_document))
+            seen.add(item.source_document_id)
+    return sources
+
+
+def capital_allocation_source_gaps(
+    company: Company,
+    missing_categories: list[str],
+    period: CapitalAllocationPeriod,
+    deployment_items: list[CapitalAllocationItem],
+) -> list[dict[str, str]]:
+    labels = dict(CapitalAllocationCategory.choices)
+    gaps = []
+    if not deployment_items:
+        gaps.append({
+            "key": "capital_deployment_items",
+            "label": "Deployment items unavailable",
+            "reason": f"{company.name} has operating cash-flow context for the selected period, but no reviewed deployment categories were present in stored SEC facts.",
+            "source": "sec-companyfacts",
+            "next_action": "Expand SEC concepts or review the filing cash-flow statement for capex, buybacks, dividends, acquisitions, debt, restructuring, content, or inventory investment.",
+        })
+    if period.operating_cash_flow is None:
+        gaps.append({
+            "key": "operating_cash_flow_context",
+            "label": "Operating cash flow unavailable",
+            "reason": "No reviewed operating cash-flow fact is available for this period.",
+            "source": "sec-companyfacts",
+            "next_action": "Collect NetCashProvidedByUsedInOperatingActivities for the selected period.",
+        })
+    for category in missing_categories:
+        gaps.append({
+            "key": f"capital_allocation_{category.lower()}",
+            "label": f"{labels.get(category, category)} unavailable",
+            "reason": f"No reviewed, source-backed {labels.get(category, category).lower()} figure is available for {company.name} in the selected period.",
+            "source": "sec-companyfacts",
+            "next_action": "Review official filings and company materials before treating this category as present or absent.",
+        })
+    return gaps
+
+
+def pct_ratio(value, denominator) -> float | None:
+    if value in {None, ""} or denominator in {None, "", 0}:
+        return None
+    try:
+        return round((float(value) / abs(float(denominator))) * 100, 2)
+    except (TypeError, ValueError, ZeroDivisionError):
+        return None
 
 
 def serialize_guidance_comparison(row: EarningsGuidanceComparison) -> dict[str, object]:
@@ -1787,6 +2012,12 @@ def decimal_to_float(value) -> float:
     return round(float(value or 0), 3)
 
 
+def decimal_to_float_or_none(value) -> float | None:
+    if value is None:
+        return None
+    return round(float(value), 3)
+
+
 def serialize_company(company: Company) -> dict[str, object]:
     return {
         "id": company.id,
@@ -2136,6 +2367,33 @@ def persist_strategy_milestone_gaps(company: Company, gaps: list[dict[str, str]]
             gap_type="strategy_milestones",
             status__in=["OPEN", "IN_PROGRESS"],
         ).update(status="RESOLVED")
+
+
+def persist_capital_allocation_gaps(company: Company, gaps: list[dict[str, str]]) -> None:
+    active_keys = [gap["key"] for gap in gaps]
+    if active_keys:
+        SourceGap.objects.filter(company=company, dashboard="capital_allocation").exclude(
+            gap_type__in=active_keys
+        ).update(status="RESOLVED")
+    else:
+        SourceGap.objects.filter(
+            company=company,
+            dashboard="capital_allocation",
+            status__in=["OPEN", "IN_PROGRESS"],
+        ).update(status="RESOLVED")
+    for gap in gaps:
+        SourceGap.objects.update_or_create(
+            company=company,
+            dashboard="capital_allocation",
+            gap_type=gap["key"],
+            provider=gap.get("source", "capital-allocation-dashboard"),
+            defaults={
+                "reason": gap["reason"],
+                "next_ingestion_task": gap.get("next_action", ""),
+                "status": "OPEN",
+                "metadata": {"label": gap.get("label", "")},
+            },
+        )
 
 
 def serialize_kpi_observation(row: KpiObservation) -> dict[str, object]:

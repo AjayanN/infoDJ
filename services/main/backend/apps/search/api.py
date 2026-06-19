@@ -194,6 +194,16 @@ def company_earnings(request, slug: str):
     return Response(payload)
 
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def company_capital_allocation(request, slug: str):
+    params = {"period": request.GET["period"]} if request.GET.get("period") else None
+    payload, error = ingestion_get(f"companies/{slug}/capital-allocation", params)
+    if error:
+        return Response({"error": "capital allocation unavailable", "detail": error}, status=503)
+    return Response(payload)
+
+
 def ingestion_get(path: str, params: dict[str, object] | None = None) -> tuple[dict | None, str]:
     base_url = settings.INGESTION_API_URL.rstrip("/") + "/"
     url = urljoin(base_url, path)
