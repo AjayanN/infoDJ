@@ -16,6 +16,7 @@ import {
   StrategyMilestoneResponse,
   EarningsResponse,
   CapitalAllocationResponse,
+  CompetitivePositionResponse,
   DashboardSection,
   DashboardResponse,
   HistoryRow,
@@ -42,7 +43,7 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'profile' | 'subscription';
+type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'profile' | 'subscription';
 type DashboardViewId =
   | 'company-intelligence'
   | 'turn-impact'
@@ -130,6 +131,7 @@ class AppComponent {
   strategyMilestones = signal<StrategyMilestoneResponse | null>(null);
   earnings = signal<EarningsResponse | null>(null);
   capitalAllocation = signal<CapitalAllocationResponse | null>(null);
+  competitivePosition = signal<CompetitivePositionResponse | null>(null);
   searchResults = signal<SearchResponse | null>(null);
   searchPages = signal<Record<SearchResultGroup, number>>({
     companies: 1,
@@ -161,6 +163,7 @@ class AppComponent {
   strategyMilestoneLoading = signal(false);
   earningsLoading = signal(false);
   capitalAllocationLoading = signal(false);
+  competitivePositionLoading = signal(false);
   companyProfileDate = '';
   businessModelDate = '';
   businessModelCompareDate = '';
@@ -184,6 +187,8 @@ class AppComponent {
   strategyMilestoneSlug = '';
   earningsPeriod = '';
   capitalAllocationPeriod = '';
+  competitivePositionDate = '';
+  competitiveRelationship = '';
   readonly companyProfileSectionOrder = [
     'summary',
     'business_model',
@@ -495,6 +500,9 @@ class AppComponent {
     if (this.activePage() === 'capital-allocation') {
       return `${this.capitalAllocation()?.company.name || 'Company'} Capital Allocation`;
     }
+    if (this.activePage() === 'competitive-position') {
+      return `${this.competitivePosition()?.company.name || 'Company'} Competitive Position`;
+    }
     if (this.activePage() === 'profile') {
       return 'Profile';
     }
@@ -525,6 +533,9 @@ class AppComponent {
     }
     if (this.activePage() === 'capital-allocation') {
       return 'Where management deployed capital across capex, R&D, buybacks, dividends, debt, acquisitions, and cash-flow context.';
+    }
+    if (this.activePage() === 'competitive-position') {
+      return 'Competitor sets, overlap dimensions, competitive actions, moat evidence, opposing evidence, and source gaps.';
     }
     if (this.activePage() === 'profile') {
       return 'Manage account details, avatar preview, and subscription access.';
@@ -994,6 +1005,32 @@ class AppComponent {
   }
 
   printCapitalAllocationBrief(): void {
+    window.print();
+  }
+
+  openCompetitivePosition(slug: string, asOf = '', relationship = ''): void {
+    if (!slug || !this.token()) return;
+    this.activePage.set('competitive-position');
+    this.menuOpen.set(false);
+    this.competitivePositionLoading.set(true);
+    this.error.set('');
+    this.api.competitivePosition(this.token(), slug, asOf || this.competitivePositionDate, relationship || this.competitiveRelationship).subscribe({
+      next: (response) => {
+        this.competitivePosition.set(response);
+        this.competitivePositionDate = response.snapshot?.effective_date || '';
+        this.competitiveRelationship = response.filters?.selected_relationship || '';
+        this.competitivePositionLoading.set(false);
+      },
+      error: (response) => { this.competitivePositionLoading.set(false); this.showError(response); }
+    });
+  }
+
+  reloadCompetitivePosition(): void {
+    const company = this.competitivePosition()?.company;
+    if (company) this.openCompetitivePosition(company.slug, this.competitivePositionDate, this.competitiveRelationship);
+  }
+
+  printCompetitivePositionBrief(): void {
     window.print();
   }
 

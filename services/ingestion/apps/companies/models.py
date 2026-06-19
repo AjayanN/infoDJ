@@ -689,3 +689,111 @@ class CapitalAllocationItem(models.Model):
 
     def __str__(self) -> str:
         return f"{self.period}: {self.label}"
+
+
+class CompetitiveRelationshipType(models.TextChoices):
+    DIRECT = "DIRECT", "Direct competitor"
+    CATEGORY = "CATEGORY", "Category competitor"
+    SUBSTITUTE = "SUBSTITUTE", "Substitute"
+    PLATFORM = "PLATFORM", "Platform competitor"
+    SUPPLIER_CUSTOMER = "SUPPLIER_CUSTOMER", "Supplier or customer overlap"
+    PEER_BENCHMARK = "PEER_BENCHMARK", "Peer benchmark"
+
+
+class CompetitiveDimensionType(models.TextChoices):
+    PRODUCT_OVERLAP = "PRODUCT_OVERLAP", "Product overlap"
+    PRICING_POSITION = "PRICING_POSITION", "Pricing position"
+    GEOGRAPHIC_OVERLAP = "GEOGRAPHIC_OVERLAP", "Geographic overlap"
+    CUSTOMER_OVERLAP = "CUSTOMER_OVERLAP", "Customer overlap"
+    SCALE_COMPARISON = "SCALE_COMPARISON", "Scale comparison"
+    COMPETITIVE_ACTION = "COMPETITIVE_ACTION", "Competitive action"
+    MOAT_EVIDENCE = "MOAT_EVIDENCE", "Moat evidence"
+    OPPOSING_EVIDENCE = "OPPOSING_EVIDENCE", "Opposing evidence"
+
+
+class CompetitivePositionSnapshot(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="competitive_position_snapshots")
+    effective_date = models.DateField(db_index=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="competitive_position_snapshots",
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=CompanyProfileStatus.choices,
+        default=CompanyProfileStatus.DRAFT,
+        db_index=True,
+    )
+    summary = models.TextField(blank=True)
+    methodology = models.TextField(blank=True)
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-effective_date", "-created_at"]
+        constraints = [
+            models.UniqueConstraint(fields=["company", "effective_date"], name="unique_competitive_position_snapshot")
+        ]
+        indexes = [models.Index(fields=["company", "status", "effective_date"], name="company_comp_pos_status_idx")]
+
+    def __str__(self) -> str:
+        return f"{self.company} competitive position at {self.effective_date}"
+
+
+class CompetitivePeer(models.Model):
+    snapshot = models.ForeignKey(CompetitivePositionSnapshot, on_delete=models.CASCADE, related_name="peers")
+    peer_name = models.CharField(max_length=255)
+    peer_company = models.ForeignKey(
+        Company,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="competitive_peer_mentions",
+    )
+    relationship_type = models.CharField(max_length=32, choices=CompetitiveRelationshipType.choices, db_index=True)
+    scope = models.CharField(max_length=255, blank=True)
+    geography = models.CharField(max_length=255, blank=True)
+    product_overlap = models.JSONField(default=list, blank=True)
+    customer_overlap = models.JSONField(default=list, blank=True)
+    evidence_text = models.TextField(blank=True)
+    is_in_universe = models.BooleanField(default=False, db_index=True)
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+
+    class Meta:
+        ordering = ["relationship_type", "peer_name"]
+        constraints = [
+            models.UniqueConstraint(fields=["snapshot", "peer_name", "relationship_type", "scope"], name="unique_competitive_peer")
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.snapshot.company} vs {self.peer_name}"
+
+
+class CompetitiveDimension(models.Model):
+    snapshot = models.ForeignKey(CompetitivePositionSnapshot, on_delete=models.CASCADE, related_name="dimensions")
+    peer = models.ForeignKey(CompetitivePeer, null=True, blank=True, on_delete=models.CASCADE, related_name="dimensions")
+    dimension_type = models.CharField(max_length=32, choices=CompetitiveDimensionType.choices, db_index=True)
+    label = models.CharField(max_length=255)
+    description = models.TextField()
+    evidence_text = models.TextField(blank=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="competitive_dimensions",
+    )
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+
+    class Meta:
+        ordering = ["dimension_type", "label"]
+        constraints = [
+            models.UniqueConstraint(fields=["snapshot", "peer", "dimension_type", "label"], name="unique_competitive_dimension")
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.snapshot.company}: {self.label}"
