@@ -545,9 +545,32 @@ BASE_URL=http://localhost:8080/api/app scripts/smoke/phase2_customer_supplier_de
 
 Requirement 11 verification on June 20, 2026: dependency builder populated all 20 configured companies with reviewed dependency snapshots and 176 category-level dependency rows; authenticated gateway smoke passed for all 20 companies; ingestion backend `66/66`, main backend `34/34`, frontend `7/7`, and frontend production build passed.
 
+## Geographic Expansion Map
+
+Phase 2 Requirement 12 adds a Geographic Expansion Map for reviewed countries and regions, dated entry or exit evidence where available, local partnerships, regulatory barriers, revenue contribution, outcomes, evidence, and source gaps.
+
+The baseline builder uses reviewed Company 360 geographies and source-backed international expansion, market-entry, and regulatory events. Generic geographic presence is not treated as a dated market entry. Missing revenue contribution, local partnerships, regulatory barriers, and outcomes are shown as source gaps instead of inferred values.
+
+Geographic Expansion endpoints:
+
+```bash
+GET /api/ingestion/companies/<slug>/geographic-expansion
+GET /api/app/companies/<slug>/geographic-expansion
+```
+
+Open `Geographic expansion map` from Company 360 for snapshot controls, status and market-type filters, country/region rows, entry/exit timeline, evidence cards, methodology guardrails, and source gaps.
+
+Geographic Expansion smoke check:
+
+```bash
+BASE_URL=http://localhost:8080/api/app scripts/smoke/phase2_geographic_expansion.sh
+```
+
+Requirement 12 verification on June 21, 2026: geographic expansion builder populated all 20 configured companies with reviewed expansion snapshots and 28 country/region market rows; direct database coverage confirmed every configured company has at least one reviewed market row; ingestion API validation passed for all 20 companies with 86 explicit source gaps; authenticated gateway smoke passed for all 20 companies; ingestion backend `71/71`, main backend `36/36`, frontend `7/7`, and frontend production build passed.
+
 ## Source Gap Resolution Guardrail
 
-Open source gaps are now routed back into ingestion instead of remaining as passive UI messages. The daily company update runs `resolve_source_gaps` after the Phase 2 builders and creates reviewed-source candidates from existing `SourceDocument` rows for acquisition lifecycle, competitive market-share, customer/supplier dependency, contract-term, concentration, and product-pricing gaps.
+Open source gaps are now routed back into ingestion instead of remaining as passive UI messages. The daily company update runs `resolve_source_gaps` after the Phase 2 builders and creates reviewed-source candidates from existing `SourceDocument` rows for acquisition lifecycle, competitive market-share, customer/supplier dependency, contract-term, concentration, product-pricing, and geographic expansion gaps.
 
 Resolution candidates are not treated as completed facts. Each candidate stores the source document, candidate type, evidence excerpt, confidence score, review status, and next extraction action. Feature builders should only promote a candidate into a dashboard row after extracting the required fields from the cited source.
 

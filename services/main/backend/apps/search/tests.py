@@ -375,6 +375,24 @@ class DashboardSearchApiTests(TestCase):
 
         self.assertEqual(response.status_code, 401)
 
+    @override_settings(INGESTION_API_URL="http://ingestion.test/api/ingestion")
+    @patch("apps.search.api.requests.get")
+    def test_geographic_expansion_proxies_filters(self, get):
+        get.return_value = json_response({"status": "available", "company": {"slug": "netflix"}, "markets": []})
+
+        response = self.client.get(
+            "/api/app/companies/netflix/geographic-expansion?status=ACTIVE&market_type=REGION"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(get.call_args.args[0], "http://ingestion.test/api/ingestion/companies/netflix/geographic-expansion")
+        self.assertEqual(get.call_args.kwargs["params"], {"status": "ACTIVE", "market_type": "REGION"})
+
+    def test_geographic_expansion_requires_authentication(self):
+        response = APIClient().get("/api/app/companies/netflix/geographic-expansion")
+
+        self.assertEqual(response.status_code, 401)
+
 
 def json_response(payload: dict):
     response = Mock()

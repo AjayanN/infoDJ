@@ -126,6 +126,7 @@
         <button type="button" *ngIf="productPricing()" [class.active]="activePage() === 'product-pricing'" [attr.aria-current]="activePage() === 'product-pricing' ? 'page' : null" (click)="setActivePage('product-pricing')">Products</button>
         <button type="button" *ngIf="acquisitionLifecycle()" [class.active]="activePage() === 'acquisition-lifecycle'" [attr.aria-current]="activePage() === 'acquisition-lifecycle' ? 'page' : null" (click)="setActivePage('acquisition-lifecycle')">Acquisitions</button>
         <button type="button" *ngIf="customerSupplierDependency()" [class.active]="activePage() === 'customer-supplier-dependency'" [attr.aria-current]="activePage() === 'customer-supplier-dependency' ? 'page' : null" (click)="setActivePage('customer-supplier-dependency')">Dependencies</button>
+        <button type="button" *ngIf="geographicExpansion()" [class.active]="activePage() === 'geographic-expansion'" [attr.aria-current]="activePage() === 'geographic-expansion' ? 'page' : null" (click)="setActivePage('geographic-expansion')">Geographies</button>
         <button type="button" [class.active]="activePage() === 'profile'" [attr.aria-current]="activePage() === 'profile' ? 'page' : null" (click)="setActivePage('profile')">Profile</button>
         <button type="button" [class.active]="activePage() === 'subscription'" [attr.aria-current]="activePage() === 'subscription' ? 'page' : null" (click)="setActivePage('subscription')">Subscription</button>
       </nav>
@@ -763,6 +764,7 @@
                   <button type="button" class="ghost-button" (click)="openProductPricing(companyView.company.slug)">Product and pricing history</button>
                   <button type="button" class="ghost-button" (click)="openAcquisitionLifecycle(companyView.company.slug)">Acquisition lifecycle tracker</button>
                   <button type="button" class="ghost-button" (click)="openCustomerSupplierDependency(companyView.company.slug)">Customer and supplier dependency</button>
+                  <button type="button" class="ghost-button" (click)="openGeographicExpansion(companyView.company.slug)">Geographic expansion map</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('companies-like-mine')">Compare peers</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('latest-moves')">Latest moves</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('risk-signals')">Risk signals</button>
@@ -1817,6 +1819,94 @@
               <section class="panel source-gap-panel" *ngIf="dependencyView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable dependency data</h2></div>
                 <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of dependencyView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+              </section>
+            </ng-container>
+          </section>
+
+          <section *ngSwitchCase="'geographic-expansion'" class="company-profile-layout" aria-labelledby="geo-expansion-heading">
+            <div class="loading-panel" *ngIf="geographicExpansionLoading()">Loading geographic expansion map...</div>
+            <ng-container *ngIf="!geographicExpansionLoading() && geographicExpansion() as geoView">
+              <section class="panel company-profile-hero">
+                <div>
+                  <p class="section-kicker">Geographic Expansion Map · {{ geoView.status }}</p>
+                  <h2 id="geo-expansion-heading">{{ geoView.company.name }}</h2>
+                  <p>{{ geoView.snapshot?.summary || 'Reviewed geographic expansion summary unavailable.' }}</p>
+                </div>
+                <div class="profile-score-card">
+                  <strong>{{ geoView.coverage.market_count }}</strong>
+                  <span>markets</span>
+                  <small>{{ geoView.coverage.entered_count }} dated entries/expansions</small>
+                  <small>{{ geoView.coverage.revenue_contribution_count }} revenue disclosures</small>
+                </div>
+              </section>
+
+              <section class="profile-controls panel">
+                <label>Map at date
+                  <select [(ngModel)]="geographicExpansionDate">
+                    <option value="">Latest reviewed snapshot</option>
+                    <option *ngFor="let snapshot of geoView.snapshot_history" [value]="snapshot.effective_date">
+                      {{ snapshot.effective_date }} · {{ snapshot.market_count }} markets
+                    </option>
+                  </select>
+                </label>
+                <label>Status
+                  <select [(ngModel)]="geographicExpansionStatus">
+                    <option value="">All statuses</option>
+                    <option *ngFor="let status of geoView.filters.statuses" [value]="status">{{ promiseLabel(status) }}</option>
+                  </select>
+                </label>
+                <label>Market type
+                  <select [(ngModel)]="geographicExpansionMarketType">
+                    <option value="">All market types</option>
+                    <option *ngFor="let type of geoView.filters.market_types" [value]="type">{{ promiseLabel(type) }}</option>
+                  </select>
+                </label>
+                <div class="profile-control-actions">
+                  <button type="button" class="primary-button" (click)="reloadGeographicExpansion()">Update filters</button>
+                  <button type="button" class="ghost-button" (click)="openCompany(geoView.company.slug)">Back to Company 360</button>
+                  <button type="button" class="ghost-button" (click)="printGeographicExpansionBrief()">Print expansion brief</button>
+                </div>
+              </section>
+
+              <section class="dashboard-two-column">
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Markets</p><h2>Countries and regions</h2></div></div>
+                  <div class="result-row" *ngFor="let market of geoView.markets">
+                    <strong>{{ market.geography }}</strong>
+                    <span>{{ promiseLabel(market.market_type) }} · {{ market.current_status_label }} · confidence {{ market.confidence_score | number:'1.2-2' }}</span>
+                    <p>{{ market.expansion_rationale }}</p>
+                    <p><strong>Outcome:</strong> {{ market.outcome_summary || 'Reviewed outcome unavailable.' }}</p>
+                    <small>{{ market.entry_date || 'Entry date unavailable' }} · revenue <ng-container *ngIf="market.revenue_contribution === null; else reviewedMarketRevenue">unavailable</ng-container><ng-template #reviewedMarketRevenue>{{ market.revenue_contribution | number:'1.0-2' }} {{ market.revenue_currency }}</ng-template></small>
+                  </div>
+                  <div class="empty-state unavailable-state" *ngIf="geoView.markets.length === 0">No reviewed geographic markets are available for the selected filters.</div>
+                </article>
+
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Timeline</p><h2>Entry and exit evidence</h2></div><span>{{ geoView.timeline.length }} dated rows</span></div>
+                  <div class="result-row" *ngFor="let row of geoView.timeline">
+                    <strong>{{ row.geography }}</strong>
+                    <span>{{ row.entry_date || 'Entry date unavailable' }} <ng-container *ngIf="row.exit_date">to {{ row.exit_date }}</ng-container></span>
+                    <p>{{ row.summary }}</p>
+                  </div>
+                  <div class="empty-state unavailable-state" *ngIf="geoView.timeline.length === 0">No reviewed dated entry or exit events are available.</div>
+                </article>
+              </section>
+
+              <section class="dashboard-two-column">
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Methodology</p><h2>Expansion guardrails</h2></div></div>
+                  <p>{{ geoView.snapshot?.methodology }}</p>
+                  <p>Missing revenue contribution, partnerships, barriers, or outcomes are shown as source gaps and are not inferred from generic geographic presence.</p>
+                </article>
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Expansion evidence</h2></div><span>{{ geoView.evidence.length }} sources</span></div>
+                  <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of geoView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                </article>
+              </section>
+
+              <section class="panel source-gap-panel" *ngIf="geoView.source_gaps.length > 0">
+                <div class="panel-header"><h2>Unavailable expansion data</h2></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of geoView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
               </section>
             </ng-container>
           </section>

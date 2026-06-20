@@ -1118,7 +1118,7 @@ The order below reflects functional dependency and user value. It does not requi
 - [x] Acquisition Lifecycle Tracker: all-company endpoint implemented with reviewed acquisition/subsidiary lifecycle rows where available, explicit source gaps otherwise, Company 360 entry point, and authenticated all-company smoke validation.
 - [x] Customer and Supplier Dependency: all-company dependency baseline implemented with category-only guardrails, source gaps for named concentration and contract terms, Company 360 entry point, and authenticated all-company smoke validation.
 - [x] Source-gap guardrail: daily ingestion now creates source-backed resolution candidates from existing 8-K, 10-K, exhibit, official-site, GDELT, and Wikipedia-reference source documents without promoting candidates into facts before review.
-- [ ] Geographic Expansion Map.
+- [x] Geographic Expansion Map: all-company reviewed geography/expansion-event baseline implemented with market rows, entry/exit timeline, explicit source gaps for dates/partners/barriers/revenue/outcomes, Company 360 entry point, daily ingestion builder, and authenticated all-company smoke validation.
 
 ### Wave 4: External Context and Governance
 
