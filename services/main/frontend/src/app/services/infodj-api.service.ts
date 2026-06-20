@@ -117,6 +117,22 @@ export type SourceGap = {
   reason: string;
   source: string;
   next_action: string;
+  resolution_candidates?: {
+    candidate_type: string;
+    evidence_text: string;
+    confidence_score: number;
+    extraction_status: string;
+    review_status: string;
+    next_action: string;
+    source: {
+      id: number;
+      source_api: string;
+      title: string;
+      publisher: string;
+      url: string;
+      published_date: string | null;
+    };
+  }[];
 };
 
 export type DashboardEvent = SearchEventResult & {
@@ -172,6 +188,10 @@ export type SourceConfidenceSummary = {
 
 export type CompanySituation = DashboardCompany & {
   match_dimensions: string[];
+  peer_source?: string;
+  relationship_type?: string;
+  evidence_text?: string;
+  is_in_universe?: boolean;
 };
 
 export type CompareExample = {

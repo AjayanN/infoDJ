@@ -7,7 +7,7 @@ from apps.curation.admin_helpers import (
     source_status_action,
 )
 from apps.ingestion.services.url_utils import apply_source_hashes
-from apps.ingestion.models import FinancialFact, MarketPrice, SourceGap
+from apps.ingestion.models import FinancialFact, MarketPrice, SourceGap, SourceGapResolutionCandidate
 
 
 class SourceDocumentAdmin(admin.ModelAdmin):
@@ -139,6 +139,23 @@ class SourceGapAdmin(admin.ModelAdmin):
     ordering = ("dashboard", "gap_type", "company")
 
 
+class SourceGapResolutionCandidateAdmin(admin.ModelAdmin):
+    list_display = (
+        "dashboard",
+        "gap_type",
+        "company",
+        "candidate_type",
+        "confidence_score",
+        "review_status",
+        "updated_at",
+    )
+    list_filter = ("dashboard", "gap_type", "candidate_type", "review_status", "company", "created_at", "updated_at")
+    search_fields = ("evidence_text", "next_action", "company__name", "source_document__title", "source_document__url")
+    readonly_fields = ("created_at", "updated_at")
+    autocomplete_fields = ("company", "source_gap", "source_document")
+    ordering = ("dashboard", "gap_type", "company", "-confidence_score")
+
+
 class MarketPriceAdmin(admin.ModelAdmin):
     list_display = ("company", "ticker", "provider", "price_date", "close_price", "volume", "updated_at")
     list_filter = ("provider", "ticker", "company", "price_date", "created_at", "updated_at")
@@ -163,5 +180,6 @@ register_planned_model("ingestion", "SourceDocument", SourceDocumentAdmin)
 register_planned_model("ingestion", "ArticleExtraction", ArticleExtractionAdmin)
 register_planned_model("ingestion", "IngestionJob", IngestionJobAdmin)
 register_planned_model("ingestion", "SourceGap", SourceGapAdmin)
+register_planned_model("ingestion", "SourceGapResolutionCandidate", SourceGapResolutionCandidateAdmin)
 register_planned_model("ingestion", "MarketPrice", MarketPriceAdmin)
 register_planned_model("ingestion", "FinancialFact", FinancialFactAdmin)

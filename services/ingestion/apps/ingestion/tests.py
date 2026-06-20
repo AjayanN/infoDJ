@@ -33,7 +33,14 @@ from apps.companies.models import (
     StrategyMilestone,
 )
 from apps.curation.models import BusinessEvent, StrategicTurn, StrategicTurnSource
-from apps.ingestion.models import ArticleExtraction, FinancialFact, MarketPrice, SourceDocument, SourceGap
+from apps.ingestion.models import (
+    ArticleExtraction,
+    FinancialFact,
+    MarketPrice,
+    SourceDocument,
+    SourceGap,
+    SourceGapResolutionCandidate,
+)
 from apps.ingestion.services.capital_allocation import (
     build_capital_allocation_periods,
     capital_allocation_quality_issues,
@@ -54,6 +61,7 @@ from apps.ingestion.services.customer_supplier_dependency import (
     build_customer_supplier_dependency,
     customer_supplier_dependency_quality_issues,
 )
+from apps.ingestion.services.source_gap_resolver import resolve_source_gaps
 from apps.ingestion.services.event_extractor import EventSignal, actual_change_for, find_evidence_sentence
 from apps.ingestion.services.earnings_intelligence import (
     build_earnings_periods,
@@ -1192,6 +1200,101 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual({row["company_slug"] for row in payload["sections"]["latest_moves"]["items"]}, {"netflix"})
         self.assertEqual({row["company_slug"] for row in payload["sections"]["risk_signals"]["items"]}, {"netflix"})
         self.assertEqual([row["slug"] for row in payload["sections"]["company_situations"]["items"]], ["disney"])
+
+    def test_dashboard_company_situations_falls_back_to_reviewed_competitive_peers(self):
+        exxon = Company.objects.create(name="ExxonMobil", industry="Energy", country="United States")
+        exxon_source = SourceDocument.objects.create(
+            company=exxon,
+            source_api="SEC",
+            url="https://example.com/exxon-10k",
+            title="ExxonMobil 10-K",
+            publisher="SEC",
+            language="en",
+        )
+        snapshot = CompetitivePositionSnapshot.objects.create(
+            company=exxon,
+            source_document=exxon_source,
+            effective_date=date(2026, 1, 1),
+            status="REVIEWED",
+            summary="ExxonMobil competes with global integrated energy companies.",
+            confidence_score="0.850",
+        )
+        CompetitivePeer.objects.create(
+            snapshot=snapshot,
+            peer_name="Chevron",
+            relationship_type="DIRECT",
+            scope="Integrated energy",
+            geography="United States",
+            evidence_text="ExxonMobil profile identifies Chevron as a direct competitor.",
+            confidence_score="0.850",
+        )
+
+        response = self.client.get("/dashboard-data?company=exxonmobil&section=company_situations")
+
+        self.assertEqual(response.status_code, 200)
+        rows = response.json()["sections"]["company_situations"]["items"]
+        self.assertEqual(rows[0]["name"], "Chevron")
+        self.assertEqual(rows[0]["peer_source"], "competitive_position")
+        self.assertEqual(rows[0]["is_in_universe"], False)
+
+    def test_source_gap_resolver_creates_real_source_candidates(self):
+        source = SourceDocument.objects.create(
+            company=self.netflix,
+            source_api="SEC_EDGAR_EXHIBIT",
+            url="https://example.com/netflix-acquires-example-studio",
+            title="Netflix announces acquisition of Example Studio",
+            publisher="SEC",
+            language="en",
+            snippet="Netflix announced the acquisition of Example Studio for cash consideration and described integration plans.",
+        )
+        gap = SourceGap.objects.create(
+            company=self.netflix,
+            dashboard="acquisition_lifecycle",
+            gap_type="acquisition_deals",
+            provider="acquisition-lifecycle",
+            reason="Reviewed acquisition deals are unavailable.",
+            next_ingestion_task="Collect SEC 8-K and company press release sources.",
+        )
+
+        result = resolve_source_gaps(company=self.netflix)
+
+        self.assertEqual(result.gaps_checked, 1)
+        self.assertEqual(result.candidates_created, 1)
+        candidate = SourceGapResolutionCandidate.objects.get(source_gap=gap)
+        self.assertEqual(candidate.source_document, source)
+        self.assertEqual(candidate.review_status, "NEEDS_REVIEW")
+        self.assertIn("Example Studio", candidate.evidence_text)
+        gap.refresh_from_db()
+        self.assertEqual(gap.status, "IN_PROGRESS")
+        self.assertEqual(gap.metadata["resolution_candidate_count"], 1)
+
+    def test_source_gaps_api_exposes_resolution_candidates(self):
+        gap = SourceGap.objects.create(
+            company=self.netflix,
+            dashboard="acquisition_lifecycle",
+            gap_type="acquisition_deals",
+            provider="acquisition-lifecycle",
+            reason="Reviewed acquisition deals are unavailable.",
+            next_ingestion_task="Collect SEC 8-K and company press release sources.",
+        )
+        SourceGapResolutionCandidate.objects.create(
+            source_gap=gap,
+            company=self.netflix,
+            source_document=self.source,
+            dashboard="acquisition_lifecycle",
+            gap_type="acquisition_deals",
+            candidate_type="acquisition_source",
+            evidence_text="Netflix acquisition evidence.",
+            confidence_score="0.700",
+            next_action="Extract named target before creating reviewed lifecycle rows.",
+        )
+
+        response = self.client.get("/source-gaps?dashboard=acquisition_lifecycle")
+
+        self.assertEqual(response.status_code, 200)
+        candidate = response.json()["source_gaps"][0]["resolution_candidates"][0]
+        self.assertEqual(candidate["candidate_type"], "acquisition_source")
+        self.assertEqual(candidate["source"]["title"], "Netflix 10-K")
 
     def test_rebuild_specific_turns_unlocks_pattern_scorecard_and_compare(self):
         peer = Company.objects.create(name="Example Streaming", industry=self.netflix.industry, country="United States")

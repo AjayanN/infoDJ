@@ -1117,6 +1117,7 @@ The order below reflects functional dependency and user value. It does not requi
 - [x] Competitive Position Dashboard: all-company peer-map baseline implemented with relationship types, overlap dimensions, source gaps, Company 360 entry point, and authenticated all-company smoke validation.
 - [x] Acquisition Lifecycle Tracker: all-company endpoint implemented with reviewed acquisition/subsidiary lifecycle rows where available, explicit source gaps otherwise, Company 360 entry point, and authenticated all-company smoke validation.
 - [x] Customer and Supplier Dependency: all-company dependency baseline implemented with category-only guardrails, source gaps for named concentration and contract terms, Company 360 entry point, and authenticated all-company smoke validation.
+- [x] Source-gap guardrail: daily ingestion now creates source-backed resolution candidates from existing 8-K, 10-K, exhibit, official-site, GDELT, and Wikipedia-reference source documents without promoting candidates into facts before review.
 - [ ] Geographic Expansion Map.
 
 ### Wave 4: External Context and Governance
