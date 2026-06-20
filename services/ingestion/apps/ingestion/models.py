@@ -206,6 +206,57 @@ class SourceGap(models.Model):
         return f"{self.dashboard}:{self.gap_type} for {company}"
 
 
+class SourceGapResolutionCandidate(models.Model):
+    source_gap = models.ForeignKey(
+        SourceGap,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="resolution_candidates",
+    )
+    company = models.ForeignKey(
+        "companies.Company",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="source_gap_resolution_candidates",
+    )
+    source_document = models.ForeignKey(
+        SourceDocument,
+        on_delete=models.CASCADE,
+        related_name="source_gap_resolution_candidates",
+    )
+    dashboard = models.CharField(max_length=96, db_index=True)
+    gap_type = models.CharField(max_length=96, db_index=True)
+    candidate_type = models.CharField(max_length=96, db_index=True)
+    evidence_text = models.TextField(blank=True)
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    extraction_status = models.CharField(max_length=32, default="CANDIDATE", db_index=True)
+    review_status = models.CharField(max_length=32, default="NEEDS_REVIEW", db_index=True)
+    next_action = models.TextField(blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["dashboard", "gap_type", "company_id", "-confidence_score"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["company", "dashboard", "gap_type", "source_document", "candidate_type"],
+                name="unique_source_gap_resolution_candidate",
+            )
+        ]
+        indexes = [
+            models.Index(fields=["dashboard", "gap_type"]),
+            models.Index(fields=["company", "review_status"]),
+            models.Index(fields=["source_gap", "review_status"]),
+        ]
+
+    def __str__(self) -> str:
+        company = self.company.name if self.company_id else "global"
+        return f"{self.dashboard}:{self.gap_type} candidate for {company}"
+
+
 class MarketPrice(models.Model):
     company = models.ForeignKey(
         "companies.Company",

@@ -545,6 +545,29 @@ BASE_URL=http://localhost:8080/api/app scripts/smoke/phase2_customer_supplier_de
 
 Requirement 11 verification on June 20, 2026: dependency builder populated all 20 configured companies with reviewed dependency snapshots and 176 category-level dependency rows; authenticated gateway smoke passed for all 20 companies; ingestion backend `66/66`, main backend `34/34`, frontend `7/7`, and frontend production build passed.
 
+## Source Gap Resolution Guardrail
+
+Open source gaps are now routed back into ingestion instead of remaining as passive UI messages. The daily company update runs `resolve_source_gaps` after the Phase 2 builders and creates reviewed-source candidates from existing `SourceDocument` rows for acquisition lifecycle, competitive market-share, customer/supplier dependency, contract-term, concentration, and product-pricing gaps.
+
+Resolution candidates are not treated as completed facts. Each candidate stores the source document, candidate type, evidence excerpt, confidence score, review status, and next extraction action. Feature builders should only promote a candidate into a dashboard row after extracting the required fields from the cited source.
+
+Source gap resolver command:
+
+```bash
+.venv/bin/python manage.py resolve_source_gaps --limit 500
+.venv/bin/python manage.py resolve_source_gaps --company netflix
+```
+
+Source-gap APIs include the first resolution candidates for review:
+
+```bash
+GET /api/ingestion/source-gaps?dashboard=acquisition_lifecycle
+```
+
+The dashboard `Compare peers`/company-situations section also falls back to reviewed Competitive Position peer evidence when no configured same-sector peer row exists. External peers remain labelled as outside the configured company universe.
+
+Source-gap guardrail verification on June 20, 2026: migration applied cleanly; resolver checked 246 open gaps and created 47 source-linked resolution candidates across 17 configured companies; no candidate was promoted to reviewed fact status; all 20 configured companies were present in the local ingestion DB; dashboard coverage validator passed with 20 companies, 59 scorecards, and six comparison groups; ingestion backend `69/69`, main backend `34/34`, frontend `7/7`, and frontend production build passed.
+
 ## Test Commands
 
 Run tests inside Docker Compose:

@@ -45,7 +45,7 @@ from apps.companies.models import (
     StrategyMilestone,
 )
 from apps.curation.models import BusinessEvent, StrategicTurn, StrategicTurnSource
-from apps.ingestion.models import FinancialFact, IngestionJob, MarketPrice, SourceDocument, SourceGap
+from apps.ingestion.models import FinancialFact, IngestionJob, MarketPrice, SourceDocument, SourceGap, SourceGapResolutionCandidate
 from apps.ingestion.services.dashboard_quality import (
     RISK_EVENT_TYPES,
     event_eligibility,
@@ -1839,6 +1839,7 @@ def dashboard_data(request: HttpRequest) -> JsonResponse:
             company_queryset = company_queryset.filter(country=scoped_company.country)
         company_queryset = company_queryset.exclude(id=scoped_company.id)
     company_rows = list(company_queryset.order_by("-event_count", "name")[:500])
+    company_situation_rows = company_situation_payload_rows(company_rows, scoped_company)
     compare_rows = compare_turn_rows(500)
     scorecard_rows = scorecard_candidate_rows(500)
     impact_rows = market_impact_rows(impact_events, 500)
@@ -1849,7 +1850,7 @@ def dashboard_data(request: HttpRequest) -> JsonResponse:
     impact_rows_page = paginate_rows(impact_rows, page_for("turn_impact"), limit)
     scorecard_rows_page = paginate_rows(scorecard_rows, page_for("scorecards"), limit)
     compare_rows_page = paginate_rows(compare_rows, page_for("compare"), limit)
-    company_rows_page = paginate_rows(company_rows, page_for("company_situations"), limit)
+    company_rows_page = paginate_rows(company_situation_rows, page_for("company_situations"), limit)
     sections = {
         "latest_moves": section_payload(
             key="latest_moves",
@@ -1930,14 +1931,14 @@ def dashboard_data(request: HttpRequest) -> JsonResponse:
         ),
         "company_situations": section_payload(
             key="company_situations",
-            items=[serialize_company_situation(company, scoped_company) for company in company_rows_page],
+            items=company_rows_page,
             raw_count=Company.objects.count(),
-            eligible_count=len(company_rows),
+            eligible_count=len(company_situation_rows),
             page=page_for("company_situations"),
             page_size=limit,
-            source_gaps=section_gaps("company_situations", company_rows, "Need company situation dimensions beyond sector/country."),
+            source_gaps=section_gaps("company_situations", company_situation_rows, "Need company situation dimensions beyond sector/country or reviewed competitive peer evidence."),
             required_data=["sector", "country", "stage", "revenue_band", "business_model", "pressure_trigger"],
-            next_action="Ingest companyfacts and classify company situation dimensions.",
+            next_action="Ingest companyfacts, classify company situation dimensions, and bridge missing configured peers from reviewed competitive-position sources.",
         ),
     }
     gaps = dashboard_source_gaps(pattern_rows, risk_events, compare_rows, impact_rows)
@@ -1953,7 +1954,7 @@ def dashboard_data(request: HttpRequest) -> JsonResponse:
             "turn_impact": impact_rows,
             "source_confidence": source_confidence_summary(),
             "scorecard_candidates": scorecard_rows,
-            "company_situations": [serialize_company_situation(company, scoped_company) for company in company_rows],
+            "company_situations": company_situation_rows,
             "compare_examples": compare_rows,
             "source_gaps": gaps,
             "sections": sections,
@@ -2101,7 +2102,7 @@ def jobs(request: HttpRequest) -> JsonResponse:
 def source_gaps(request: HttpRequest) -> JsonResponse:
     status = request.GET.get("status") or "OPEN"
     dashboard = request.GET.get("dashboard") or ""
-    queryset = SourceGap.objects.select_related("company")
+    queryset = SourceGap.objects.select_related("company").prefetch_related("resolution_candidates__source_document")
     if status:
         queryset = queryset.filter(status=status)
     if dashboard:
@@ -2687,6 +2688,57 @@ def serialize_company_situation(company: Company, anchor: Company | None = None)
         "strategic_turn_count": company.turn_count,
         "match_dimensions": match_dimensions,
     }
+
+
+def company_situation_payload_rows(company_rows: list[Company], anchor: Company | None) -> list[dict[str, object]]:
+    rows = [serialize_company_situation(company, anchor) for company in company_rows]
+    if rows or anchor is None:
+        return rows
+    return competitive_peer_situation_rows(anchor)
+
+
+def competitive_peer_situation_rows(anchor: Company) -> list[dict[str, object]]:
+    snapshot = (
+        CompetitivePositionSnapshot.objects.filter(company=anchor, status__in=["PUBLISHED", "REVIEWED"])
+        .prefetch_related("peers__peer_company")
+        .order_by("-effective_date", "-updated_at")
+        .first()
+    )
+    if snapshot is None:
+        return []
+    rows = []
+    seen = set()
+    source_count = SourceDocument.objects.filter(company=anchor).count()
+    for peer in snapshot.peers.all()[:20]:
+        key = peer.peer_company.slug if peer.peer_company_id else f"external-{peer.peer_name.lower().replace(' ', '-')}"
+        if key in seen:
+            continue
+        seen.add(key)
+        if peer.peer_company_id:
+            row = serialize_company_situation(peer.peer_company, anchor)
+            row["peer_source"] = "competitive_position"
+            row["relationship_type"] = peer.relationship_type
+            row["evidence_text"] = peer.evidence_text
+            rows.append(row)
+            continue
+        rows.append(
+            {
+                "id": None,
+                "name": peer.peer_name,
+                "slug": key,
+                "sector": anchor.industry,
+                "country": peer.geography or anchor.country,
+                "source_count": source_count,
+                "event_count": 0,
+                "strategic_turn_count": 0,
+                "match_dimensions": [value for value in [peer.relationship_type, peer.scope, peer.geography] if value],
+                "peer_source": "competitive_position",
+                "relationship_type": peer.relationship_type,
+                "evidence_text": peer.evidence_text,
+                "is_in_universe": False,
+            }
+        )
+    return rows
 
 
 def serialize_dashboard_scope(company: Company | None) -> dict[str, object] | None:
@@ -3610,6 +3662,31 @@ def serialize_source_gap(gap: SourceGap) -> dict[str, object]:
         "next_ingestion_task": gap.next_ingestion_task,
         "status": gap.status,
         "metadata": gap.metadata,
+        "resolution_candidates": [
+            serialize_source_gap_resolution_candidate(candidate)
+            for candidate in list(gap.resolution_candidates.all())[:5]
+        ],
         "created_at": gap.created_at.isoformat() if gap.created_at else None,
         "updated_at": gap.updated_at.isoformat() if gap.updated_at else None,
+    }
+
+
+def serialize_source_gap_resolution_candidate(candidate: SourceGapResolutionCandidate) -> dict[str, object]:
+    source = candidate.source_document
+    return {
+        "id": candidate.id,
+        "candidate_type": candidate.candidate_type,
+        "evidence_text": candidate.evidence_text,
+        "confidence_score": decimal_to_float(candidate.confidence_score),
+        "extraction_status": candidate.extraction_status,
+        "review_status": candidate.review_status,
+        "next_action": candidate.next_action,
+        "source": {
+            "id": source.id,
+            "source_api": source.source_api,
+            "title": source.title,
+            "publisher": source.publisher,
+            "url": source.canonical_url or source.url,
+            "published_date": source.published_date.isoformat() if source.published_date else None,
+        },
     }
