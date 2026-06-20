@@ -18,6 +18,7 @@ from apps.companies.models import (
     CompanyProfileSnapshot,
     CompetitivePeer,
     CompetitivePositionSnapshot,
+    CustomerSupplierDependencySnapshot,
     EarningsGuidanceComparison,
     EarningsPeriod,
     EarningsPeriodDocument,
@@ -48,6 +49,10 @@ from apps.ingestion.services.product_pricing_history import (
 from apps.ingestion.services.acquisition_lifecycle import (
     build_acquisition_lifecycle,
     acquisition_lifecycle_quality_issues,
+)
+from apps.ingestion.services.customer_supplier_dependency import (
+    build_customer_supplier_dependency,
+    customer_supplier_dependency_quality_issues,
 )
 from apps.ingestion.services.event_extractor import EventSignal, actual_change_for, find_evidence_sentence
 from apps.ingestion.services.earnings_intelligence import (
@@ -1033,6 +1038,47 @@ class IngestionSearchApiTests(TestCase):
             self.assertTrue(any(gap["key"] == "acquisition_deal_terms" for gap in payload["source_gaps"]))
         else:
             self.assertTrue(any(gap["key"] == "acquisition_deals" for gap in payload["source_gaps"]))
+
+    def test_customer_supplier_dependency_builder_creates_category_only_map(self):
+        CompanyProfileSnapshot.objects.create(
+            company=self.netflix,
+            effective_date=date(2026, 1, 1),
+            source_document=self.source,
+            status="REVIEWED",
+            products=["Subscription video streaming"],
+            customer_groups=["Streaming members", "Advertisers"],
+            geographies=["United States"],
+            confidence_score="0.900",
+        )
+
+        first = build_customer_supplier_dependency(self.netflix)
+        second = build_customer_supplier_dependency(self.netflix)
+        snapshot = CustomerSupplierDependencySnapshot.objects.get(company=self.netflix)
+
+        self.assertEqual(first["snapshots_created"], 1)
+        self.assertEqual(second["snapshots_updated"], 1)
+        self.assertTrue(snapshot.dependencies.filter(dependency_type="CUSTOMER_SEGMENT", counterparty_name="Streaming members").exists())
+        self.assertTrue(snapshot.dependencies.filter(disclosure_confidence="CATEGORY_ONLY").exists())
+        self.assertNotIn("no reviewed dependency snapshot", customer_supplier_dependency_quality_issues(self.netflix))
+
+    def test_customer_supplier_dependency_api_keeps_named_counterparties_unavailable(self):
+        CompanyProfileSnapshot.objects.create(
+            company=self.netflix,
+            effective_date=date(2026, 1, 1),
+            source_document=self.source,
+            status="REVIEWED",
+            customer_groups=["Streaming members"],
+            confidence_score="0.900",
+        )
+        build_customer_supplier_dependency(self.netflix)
+
+        payload = self.client.get("/companies/netflix/customer-supplier-dependency").json()
+
+        self.assertEqual(payload["status"], "available")
+        self.assertGreaterEqual(payload["coverage"]["dependency_count"], 1)
+        self.assertEqual(payload["coverage"]["named_counterparty_count"], 0)
+        self.assertTrue(any(gap["key"] == "named_counterparties" for gap in payload["source_gaps"]))
+        self.assertTrue(any(gap["key"] == "dependency_contract_terms" for gap in payload["source_gaps"]))
 
     def test_companyfacts_builder_creates_idempotent_annual_and_quarterly_series(self):
         for filed, accession, value in (

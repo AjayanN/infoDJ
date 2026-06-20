@@ -522,6 +522,29 @@ BASE_URL=http://localhost:8080/api/app scripts/smoke/phase2_acquisition_lifecycl
 
 Requirement 10 verification on June 19, 2026: acquisition lifecycle builder validated all 20 configured companies; companies with reviewed subsidiary/acquired-entity context expose lifecycle rows and companies without reviewed targets expose acquisition source gaps; authenticated gateway smoke passed for all 20 companies; ingestion backend `64/64`, main backend `34/34`, frontend `7/7`, and frontend production build passed.
 
+## Customer and Supplier Dependency
+
+Phase 2 Requirement 11 adds a Customer and Supplier Dependency map for reviewed customer groups, supplier categories, platforms, distributors, licensors, infrastructure providers, partners, and contract-risk disclosures. It separates named counterparties from category-only dependencies so confidential or ambiguous counterparties are not published as facts.
+
+The baseline builder uses reviewed Company 360 customer groups and reviewed Business Model Map channel/partner components. Missing named counterparties, concentration percentages, renewal dates, exclusivity, minimum commitments, termination rights, and critical-supplier details are shown as source gaps. Absence of disclosure is not interpreted as absence of dependency.
+
+Customer and Supplier Dependency endpoints:
+
+```bash
+GET /api/ingestion/companies/<slug>/customer-supplier-dependency
+GET /api/app/companies/<slug>/customer-supplier-dependency
+```
+
+Open `Customer and supplier dependency` from Company 360 for snapshot controls, dependency-type and disclosure-confidence filters, dependency relationships, contract-risk states, evidence cards, methodology guardrails, and source gaps.
+
+Customer and Supplier Dependency smoke check:
+
+```bash
+BASE_URL=http://localhost:8080/api/app scripts/smoke/phase2_customer_supplier_dependency.sh
+```
+
+Requirement 11 verification on June 20, 2026: dependency builder populated all 20 configured companies with reviewed dependency snapshots and 176 category-level dependency rows; authenticated gateway smoke passed for all 20 companies; ingestion backend `66/66`, main backend `34/34`, frontend `7/7`, and frontend production build passed.
+
 ## Test Commands
 
 Run tests inside Docker Compose:

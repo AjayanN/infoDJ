@@ -863,6 +863,37 @@ export type AcquisitionLifecycleResponse = {
   source_gaps: SourceGap[];
 };
 
+export type CustomerSupplierDependency = {
+  id: number; dependency_type: string; dependency_type_label: string; counterparty_name: string;
+  counterparty_company: DashboardCompany | null; is_named_counterparty: boolean;
+  materiality_band: string; materiality_band_label: string; disclosure_confidence: string; disclosure_confidence_label: string;
+  concentration_percent: number | null; geography: string; product_scope: string; relationship_summary: string; risk_summary: string;
+  evidence_text: string; confidence_score: number; source: CompanyProfileSource | null; contract_term_count: number;
+};
+
+export type DependencyContractTerm = {
+  id: number; dependency_id: number; counterparty_name: string; term_type: string; term_type_label: string;
+  effective_date: string | null; expiration_date: string | null; description: string; evidence_text: string;
+  confidence_score: number; review_status: string; source: CompanyProfileSource | null;
+};
+
+export type CustomerSupplierDependencyResponse = {
+  status: 'available' | 'partial' | 'unavailable';
+  company: CompanyProfileResponse['company'];
+  snapshot: {
+    id: number; effective_date: string; status: string; summary: string; methodology: string;
+    confidence_score: number; source: CompanyProfileSource | null;
+  } | null;
+  snapshot_history: { id: number; effective_date: string; status: string; confidence_score: number; dependency_count: number; selected: boolean }[];
+  dependencies: CustomerSupplierDependency[];
+  map: Record<string, CustomerSupplierDependency[]>;
+  contract_terms: DependencyContractTerm[];
+  filters: { types: string[]; confidence_levels: string[]; selected_type: string; selected_confidence: string; as_of: string };
+  coverage: { dependency_count: number; named_counterparty_count: number; category_only_count: number; contract_term_count: number; source_count: number; last_updated: string };
+  evidence: CompanyProfileSource[];
+  source_gaps: SourceGap[];
+};
+
 @Injectable({ providedIn: 'root' })
 export class InfoDjApiService {
   private readonly http = inject(HttpClient);
@@ -1101,6 +1132,16 @@ export class InfoDjApiService {
     if (outcome) params['outcome'] = outcome;
     if (deal) params['deal'] = deal;
     return this.http.get<AcquisitionLifecycleResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/acquisition-lifecycle`, {
+      headers: this.authHeaders(token), params
+    });
+  }
+
+  customerSupplierDependency(token: string, slug: string, asOf = '', type = '', confidence = '') {
+    const params: Record<string, string> = {};
+    if (asOf) params['as_of'] = asOf;
+    if (type) params['type'] = type;
+    if (confidence) params['confidence'] = confidence;
+    return this.http.get<CustomerSupplierDependencyResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/customer-supplier-dependency`, {
       headers: this.authHeaders(token), params
     });
   }

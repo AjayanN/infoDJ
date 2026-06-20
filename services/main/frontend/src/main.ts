@@ -19,6 +19,7 @@ import {
   CompetitivePositionResponse,
   ProductPricingResponse,
   AcquisitionLifecycleResponse,
+  CustomerSupplierDependencyResponse,
   DashboardSection,
   DashboardResponse,
   HistoryRow,
@@ -45,7 +46,7 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'profile' | 'subscription';
+type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'profile' | 'subscription';
 type DashboardViewId =
   | 'company-intelligence'
   | 'turn-impact'
@@ -136,6 +137,7 @@ class AppComponent {
   competitivePosition = signal<CompetitivePositionResponse | null>(null);
   productPricing = signal<ProductPricingResponse | null>(null);
   acquisitionLifecycle = signal<AcquisitionLifecycleResponse | null>(null);
+  customerSupplierDependency = signal<CustomerSupplierDependencyResponse | null>(null);
   searchResults = signal<SearchResponse | null>(null);
   searchPages = signal<Record<SearchResultGroup, number>>({
     companies: 1,
@@ -170,6 +172,7 @@ class AppComponent {
   competitivePositionLoading = signal(false);
   productPricingLoading = signal(false);
   acquisitionLifecycleLoading = signal(false);
+  customerSupplierDependencyLoading = signal(false);
   companyProfileDate = '';
   businessModelDate = '';
   businessModelCompareDate = '';
@@ -201,6 +204,9 @@ class AppComponent {
   acquisitionTransactionType = '';
   acquisitionOutcome = '';
   acquisitionDeal = '';
+  dependencyDate = '';
+  dependencyType = '';
+  dependencyConfidence = '';
   readonly companyProfileSectionOrder = [
     'summary',
     'business_model',
@@ -521,6 +527,9 @@ class AppComponent {
     if (this.activePage() === 'acquisition-lifecycle') {
       return `${this.acquisitionLifecycle()?.company.name || 'Company'} Acquisition Lifecycle`;
     }
+    if (this.activePage() === 'customer-supplier-dependency') {
+      return `${this.customerSupplierDependency()?.company.name || 'Company'} Customer and Supplier Dependency`;
+    }
     if (this.activePage() === 'profile') {
       return 'Profile';
     }
@@ -560,6 +569,9 @@ class AppComponent {
     }
     if (this.activePage() === 'acquisition-lifecycle') {
       return 'Acquisition portfolio, deal stages, management rationale, approvals, integration progress, outcomes, and source gaps.';
+    }
+    if (this.activePage() === 'customer-supplier-dependency') {
+      return 'Customer, supplier, platform, distributor, licensor, infrastructure, and contract dependencies with evidence and source gaps.';
     }
     if (this.activePage() === 'profile') {
       return 'Manage account details, avatar preview, and subscription access.';
@@ -1123,6 +1135,39 @@ class AppComponent {
   }
 
   printAcquisitionLifecycleBrief(): void {
+    window.print();
+  }
+
+  openCustomerSupplierDependency(slug: string, asOf = '', type = '', confidence = ''): void {
+    if (!slug || !this.token()) return;
+    this.activePage.set('customer-supplier-dependency');
+    this.menuOpen.set(false);
+    this.customerSupplierDependencyLoading.set(true);
+    this.error.set('');
+    this.api.customerSupplierDependency(
+      this.token(),
+      slug,
+      asOf || this.dependencyDate,
+      type || this.dependencyType,
+      confidence || this.dependencyConfidence
+    ).subscribe({
+      next: (response) => {
+        this.customerSupplierDependency.set(response);
+        this.dependencyDate = response.snapshot?.effective_date || '';
+        this.dependencyType = response.filters?.selected_type || '';
+        this.dependencyConfidence = response.filters?.selected_confidence || '';
+        this.customerSupplierDependencyLoading.set(false);
+      },
+      error: (response) => { this.customerSupplierDependencyLoading.set(false); this.showError(response); }
+    });
+  }
+
+  reloadCustomerSupplierDependency(): void {
+    const company = this.customerSupplierDependency()?.company;
+    if (company) this.openCustomerSupplierDependency(company.slug, this.dependencyDate, this.dependencyType, this.dependencyConfidence);
+  }
+
+  printCustomerSupplierDependencyBrief(): void {
     window.print();
   }
 

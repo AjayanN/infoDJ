@@ -1075,3 +1075,135 @@ class AcquisitionLifecycleEvent(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["deal", "stage", "title", "event_date"], name="unique_acquisition_lifecycle_event")
         ]
+
+
+class DependencyType(models.TextChoices):
+    CUSTOMER = "CUSTOMER", "Named customer"
+    CUSTOMER_SEGMENT = "CUSTOMER_SEGMENT", "Customer segment"
+    SUPPLIER = "SUPPLIER", "Supplier"
+    MANUFACTURER = "MANUFACTURER", "Manufacturer"
+    PLATFORM = "PLATFORM", "Platform"
+    DISTRIBUTOR = "DISTRIBUTOR", "Distributor"
+    LICENSOR = "LICENSOR", "Licensor"
+    INFRASTRUCTURE = "INFRASTRUCTURE", "Infrastructure provider"
+    CONTRACT = "CONTRACT", "Contractual dependency"
+    PARTNER = "PARTNER", "Partner"
+
+
+class DependencyMaterialityBand(models.TextChoices):
+    DISCLOSED_MATERIAL = "DISCLOSED_MATERIAL", "Disclosed material"
+    CONCENTRATION_DISCLOSED = "CONCENTRATION_DISCLOSED", "Concentration disclosed"
+    IMPORTANT = "IMPORTANT", "Important"
+    CONTEXT = "CONTEXT", "Context"
+    UNKNOWN = "UNKNOWN", "Unknown"
+
+
+class DependencyDisclosureConfidence(models.TextChoices):
+    NAMED = "NAMED", "Named counterparty"
+    UNNAMED = "UNNAMED", "Unnamed disclosed counterparty"
+    CATEGORY_ONLY = "CATEGORY_ONLY", "Category only"
+    REVIEWED_INFERENCE = "REVIEWED_INFERENCE", "Reviewed inference"
+
+
+class DependencyContractTermType(models.TextChoices):
+    CONCENTRATION = "CONCENTRATION", "Concentration disclosure"
+    RENEWAL = "RENEWAL", "Renewal"
+    EXPIRATION = "EXPIRATION", "Expiration"
+    EXCLUSIVITY = "EXCLUSIVITY", "Exclusivity"
+    MINIMUM_COMMITMENT = "MINIMUM_COMMITMENT", "Minimum commitment"
+    TERMINATION = "TERMINATION", "Termination"
+    OTHER = "OTHER", "Other contract term"
+
+
+class CustomerSupplierDependencySnapshot(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="dependency_snapshots")
+    effective_date = models.DateField(db_index=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="dependency_snapshots",
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=CompanyProfileStatus.choices,
+        default=CompanyProfileStatus.DRAFT,
+        db_index=True,
+    )
+    summary = models.TextField(blank=True)
+    methodology = models.TextField(blank=True)
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-effective_date", "-created_at"]
+        constraints = [
+            models.UniqueConstraint(fields=["company", "effective_date"], name="unique_dependency_snapshot")
+        ]
+        indexes = [models.Index(fields=["company", "status", "effective_date"], name="company_dep_status_idx")]
+
+
+class CustomerSupplierDependency(models.Model):
+    snapshot = models.ForeignKey(CustomerSupplierDependencySnapshot, on_delete=models.CASCADE, related_name="dependencies")
+    dependency_type = models.CharField(max_length=32, choices=DependencyType.choices, db_index=True)
+    counterparty_name = models.CharField(max_length=255)
+    counterparty_company = models.ForeignKey(
+        Company,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="dependency_counterparty_mentions",
+    )
+    is_named_counterparty = models.BooleanField(default=False, db_index=True)
+    materiality_band = models.CharField(max_length=32, choices=DependencyMaterialityBand.choices, db_index=True)
+    disclosure_confidence = models.CharField(max_length=32, choices=DependencyDisclosureConfidence.choices, db_index=True)
+    concentration_percent = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True)
+    geography = models.CharField(max_length=255, blank=True)
+    product_scope = models.CharField(max_length=255, blank=True)
+    relationship_summary = models.TextField(blank=True)
+    risk_summary = models.TextField(blank=True)
+    evidence_text = models.TextField(blank=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="customer_supplier_dependencies",
+    )
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["dependency_type", "counterparty_name"]
+        constraints = [
+            models.UniqueConstraint(fields=["snapshot", "dependency_type", "counterparty_name", "product_scope"], name="unique_dependency_relationship")
+        ]
+
+
+class DependencyContractTerm(models.Model):
+    dependency = models.ForeignKey(CustomerSupplierDependency, on_delete=models.CASCADE, related_name="contract_terms")
+    term_type = models.CharField(max_length=32, choices=DependencyContractTermType.choices, db_index=True)
+    effective_date = models.DateField(null=True, blank=True, db_index=True)
+    expiration_date = models.DateField(null=True, blank=True, db_index=True)
+    description = models.TextField()
+    evidence_text = models.TextField(blank=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="dependency_contract_terms",
+    )
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    review_status = models.CharField(
+        max_length=32, choices=PromiseReviewStatus.choices, default=PromiseReviewStatus.NEEDS_REVIEW, db_index=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["term_type", "expiration_date", "effective_date"]
+        constraints = [
+            models.UniqueConstraint(fields=["dependency", "term_type", "description"], name="unique_dependency_contract_term")
+        ]

@@ -641,13 +641,20 @@ Each feature below inherits the shared standards above. Feature sections only de
 
 **MVP tasks:**
 
-- [ ] Define dependency types, materiality bands, and disclosure confidence.
-- [ ] Build current and historical dependency map.
-- [ ] Track named and unnamed customer concentration disclosures.
-- [ ] Track critical suppliers, manufacturers, cloud providers, app stores, distributors, and licensors.
-- [ ] Track contract renewal, expiration, exclusivity, minimum commitment, and termination risk where disclosed.
-- [ ] Protect confidential or ambiguously disclosed counterparties from false identification.
-- [ ] Avoid interpreting absence of disclosure as absence of dependency.
+- [x] Define dependency types, materiality bands, and disclosure confidence.
+- [x] Build current and historical dependency map.
+- [x] Track named and unnamed customer concentration disclosures as explicit fields and source gaps.
+- [x] Track critical suppliers, manufacturers, cloud providers, app stores, distributors, and licensors as dependency categories.
+- [x] Track contract renewal, expiration, exclusivity, minimum commitment, and termination risk where disclosed as contract-term records.
+- [x] Protect confidential or ambiguously disclosed counterparties from false identification through category-only disclosure states.
+- [x] Avoid interpreting absence of disclosure as absence of dependency.
+
+**Implementation notes:**
+
+- Backend: added dependency snapshots, dependency relationship rows, contract-term rows, enums for type/materiality/disclosure confidence, reviewed builder, ingestion API endpoint, source-gap persistence, main-backend proxy, admin registration, and daily scheduler hook.
+- Frontend: added Company 360 action, left-nav page, snapshot/type/confidence controls, relationship map, contract-risk panel, methodology guardrails, evidence cards, and source-gap states.
+- Data acquisition: builds from reviewed Company 360 customer groups and reviewed Business Model Map channel/partner components; named counterparties and contract terms remain unavailable unless explicitly reviewed.
+- Validation completed: all-company authenticated gateway smoke with `scripts/smoke/phase2_customer_supplier_dependency.sh`, full ingestion backend, main backend, frontend test suite, and frontend production build passed.
 
 **Acceptance criteria:**
 
@@ -1109,7 +1116,7 @@ The order below reflects functional dependency and user value. It does not requi
 - [x] Capital Allocation Dashboard: SEC-backed all-company baseline implemented with period views, deployment/context separation, source gaps, Company 360 entry point, and authenticated all-company smoke validation.
 - [x] Competitive Position Dashboard: all-company peer-map baseline implemented with relationship types, overlap dimensions, source gaps, Company 360 entry point, and authenticated all-company smoke validation.
 - [x] Acquisition Lifecycle Tracker: all-company endpoint implemented with reviewed acquisition/subsidiary lifecycle rows where available, explicit source gaps otherwise, Company 360 entry point, and authenticated all-company smoke validation.
-- [ ] Customer and Supplier Dependency.
+- [x] Customer and Supplier Dependency: all-company dependency baseline implemented with category-only guardrails, source gaps for named concentration and contract terms, Company 360 entry point, and authenticated all-company smoke validation.
 - [ ] Geographic Expansion Map.
 
 ### Wave 4: External Context and Governance
