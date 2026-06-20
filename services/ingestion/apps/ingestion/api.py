@@ -26,6 +26,12 @@ from apps.companies.models import (
     CompetitiveDimensionType,
     CompetitivePeer,
     CompetitivePositionSnapshot,
+    CustomerSupplierDependency,
+    CustomerSupplierDependencySnapshot,
+    DependencyContractTerm,
+    DependencyDisclosureConfidence,
+    DependencyMaterialityBand,
+    DependencyType,
     EarningsGuidanceComparison,
     EarningsPeriod,
     KpiDefinition,
@@ -899,6 +905,66 @@ def company_acquisition_lifecycle(request: HttpRequest, slug: str) -> JsonRespon
     })
 
 
+@require_GET
+def company_customer_supplier_dependency(request: HttpRequest, slug: str) -> JsonResponse:
+    company = get_company(slug)
+    snapshots = list(
+        CustomerSupplierDependencySnapshot.objects.filter(company=company, status__in=["PUBLISHED", "REVIEWED"])
+        .select_related("source_document")
+        .prefetch_related("dependencies__source_document", "dependencies__counterparty_company", "dependencies__contract_terms__source_document")
+        .order_by("-effective_date", "-updated_at")
+    )
+    as_of = parse_iso_date(request.GET.get("as_of"))
+    eligible = [row for row in snapshots if as_of is None or row.effective_date <= as_of]
+    current = eligible[0] if eligible else None
+    dependency_type = (request.GET.get("type") or "").strip().upper()
+    confidence = (request.GET.get("confidence") or "").strip().upper()
+    if current is None:
+        gaps = [{
+            "key": "dependency_snapshot",
+            "label": "Dependency map unavailable",
+            "reason": f"No reviewed customer and supplier dependency snapshot is available for {company.name}.",
+            "source": "customer-supplier-dependency",
+            "next_action": "Refresh reviewed Company 360 profiles, business-model maps, and run build_customer_supplier_dependencies.",
+        }]
+        persist_customer_supplier_dependency_gaps(company, gaps)
+        return JsonResponse({"status": "unavailable", "company": serialize_company_detail(company), "snapshot": None, "snapshot_history": [], "dependencies": [], "source_gaps": gaps})
+    dependencies = list(current.dependencies.all())
+    if dependency_type:
+        dependencies = [row for row in dependencies if row.dependency_type == dependency_type]
+    if confidence:
+        dependencies = [row for row in dependencies if row.disclosure_confidence == confidence]
+    gaps = customer_supplier_dependency_source_gaps(company, current, dependencies)
+    persist_customer_supplier_dependency_gaps(company, gaps)
+    evidence = customer_supplier_dependency_evidence(current, dependencies)
+    return JsonResponse({
+        "status": "available" if dependencies else "partial",
+        "company": serialize_company_detail(company),
+        "snapshot": serialize_dependency_snapshot(current),
+        "snapshot_history": [serialize_dependency_snapshot_history(row, current) for row in snapshots],
+        "dependencies": [serialize_dependency(row) for row in dependencies],
+        "map": dependency_map(dependencies),
+        "contract_terms": [serialize_dependency_contract_term(term) for row in dependencies for term in row.contract_terms.all()],
+        "filters": {
+            "types": sorted({row.dependency_type for row in current.dependencies.all()}),
+            "confidence_levels": sorted({row.disclosure_confidence for row in current.dependencies.all()}),
+            "selected_type": dependency_type,
+            "selected_confidence": confidence,
+            "as_of": as_of.isoformat() if as_of else "",
+        },
+        "coverage": {
+            "dependency_count": len(dependencies),
+            "named_counterparty_count": sum(1 for row in dependencies if row.is_named_counterparty),
+            "category_only_count": sum(1 for row in dependencies if row.disclosure_confidence == DependencyDisclosureConfidence.CATEGORY_ONLY),
+            "contract_term_count": sum(row.contract_terms.count() for row in dependencies),
+            "source_count": len(evidence),
+            "last_updated": current.updated_at.isoformat(),
+        },
+        "evidence": evidence,
+        "source_gaps": gaps,
+    })
+
+
 def earnings_period_key(period: EarningsPeriod) -> str:
     return f"FY{period.fiscal_year}-{period.fiscal_period}"
 
@@ -1574,6 +1640,122 @@ def acquisition_lifecycle_source_gaps(
         gaps.append({"key": "acquisition_stage_events", "label": "Lifecycle timeline unavailable", "reason": "No reviewed stage events are linked to the selected deal.", "source": "acquisition-lifecycle", "next_action": "Add announcement, approval, close, integration, impairment, divestiture, or review events."})
     if selected and not selected.outcome_review:
         gaps.append({"key": "acquisition_outcome_review", "label": "Outcome review unavailable", "reason": "No reviewed post-close outcome assessment is available for the selected deal.", "source": "acquisition-lifecycle", "next_action": "Review later filings and operating evidence before classifying the outcome."})
+    return gaps
+
+
+def serialize_dependency_snapshot(snapshot: CustomerSupplierDependencySnapshot) -> dict[str, object]:
+    return {
+        "id": snapshot.id,
+        "effective_date": snapshot.effective_date.isoformat(),
+        "status": snapshot.status,
+        "summary": snapshot.summary,
+        "methodology": snapshot.methodology,
+        "confidence_score": decimal_to_float(snapshot.confidence_score),
+        "source": serialize_profile_source(snapshot.source_document) if snapshot.source_document_id else None,
+    }
+
+
+def serialize_dependency_snapshot_history(
+    snapshot: CustomerSupplierDependencySnapshot,
+    current: CustomerSupplierDependencySnapshot,
+) -> dict[str, object]:
+    return {
+        "id": snapshot.id,
+        "effective_date": snapshot.effective_date.isoformat(),
+        "status": snapshot.status,
+        "confidence_score": decimal_to_float(snapshot.confidence_score),
+        "dependency_count": snapshot.dependencies.count(),
+        "selected": snapshot.id == current.id,
+    }
+
+
+def serialize_dependency(row: CustomerSupplierDependency) -> dict[str, object]:
+    return {
+        "id": row.id,
+        "dependency_type": row.dependency_type,
+        "dependency_type_label": row.get_dependency_type_display(),
+        "counterparty_name": row.counterparty_name,
+        "counterparty_company": serialize_company(row.counterparty_company) if row.counterparty_company_id else None,
+        "is_named_counterparty": row.is_named_counterparty,
+        "materiality_band": row.materiality_band,
+        "materiality_band_label": row.get_materiality_band_display(),
+        "disclosure_confidence": row.disclosure_confidence,
+        "disclosure_confidence_label": row.get_disclosure_confidence_display(),
+        "concentration_percent": decimal_to_float_or_none(row.concentration_percent),
+        "geography": row.geography,
+        "product_scope": row.product_scope,
+        "relationship_summary": row.relationship_summary,
+        "risk_summary": row.risk_summary,
+        "evidence_text": row.evidence_text,
+        "confidence_score": decimal_to_float(row.confidence_score),
+        "source": serialize_profile_source(row.source_document) if row.source_document_id else None,
+        "contract_term_count": row.contract_terms.count(),
+    }
+
+
+def serialize_dependency_contract_term(term: DependencyContractTerm) -> dict[str, object]:
+    return {
+        "id": term.id,
+        "dependency_id": term.dependency_id,
+        "counterparty_name": term.dependency.counterparty_name,
+        "term_type": term.term_type,
+        "term_type_label": term.get_term_type_display(),
+        "effective_date": term.effective_date.isoformat() if term.effective_date else None,
+        "expiration_date": term.expiration_date.isoformat() if term.expiration_date else None,
+        "description": term.description,
+        "evidence_text": term.evidence_text,
+        "confidence_score": decimal_to_float(term.confidence_score),
+        "review_status": term.review_status,
+        "source": serialize_profile_source(term.source_document) if term.source_document_id else None,
+    }
+
+
+def dependency_map(dependencies: list[CustomerSupplierDependency]) -> dict[str, list[dict[str, object]]]:
+    grouped: dict[str, list[dict[str, object]]] = defaultdict(list)
+    for row in dependencies:
+        grouped[row.dependency_type].append(serialize_dependency(row))
+    return dict(grouped)
+
+
+def customer_supplier_dependency_evidence(
+    snapshot: CustomerSupplierDependencySnapshot,
+    dependencies: list[CustomerSupplierDependency],
+) -> list[dict[str, object]]:
+    sources = []
+    seen = set()
+    if snapshot.source_document_id:
+        sources.append(serialize_profile_source(snapshot.source_document))
+        seen.add(snapshot.source_document_id)
+    for dependency in dependencies:
+        if dependency.source_document_id and dependency.source_document_id not in seen:
+            sources.append(serialize_profile_source(dependency.source_document))
+            seen.add(dependency.source_document_id)
+        for term in dependency.contract_terms.all():
+            if term.source_document_id and term.source_document_id not in seen:
+                sources.append(serialize_profile_source(term.source_document))
+                seen.add(term.source_document_id)
+    return sources
+
+
+def customer_supplier_dependency_source_gaps(
+    company: Company,
+    snapshot: CustomerSupplierDependencySnapshot,
+    dependencies: list[CustomerSupplierDependency],
+) -> list[dict[str, str]]:
+    gaps = []
+    if not dependencies:
+        gaps.append({"key": "dependency_relationships", "label": "Dependency relationships unavailable", "reason": f"No reviewed dependency relationships are available for {company.name} under the selected filters.", "source": "customer-supplier-dependency", "next_action": "Review Company 360 customers, business-model channels, partner components, and official concentration disclosures."})
+        return gaps
+    if not any(row.is_named_counterparty for row in dependencies):
+        gaps.append({"key": "named_counterparties", "label": "Named counterparties unavailable", "reason": "The reviewed baseline contains category-only dependencies. It does not identify customers, suppliers, platforms, or distributors unless the source explicitly names them.", "source": "customer-supplier-dependency", "next_action": "Review official filings and contracts for named counterparties before publishing them."})
+    if not any(row.concentration_percent is not None for row in dependencies):
+        gaps.append({"key": "concentration_percentages", "label": "Concentration percentages unavailable", "reason": "No reviewed customer or supplier concentration percentage is linked to the selected dependency set.", "source": "customer-supplier-dependency", "next_action": "Review major-customer and major-supplier concentration notes in annual filings."})
+    if not any(row.contract_terms.exists() for row in dependencies):
+        gaps.append({"key": "dependency_contract_terms", "label": "Contract terms unavailable", "reason": "No reviewed renewal, expiration, exclusivity, minimum commitment, or termination-risk terms are linked to the selected dependencies.", "source": "customer-supplier-dependency", "next_action": "Add contract terms only when disclosed in filings, agreements, or reviewed source documents."})
+    if not any(row.dependency_type in {DependencyType.SUPPLIER, DependencyType.MANUFACTURER, DependencyType.INFRASTRUCTURE} for row in dependencies):
+        gaps.append({"key": "critical_supplier_detail", "label": "Critical supplier detail unavailable", "reason": "No reviewed critical supplier, manufacturer, or infrastructure-provider category is available under the selected filters.", "source": "customer-supplier-dependency", "next_action": "Review supply-chain and infrastructure risk disclosures without inferring undisclosed suppliers."})
+    if not snapshot.source_document_id:
+        gaps.append({"key": "dependency_source_document", "label": "Dependency source unavailable", "reason": "The selected dependency snapshot is not linked to a source document.", "source": "customer-supplier-dependency", "next_action": "Rebuild from reviewed Company 360 profiles or business-model maps with source documents."})
     return gaps
 
 
@@ -3082,6 +3264,33 @@ def persist_acquisition_lifecycle_gaps(company: Company, gaps: list[dict[str, st
             dashboard="acquisition_lifecycle",
             gap_type=gap["key"],
             provider=gap.get("source", "acquisition-lifecycle"),
+            defaults={
+                "reason": gap["reason"],
+                "next_ingestion_task": gap.get("next_action", ""),
+                "status": "OPEN",
+                "metadata": {"label": gap.get("label", "")},
+            },
+        )
+
+
+def persist_customer_supplier_dependency_gaps(company: Company, gaps: list[dict[str, str]]) -> None:
+    active_keys = [gap["key"] for gap in gaps]
+    if active_keys:
+        SourceGap.objects.filter(company=company, dashboard="customer_supplier_dependency").exclude(
+            gap_type__in=active_keys
+        ).update(status="RESOLVED")
+    else:
+        SourceGap.objects.filter(
+            company=company,
+            dashboard="customer_supplier_dependency",
+            status__in=["OPEN", "IN_PROGRESS"],
+        ).update(status="RESOLVED")
+    for gap in gaps:
+        SourceGap.objects.update_or_create(
+            company=company,
+            dashboard="customer_supplier_dependency",
+            gap_type=gap["key"],
+            provider=gap.get("source", "customer-supplier-dependency"),
             defaults={
                 "reason": gap["reason"],
                 "next_ingestion_task": gap.get("next_action", ""),

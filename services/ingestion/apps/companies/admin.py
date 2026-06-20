@@ -21,6 +21,9 @@ from apps.companies.models import (
     CompetitiveDimension,
     CompetitivePeer,
     CompetitivePositionSnapshot,
+    CustomerSupplierDependency,
+    CustomerSupplierDependencySnapshot,
+    DependencyContractTerm,
     EarningsGuidanceComparison,
     EarningsPeriod,
     EarningsPeriodDocument,
@@ -419,3 +422,37 @@ class AcquisitionLifecycleEventAdmin(admin.ModelAdmin):
     list_display = ("deal", "stage", "event_date", "title", "review_status", "source_document")
     list_filter = ("stage", "review_status", "deal__company")
     search_fields = ("deal__company__name", "deal__target_name", "title", "description", "evidence_text")
+
+
+class CustomerSupplierDependencyInline(admin.TabularInline):
+    model = CustomerSupplierDependency
+    extra = 0
+
+
+class DependencyContractTermInline(admin.TabularInline):
+    model = DependencyContractTerm
+    extra = 0
+
+
+@admin.register(CustomerSupplierDependencySnapshot)
+class CustomerSupplierDependencySnapshotAdmin(admin.ModelAdmin):
+    list_display = ("company", "effective_date", "status", "confidence_score", "source_document", "updated_at")
+    list_filter = ("status", "effective_date", "company")
+    search_fields = ("company__name", "summary", "methodology")
+    readonly_fields = ("created_at", "updated_at")
+    inlines = (CustomerSupplierDependencyInline,)
+
+
+@admin.register(CustomerSupplierDependency)
+class CustomerSupplierDependencyAdmin(admin.ModelAdmin):
+    list_display = ("snapshot", "dependency_type", "counterparty_name", "materiality_band", "disclosure_confidence", "is_named_counterparty")
+    list_filter = ("dependency_type", "materiality_band", "disclosure_confidence", "is_named_counterparty", "snapshot__company")
+    search_fields = ("snapshot__company__name", "counterparty_name", "relationship_summary", "risk_summary", "evidence_text")
+    inlines = (DependencyContractTermInline,)
+
+
+@admin.register(DependencyContractTerm)
+class DependencyContractTermAdmin(admin.ModelAdmin):
+    list_display = ("dependency", "term_type", "effective_date", "expiration_date", "review_status")
+    list_filter = ("term_type", "review_status", "dependency__snapshot__company")
+    search_fields = ("dependency__counterparty_name", "description", "evidence_text")
