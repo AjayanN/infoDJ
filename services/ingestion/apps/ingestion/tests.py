@@ -77,6 +77,7 @@ from apps.ingestion.services.leadership_decision_record import (
     leadership_decision_quality_issues,
 )
 from apps.ingestion.services.source_gap_resolver import resolve_source_gaps
+from apps.ingestion.services.source_gap_source_collector import forms_for_gap, ticker_for
 from apps.ingestion.services.event_extractor import EventSignal, actual_change_for, find_evidence_sentence
 from apps.ingestion.services.earnings_intelligence import (
     build_earnings_periods,
@@ -1282,6 +1283,20 @@ class IngestionSearchApiTests(TestCase):
         gap.refresh_from_db()
         self.assertEqual(gap.status, "IN_PROGRESS")
         self.assertEqual(gap.metadata["resolution_candidate_count"], 1)
+
+    def test_source_gap_collector_maps_gaps_to_golden_sec_forms(self):
+        self.assertIn("DEF 14A", forms_for_gap("ownership_insider_activity", "ownership_percentages"))
+        self.assertIn("4", forms_for_gap("ownership_insider_activity", "insider_transactions"))
+        self.assertIn("8-K", forms_for_gap("leadership_decision_record", "transition_events"))
+        self.assertIn("10-Q", forms_for_gap("geographic_expansion", "revenue_contribution"))
+        self.assertEqual(forms_for_gap("unknown", "missing"), ("10-K", "10-Q", "8-K"))
+
+    def test_source_gap_collector_uses_company_ticker_alias(self):
+        self.assertEqual(ticker_for(self.netflix), "NFLX")
+        ford = Company.objects.create(name="Ford Motor Company", slug="ford-motor-company", aliases=["FOMOCO"])
+        self.assertEqual(ticker_for(ford), "F")
+        company = Company.objects.create(name="Tickerless Example", slug="tickerless-example", aliases=["Long Name"])
+        self.assertEqual(ticker_for(company), "")
 
     def test_source_gaps_api_exposes_resolution_candidates(self):
         gap = SourceGap.objects.create(

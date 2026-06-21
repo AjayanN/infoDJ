@@ -618,6 +618,15 @@ Requirement 14 verification on June 21, 2026: ownership builder populated all 20
 
 Open source gaps are now routed back into ingestion instead of remaining as passive UI messages. The daily company update runs `resolve_source_gaps` after the Phase 2 builders and creates reviewed-source candidates from existing `SourceDocument` rows for acquisition lifecycle, competitive market-share, customer/supplier dependency, contract-term, concentration, product-pricing, geographic expansion, leadership, and ownership/insider gaps.
 
+Gap-targeted golden source collection now runs before source-gap resolution. It looks at open source gaps and collects the official SEC filing classes most likely to fill them, including `10-K`, `10-Q`, `8-K`, `DEF 14A`, `Form 4`, `S-4`, `DEFM14A`, `SC 13D`, and `SC 13G`. This is the bridge between empty dashboard sections and the real quarterly/proxy/ownership filings that can fill them.
+
+Gap-targeted source collection command:
+
+```bash
+.venv/bin/python manage.py collect_source_gap_sources --limit 20 --filing-limit 160
+.venv/bin/python manage.py collect_source_gap_sources --company netflix --filing-limit 160
+```
+
 Resolution candidates are not treated as completed facts. Each candidate stores the source document, candidate type, evidence excerpt, confidence score, review status, and next extraction action. Feature builders should only promote a candidate into a dashboard row after extracting the required fields from the cited source.
 
 Source gap resolver command:
@@ -634,6 +643,8 @@ GET /api/ingestion/source-gaps?dashboard=acquisition_lifecycle
 ```
 
 The dashboard `Compare peers`/company-situations section also falls back to reviewed Competitive Position peer evidence when no configured same-sector peer row exists. External peers remain labelled as outside the configured company universe.
+
+Gap-targeted collection verification on June 21, 2026: all 20 configured companies were collected from official SEC EDGAR sources for open gaps; the first pass checked 20 companies, collected 17, found 2,720 filings, inserted 2,290 source documents, and exposed 3 ticker-resolution failures; the ticker resolver was fixed to prefer configured universe tickers and the failed JPMorgan Chase, Visa, and Ford collections then succeeded with 476 more filings found and 390 inserted. Source-gap resolution then created 74 new candidate mappings and updated 172 candidates. Ingestion backend `77/77`, main backend `40/40`, frontend `7/7`, and frontend production build passed.
 
 Source-gap guardrail verification on June 20, 2026: migration applied cleanly; resolver checked 246 open gaps and created 47 source-linked resolution candidates across 17 configured companies; no candidate was promoted to reviewed fact status; all 20 configured companies were present in the local ingestion DB; dashboard coverage validator passed with 20 companies, 59 scorecards, and six comparison groups; ingestion backend `69/69`, main backend `34/34`, frontend `7/7`, and frontend production build passed.
 
