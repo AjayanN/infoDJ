@@ -22,6 +22,7 @@ from apps.companies.models import (
     EarningsGuidanceComparison,
     EarningsPeriod,
     EarningsPeriodDocument,
+    GeographicExpansionSnapshot,
     KpiDefinition,
     KpiDefinitionVersion,
     KpiObservation,
@@ -60,6 +61,10 @@ from apps.ingestion.services.acquisition_lifecycle import (
 from apps.ingestion.services.customer_supplier_dependency import (
     build_customer_supplier_dependency,
     customer_supplier_dependency_quality_issues,
+)
+from apps.ingestion.services.geographic_expansion import (
+    build_geographic_expansion,
+    geographic_expansion_quality_issues,
 )
 from apps.ingestion.services.source_gap_resolver import resolve_source_gaps
 from apps.ingestion.services.event_extractor import EventSignal, actual_change_for, find_evidence_sentence
@@ -1295,6 +1300,39 @@ class IngestionSearchApiTests(TestCase):
         candidate = response.json()["source_gaps"][0]["resolution_candidates"][0]
         self.assertEqual(candidate["candidate_type"], "acquisition_source")
         self.assertEqual(candidate["source"]["title"], "Netflix 10-K")
+
+    def test_geographic_expansion_builder_creates_reviewed_market_rows(self):
+        CompanyProfileSnapshot.objects.create(
+            company=self.netflix,
+            source_document=self.source,
+            effective_date=date(2026, 1, 1),
+            status="REVIEWED",
+            summary="Netflix operates globally.",
+            geographies=["United States", "International markets"],
+            confidence_score="0.850",
+        )
+
+        first = build_geographic_expansion(self.netflix)
+        second = build_geographic_expansion(self.netflix)
+
+        self.assertEqual(first["markets_created"], 2)
+        self.assertEqual(second["markets_updated"], 2)
+        snapshot = GeographicExpansionSnapshot.objects.get(company=self.netflix)
+        self.assertEqual(snapshot.status, "REVIEWED")
+        self.assertEqual(snapshot.markets.count(), 2)
+        self.assertNotIn("no reviewed geographic markets", geographic_expansion_quality_issues(self.netflix))
+
+    def test_geographic_expansion_api_exposes_gaps_without_estimating_revenue(self):
+        build_geographic_expansion(self.netflix)
+
+        response = self.client.get("/companies/netflix/geographic-expansion")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "available")
+        self.assertGreaterEqual(payload["coverage"]["market_count"], 1)
+        self.assertEqual(payload["coverage"]["revenue_contribution_count"], 0)
+        self.assertTrue(any(gap["key"] == "revenue_contribution" for gap in payload["source_gaps"]))
 
     def test_rebuild_specific_turns_unlocks_pattern_scorecard_and_compare(self):
         peer = Company.objects.create(name="Example Streaming", industry=self.netflix.industry, country="United States")

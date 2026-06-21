@@ -70,6 +70,36 @@ SOURCE_RULES = {
         "sources": ("OFFICIAL_WEBSITE", "SEC", "SEC_EDGAR", "WIKIPEDIA_REFERENCES", "GDELT_DOC_2"),
         "next_action": "Extract product, plan, list price, currency, geography, effective date, and source date.",
     },
+    ("geographic_expansion", "market_entry_dates"): {
+        "candidate_type": "market_entry_source",
+        "keywords": ("international", "expansion", "entered", "launched in", "market entry", "new market", "country"),
+        "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT", "OFFICIAL_WEBSITE", "WIKIPEDIA_REFERENCES", "GDELT_DOC_2"),
+        "next_action": "Extract market, entry or exit date, source date, and whether the disclosure is country-specific or region-level.",
+    },
+    ("geographic_expansion", "local_partnerships"): {
+        "candidate_type": "local_partnership_source",
+        "keywords": ("partnership", "partner", "joint venture", "local", "distribution agreement", "license"),
+        "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT", "OFFICIAL_WEBSITE", "GDELT_DOC_2"),
+        "next_action": "Extract named local partner, geography, relationship type, and source evidence before publishing.",
+    },
+    ("geographic_expansion", "regulatory_barriers"): {
+        "candidate_type": "market_regulatory_source",
+        "keywords": ("regulatory", "approval", "license", "restriction", "foreign", "country risk", "compliance"),
+        "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT", "OFFICIAL_WEBSITE"),
+        "next_action": "Extract market-specific regulatory barrier, approval, licensing requirement, and business exposure.",
+    },
+    ("geographic_expansion", "revenue_contribution"): {
+        "candidate_type": "geographic_revenue_source",
+        "keywords": ("geographic", "revenue", "international", "region", "net sales", "segment"),
+        "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT"),
+        "next_action": "Extract region or country revenue, period, currency, and whether the disclosure is segment-level or market-level.",
+    },
+    ("geographic_expansion", "expansion_outcomes"): {
+        "candidate_type": "expansion_outcome_source",
+        "keywords": ("growth", "international", "expansion", "outcome", "performance", "market", "exited"),
+        "sources": ("SEC", "SEC_EDGAR", "OFFICIAL_WEBSITE", "WIKIPEDIA_REFERENCES", "GDELT_DOC_2"),
+        "next_action": "Extract later evidence that describes the result of an expansion, exit, or market scaling decision.",
+    },
 }
 
 

@@ -20,6 +20,7 @@ import {
   ProductPricingResponse,
   AcquisitionLifecycleResponse,
   CustomerSupplierDependencyResponse,
+  GeographicExpansionResponse,
   DashboardSection,
   DashboardResponse,
   HistoryRow,
@@ -46,7 +47,7 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'profile' | 'subscription';
+type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'profile' | 'subscription';
 type DashboardViewId =
   | 'company-intelligence'
   | 'turn-impact'
@@ -138,6 +139,7 @@ class AppComponent {
   productPricing = signal<ProductPricingResponse | null>(null);
   acquisitionLifecycle = signal<AcquisitionLifecycleResponse | null>(null);
   customerSupplierDependency = signal<CustomerSupplierDependencyResponse | null>(null);
+  geographicExpansion = signal<GeographicExpansionResponse | null>(null);
   searchResults = signal<SearchResponse | null>(null);
   searchPages = signal<Record<SearchResultGroup, number>>({
     companies: 1,
@@ -173,6 +175,7 @@ class AppComponent {
   productPricingLoading = signal(false);
   acquisitionLifecycleLoading = signal(false);
   customerSupplierDependencyLoading = signal(false);
+  geographicExpansionLoading = signal(false);
   companyProfileDate = '';
   businessModelDate = '';
   businessModelCompareDate = '';
@@ -207,6 +210,9 @@ class AppComponent {
   dependencyDate = '';
   dependencyType = '';
   dependencyConfidence = '';
+  geographicExpansionDate = '';
+  geographicExpansionStatus = '';
+  geographicExpansionMarketType = '';
   readonly companyProfileSectionOrder = [
     'summary',
     'business_model',
@@ -530,6 +536,9 @@ class AppComponent {
     if (this.activePage() === 'customer-supplier-dependency') {
       return `${this.customerSupplierDependency()?.company.name || 'Company'} Customer and Supplier Dependency`;
     }
+    if (this.activePage() === 'geographic-expansion') {
+      return `${this.geographicExpansion()?.company.name || 'Company'} Geographic Expansion Map`;
+    }
     if (this.activePage() === 'profile') {
       return 'Profile';
     }
@@ -572,6 +581,9 @@ class AppComponent {
     }
     if (this.activePage() === 'customer-supplier-dependency') {
       return 'Customer, supplier, platform, distributor, licensor, infrastructure, and contract dependencies with evidence and source gaps.';
+    }
+    if (this.activePage() === 'geographic-expansion') {
+      return 'Countries and regions entered or exited, partnerships, regulatory barriers, revenue contribution, outcomes, evidence, and source gaps.';
     }
     if (this.activePage() === 'profile') {
       return 'Manage account details, avatar preview, and subscription access.';
@@ -1168,6 +1180,39 @@ class AppComponent {
   }
 
   printCustomerSupplierDependencyBrief(): void {
+    window.print();
+  }
+
+  openGeographicExpansion(slug: string, asOf = '', status = '', marketType = ''): void {
+    if (!slug || !this.token()) return;
+    this.activePage.set('geographic-expansion');
+    this.menuOpen.set(false);
+    this.geographicExpansionLoading.set(true);
+    this.error.set('');
+    this.api.geographicExpansion(
+      this.token(),
+      slug,
+      asOf || this.geographicExpansionDate,
+      status || this.geographicExpansionStatus,
+      marketType || this.geographicExpansionMarketType
+    ).subscribe({
+      next: (response) => {
+        this.geographicExpansion.set(response);
+        this.geographicExpansionDate = response.snapshot?.effective_date || '';
+        this.geographicExpansionStatus = response.filters?.selected_status || '';
+        this.geographicExpansionMarketType = response.filters?.selected_market_type || '';
+        this.geographicExpansionLoading.set(false);
+      },
+      error: (response) => { this.geographicExpansionLoading.set(false); this.showError(response); }
+    });
+  }
+
+  reloadGeographicExpansion(): void {
+    const company = this.geographicExpansion()?.company;
+    if (company) this.openGeographicExpansion(company.slug, this.geographicExpansionDate, this.geographicExpansionStatus, this.geographicExpansionMarketType);
+  }
+
+  printGeographicExpansionBrief(): void {
     window.print();
   }
 

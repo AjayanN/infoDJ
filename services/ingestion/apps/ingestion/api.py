@@ -34,6 +34,9 @@ from apps.companies.models import (
     DependencyType,
     EarningsGuidanceComparison,
     EarningsPeriod,
+    GeographicExpansionMarket,
+    GeographicExpansionSnapshot,
+    GeographicExpansionStatus,
     KpiDefinition,
     KpiObservation,
     ManagementPromise,
@@ -965,6 +968,67 @@ def company_customer_supplier_dependency(request: HttpRequest, slug: str) -> Jso
     })
 
 
+@require_GET
+def company_geographic_expansion(request: HttpRequest, slug: str) -> JsonResponse:
+    company = get_company(slug)
+    snapshots = list(
+        GeographicExpansionSnapshot.objects.filter(company=company, status__in=["PUBLISHED", "REVIEWED"])
+        .select_related("source_document")
+        .prefetch_related("markets__source_document", "markets__linked_event")
+        .order_by("-effective_date", "-updated_at")
+    )
+    as_of = parse_iso_date(request.GET.get("as_of"))
+    eligible = [row for row in snapshots if as_of is None or row.effective_date <= as_of]
+    current = eligible[0] if eligible else None
+    selected_status = (request.GET.get("status") or "").strip().upper()
+    selected_market_type = (request.GET.get("market_type") or "").strip().upper()
+    if current is None:
+        gaps = [{
+            "key": "geographic_expansion_snapshot",
+            "label": "Geographic expansion map unavailable",
+            "reason": f"No reviewed geographic expansion snapshot is available for {company.name}.",
+            "source": "geographic-expansion",
+            "next_action": "Refresh reviewed Company 360 geographies and run build_geographic_expansions.",
+        }]
+        persist_geographic_expansion_gaps(company, gaps)
+        return JsonResponse({"status": "unavailable", "company": serialize_company_detail(company), "snapshot": None, "snapshot_history": [], "markets": [], "timeline": [], "source_gaps": gaps})
+    markets = list(current.markets.all())
+    if selected_status:
+        markets = [row for row in markets if row.current_status == selected_status]
+    if selected_market_type:
+        markets = [row for row in markets if row.market_type == selected_market_type]
+    gaps = geographic_expansion_source_gaps(company, current, markets)
+    persist_geographic_expansion_gaps(company, gaps)
+    evidence = geographic_expansion_evidence(current, markets)
+    return JsonResponse({
+        "status": "available" if markets else "partial",
+        "company": serialize_company_detail(company),
+        "snapshot": serialize_geographic_expansion_snapshot(current),
+        "snapshot_history": [serialize_geographic_expansion_snapshot_history(row, current) for row in snapshots],
+        "markets": [serialize_geographic_expansion_market(row) for row in markets],
+        "timeline": [serialize_geographic_expansion_timeline(row) for row in markets if row.entry_date or row.exit_date],
+        "filters": {
+            "statuses": sorted({row.current_status for row in current.markets.all()}),
+            "market_types": sorted({row.market_type for row in current.markets.all()}),
+            "selected_status": selected_status,
+            "selected_market_type": selected_market_type,
+            "as_of": as_of.isoformat() if as_of else "",
+        },
+        "coverage": {
+            "market_count": len(markets),
+            "entered_count": sum(1 for row in markets if row.current_status in {GeographicExpansionStatus.ENTERED, GeographicExpansionStatus.EXPANDING}),
+            "exited_count": sum(1 for row in markets if row.current_status == GeographicExpansionStatus.EXITED),
+            "revenue_contribution_count": sum(1 for row in markets if row.revenue_contribution is not None),
+            "partnership_count": sum(len(row.local_partnerships or []) for row in markets),
+            "regulatory_barrier_count": sum(len(row.regulatory_barriers or []) for row in markets),
+            "source_count": len(evidence),
+            "last_updated": current.updated_at.isoformat(),
+        },
+        "evidence": evidence,
+        "source_gaps": gaps,
+    })
+
+
 def earnings_period_key(period: EarningsPeriod) -> str:
     return f"FY{period.fiscal_year}-{period.fiscal_period}"
 
@@ -1715,6 +1779,107 @@ def dependency_map(dependencies: list[CustomerSupplierDependency]) -> dict[str, 
     for row in dependencies:
         grouped[row.dependency_type].append(serialize_dependency(row))
     return dict(grouped)
+
+
+def serialize_geographic_expansion_snapshot(snapshot: GeographicExpansionSnapshot) -> dict[str, object]:
+    return {
+        "id": snapshot.id,
+        "effective_date": snapshot.effective_date.isoformat(),
+        "status": snapshot.status,
+        "summary": snapshot.summary,
+        "methodology": snapshot.methodology,
+        "confidence_score": decimal_to_float(snapshot.confidence_score),
+        "source": serialize_profile_source(snapshot.source_document) if snapshot.source_document_id else None,
+    }
+
+
+def serialize_geographic_expansion_snapshot_history(
+    snapshot: GeographicExpansionSnapshot,
+    current: GeographicExpansionSnapshot,
+) -> dict[str, object]:
+    return {
+        "id": snapshot.id,
+        "effective_date": snapshot.effective_date.isoformat(),
+        "status": snapshot.status,
+        "confidence_score": decimal_to_float(snapshot.confidence_score),
+        "market_count": snapshot.markets.count(),
+        "selected": snapshot.id == current.id,
+    }
+
+
+def serialize_geographic_expansion_market(row: GeographicExpansionMarket) -> dict[str, object]:
+    return {
+        "id": row.id,
+        "geography": row.geography,
+        "market_type": row.market_type,
+        "current_status": row.current_status,
+        "current_status_label": row.get_current_status_display(),
+        "entry_date": row.entry_date.isoformat() if row.entry_date else None,
+        "exit_date": row.exit_date.isoformat() if row.exit_date else None,
+        "local_partnerships": row.local_partnerships if isinstance(row.local_partnerships, list) else [],
+        "regulatory_barriers": row.regulatory_barriers if isinstance(row.regulatory_barriers, list) else [],
+        "revenue_contribution": decimal_to_float_or_none(row.revenue_contribution),
+        "revenue_currency": row.revenue_currency,
+        "revenue_period": row.revenue_period,
+        "expansion_rationale": row.expansion_rationale,
+        "outcome_summary": row.outcome_summary,
+        "evidence_text": row.evidence_text,
+        "confidence_score": decimal_to_float(row.confidence_score),
+        "review_status": row.review_status,
+        "source": serialize_profile_source(row.source_document) if row.source_document_id else None,
+        "linked_event": serialize_business_event(row.linked_event) if row.linked_event_id else None,
+    }
+
+
+def serialize_geographic_expansion_timeline(row: GeographicExpansionMarket) -> dict[str, object]:
+    return {
+        "market_id": row.id,
+        "geography": row.geography,
+        "entry_date": row.entry_date.isoformat() if row.entry_date else None,
+        "exit_date": row.exit_date.isoformat() if row.exit_date else None,
+        "status": row.current_status,
+        "summary": row.expansion_rationale or row.outcome_summary,
+    }
+
+
+def geographic_expansion_evidence(
+    snapshot: GeographicExpansionSnapshot,
+    markets: list[GeographicExpansionMarket],
+) -> list[dict[str, object]]:
+    sources = []
+    seen = set()
+    if snapshot.source_document_id:
+        sources.append(serialize_profile_source(snapshot.source_document))
+        seen.add(snapshot.source_document_id)
+    for market in markets:
+        if market.source_document_id and market.source_document_id not in seen:
+            sources.append(serialize_profile_source(market.source_document))
+            seen.add(market.source_document_id)
+    return sources
+
+
+def geographic_expansion_source_gaps(
+    company: Company,
+    snapshot: GeographicExpansionSnapshot,
+    markets: list[GeographicExpansionMarket],
+) -> list[dict[str, str]]:
+    gaps = []
+    if not markets:
+        gaps.append({"key": "geographic_markets", "label": "Geographic markets unavailable", "reason": f"No reviewed geographic markets are available for {company.name} under the selected filters.", "source": "geographic-expansion", "next_action": "Review Company 360 geographies and source-backed expansion events."})
+        return gaps
+    if not any(row.entry_date for row in markets):
+        gaps.append({"key": "market_entry_dates", "label": "Market entry dates unavailable", "reason": "Reviewed markets do not include specific entry dates unless the source identifies a dated expansion event.", "source": "geographic-expansion", "next_action": "Review 8-Ks, annual filings, press releases, and source-backed expansion events for dated market entries."})
+    if not any(row.local_partnerships for row in markets):
+        gaps.append({"key": "local_partnerships", "label": "Local partnerships unavailable", "reason": "No reviewed local partner is linked to the selected market set.", "source": "geographic-expansion", "next_action": "Add local partners only when official filings, exhibits, or reviewed sources name them."})
+    if not any(row.regulatory_barriers for row in markets):
+        gaps.append({"key": "regulatory_barriers", "label": "Regulatory barriers unavailable", "reason": "No reviewed market-specific regulatory barrier is linked to the selected market set.", "source": "geographic-expansion", "next_action": "Review country-specific risk, approval, licensing, and regulatory disclosures."})
+    if not any(row.revenue_contribution is not None for row in markets):
+        gaps.append({"key": "revenue_contribution", "label": "Revenue contribution unavailable", "reason": "No reviewed revenue contribution is linked to the selected market set. Missing revenue is not treated as zero.", "source": "geographic-expansion", "next_action": "Review segment/geography revenue notes and keep region-level disclosures separate from country-level facts."})
+    if not any(row.outcome_summary and "not separately disclosed" not in row.outcome_summary.lower() for row in markets):
+        gaps.append({"key": "expansion_outcomes", "label": "Expansion outcomes unavailable", "reason": "Market-level outcomes are unavailable unless a later reviewed source describes the result of the expansion.", "source": "geographic-expansion", "next_action": "Link later filings, earnings releases, or reviewed business events that discuss expansion results."})
+    if not snapshot.source_document_id:
+        gaps.append({"key": "geographic_source_document", "label": "Geographic source unavailable", "reason": "The selected geographic expansion snapshot is not linked to a source document.", "source": "geographic-expansion", "next_action": "Rebuild from reviewed Company 360 profiles or expansion events with source documents."})
+    return gaps
 
 
 def customer_supplier_dependency_evidence(
@@ -3343,6 +3508,33 @@ def persist_customer_supplier_dependency_gaps(company: Company, gaps: list[dict[
             dashboard="customer_supplier_dependency",
             gap_type=gap["key"],
             provider=gap.get("source", "customer-supplier-dependency"),
+            defaults={
+                "reason": gap["reason"],
+                "next_ingestion_task": gap.get("next_action", ""),
+                "status": "OPEN",
+                "metadata": {"label": gap.get("label", "")},
+            },
+        )
+
+
+def persist_geographic_expansion_gaps(company: Company, gaps: list[dict[str, str]]) -> None:
+    active_keys = [gap["key"] for gap in gaps]
+    if active_keys:
+        SourceGap.objects.filter(company=company, dashboard="geographic_expansion").exclude(
+            gap_type__in=active_keys
+        ).update(status="RESOLVED")
+    else:
+        SourceGap.objects.filter(
+            company=company,
+            dashboard="geographic_expansion",
+            status__in=["OPEN", "IN_PROGRESS"],
+        ).update(status="RESOLVED")
+    for gap in gaps:
+        SourceGap.objects.update_or_create(
+            company=company,
+            dashboard="geographic_expansion",
+            gap_type=gap["key"],
+            provider=gap.get("source", "geographic-expansion"),
             defaults={
                 "reason": gap["reason"],
                 "next_ingestion_task": gap.get("next_action", ""),

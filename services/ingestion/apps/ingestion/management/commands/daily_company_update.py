@@ -87,6 +87,7 @@ class Command(BaseCommand):
         call_command("build_product_pricing_history", all=True)
         call_command("build_acquisition_lifecycles", all=True)
         call_command("build_customer_supplier_dependencies", all=True)
+        call_command("build_geographic_expansions", all=True)
         call_command("resolve_source_gaps", limit=500)
 
         if options["include_quality_scoring"]:

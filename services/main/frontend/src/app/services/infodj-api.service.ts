@@ -914,6 +914,47 @@ export type CustomerSupplierDependencyResponse = {
   source_gaps: SourceGap[];
 };
 
+export type GeographicExpansionMarket = {
+  id: number;
+  geography: string;
+  market_type: string;
+  current_status: string;
+  current_status_label: string;
+  entry_date: string | null;
+  exit_date: string | null;
+  local_partnerships: string[];
+  regulatory_barriers: string[];
+  revenue_contribution: number | null;
+  revenue_currency: string;
+  revenue_period: string;
+  expansion_rationale: string;
+  outcome_summary: string;
+  evidence_text: string;
+  confidence_score: number;
+  review_status: string;
+  source: CompanyProfileSource | null;
+  linked_event: DashboardEvent | null;
+};
+
+export type GeographicExpansionResponse = {
+  status: 'available' | 'partial' | 'unavailable';
+  company: CompanyProfileResponse['company'];
+  snapshot: {
+    id: number; effective_date: string; status: string; summary: string; methodology: string;
+    confidence_score: number; source: CompanyProfileSource | null;
+  } | null;
+  snapshot_history: { id: number; effective_date: string; status: string; confidence_score: number; market_count: number; selected: boolean }[];
+  markets: GeographicExpansionMarket[];
+  timeline: { market_id: number; geography: string; entry_date: string | null; exit_date: string | null; status: string; summary: string }[];
+  filters: { statuses: string[]; market_types: string[]; selected_status: string; selected_market_type: string; as_of: string };
+  coverage: {
+    market_count: number; entered_count: number; exited_count: number; revenue_contribution_count: number;
+    partnership_count: number; regulatory_barrier_count: number; source_count: number; last_updated: string;
+  };
+  evidence: CompanyProfileSource[];
+  source_gaps: SourceGap[];
+};
+
 @Injectable({ providedIn: 'root' })
 export class InfoDjApiService {
   private readonly http = inject(HttpClient);
@@ -1162,6 +1203,16 @@ export class InfoDjApiService {
     if (type) params['type'] = type;
     if (confidence) params['confidence'] = confidence;
     return this.http.get<CustomerSupplierDependencyResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/customer-supplier-dependency`, {
+      headers: this.authHeaders(token), params
+    });
+  }
+
+  geographicExpansion(token: string, slug: string, asOf = '', status = '', marketType = '') {
+    const params: Record<string, string> = {};
+    if (asOf) params['as_of'] = asOf;
+    if (status) params['status'] = status;
+    if (marketType) params['market_type'] = marketType;
+    return this.http.get<GeographicExpansionResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/geographic-expansion`, {
       headers: this.authHeaders(token), params
     });
   }

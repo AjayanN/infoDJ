@@ -1207,3 +1207,97 @@ class DependencyContractTerm(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["dependency", "term_type", "description"], name="unique_dependency_contract_term")
         ]
+
+
+class GeographicExpansionStatus(models.TextChoices):
+    ACTIVE = "ACTIVE", "Active market"
+    ENTERED = "ENTERED", "Entered"
+    EXPANDING = "EXPANDING", "Expanding"
+    EXITED = "EXITED", "Exited"
+    PAUSED = "PAUSED", "Paused"
+    UNKNOWN = "UNKNOWN", "Unknown"
+
+
+class GeographicExpansionSnapshot(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="geographic_expansion_snapshots")
+    effective_date = models.DateField(db_index=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="geographic_expansion_snapshots",
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=CompanyProfileStatus.choices,
+        default=CompanyProfileStatus.DRAFT,
+        db_index=True,
+    )
+    summary = models.TextField(blank=True)
+    methodology = models.TextField(blank=True)
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-effective_date", "-created_at"]
+        constraints = [
+            models.UniqueConstraint(fields=["company", "effective_date"], name="unique_geographic_expansion_snapshot")
+        ]
+        indexes = [models.Index(fields=["company", "status", "effective_date"], name="company_geo_exp_status_idx")]
+
+    def __str__(self) -> str:
+        return f"{self.company} geographic expansion at {self.effective_date}"
+
+
+class GeographicExpansionMarket(models.Model):
+    snapshot = models.ForeignKey(GeographicExpansionSnapshot, on_delete=models.CASCADE, related_name="markets")
+    geography = models.CharField(max_length=255)
+    market_type = models.CharField(max_length=64, default="REGION", db_index=True)
+    current_status = models.CharField(max_length=32, choices=GeographicExpansionStatus.choices, db_index=True)
+    entry_date = models.DateField(null=True, blank=True, db_index=True)
+    exit_date = models.DateField(null=True, blank=True, db_index=True)
+    local_partnerships = models.JSONField(default=list, blank=True)
+    regulatory_barriers = models.JSONField(default=list, blank=True)
+    revenue_contribution = models.DecimalField(max_digits=18, decimal_places=6, null=True, blank=True)
+    revenue_currency = models.CharField(max_length=16, blank=True)
+    revenue_period = models.CharField(max_length=64, blank=True)
+    expansion_rationale = models.TextField(blank=True)
+    outcome_summary = models.TextField(blank=True)
+    evidence_text = models.TextField(blank=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="geographic_expansion_markets",
+    )
+    linked_event = models.ForeignKey(
+        "curation.BusinessEvent",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="geographic_expansion_markets",
+    )
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    review_status = models.CharField(
+        max_length=32,
+        choices=PromiseReviewStatus.choices,
+        default=PromiseReviewStatus.REVIEWED,
+        db_index=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["geography", "market_type"]
+        constraints = [
+            models.UniqueConstraint(fields=["snapshot", "geography", "market_type"], name="unique_geo_expansion_market")
+        ]
+        indexes = [
+            models.Index(fields=["snapshot", "current_status"], name="geo_exp_market_status_idx"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.snapshot.company} geography: {self.geography}"
