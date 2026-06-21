@@ -22,6 +22,7 @@ import {
   CustomerSupplierDependencyResponse,
   GeographicExpansionResponse,
   OwnershipInsiderResponse,
+  LeadershipDecisionResponse,
   DashboardSection,
   DashboardResponse,
   HistoryRow,
@@ -48,7 +49,7 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'ownership-insider' | 'profile' | 'subscription';
+type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider' | 'profile' | 'subscription';
 type DashboardViewId =
   | 'company-intelligence'
   | 'turn-impact'
@@ -142,6 +143,7 @@ class AppComponent {
   customerSupplierDependency = signal<CustomerSupplierDependencyResponse | null>(null);
   geographicExpansion = signal<GeographicExpansionResponse | null>(null);
   ownershipInsider = signal<OwnershipInsiderResponse | null>(null);
+  leadershipDecisions = signal<LeadershipDecisionResponse | null>(null);
   searchResults = signal<SearchResponse | null>(null);
   searchPages = signal<Record<SearchResultGroup, number>>({
     companies: 1,
@@ -179,6 +181,7 @@ class AppComponent {
   customerSupplierDependencyLoading = signal(false);
   geographicExpansionLoading = signal(false);
   ownershipInsiderLoading = signal(false);
+  leadershipDecisionLoading = signal(false);
   companyProfileDate = '';
   businessModelDate = '';
   businessModelCompareDate = '';
@@ -219,6 +222,9 @@ class AppComponent {
   ownershipInsiderDate = '';
   ownershipHolderType = '';
   insiderTransactionType = '';
+  leadershipDecisionDate = '';
+  leadershipRoleType = '';
+  leadershipDecisionType = '';
   readonly companyProfileSectionOrder = [
     'summary',
     'business_model',
@@ -548,6 +554,9 @@ class AppComponent {
     if (this.activePage() === 'ownership-insider') {
       return `${this.ownershipInsider()?.company.name || 'Company'} Ownership and Insider Activity`;
     }
+    if (this.activePage() === 'leadership-decisions') {
+      return `${this.leadershipDecisions()?.company.name || 'Company'} Leadership Decision Record`;
+    }
     if (this.activePage() === 'profile') {
       return 'Profile';
     }
@@ -596,6 +605,9 @@ class AppComponent {
     }
     if (this.activePage() === 'ownership-insider') {
       return 'Ownership context, economic versus voting control, institutional and insider rows where disclosed, transaction-plan gaps, and evidence.';
+    }
+    if (this.activePage() === 'leadership-decisions') {
+      return 'Leadership roles, tenure context, stated priorities, material decisions, succession events, evidence, and non-causation guardrails.';
     }
     if (this.activePage() === 'profile') {
       return 'Manage account details, avatar preview, and subscription access.';
@@ -1258,6 +1270,39 @@ class AppComponent {
   }
 
   printOwnershipInsiderBrief(): void {
+    window.print();
+  }
+
+  openLeadershipDecisions(slug: string, asOf = '', roleType = '', decisionType = ''): void {
+    if (!slug || !this.token()) return;
+    this.activePage.set('leadership-decisions');
+    this.menuOpen.set(false);
+    this.leadershipDecisionLoading.set(true);
+    this.error.set('');
+    this.api.leadershipDecisions(
+      this.token(),
+      slug,
+      asOf || this.leadershipDecisionDate,
+      roleType || this.leadershipRoleType,
+      decisionType || this.leadershipDecisionType
+    ).subscribe({
+      next: (response) => {
+        this.leadershipDecisions.set(response);
+        this.leadershipDecisionDate = response.snapshot?.effective_date || '';
+        this.leadershipRoleType = response.filters?.selected_role_type || '';
+        this.leadershipDecisionType = response.filters?.selected_decision_type || '';
+        this.leadershipDecisionLoading.set(false);
+      },
+      error: (response) => { this.leadershipDecisionLoading.set(false); this.showError(response); }
+    });
+  }
+
+  reloadLeadershipDecisions(): void {
+    const company = this.leadershipDecisions()?.company;
+    if (company) this.openLeadershipDecisions(company.slug, this.leadershipDecisionDate, this.leadershipRoleType, this.leadershipDecisionType);
+  }
+
+  printLeadershipDecisionBrief(): void {
     window.print();
   }
 

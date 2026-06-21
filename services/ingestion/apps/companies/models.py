@@ -1436,3 +1436,154 @@ class InsiderTransaction(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["snapshot", "insider_name", "transaction_type", "transaction_date"], name="unique_insider_transaction")
         ]
+
+
+class LeadershipRoleType(models.TextChoices):
+    CEO = "CEO", "Chief executive"
+    CFO = "CFO", "Chief financial"
+    COO = "COO", "Chief operating"
+    CHAIR = "CHAIR", "Board chair"
+    DIRECTOR = "DIRECTOR", "Director"
+    EXECUTIVE = "EXECUTIVE", "Executive"
+    BOARD = "BOARD", "Board"
+    UNKNOWN = "UNKNOWN", "Unknown"
+
+
+class LeadershipTransitionType(models.TextChoices):
+    CURRENT_ROLE = "CURRENT_ROLE", "Current role"
+    APPOINTMENT = "APPOINTMENT", "Appointment"
+    DEPARTURE = "DEPARTURE", "Departure"
+    ROLE_CHANGE = "ROLE_CHANGE", "Role change"
+    BOARD_CHANGE = "BOARD_CHANGE", "Board change"
+    SUCCESSION_PLAN = "SUCCESSION_PLAN", "Succession plan"
+
+
+class LeadershipDecisionType(models.TextChoices):
+    STRATEGIC_PRIORITY = "STRATEGIC_PRIORITY", "Strategic priority"
+    MATERIAL_DECISION = "MATERIAL_DECISION", "Material decision"
+    SUCCESSION = "SUCCESSION", "Succession"
+    CAPITAL_ALLOCATION = "CAPITAL_ALLOCATION", "Capital allocation"
+    ACQUISITION = "ACQUISITION", "Acquisition"
+    MILESTONE = "MILESTONE", "Milestone"
+    PROMISE = "PROMISE", "Promise"
+    OTHER = "OTHER", "Other"
+
+
+class LeadershipDecisionSnapshot(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="leadership_decision_snapshots")
+    effective_date = models.DateField(db_index=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="leadership_decision_snapshots",
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=CompanyProfileStatus.choices,
+        default=CompanyProfileStatus.DRAFT,
+        db_index=True,
+    )
+    summary = models.TextField(blank=True)
+    methodology = models.TextField(blank=True)
+    non_causation_note = models.TextField(blank=True)
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-effective_date", "-created_at"]
+        constraints = [
+            models.UniqueConstraint(fields=["company", "effective_date"], name="unique_leadership_decision_snapshot")
+        ]
+        indexes = [models.Index(fields=["company", "status", "effective_date"], name="company_leader_status_idx")]
+
+
+class LeadershipRoleRecord(models.Model):
+    snapshot = models.ForeignKey(LeadershipDecisionSnapshot, on_delete=models.CASCADE, related_name="roles")
+    leader_name = models.CharField(max_length=255)
+    role_title = models.CharField(max_length=255, blank=True)
+    role_type = models.CharField(max_length=32, choices=LeadershipRoleType.choices, db_index=True)
+    transition_type = models.CharField(max_length=32, choices=LeadershipTransitionType.choices, db_index=True)
+    start_date = models.DateField(null=True, blank=True, db_index=True)
+    end_date = models.DateField(null=True, blank=True, db_index=True)
+    interim_status = models.BooleanField(default=False, db_index=True)
+    co_leadership = models.BooleanField(default=False, db_index=True)
+    stated_priorities = models.JSONField(default=list, blank=True)
+    evidence_text = models.TextField(blank=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="leadership_role_records",
+    )
+    linked_event = models.ForeignKey(
+        "curation.BusinessEvent",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="leadership_role_records",
+    )
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    review_status = models.CharField(
+        max_length=32,
+        choices=PromiseReviewStatus.choices,
+        default=PromiseReviewStatus.REVIEWED,
+        db_index=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["leader_name", "role_title"]
+        constraints = [
+            models.UniqueConstraint(fields=["snapshot", "leader_name", "role_title", "transition_type"], name="unique_leadership_role_record")
+        ]
+
+
+class LeadershipDecisionRecord(models.Model):
+    snapshot = models.ForeignKey(LeadershipDecisionSnapshot, on_delete=models.CASCADE, related_name="decisions")
+    title = models.CharField(max_length=255)
+    decision_type = models.CharField(max_length=32, choices=LeadershipDecisionType.choices, db_index=True)
+    decision_date = models.DateField(null=True, blank=True, db_index=True)
+    leader_name = models.CharField(max_length=255, blank=True)
+    summary = models.TextField(blank=True)
+    evidence_text = models.TextField(blank=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="leadership_decision_records",
+    )
+    linked_event = models.ForeignKey(
+        "curation.BusinessEvent",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="leadership_decision_records",
+    )
+    linked_strategic_turn = models.ForeignKey(
+        "curation.StrategicTurn",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="leadership_decision_records",
+    )
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    review_status = models.CharField(
+        max_length=32,
+        choices=PromiseReviewStatus.choices,
+        default=PromiseReviewStatus.REVIEWED,
+        db_index=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-decision_date", "title"]
+        constraints = [
+            models.UniqueConstraint(fields=["snapshot", "title", "decision_type", "decision_date"], name="unique_leadership_decision_record")
+        ]

@@ -1043,6 +1043,40 @@ export type OwnershipInsiderResponse = {
   source_gaps: SourceGap[];
 };
 
+export type LeadershipDecisionResponse = {
+  status: 'available' | 'partial' | 'unavailable';
+  company: CompanyProfileResponse['company'];
+  snapshot: {
+    id: number;
+    effective_date: string;
+    status: string;
+    summary: string;
+    methodology: string;
+    non_causation_note: string;
+    confidence_score: number;
+    source: CompanyProfileSource | null;
+    updated_at: string;
+  } | null;
+  snapshot_history: { id: number; effective_date: string; status: string; is_current: boolean; role_count: number; decision_count: number }[];
+  roles: {
+    id: number; leader_name: string; role_title: string; role_type: string; role_type_label: string;
+    transition_type: string; transition_type_label: string; start_date: string | null; end_date: string | null;
+    interim_status: boolean; co_leadership: boolean; stated_priorities: string[]; evidence_text: string;
+    confidence_score: number; source: CompanyProfileSource | null; linked_event: DashboardEvent | null;
+  }[];
+  decisions: {
+    id: number; title: string; decision_type: string; decision_type_label: string; decision_date: string | null;
+    leader_name: string; summary: string; evidence_text: string; confidence_score: number;
+    source: CompanyProfileSource | null; linked_event: DashboardEvent | null; linked_strategic_turn: DashboardTurn | null;
+  }[];
+  timeline: { date: string; type: string; label: string; summary: string }[];
+  performance_context: { status: 'available' | 'unavailable'; non_causation_note: string; reason: string };
+  filters: { role_types: string[]; decision_types: string[]; selected_role_type: string; selected_decision_type: string; as_of: string };
+  coverage: { role_count: number; decision_count: number; dated_role_count: number; priority_count: number; linked_turn_count: number; source_count: number; last_updated: string };
+  evidence: CompanyProfileSource[];
+  source_gaps: SourceGap[];
+};
+
 @Injectable({ providedIn: 'root' })
 export class InfoDjApiService {
   private readonly http = inject(HttpClient);
@@ -1311,6 +1345,16 @@ export class InfoDjApiService {
     if (holderType) params['holder_type'] = holderType;
     if (transactionType) params['transaction_type'] = transactionType;
     return this.http.get<OwnershipInsiderResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/ownership-insider`, {
+      headers: this.authHeaders(token), params
+    });
+  }
+
+  leadershipDecisions(token: string, slug: string, asOf = '', roleType = '', decisionType = '') {
+    const params: Record<string, string> = {};
+    if (asOf) params['as_of'] = asOf;
+    if (roleType) params['role_type'] = roleType;
+    if (decisionType) params['decision_type'] = decisionType;
+    return this.http.get<LeadershipDecisionResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/leadership-decisions`, {
       headers: this.authHeaders(token), params
     });
   }

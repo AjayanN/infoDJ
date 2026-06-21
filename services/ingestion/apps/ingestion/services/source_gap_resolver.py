@@ -130,6 +130,30 @@ SOURCE_RULES = {
         "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT", "OFFICIAL_WEBSITE"),
         "next_action": "Extract plan reference, adoption or termination date, related Form 4 footnote, and transaction scope.",
     },
+    ("leadership_decision_record", "tenure_dates"): {
+        "candidate_type": "leadership_tenure_source",
+        "keywords": ("chief executive", "CEO", "appointed", "named", "effective", "retired", "resigned", "succession"),
+        "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT", "OFFICIAL_WEBSITE", "GDELT_DOC_2"),
+        "next_action": "Extract leader name, role, appointment or departure date, interim status, and whether the source states a succession plan.",
+    },
+    ("leadership_decision_record", "transition_events"): {
+        "candidate_type": "leadership_transition_source",
+        "keywords": ("leadership change", "succession", "appointed", "departed", "resigned", "retired", "board", "named"),
+        "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT", "OFFICIAL_WEBSITE", "GDELT_DOC_2"),
+        "next_action": "Extract transition type, date, predecessor/successor if disclosed, and avoid unsupported departure reasons.",
+    },
+    ("leadership_decision_record", "leadership_decisions"): {
+        "candidate_type": "leadership_decision_source",
+        "keywords": ("strategic priorities", "strategy", "initiative", "announced", "decision", "capital allocation", "acquisition"),
+        "sources": ("SEC", "SEC_EDGAR", "OFFICIAL_WEBSITE", "GDELT_DOC_2"),
+        "next_action": "Extract dated priorities or material decisions and link to existing strategic turns, promises, milestones, acquisitions, or allocation rows.",
+    },
+    ("leadership_decision_record", "decision_links"): {
+        "candidate_type": "leadership_link_source",
+        "keywords": ("strategy", "priority", "milestone", "target", "capital allocation", "acquisition", "investment"),
+        "sources": ("SEC", "SEC_EDGAR", "OFFICIAL_WEBSITE", "GDELT_DOC_2"),
+        "next_action": "Map the leadership claim to the canonical owner feature instead of duplicating the fact.",
+    },
 }
 
 
