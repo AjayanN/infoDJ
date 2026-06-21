@@ -411,6 +411,24 @@ class DashboardSearchApiTests(TestCase):
 
         self.assertEqual(response.status_code, 401)
 
+    @override_settings(INGESTION_API_URL="http://ingestion.test/api/ingestion")
+    @patch("apps.search.api.requests.get")
+    def test_leadership_decisions_proxies_filters(self, get):
+        get.return_value = json_response({"status": "available", "company": {"slug": "netflix"}, "roles": []})
+
+        response = self.client.get(
+            "/api/app/companies/netflix/leadership-decisions?role_type=CEO&decision_type=SUCCESSION"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(get.call_args.args[0], "http://ingestion.test/api/ingestion/companies/netflix/leadership-decisions")
+        self.assertEqual(get.call_args.kwargs["params"], {"role_type": "CEO", "decision_type": "SUCCESSION"})
+
+    def test_leadership_decisions_requires_authentication(self):
+        response = APIClient().get("/api/app/companies/netflix/leadership-decisions")
+
+        self.assertEqual(response.status_code, 401)
+
 
 def json_response(payload: dict):
     response = Mock()

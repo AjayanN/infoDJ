@@ -40,6 +40,12 @@ from apps.companies.models import (
     InsiderTransaction,
     KpiDefinition,
     KpiObservation,
+    LeadershipDecisionRecord,
+    LeadershipDecisionSnapshot,
+    LeadershipDecisionType,
+    LeadershipRoleRecord,
+    LeadershipRoleType,
+    LeadershipTransitionType,
     ManagementPromise,
     MilestoneStatus,
     OwnershipHolderType,
@@ -1098,6 +1104,73 @@ def company_ownership_insider(request: HttpRequest, slug: str) -> JsonResponse:
     })
 
 
+@require_GET
+def company_leadership_decisions(request: HttpRequest, slug: str) -> JsonResponse:
+    company = get_company(slug)
+    snapshots = list(
+        LeadershipDecisionSnapshot.objects.filter(company=company, status__in=["PUBLISHED", "REVIEWED"])
+        .select_related("source_document")
+        .prefetch_related("roles__source_document", "roles__linked_event", "decisions__source_document", "decisions__linked_event", "decisions__linked_strategic_turn")
+        .order_by("-effective_date", "-updated_at")
+    )
+    as_of = parse_iso_date(request.GET.get("as_of"))
+    eligible = [row for row in snapshots if as_of is None or row.effective_date <= as_of]
+    current = eligible[0] if eligible else None
+    role_type = (request.GET.get("role_type") or "").strip().upper()
+    decision_type = (request.GET.get("decision_type") or "").strip().upper()
+    if current is None:
+        gaps = [{
+            "key": "leadership_decision_snapshot",
+            "label": "Leadership Decision Record unavailable",
+            "reason": f"No reviewed leadership decision snapshot is available for {company.name}.",
+            "source": "leadership-decision-record",
+            "next_action": "Refresh reviewed Company 360 leadership and run build_leadership_decision_records.",
+        }]
+        persist_leadership_decision_gaps(company, gaps)
+        return JsonResponse({"status": "unavailable", "company": serialize_company_detail(company), "snapshot": None, "snapshot_history": [], "roles": [], "decisions": [], "source_gaps": gaps})
+    roles = list(current.roles.all())
+    if role_type:
+        roles = [row for row in roles if row.role_type == role_type]
+    decisions = list(current.decisions.all())
+    if decision_type:
+        decisions = [row for row in decisions if row.decision_type == decision_type]
+    gaps = leadership_decision_source_gaps(company, current, roles, decisions)
+    persist_leadership_decision_gaps(company, gaps)
+    evidence = leadership_decision_evidence(current, roles, decisions)
+    return JsonResponse({
+        "status": "available" if roles or decisions else "partial",
+        "company": serialize_company_detail(company),
+        "snapshot": serialize_leadership_decision_snapshot(current),
+        "snapshot_history": [serialize_leadership_decision_snapshot_history(row, current) for row in snapshots],
+        "roles": [serialize_leadership_role(row) for row in roles],
+        "decisions": [serialize_leadership_decision(row) for row in decisions],
+        "timeline": leadership_timeline(roles, decisions),
+        "performance_context": {
+            "status": "unavailable",
+            "non_causation_note": current.non_causation_note,
+            "reason": "Tenure performance context is not calculated yet and must not be read as leadership causation.",
+        },
+        "filters": {
+            "role_types": sorted({row.role_type for row in current.roles.all()}),
+            "decision_types": sorted({row.decision_type for row in current.decisions.all()}),
+            "selected_role_type": role_type,
+            "selected_decision_type": decision_type,
+            "as_of": as_of.isoformat() if as_of else "",
+        },
+        "coverage": {
+            "role_count": len(roles),
+            "decision_count": len(decisions),
+            "dated_role_count": sum(1 for row in roles if row.start_date or row.end_date),
+            "priority_count": sum(1 for row in decisions if row.decision_type == LeadershipDecisionType.STRATEGIC_PRIORITY),
+            "linked_turn_count": sum(1 for row in decisions if row.linked_strategic_turn_id),
+            "source_count": len(evidence),
+            "last_updated": current.updated_at.isoformat(),
+        },
+        "evidence": evidence,
+        "source_gaps": gaps,
+    })
+
+
 def earnings_period_key(period: EarningsPeriod) -> str:
     return f"FY{period.fiscal_year}-{period.fiscal_period}"
 
@@ -2064,6 +2137,112 @@ def ownership_insider_source_gaps(
         gaps.append({"key": "transaction_plans", "label": "Transaction plans unavailable", "reason": "No reviewed 10b5-1 or other planned-sale indicator is linked to the selected transactions.", "source": "ownership-insider-activity", "next_action": "Review Form 4 footnotes and company disclosures for planned-sale references."})
     if not snapshot.source_document_id:
         gaps.append({"key": "ownership_source_document", "label": "Ownership source unavailable", "reason": "The selected ownership snapshot is not linked to a source document.", "source": "ownership-insider-activity", "next_action": "Rebuild from reviewed Company 360 profiles or ownership filings with source documents."})
+    return gaps
+
+
+def serialize_leadership_decision_snapshot(snapshot: LeadershipDecisionSnapshot) -> dict[str, object]:
+    return {
+        "id": snapshot.id,
+        "effective_date": snapshot.effective_date.isoformat(),
+        "status": snapshot.status,
+        "summary": snapshot.summary,
+        "methodology": snapshot.methodology,
+        "non_causation_note": snapshot.non_causation_note,
+        "confidence_score": decimal_to_float(snapshot.confidence_score),
+        "source": serialize_profile_source(snapshot.source_document) if snapshot.source_document_id else None,
+        "updated_at": snapshot.updated_at.isoformat(),
+    }
+
+
+def serialize_leadership_decision_snapshot_history(snapshot: LeadershipDecisionSnapshot, current: LeadershipDecisionSnapshot) -> dict[str, object]:
+    return {
+        "id": snapshot.id,
+        "effective_date": snapshot.effective_date.isoformat(),
+        "status": snapshot.status,
+        "is_current": snapshot.id == current.id,
+        "role_count": snapshot.roles.count(),
+        "decision_count": snapshot.decisions.count(),
+    }
+
+
+def serialize_leadership_role(row: LeadershipRoleRecord) -> dict[str, object]:
+    return {
+        "id": row.id,
+        "leader_name": row.leader_name,
+        "role_title": row.role_title,
+        "role_type": row.role_type,
+        "role_type_label": dict(LeadershipRoleType.choices).get(row.role_type, row.role_type),
+        "transition_type": row.transition_type,
+        "transition_type_label": dict(LeadershipTransitionType.choices).get(row.transition_type, row.transition_type),
+        "start_date": row.start_date.isoformat() if row.start_date else None,
+        "end_date": row.end_date.isoformat() if row.end_date else None,
+        "interim_status": row.interim_status,
+        "co_leadership": row.co_leadership,
+        "stated_priorities": row.stated_priorities,
+        "evidence_text": row.evidence_text,
+        "confidence_score": decimal_to_float(row.confidence_score),
+        "source": serialize_profile_source(row.source_document) if row.source_document_id else None,
+        "linked_event": serialize_business_event(row.linked_event) if row.linked_event_id else None,
+    }
+
+
+def serialize_leadership_decision(row: LeadershipDecisionRecord) -> dict[str, object]:
+    return {
+        "id": row.id,
+        "title": row.title,
+        "decision_type": row.decision_type,
+        "decision_type_label": dict(LeadershipDecisionType.choices).get(row.decision_type, row.decision_type),
+        "decision_date": row.decision_date.isoformat() if row.decision_date else None,
+        "leader_name": row.leader_name,
+        "summary": row.summary,
+        "evidence_text": row.evidence_text,
+        "confidence_score": decimal_to_float(row.confidence_score),
+        "source": serialize_profile_source(row.source_document) if row.source_document_id else None,
+        "linked_event": serialize_business_event(row.linked_event) if row.linked_event_id else None,
+        "linked_strategic_turn": serialize_strategic_turn(row.linked_strategic_turn, source_count=row.linked_strategic_turn.turn_sources.count()) if row.linked_strategic_turn_id else None,
+    }
+
+
+def leadership_timeline(roles: list[LeadershipRoleRecord], decisions: list[LeadershipDecisionRecord]) -> list[dict[str, object]]:
+    rows = []
+    for role in roles:
+        if role.start_date or role.end_date:
+            rows.append({"date": (role.start_date or role.end_date).isoformat(), "type": "role", "label": role.leader_name, "summary": role.evidence_text})
+    for decision in decisions:
+        if decision.decision_date:
+            rows.append({"date": decision.decision_date.isoformat(), "type": "decision", "label": decision.title, "summary": decision.summary})
+    return sorted(rows, key=lambda row: row["date"], reverse=True)
+
+
+def leadership_decision_evidence(snapshot: LeadershipDecisionSnapshot, roles: list[LeadershipRoleRecord], decisions: list[LeadershipDecisionRecord]) -> list[dict[str, object]]:
+    sources = []
+    seen = set()
+    if snapshot.source_document_id:
+        sources.append(serialize_profile_source(snapshot.source_document))
+        seen.add(snapshot.source_document_id)
+    for row in [*roles, *decisions]:
+        if row.source_document_id and row.source_document_id not in seen:
+            sources.append(serialize_profile_source(row.source_document))
+            seen.add(row.source_document_id)
+    return sources
+
+
+def leadership_decision_source_gaps(company: Company, snapshot: LeadershipDecisionSnapshot, roles: list[LeadershipRoleRecord], decisions: list[LeadershipDecisionRecord]) -> list[dict[str, str]]:
+    gaps = []
+    if not roles and not decisions:
+        gaps.append({"key": "leadership_records", "label": "Leadership records unavailable", "reason": f"No reviewed leadership roles or decisions are available for {company.name} under the selected filters.", "source": "leadership-decision-record", "next_action": "Review Company 360 leadership, leadership-change events, annual filings, proxy statements, and official succession announcements."})
+        return gaps
+    if not any(row.start_date or row.end_date for row in roles):
+        gaps.append({"key": "tenure_dates", "label": "Tenure dates unavailable", "reason": "Reviewed leadership rows do not include start or end dates unless a dated appointment, departure, or succession source is available.", "source": "leadership-decision-record", "next_action": "Review 8-Ks, proxy statements, annual reports, and official press releases for dated tenure boundaries."})
+    if not any(row.transition_type in {LeadershipTransitionType.APPOINTMENT, LeadershipTransitionType.DEPARTURE, LeadershipTransitionType.SUCCESSION_PLAN, LeadershipTransitionType.BOARD_CHANGE} for row in roles):
+        gaps.append({"key": "transition_events", "label": "Transition events unavailable", "reason": "No reviewed appointment, departure, board-change, or succession-plan event is linked yet.", "source": "leadership-decision-record", "next_action": "Extract leadership-change events only when the source identifies the transition and date."})
+    if not decisions:
+        gaps.append({"key": "leadership_decisions", "label": "Leadership decisions unavailable", "reason": "No reviewed priorities, material decisions, promises, milestones, capital allocation, or acquisition links are connected to leadership yet.", "source": "leadership-decision-record", "next_action": "Link reviewed strategic priorities, strategic turns, promises, milestones, acquisitions, and capital allocation records."})
+    if not any(row.linked_strategic_turn_id for row in decisions):
+        gaps.append({"key": "decision_links", "label": "Cross-feature decision links unavailable", "reason": "No reviewed strategic-turn link is connected to the selected leadership decisions.", "source": "leadership-decision-record", "next_action": "Link decisions to reviewed strategic turns, promises, capital allocation, acquisitions, and milestones without duplicating owner features."})
+    gaps.append({"key": "tenure_performance_context", "label": "Tenure performance context unavailable", "reason": "Performance during tenure requires explicit method, period, and non-causation language before display.", "source": "leadership-decision-record", "next_action": "Add contextual performance metrics only after defining period alignment and non-causation rules."})
+    if not snapshot.source_document_id:
+        gaps.append({"key": "leadership_source_document", "label": "Leadership source unavailable", "reason": "The selected leadership snapshot is not linked to a source document.", "source": "leadership-decision-record", "next_action": "Rebuild from reviewed Company 360 profiles or leadership-change events with source documents."})
     return gaps
 
 
@@ -3747,6 +3926,33 @@ def persist_ownership_insider_gaps(company: Company, gaps: list[dict[str, str]])
             dashboard="ownership_insider_activity",
             gap_type=gap["key"],
             provider=gap.get("source", "ownership-insider-activity"),
+            defaults={
+                "reason": gap["reason"],
+                "next_ingestion_task": gap.get("next_action", ""),
+                "status": "OPEN",
+                "metadata": {"label": gap.get("label", "")},
+            },
+        )
+
+
+def persist_leadership_decision_gaps(company: Company, gaps: list[dict[str, str]]) -> None:
+    active_keys = [gap["key"] for gap in gaps]
+    if active_keys:
+        SourceGap.objects.filter(company=company, dashboard="leadership_decision_record").exclude(
+            gap_type__in=active_keys
+        ).update(status="RESOLVED")
+    else:
+        SourceGap.objects.filter(
+            company=company,
+            dashboard="leadership_decision_record",
+            status__in=["OPEN", "IN_PROGRESS"],
+        ).update(status="RESOLVED")
+    for gap in gaps:
+        SourceGap.objects.update_or_create(
+            company=company,
+            dashboard="leadership_decision_record",
+            gap_type=gap["key"],
+            provider=gap.get("source", "leadership-decision-record"),
             defaults={
                 "reason": gap["reason"],
                 "next_ingestion_task": gap.get("next_action", ""),

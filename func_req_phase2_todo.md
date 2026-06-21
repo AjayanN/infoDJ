@@ -692,17 +692,18 @@ Each feature below inherits the shared standards above. Feature sections only de
 
 **MVP tasks:**
 
-- [ ] Define leadership roles, interim status, co-leadership, and tenure boundaries.
-- [ ] Build leadership timeline and leader detail page.
-- [ ] Capture appointments, departures, role changes, board changes, and succession plans.
-- [ ] Capture each leader's stated priorities and material decisions.
-- [ ] Link decisions to strategic turns, promises, capital allocation, acquisitions, and milestones.
-- [ ] Show company performance during tenure with explicit non-causation language.
-- [ ] Prevent unverified departure reasons or personal allegations from appearing as fact.
+- [x] Define leadership roles, interim status, co-leadership, and tenure boundaries.
+- [x] Build leadership timeline and leader detail page.
+- [x] Capture appointments, departures, role changes, board changes, and succession plans.
+- [x] Capture each leader's stated priorities and material decisions.
+- [x] Link decisions to strategic turns, promises, capital allocation, acquisitions, and milestones.
+- [x] Show company performance during tenure with explicit non-causation language.
+- [x] Prevent unverified departure reasons or personal allegations from appearing as fact.
 
 **Acceptance criteria:**
 
 - Users can reconstruct who was responsible for stated priorities and when major decisions occurred.
+- Implemented baseline: all 20 configured companies receive reviewed leadership decision snapshots; reviewed role rows are published from available leadership context; tenure dates, transition events, cross-feature links, and performance context remain explicit source gaps unless source-backed evidence exists.
 
 ---
 
@@ -1108,7 +1109,7 @@ The order below reflects functional dependency and user value. It does not requi
 - [x] Earnings Intelligence: reviewed filing and earnings-release coverage for all 20 companies, with a separate-source comparable-guidance pilot and explicit unavailable states.
 - [x] Management Promise Tracker: complete with reviewed filing-backed coverage for all 20 configured companies.
 - [x] Strategy Milestone Tracker: reviewed all-company milestone baseline with status history, source-backed success conditions, and lifecycle filters.
-- [ ] Leadership Decision Record.
+- [x] Leadership Decision Record: all-company reviewed snapshot baseline implemented with role categories, tenure/transition fields, priority and decision rows where disclosed, non-causation performance guardrails, explicit source gaps, Company 360 entry point, daily ingestion builder, source-gap resolver rules, and authenticated all-company smoke validation.
 
 ### Wave 3: Resource and Market Position
 

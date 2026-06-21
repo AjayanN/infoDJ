@@ -127,6 +127,7 @@
         <button type="button" *ngIf="acquisitionLifecycle()" [class.active]="activePage() === 'acquisition-lifecycle'" [attr.aria-current]="activePage() === 'acquisition-lifecycle' ? 'page' : null" (click)="setActivePage('acquisition-lifecycle')">Acquisitions</button>
         <button type="button" *ngIf="customerSupplierDependency()" [class.active]="activePage() === 'customer-supplier-dependency'" [attr.aria-current]="activePage() === 'customer-supplier-dependency' ? 'page' : null" (click)="setActivePage('customer-supplier-dependency')">Dependencies</button>
         <button type="button" *ngIf="geographicExpansion()" [class.active]="activePage() === 'geographic-expansion'" [attr.aria-current]="activePage() === 'geographic-expansion' ? 'page' : null" (click)="setActivePage('geographic-expansion')">Geographies</button>
+        <button type="button" *ngIf="leadershipDecisions()" [class.active]="activePage() === 'leadership-decisions'" [attr.aria-current]="activePage() === 'leadership-decisions' ? 'page' : null" (click)="setActivePage('leadership-decisions')">Leadership</button>
         <button type="button" *ngIf="ownershipInsider()" [class.active]="activePage() === 'ownership-insider'" [attr.aria-current]="activePage() === 'ownership-insider' ? 'page' : null" (click)="setActivePage('ownership-insider')">Ownership</button>
         <button type="button" [class.active]="activePage() === 'profile'" [attr.aria-current]="activePage() === 'profile' ? 'page' : null" (click)="setActivePage('profile')">Profile</button>
         <button type="button" [class.active]="activePage() === 'subscription'" [attr.aria-current]="activePage() === 'subscription' ? 'page' : null" (click)="setActivePage('subscription')">Subscription</button>
@@ -766,6 +767,7 @@
                   <button type="button" class="ghost-button" (click)="openAcquisitionLifecycle(companyView.company.slug)">Acquisition lifecycle tracker</button>
                   <button type="button" class="ghost-button" (click)="openCustomerSupplierDependency(companyView.company.slug)">Customer and supplier dependency</button>
                   <button type="button" class="ghost-button" (click)="openGeographicExpansion(companyView.company.slug)">Geographic expansion map</button>
+                  <button type="button" class="ghost-button" (click)="openLeadershipDecisions(companyView.company.slug)">Leadership decision record</button>
                   <button type="button" class="ghost-button" (click)="openOwnershipInsider(companyView.company.slug)">Ownership and insider activity</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('companies-like-mine')">Compare peers</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('latest-moves')">Latest moves</button>
@@ -1909,6 +1911,95 @@
               <section class="panel source-gap-panel" *ngIf="geoView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable expansion data</h2></div>
                 <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of geoView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+              </section>
+            </ng-container>
+          </section>
+
+          <section *ngSwitchCase="'leadership-decisions'" class="company-profile-layout" aria-labelledby="leadership-heading">
+            <div class="loading-panel" *ngIf="leadershipDecisionLoading()">Loading leadership decision record...</div>
+            <ng-container *ngIf="!leadershipDecisionLoading() && leadershipDecisions() as leaderView">
+              <section class="panel company-profile-hero">
+                <div>
+                  <p class="section-kicker">Leadership Decision Record · {{ leaderView.status }}</p>
+                  <h2 id="leadership-heading">{{ leaderView.company.name }}</h2>
+                  <p>{{ leaderView.snapshot?.summary || 'Reviewed leadership decision summary unavailable.' }}</p>
+                </div>
+                <div class="profile-score-card">
+                  <strong>{{ leaderView.coverage.role_count }}</strong>
+                  <span>role rows</span>
+                  <small>{{ leaderView.coverage.decision_count }} decisions/priorities</small>
+                  <small>{{ leaderView.coverage.dated_role_count }} dated tenure rows</small>
+                </div>
+              </section>
+
+              <section class="profile-controls panel">
+                <label>Snapshot at date
+                  <select [(ngModel)]="leadershipDecisionDate">
+                    <option value="">Latest reviewed snapshot</option>
+                    <option *ngFor="let snapshot of leaderView.snapshot_history" [value]="snapshot.effective_date">
+                      {{ snapshot.effective_date }} · {{ snapshot.role_count }} roles · {{ snapshot.decision_count }} decisions
+                    </option>
+                  </select>
+                </label>
+                <label>Role type
+                  <select [(ngModel)]="leadershipRoleType">
+                    <option value="">All role types</option>
+                    <option *ngFor="let type of leaderView.filters.role_types" [value]="type">{{ promiseLabel(type) }}</option>
+                  </select>
+                </label>
+                <label>Decision type
+                  <select [(ngModel)]="leadershipDecisionType">
+                    <option value="">All decision types</option>
+                    <option *ngFor="let type of leaderView.filters.decision_types" [value]="type">{{ promiseLabel(type) }}</option>
+                  </select>
+                </label>
+                <div class="profile-control-actions">
+                  <button type="button" class="primary-button" (click)="reloadLeadershipDecisions()">Update filters</button>
+                  <button type="button" class="ghost-button" (click)="openCompany(leaderView.company.slug)">Back to Company 360</button>
+                  <button type="button" class="ghost-button" (click)="printLeadershipDecisionBrief()">Print leadership brief</button>
+                </div>
+              </section>
+
+              <section class="dashboard-two-column">
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Roles</p><h2>Timeline and tenure context</h2></div></div>
+                  <div class="result-row" *ngFor="let role of leaderView.roles">
+                    <strong>{{ role.leader_name }}</strong>
+                    <span>{{ role.role_title || role.role_type_label }} · {{ role.transition_type_label }}</span>
+                    <p>{{ role.evidence_text }}</p>
+                    <small>{{ role.start_date || 'Start date unavailable' }} <ng-container *ngIf="role.end_date">to {{ role.end_date }}</ng-container> · interim {{ role.interim_status ? 'yes' : 'no' }} · co-leadership {{ role.co_leadership ? 'yes' : 'no' }}</small>
+                  </div>
+                  <div class="empty-state unavailable-state" *ngIf="leaderView.roles.length === 0">No reviewed leadership roles are available for the selected filters.</div>
+                </article>
+
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Decisions</p><h2>Priorities and material decisions</h2></div><span>{{ leaderView.decisions.length }} rows</span></div>
+                  <div class="result-row" *ngFor="let decision of leaderView.decisions">
+                    <strong>{{ decision.title }}</strong>
+                    <span>{{ decision.decision_type_label }} · {{ decision.decision_date || 'date unavailable' }}</span>
+                    <p>{{ decision.summary }}</p>
+                    <small>{{ decision.leader_name || 'Leader link unavailable' }} · strategic-turn link {{ decision.linked_strategic_turn ? 'available' : 'unavailable' }}</small>
+                  </div>
+                  <div class="empty-state unavailable-state" *ngIf="leaderView.decisions.length === 0">No reviewed leadership-linked decisions are available for the selected filters.</div>
+                </article>
+              </section>
+
+              <section class="dashboard-two-column">
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Guardrails</p><h2>Performance and attribution</h2></div></div>
+                  <p>{{ leaderView.performance_context.non_causation_note }}</p>
+                  <p>{{ leaderView.performance_context.reason }}</p>
+                  <p>{{ leaderView.snapshot?.methodology }}</p>
+                </article>
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Leadership evidence</h2></div><span>{{ leaderView.evidence.length }} sources</span></div>
+                  <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of leaderView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                </article>
+              </section>
+
+              <section class="panel source-gap-panel" *ngIf="leaderView.source_gaps.length > 0">
+                <div class="panel-header"><h2>Unavailable leadership data</h2></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of leaderView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
               </section>
             </ng-container>
           </section>

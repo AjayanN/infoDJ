@@ -88,6 +88,7 @@ class Command(BaseCommand):
         call_command("build_acquisition_lifecycles", all=True)
         call_command("build_customer_supplier_dependencies", all=True)
         call_command("build_geographic_expansions", all=True)
+        call_command("build_leadership_decision_records", all=True)
         call_command("build_ownership_insider_activity", all=True)
         call_command("resolve_source_gaps", limit=500)
 

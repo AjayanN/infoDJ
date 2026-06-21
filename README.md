@@ -568,6 +568,29 @@ BASE_URL=http://localhost:8080/api/app scripts/smoke/phase2_geographic_expansion
 
 Requirement 12 verification on June 21, 2026: geographic expansion builder populated all 20 configured companies with reviewed expansion snapshots and 28 country/region market rows; direct database coverage confirmed every configured company has at least one reviewed market row; ingestion API validation passed for all 20 companies with 86 explicit source gaps; authenticated gateway smoke passed for all 20 companies; ingestion backend `71/71`, main backend `36/36`, frontend `7/7`, and frontend production build passed.
 
+## Leadership Decision Record
+
+Phase 2 Requirement 13 adds a Leadership Decision Record for leadership roles, tenure context, stated priorities, material decisions, succession events, evidence, and explicit non-causation guardrails.
+
+The baseline builder creates a reviewed snapshot for every configured company. It publishes role rows only from reviewed Company 360 leadership or reviewed leadership-change events. Tenure start/end dates, departures, succession plans, board changes, decision links, compensation context, and tenure performance remain explicit source gaps unless a reviewed source supports them. Performance during tenure is shown only as context and is not treated as leadership causation.
+
+Leadership Decision Record endpoints:
+
+```bash
+GET /api/ingestion/companies/<slug>/leadership-decisions
+GET /api/app/companies/<slug>/leadership-decisions
+```
+
+Open `Leadership decision record` from Company 360 for snapshot controls, role and decision filters, role rows, decision/priority rows, non-causation guardrails, evidence cards, and source gaps.
+
+Leadership Decision Record smoke check:
+
+```bash
+BASE_URL=http://localhost:8080/api/app scripts/smoke/phase2_leadership_decisions.sh
+```
+
+Requirement 13 verification on June 21, 2026: leadership builder populated all 20 configured companies with reviewed snapshots and 6 reviewed role rows from available leadership data; ingestion API validation passed for all 20 companies with 32 explicit source gaps and no unsupported departure or performance-causation claims; source-gap resolver checked 396 gaps, created 3 candidate mappings, and updated 95; authenticated gateway smoke passed for all 20 companies; ingestion backend `75/75`, main backend `40/40`, frontend `7/7`, and frontend production build passed.
+
 ## Ownership and Insider Activity
 
 Phase 2 Requirement 14 adds Ownership and Insider Activity for reviewed ownership context, economic versus voting-control separation, institutional and insider rows where disclosed, transaction-plan gaps, evidence, and source-gap resolution candidates.
@@ -593,7 +616,7 @@ Requirement 14 verification on June 21, 2026: ownership builder populated all 20
 
 ## Source Gap Resolution Guardrail
 
-Open source gaps are now routed back into ingestion instead of remaining as passive UI messages. The daily company update runs `resolve_source_gaps` after the Phase 2 builders and creates reviewed-source candidates from existing `SourceDocument` rows for acquisition lifecycle, competitive market-share, customer/supplier dependency, contract-term, concentration, product-pricing, geographic expansion, and ownership/insider gaps.
+Open source gaps are now routed back into ingestion instead of remaining as passive UI messages. The daily company update runs `resolve_source_gaps` after the Phase 2 builders and creates reviewed-source candidates from existing `SourceDocument` rows for acquisition lifecycle, competitive market-share, customer/supplier dependency, contract-term, concentration, product-pricing, geographic expansion, leadership, and ownership/insider gaps.
 
 Resolution candidates are not treated as completed facts. Each candidate stores the source document, candidate type, evidence excerpt, confidence score, review status, and next extraction action. Feature builders should only promote a candidate into a dashboard row after extracting the required fields from the cited source.
 

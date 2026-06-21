@@ -27,6 +27,7 @@ from apps.companies.models import (
     KpiDefinitionVersion,
     KpiObservation,
     KpiTarget,
+    LeadershipDecisionSnapshot,
     ManagementPromise,
     ManagementPromiseUpdate,
     OwnershipInsiderSnapshot,
@@ -70,6 +71,10 @@ from apps.ingestion.services.geographic_expansion import (
 from apps.ingestion.services.ownership_insider_activity import (
     build_ownership_insider_activity,
     ownership_insider_quality_issues,
+)
+from apps.ingestion.services.leadership_decision_record import (
+    build_leadership_decision_record,
+    leadership_decision_quality_issues,
 )
 from apps.ingestion.services.source_gap_resolver import resolve_source_gaps
 from apps.ingestion.services.event_extractor import EventSignal, actual_change_for, find_evidence_sentence
@@ -1382,6 +1387,51 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(payload["coverage"]["transaction_count"], 0)
         self.assertTrue(any(gap["key"] == "ownership_percentages" for gap in payload["source_gaps"]))
         self.assertTrue(any(gap["key"] == "insider_transactions" for gap in payload["source_gaps"]))
+
+    def test_leadership_decision_builder_creates_roles_and_decisions(self):
+        CompanyProfileSnapshot.objects.create(
+            company=self.netflix,
+            source_document=self.source,
+            effective_date=date(2026, 1, 1),
+            status="REVIEWED",
+            summary="Netflix reviewed profile.",
+            leadership=["Greg Peters - Co-CEO", "Ted Sarandos - Co-CEO"],
+            strategic_priorities=["Scale advertising business"],
+            confidence_score="0.850",
+        )
+
+        first = build_leadership_decision_record(self.netflix)
+        second = build_leadership_decision_record(self.netflix)
+
+        self.assertEqual(first["roles_created"], 2)
+        self.assertGreaterEqual(first["decisions_created"], 1)
+        self.assertEqual(second["roles_updated"], 2)
+        snapshot = LeadershipDecisionSnapshot.objects.get(company=self.netflix)
+        self.assertEqual(snapshot.status, "REVIEWED")
+        self.assertEqual(snapshot.roles.count(), 2)
+        self.assertNotIn("no reviewed leadership roles", leadership_decision_quality_issues(self.netflix))
+
+    def test_leadership_decision_api_exposes_non_causation_and_gaps(self):
+        CompanyProfileSnapshot.objects.create(
+            company=self.netflix,
+            source_document=self.source,
+            effective_date=date(2026, 1, 1),
+            status="REVIEWED",
+            summary="Netflix reviewed profile.",
+            leadership=["Greg Peters - Co-CEO"],
+            confidence_score="0.850",
+        )
+        build_leadership_decision_record(self.netflix)
+
+        response = self.client.get("/companies/netflix/leadership-decisions")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertIn(payload["status"], {"available", "partial"})
+        self.assertGreaterEqual(payload["coverage"]["role_count"], 1)
+        self.assertEqual(payload["performance_context"]["status"], "unavailable")
+        self.assertIn("does not claim", payload["performance_context"]["non_causation_note"])
+        self.assertTrue(any(gap["key"] == "tenure_dates" for gap in payload["source_gaps"]))
 
     def test_rebuild_specific_turns_unlocks_pattern_scorecard_and_compare(self):
         peer = Company.objects.create(name="Example Streaming", industry=self.netflix.industry, country="United States")
