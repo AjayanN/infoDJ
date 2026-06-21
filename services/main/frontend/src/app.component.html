@@ -127,6 +127,7 @@
         <button type="button" *ngIf="acquisitionLifecycle()" [class.active]="activePage() === 'acquisition-lifecycle'" [attr.aria-current]="activePage() === 'acquisition-lifecycle' ? 'page' : null" (click)="setActivePage('acquisition-lifecycle')">Acquisitions</button>
         <button type="button" *ngIf="customerSupplierDependency()" [class.active]="activePage() === 'customer-supplier-dependency'" [attr.aria-current]="activePage() === 'customer-supplier-dependency' ? 'page' : null" (click)="setActivePage('customer-supplier-dependency')">Dependencies</button>
         <button type="button" *ngIf="geographicExpansion()" [class.active]="activePage() === 'geographic-expansion'" [attr.aria-current]="activePage() === 'geographic-expansion' ? 'page' : null" (click)="setActivePage('geographic-expansion')">Geographies</button>
+        <button type="button" *ngIf="ownershipInsider()" [class.active]="activePage() === 'ownership-insider'" [attr.aria-current]="activePage() === 'ownership-insider' ? 'page' : null" (click)="setActivePage('ownership-insider')">Ownership</button>
         <button type="button" [class.active]="activePage() === 'profile'" [attr.aria-current]="activePage() === 'profile' ? 'page' : null" (click)="setActivePage('profile')">Profile</button>
         <button type="button" [class.active]="activePage() === 'subscription'" [attr.aria-current]="activePage() === 'subscription' ? 'page' : null" (click)="setActivePage('subscription')">Subscription</button>
       </nav>
@@ -765,6 +766,7 @@
                   <button type="button" class="ghost-button" (click)="openAcquisitionLifecycle(companyView.company.slug)">Acquisition lifecycle tracker</button>
                   <button type="button" class="ghost-button" (click)="openCustomerSupplierDependency(companyView.company.slug)">Customer and supplier dependency</button>
                   <button type="button" class="ghost-button" (click)="openGeographicExpansion(companyView.company.slug)">Geographic expansion map</button>
+                  <button type="button" class="ghost-button" (click)="openOwnershipInsider(companyView.company.slug)">Ownership and insider activity</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('companies-like-mine')">Compare peers</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('latest-moves')">Latest moves</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('risk-signals')">Risk signals</button>
@@ -1907,6 +1909,99 @@
               <section class="panel source-gap-panel" *ngIf="geoView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable expansion data</h2></div>
                 <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of geoView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+              </section>
+            </ng-container>
+          </section>
+
+          <section *ngSwitchCase="'ownership-insider'" class="company-profile-layout" aria-labelledby="ownership-heading">
+            <div class="loading-panel" *ngIf="ownershipInsiderLoading()">Loading ownership and insider activity...</div>
+            <ng-container *ngIf="!ownershipInsiderLoading() && ownershipInsider() as ownerView">
+              <section class="panel company-profile-hero">
+                <div>
+                  <p class="section-kicker">Ownership and Insider Activity · {{ ownerView.status }}</p>
+                  <h2 id="ownership-heading">{{ ownerView.company.name }}</h2>
+                  <p>{{ ownerView.snapshot?.summary || 'Reviewed ownership and insider summary unavailable.' }}</p>
+                </div>
+                <div class="profile-score-card">
+                  <strong>{{ ownerView.coverage.position_count }}</strong>
+                  <span>ownership/context rows</span>
+                  <small>{{ ownerView.coverage.transaction_count }} reviewed transactions</small>
+                  <small>{{ ownerView.coverage.voting_control_count }} voting-control rows</small>
+                </div>
+              </section>
+
+              <section class="profile-controls panel">
+                <label>Snapshot at date
+                  <select [(ngModel)]="ownershipInsiderDate">
+                    <option value="">Latest reviewed snapshot</option>
+                    <option *ngFor="let snapshot of ownerView.snapshot_history" [value]="snapshot.effective_date">
+                      {{ snapshot.effective_date }} · {{ snapshot.position_count }} positions · {{ snapshot.transaction_count }} transactions
+                    </option>
+                  </select>
+                </label>
+                <label>Holder type
+                  <select [(ngModel)]="ownershipHolderType">
+                    <option value="">All holder types</option>
+                    <option *ngFor="let type of ownerView.filters.holder_types" [value]="type">{{ promiseLabel(type) }}</option>
+                  </select>
+                </label>
+                <label>Transaction type
+                  <select [(ngModel)]="insiderTransactionType">
+                    <option value="">All transaction types</option>
+                    <option *ngFor="let type of ownerView.filters.transaction_types" [value]="type">{{ promiseLabel(type) }}</option>
+                  </select>
+                </label>
+                <div class="profile-control-actions">
+                  <button type="button" class="primary-button" (click)="reloadOwnershipInsider()">Update filters</button>
+                  <button type="button" class="ghost-button" (click)="openCompany(ownerView.company.slug)">Back to Company 360</button>
+                  <button type="button" class="ghost-button" (click)="printOwnershipInsiderBrief()">Print ownership brief</button>
+                </div>
+              </section>
+
+              <section class="dashboard-two-column">
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Positions</p><h2>Ownership and insider context</h2></div></div>
+                  <div class="result-row" *ngFor="let position of ownerView.positions">
+                    <strong>{{ position.holder_name }}</strong>
+                    <span>{{ position.holder_type_label }} · {{ position.position_type_label }} · confidence {{ position.confidence_score | number:'1.2-2' }}</span>
+                    <p>{{ position.evidence_text }}</p>
+                    <small>
+                      economic ownership <ng-container *ngIf="position.economic_ownership_pct === null; else ownershipPct">unavailable</ng-container>
+                      <ng-template #ownershipPct>{{ position.economic_ownership_pct | number:'1.2-2' }}%</ng-template>
+                      · voting power <ng-container *ngIf="position.voting_power_pct === null; else votingPct">unavailable</ng-container>
+                      <ng-template #votingPct>{{ position.voting_power_pct | number:'1.2-2' }}%</ng-template>
+                    </small>
+                  </div>
+                  <div class="empty-state unavailable-state" *ngIf="ownerView.positions.length === 0">No reviewed ownership positions are available for the selected filters.</div>
+                </article>
+
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Transactions</p><h2>Insider activity</h2></div><span>{{ ownerView.insider_transactions.length }} reviewed rows</span></div>
+                  <div class="result-row" *ngFor="let transaction of ownerView.insider_transactions">
+                    <strong>{{ transaction.insider_name }}</strong>
+                    <span>{{ transaction.transaction_type_label }} · {{ transaction.transaction_date || 'date unavailable' }}</span>
+                    <p>{{ transaction.evidence_text }}</p>
+                    <small>{{ transaction.shares || 'shares unavailable' }} shares · {{ transaction.value || 'value unavailable' }} · planned sale {{ transaction.planned_sale ? 'yes' : 'no' }}</small>
+                  </div>
+                  <div class="empty-state unavailable-state" *ngIf="ownerView.insider_transactions.length === 0">No reviewed insider transactions are available. This is shown as a source gap, not treated as no activity.</div>
+                </article>
+              </section>
+
+              <section class="dashboard-two-column">
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Control</p><h2>Economic versus voting ownership</h2></div></div>
+                  <p>{{ ownerView.control_context.reason || 'Reviewed economic and voting-control fields are available.' }}</p>
+                  <p>{{ ownerView.snapshot?.methodology }}</p>
+                </article>
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Ownership evidence</h2></div><span>{{ ownerView.evidence.length }} sources</span></div>
+                  <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of ownerView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                </article>
+              </section>
+
+              <section class="panel source-gap-panel" *ngIf="ownerView.source_gaps.length > 0">
+                <div class="panel-header"><h2>Unavailable ownership data</h2></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of ownerView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
               </section>
             </ng-container>
           </section>

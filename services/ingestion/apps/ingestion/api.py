@@ -37,10 +37,15 @@ from apps.companies.models import (
     GeographicExpansionMarket,
     GeographicExpansionSnapshot,
     GeographicExpansionStatus,
+    InsiderTransaction,
     KpiDefinition,
     KpiObservation,
     ManagementPromise,
     MilestoneStatus,
+    OwnershipHolderType,
+    OwnershipInsiderSnapshot,
+    OwnershipPosition,
+    OwnershipPositionType,
     PriceObservation,
     ProductCatalogSnapshot,
     ProductChange,
@@ -1029,6 +1034,70 @@ def company_geographic_expansion(request: HttpRequest, slug: str) -> JsonRespons
     })
 
 
+@require_GET
+def company_ownership_insider(request: HttpRequest, slug: str) -> JsonResponse:
+    company = get_company(slug)
+    snapshots = list(
+        OwnershipInsiderSnapshot.objects.filter(company=company, status__in=["PUBLISHED", "REVIEWED"])
+        .select_related("source_document")
+        .prefetch_related("positions__source_document", "insider_transactions__source_document")
+        .order_by("-effective_date", "-updated_at")
+    )
+    as_of = parse_iso_date(request.GET.get("as_of"))
+    eligible = [row for row in snapshots if as_of is None or row.effective_date <= as_of]
+    current = eligible[0] if eligible else None
+    holder_type = (request.GET.get("holder_type") or "").strip().upper()
+    transaction_type = (request.GET.get("transaction_type") or "").strip().upper()
+    if current is None:
+        gaps = [{
+            "key": "ownership_insider_snapshot",
+            "label": "Ownership and Insider Activity unavailable",
+            "reason": f"No reviewed ownership and insider activity snapshot is available for {company.name}.",
+            "source": "ownership-insider-activity",
+            "next_action": "Refresh reviewed Company 360 leadership context and run build_ownership_insider_activity.",
+        }]
+        persist_ownership_insider_gaps(company, gaps)
+        return JsonResponse({"status": "unavailable", "company": serialize_company_detail(company), "snapshot": None, "snapshot_history": [], "positions": [], "insider_transactions": [], "source_gaps": gaps})
+    positions = list(current.positions.all())
+    if holder_type:
+        positions = [row for row in positions if row.holder_type == holder_type]
+    transactions = list(current.insider_transactions.all())
+    if transaction_type:
+        transactions = [row for row in transactions if row.transaction_type == transaction_type]
+    gaps = ownership_insider_source_gaps(company, current, positions, transactions)
+    persist_ownership_insider_gaps(company, gaps)
+    evidence = ownership_insider_evidence(current, positions, transactions)
+    return JsonResponse({
+        "status": "available" if positions or transactions else "partial",
+        "company": serialize_company_detail(company),
+        "snapshot": serialize_ownership_insider_snapshot(current),
+        "snapshot_history": [serialize_ownership_insider_snapshot_history(row, current) for row in snapshots],
+        "positions": [serialize_ownership_position(row) for row in positions],
+        "insider_transactions": [serialize_insider_transaction(row) for row in transactions],
+        "control_context": ownership_control_context(positions),
+        "filters": {
+            "holder_types": sorted({row.holder_type for row in current.positions.all()}),
+            "transaction_types": sorted({row.transaction_type for row in current.insider_transactions.all()}),
+            "selected_holder_type": holder_type,
+            "selected_transaction_type": transaction_type,
+            "as_of": as_of.isoformat() if as_of else "",
+        },
+        "coverage": {
+            "position_count": len(positions),
+            "insider_context_count": sum(1 for row in positions if row.position_type == OwnershipPositionType.INSIDER_CONTEXT),
+            "ownership_percent_count": sum(1 for row in positions if row.economic_ownership_pct is not None),
+            "voting_control_count": sum(1 for row in positions if row.voting_power_pct is not None),
+            "institutional_position_count": sum(1 for row in positions if row.holder_type == OwnershipHolderType.INSTITUTIONAL),
+            "transaction_count": len(transactions),
+            "planned_sale_count": sum(1 for row in transactions if row.planned_sale),
+            "source_count": len(evidence),
+            "last_updated": current.updated_at.isoformat(),
+        },
+        "evidence": evidence,
+        "source_gaps": gaps,
+    })
+
+
 def earnings_period_key(period: EarningsPeriod) -> str:
     return f"FY{period.fiscal_year}-{period.fiscal_period}"
 
@@ -1879,6 +1948,122 @@ def geographic_expansion_source_gaps(
         gaps.append({"key": "expansion_outcomes", "label": "Expansion outcomes unavailable", "reason": "Market-level outcomes are unavailable unless a later reviewed source describes the result of the expansion.", "source": "geographic-expansion", "next_action": "Link later filings, earnings releases, or reviewed business events that discuss expansion results."})
     if not snapshot.source_document_id:
         gaps.append({"key": "geographic_source_document", "label": "Geographic source unavailable", "reason": "The selected geographic expansion snapshot is not linked to a source document.", "source": "geographic-expansion", "next_action": "Rebuild from reviewed Company 360 profiles or expansion events with source documents."})
+    return gaps
+
+
+def serialize_ownership_insider_snapshot(snapshot: OwnershipInsiderSnapshot) -> dict[str, object]:
+    return {
+        "id": snapshot.id,
+        "effective_date": snapshot.effective_date.isoformat(),
+        "status": snapshot.status,
+        "summary": snapshot.summary,
+        "methodology": snapshot.methodology,
+        "confidence_score": decimal_to_float(snapshot.confidence_score),
+        "source": serialize_profile_source(snapshot.source_document) if snapshot.source_document_id else None,
+        "updated_at": snapshot.updated_at.isoformat(),
+    }
+
+
+def serialize_ownership_insider_snapshot_history(snapshot: OwnershipInsiderSnapshot, current: OwnershipInsiderSnapshot) -> dict[str, object]:
+    return {
+        "id": snapshot.id,
+        "effective_date": snapshot.effective_date.isoformat(),
+        "status": snapshot.status,
+        "is_current": snapshot.id == current.id,
+        "position_count": snapshot.positions.count(),
+        "transaction_count": snapshot.insider_transactions.count(),
+    }
+
+
+def serialize_ownership_position(row: OwnershipPosition) -> dict[str, object]:
+    return {
+        "id": row.id,
+        "holder_name": row.holder_name,
+        "holder_type": row.holder_type,
+        "holder_type_label": dict(OwnershipHolderType.choices).get(row.holder_type, row.holder_type),
+        "position_type": row.position_type,
+        "position_type_label": dict(OwnershipPositionType.choices).get(row.position_type, row.position_type),
+        "economic_ownership_pct": decimal_to_float_or_none(row.economic_ownership_pct),
+        "voting_power_pct": decimal_to_float_or_none(row.voting_power_pct),
+        "shares_owned": decimal_to_float_or_none(row.shares_owned),
+        "share_class": row.share_class,
+        "filing_date": row.filing_date.isoformat() if row.filing_date else None,
+        "report_period": row.report_period,
+        "disclosure_form": row.disclosure_form,
+        "evidence_text": row.evidence_text,
+        "confidence_score": decimal_to_float(row.confidence_score),
+        "source": serialize_profile_source(row.source_document) if row.source_document_id else None,
+    }
+
+
+def serialize_insider_transaction(row: InsiderTransaction) -> dict[str, object]:
+    return {
+        "id": row.id,
+        "insider_name": row.insider_name,
+        "insider_role": row.insider_role,
+        "transaction_type": row.transaction_type,
+        "transaction_type_label": dict(InsiderTransaction._meta.get_field("transaction_type").choices).get(row.transaction_type, row.transaction_type),
+        "transaction_date": row.transaction_date.isoformat() if row.transaction_date else None,
+        "shares": decimal_to_float_or_none(row.shares),
+        "price": decimal_to_float_or_none(row.price),
+        "value": decimal_to_float_or_none(row.value),
+        "planned_sale": row.planned_sale,
+        "plan_reference": row.plan_reference,
+        "ownership_after": decimal_to_float_or_none(row.ownership_after),
+        "evidence_text": row.evidence_text,
+        "confidence_score": decimal_to_float(row.confidence_score),
+        "source": serialize_profile_source(row.source_document) if row.source_document_id else None,
+    }
+
+
+def ownership_control_context(positions: list[OwnershipPosition]) -> dict[str, object]:
+    return {
+        "status": "available" if any(row.voting_power_pct is not None for row in positions) else "unavailable",
+        "economic_ownership_available": any(row.economic_ownership_pct is not None for row in positions),
+        "voting_power_available": any(row.voting_power_pct is not None for row in positions),
+        "reason": "" if any(row.voting_power_pct is not None for row in positions) else "No reviewed voting-control percentage is available. Missing control data is not estimated.",
+    }
+
+
+def ownership_insider_evidence(
+    snapshot: OwnershipInsiderSnapshot,
+    positions: list[OwnershipPosition],
+    transactions: list[InsiderTransaction],
+) -> list[dict[str, object]]:
+    sources = []
+    seen = set()
+    if snapshot.source_document_id:
+        sources.append(serialize_profile_source(snapshot.source_document))
+        seen.add(snapshot.source_document_id)
+    for row in [*positions, *transactions]:
+        if row.source_document_id and row.source_document_id not in seen:
+            sources.append(serialize_profile_source(row.source_document))
+            seen.add(row.source_document_id)
+    return sources
+
+
+def ownership_insider_source_gaps(
+    company: Company,
+    snapshot: OwnershipInsiderSnapshot,
+    positions: list[OwnershipPosition],
+    transactions: list[InsiderTransaction],
+) -> list[dict[str, str]]:
+    gaps = []
+    if not positions and not transactions:
+        gaps.append({"key": "ownership_positions", "label": "Ownership positions unavailable", "reason": f"No reviewed ownership or insider context rows are available for {company.name} under the selected filters.", "source": "ownership-insider-activity", "next_action": "Review proxy statements, Form 4, Schedule 13D/13G, and reviewed Company 360 leadership context."})
+        return gaps
+    if not any(row.economic_ownership_pct is not None for row in positions):
+        gaps.append({"key": "ownership_percentages", "label": "Ownership percentages unavailable", "reason": "Reviewed rows do not include disclosed economic ownership percentages. Missing percentages are not estimated.", "source": "ownership-insider-activity", "next_action": "Review proxy beneficial ownership tables, 13D/13G filings, and share-class disclosures."})
+    if not any(row.voting_power_pct is not None for row in positions):
+        gaps.append({"key": "voting_control", "label": "Voting control unavailable", "reason": "No reviewed voting-power percentage or share-class control disclosure is linked to the selected rows.", "source": "ownership-insider-activity", "next_action": "Review proxy statements and dual-class share disclosures for voting power."})
+    if not any(row.holder_type == OwnershipHolderType.INSTITUTIONAL for row in positions):
+        gaps.append({"key": "institutional_positions", "label": "Institutional positions unavailable", "reason": "No reviewed institutional ownership positions are linked yet.", "source": "ownership-insider-activity", "next_action": "Review 13F, 13D, 13G, and official ownership disclosures before publishing institutions."})
+    if not transactions:
+        gaps.append({"key": "insider_transactions", "label": "Insider transactions unavailable", "reason": "No reviewed insider purchase, sale, grant, exercise, or planned-sale rows are linked yet.", "source": "ownership-insider-activity", "next_action": "Review Form 4 filings and transaction-plan disclosures without interpreting trades as signals."})
+    if not any(row.planned_sale for row in transactions):
+        gaps.append({"key": "transaction_plans", "label": "Transaction plans unavailable", "reason": "No reviewed 10b5-1 or other planned-sale indicator is linked to the selected transactions.", "source": "ownership-insider-activity", "next_action": "Review Form 4 footnotes and company disclosures for planned-sale references."})
+    if not snapshot.source_document_id:
+        gaps.append({"key": "ownership_source_document", "label": "Ownership source unavailable", "reason": "The selected ownership snapshot is not linked to a source document.", "source": "ownership-insider-activity", "next_action": "Rebuild from reviewed Company 360 profiles or ownership filings with source documents."})
     return gaps
 
 
@@ -3535,6 +3720,33 @@ def persist_geographic_expansion_gaps(company: Company, gaps: list[dict[str, str
             dashboard="geographic_expansion",
             gap_type=gap["key"],
             provider=gap.get("source", "geographic-expansion"),
+            defaults={
+                "reason": gap["reason"],
+                "next_ingestion_task": gap.get("next_action", ""),
+                "status": "OPEN",
+                "metadata": {"label": gap.get("label", "")},
+            },
+        )
+
+
+def persist_ownership_insider_gaps(company: Company, gaps: list[dict[str, str]]) -> None:
+    active_keys = [gap["key"] for gap in gaps]
+    if active_keys:
+        SourceGap.objects.filter(company=company, dashboard="ownership_insider_activity").exclude(
+            gap_type__in=active_keys
+        ).update(status="RESOLVED")
+    else:
+        SourceGap.objects.filter(
+            company=company,
+            dashboard="ownership_insider_activity",
+            status__in=["OPEN", "IN_PROGRESS"],
+        ).update(status="RESOLVED")
+    for gap in gaps:
+        SourceGap.objects.update_or_create(
+            company=company,
+            dashboard="ownership_insider_activity",
+            gap_type=gap["key"],
+            provider=gap.get("source", "ownership-insider-activity"),
             defaults={
                 "reason": gap["reason"],
                 "next_ingestion_task": gap.get("next_action", ""),

@@ -568,9 +568,32 @@ BASE_URL=http://localhost:8080/api/app scripts/smoke/phase2_geographic_expansion
 
 Requirement 12 verification on June 21, 2026: geographic expansion builder populated all 20 configured companies with reviewed expansion snapshots and 28 country/region market rows; direct database coverage confirmed every configured company has at least one reviewed market row; ingestion API validation passed for all 20 companies with 86 explicit source gaps; authenticated gateway smoke passed for all 20 companies; ingestion backend `71/71`, main backend `36/36`, frontend `7/7`, and frontend production build passed.
 
+## Ownership and Insider Activity
+
+Phase 2 Requirement 14 adds Ownership and Insider Activity for reviewed ownership context, economic versus voting-control separation, institutional and insider rows where disclosed, transaction-plan gaps, evidence, and source-gap resolution candidates.
+
+The baseline builder creates a reviewed snapshot for every configured company. It publishes insider-context rows only from reviewed leadership context and does not estimate ownership percentages, voting power, institutional positions, Form 4 transactions, or 10b5-1 plans. Missing ownership details are shown as source gaps and routed to the source-gap resolver for proxy, Form 4, Schedule 13D/13G, and 13F candidate documents where available.
+
+Ownership and Insider Activity endpoints:
+
+```bash
+GET /api/ingestion/companies/<slug>/ownership-insider
+GET /api/app/companies/<slug>/ownership-insider
+```
+
+Open `Ownership and insider activity` from Company 360 for snapshot controls, holder and transaction filters, position/context rows, insider transaction rows, economic-versus-voting control guardrails, evidence cards, and source gaps.
+
+Ownership and Insider Activity smoke check:
+
+```bash
+BASE_URL=http://localhost:8080/api/app scripts/smoke/phase2_ownership_insider.sh
+```
+
+Requirement 14 verification on June 21, 2026: ownership builder populated all 20 configured companies with reviewed snapshots and 6 reviewed insider-context rows from available leadership data; ingestion API validation passed for all 20 companies with 32 explicit source gaps and no fabricated transactions; source-gap resolver checked 364 gaps and updated 95 candidate mappings; authenticated gateway smoke passed for all 20 companies; ingestion backend `73/73`, main backend `38/38`, frontend `7/7`, and frontend production build passed.
+
 ## Source Gap Resolution Guardrail
 
-Open source gaps are now routed back into ingestion instead of remaining as passive UI messages. The daily company update runs `resolve_source_gaps` after the Phase 2 builders and creates reviewed-source candidates from existing `SourceDocument` rows for acquisition lifecycle, competitive market-share, customer/supplier dependency, contract-term, concentration, product-pricing, and geographic expansion gaps.
+Open source gaps are now routed back into ingestion instead of remaining as passive UI messages. The daily company update runs `resolve_source_gaps` after the Phase 2 builders and creates reviewed-source candidates from existing `SourceDocument` rows for acquisition lifecycle, competitive market-share, customer/supplier dependency, contract-term, concentration, product-pricing, geographic expansion, and ownership/insider gaps.
 
 Resolution candidates are not treated as completed facts. Each candidate stores the source document, candidate type, evidence excerpt, confidence score, review status, and next extraction action. Feature builders should only promote a candidate into a dashboard row after extracting the required fields from the cited source.
 

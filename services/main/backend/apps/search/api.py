@@ -269,6 +269,19 @@ def company_geographic_expansion(request, slug: str):
     return Response(payload)
 
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def company_ownership_insider(request, slug: str):
+    params = {}
+    for key in ("as_of", "holder_type", "transaction_type"):
+        if request.GET.get(key):
+            params[key] = request.GET[key]
+    payload, error = ingestion_get(f"companies/{slug}/ownership-insider", params or None)
+    if error:
+        return Response({"error": "ownership and insider activity unavailable", "detail": error}, status=503)
+    return Response(payload)
+
+
 def ingestion_get(path: str, params: dict[str, object] | None = None) -> tuple[dict | None, str]:
     base_url = settings.INGESTION_API_URL.rstrip("/") + "/"
     url = urljoin(base_url, path)

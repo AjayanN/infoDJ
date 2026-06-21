@@ -100,6 +100,36 @@ SOURCE_RULES = {
         "sources": ("SEC", "SEC_EDGAR", "OFFICIAL_WEBSITE", "WIKIPEDIA_REFERENCES", "GDELT_DOC_2"),
         "next_action": "Extract later evidence that describes the result of an expansion, exit, or market scaling decision.",
     },
+    ("ownership_insider_activity", "ownership_percentages"): {
+        "candidate_type": "ownership_percentage_source",
+        "keywords": ("beneficial ownership", "owned", "shares beneficially", "proxy statement", "DEF 14A", "Schedule 13D", "Schedule 13G"),
+        "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT"),
+        "next_action": "Extract disclosed holder, share class, economic ownership percentage, report date, and filing form without estimating missing values.",
+    },
+    ("ownership_insider_activity", "voting_control"): {
+        "candidate_type": "voting_control_source",
+        "keywords": ("voting power", "voting control", "Class B", "dual class", "vote", "proxy statement", "DEF 14A"),
+        "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT"),
+        "next_action": "Extract voting power, share class, holder, and date from proxy or share-class disclosures.",
+    },
+    ("ownership_insider_activity", "institutional_positions"): {
+        "candidate_type": "institutional_position_source",
+        "keywords": ("institutional ownership", "Schedule 13G", "Schedule 13D", "13F", "beneficial owner", "BlackRock", "Vanguard"),
+        "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT"),
+        "next_action": "Extract disclosed institution, position type, percentage or shares, filing date, and form.",
+    },
+    ("ownership_insider_activity", "insider_transactions"): {
+        "candidate_type": "insider_transaction_source",
+        "keywords": ("Form 4", "insider transaction", "sale", "purchase", "option exercise", "restricted stock", "grant"),
+        "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT"),
+        "next_action": "Extract transaction date, insider, role, transaction code/type, shares, price, ownership after, and source form.",
+    },
+    ("ownership_insider_activity", "transaction_plans"): {
+        "candidate_type": "transaction_plan_source",
+        "keywords": ("10b5-1", "trading plan", "planned sale", "Rule 10b5-1", "prearranged trading"),
+        "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT", "OFFICIAL_WEBSITE"),
+        "next_action": "Extract plan reference, adoption or termination date, related Form 4 footnote, and transaction scope.",
+    },
 }
 
 
