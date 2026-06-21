@@ -636,6 +636,13 @@ Source gap resolver command:
 .venv/bin/python manage.py resolve_source_gaps --company netflix
 ```
 
+Candidate extraction command:
+
+```bash
+.venv/bin/python manage.py extract_source_gap_candidates --limit 100
+.venv/bin/python manage.py extract_source_gap_candidates --dashboard ownership_insider_activity --gap-type ownership_percentages --limit 50
+```
+
 Source-gap APIs include the first resolution candidates for review:
 
 ```bash
@@ -643,6 +650,8 @@ GET /api/ingestion/source-gaps?dashboard=acquisition_lifecycle
 ```
 
 The dashboard `Compare peers`/company-situations section also falls back to reviewed Competitive Position peer evidence when no configured same-sector peer row exists. External peers remain labelled as outside the configured company universe.
+
+Candidate extraction verification on June 21, 2026: full-text extraction checked 100 pending source-gap candidates, extracted 79 source documents, updated 96 candidates with source-backed evidence excerpts and extraction metadata, and marked 4 candidates failed for follow-up. Persisted candidate statuses after the run were 96 `EXTRACTED`, 4 `FAILED`, and 72 still `CANDIDATE`; no extracted candidate was promoted into a dashboard fact without review. Ingestion backend `79/79`, main backend `40/40`, frontend `7/7`, and frontend production build passed.
 
 Gap-targeted collection verification on June 21, 2026: all 20 configured companies were collected from official SEC EDGAR sources for open gaps; the first pass checked 20 companies, collected 17, found 2,720 filings, inserted 2,290 source documents, and exposed 3 ticker-resolution failures; the ticker resolver was fixed to prefer configured universe tickers and the failed JPMorgan Chase, Visa, and Ford collections then succeeded with 476 more filings found and 390 inserted. Source-gap resolution then created 74 new candidate mappings and updated 172 candidates. Ingestion backend `77/77`, main backend `40/40`, frontend `7/7`, and frontend production build passed.
 

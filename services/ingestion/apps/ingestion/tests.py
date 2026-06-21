@@ -78,6 +78,7 @@ from apps.ingestion.services.leadership_decision_record import (
 )
 from apps.ingestion.services.source_gap_resolver import resolve_source_gaps
 from apps.ingestion.services.source_gap_source_collector import forms_for_gap, ticker_for
+from apps.ingestion.services.source_gap_candidate_extractor import extract_source_gap_candidates, full_text_excerpt
 from apps.ingestion.services.event_extractor import EventSignal, actual_change_for, find_evidence_sentence
 from apps.ingestion.services.earnings_intelligence import (
     build_earnings_periods,
@@ -1297,6 +1298,61 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(ticker_for(ford), "F")
         company = Company.objects.create(name="Tickerless Example", slug="tickerless-example", aliases=["Long Name"])
         self.assertEqual(ticker_for(company), "")
+
+    def test_source_gap_candidate_extractor_updates_evidence_from_full_text(self):
+        source = SourceDocument.objects.create(
+            company=self.netflix,
+            source_api="SEC_EDGAR",
+            url="https://example.com/netflix-proxy",
+            title="Netflix DEF 14A filing",
+            publisher="SEC",
+            language="en",
+            snippet="Proxy statement.",
+        )
+        ArticleExtraction.objects.create(
+            source_document=source,
+            clean_text="Intro text. The proxy statement includes beneficial ownership and voting power by named holders. Closing text.",
+            word_count=15,
+            extraction_status="SUCCEEDED",
+            extractor_name="test",
+        )
+        gap = SourceGap.objects.create(
+            company=self.netflix,
+            dashboard="ownership_insider_activity",
+            gap_type="ownership_percentages",
+            provider="ownership-insider-activity",
+            reason="Ownership percentages unavailable.",
+            next_ingestion_task="Review proxy.",
+        )
+        SourceGapResolutionCandidate.objects.create(
+            company=self.netflix,
+            source_gap=gap,
+            dashboard=gap.dashboard,
+            gap_type=gap.gap_type,
+            source_document=source,
+            candidate_type="ownership_percentage_source",
+            evidence_text="Proxy statement.",
+            confidence_score="0.500",
+            extraction_status="CANDIDATE",
+            review_status="NEEDS_REVIEW",
+        )
+
+        result = extract_source_gap_candidates(limit=10)
+
+        self.assertEqual(result.candidates_checked, 1)
+        self.assertEqual(result.candidates_updated, 1)
+        candidate = SourceGapResolutionCandidate.objects.get(source_gap=gap)
+        self.assertEqual(candidate.extraction_status, "EXTRACTED")
+        self.assertIn("beneficial ownership", candidate.evidence_text)
+        self.assertTrue(candidate.metadata["full_text_evidence"])
+
+    def test_full_text_excerpt_prefers_keyword_window(self):
+        text = "A " * 200 + "Form 4 shows an insider transaction sale under a trading plan." + " Z" * 200
+
+        excerpt = full_text_excerpt(text, ("insider transaction",))
+
+        self.assertIn("insider transaction", excerpt)
+        self.assertLess(len(excerpt), len(text))
 
     def test_source_gaps_api_exposes_resolution_candidates(self):
         gap = SourceGap.objects.create(
