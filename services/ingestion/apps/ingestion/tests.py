@@ -29,6 +29,7 @@ from apps.companies.models import (
     KpiTarget,
     ManagementPromise,
     ManagementPromiseUpdate,
+    OwnershipInsiderSnapshot,
     ProductCatalogSnapshot,
     ProductOffering,
     StrategyMilestone,
@@ -65,6 +66,10 @@ from apps.ingestion.services.customer_supplier_dependency import (
 from apps.ingestion.services.geographic_expansion import (
     build_geographic_expansion,
     geographic_expansion_quality_issues,
+)
+from apps.ingestion.services.ownership_insider_activity import (
+    build_ownership_insider_activity,
+    ownership_insider_quality_issues,
 )
 from apps.ingestion.services.source_gap_resolver import resolve_source_gaps
 from apps.ingestion.services.event_extractor import EventSignal, actual_change_for, find_evidence_sentence
@@ -1333,6 +1338,50 @@ class IngestionSearchApiTests(TestCase):
         self.assertGreaterEqual(payload["coverage"]["market_count"], 1)
         self.assertEqual(payload["coverage"]["revenue_contribution_count"], 0)
         self.assertTrue(any(gap["key"] == "revenue_contribution" for gap in payload["source_gaps"]))
+
+    def test_ownership_insider_builder_creates_reviewed_insider_context(self):
+        CompanyProfileSnapshot.objects.create(
+            company=self.netflix,
+            source_document=self.source,
+            effective_date=date(2026, 1, 1),
+            status="REVIEWED",
+            summary="Netflix reviewed profile.",
+            leadership=["Greg Peters - Co-CEO", "Ted Sarandos - Co-CEO"],
+            confidence_score="0.850",
+        )
+
+        first = build_ownership_insider_activity(self.netflix)
+        second = build_ownership_insider_activity(self.netflix)
+
+        self.assertEqual(first["positions_created"], 2)
+        self.assertEqual(second["positions_updated"], 2)
+        snapshot = OwnershipInsiderSnapshot.objects.get(company=self.netflix)
+        self.assertEqual(snapshot.status, "REVIEWED")
+        self.assertEqual(snapshot.positions.count(), 2)
+        self.assertNotIn("no reviewed insider context or ownership positions", ownership_insider_quality_issues(self.netflix))
+
+    def test_ownership_insider_api_exposes_gaps_without_estimating_control(self):
+        CompanyProfileSnapshot.objects.create(
+            company=self.netflix,
+            source_document=self.source,
+            effective_date=date(2026, 1, 1),
+            status="REVIEWED",
+            summary="Netflix reviewed profile.",
+            leadership=["Greg Peters - Co-CEO"],
+            confidence_score="0.850",
+        )
+        build_ownership_insider_activity(self.netflix)
+
+        response = self.client.get("/companies/netflix/ownership-insider")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertIn(payload["status"], {"available", "partial"})
+        self.assertEqual(payload["coverage"]["ownership_percent_count"], 0)
+        self.assertEqual(payload["coverage"]["voting_control_count"], 0)
+        self.assertEqual(payload["coverage"]["transaction_count"], 0)
+        self.assertTrue(any(gap["key"] == "ownership_percentages" for gap in payload["source_gaps"]))
+        self.assertTrue(any(gap["key"] == "insider_transactions" for gap in payload["source_gaps"]))
 
     def test_rebuild_specific_turns_unlocks_pattern_scorecard_and_compare(self):
         peer = Company.objects.create(name="Example Streaming", industry=self.netflix.industry, country="United States")

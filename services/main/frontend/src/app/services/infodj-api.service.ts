@@ -955,6 +955,94 @@ export type GeographicExpansionResponse = {
   source_gaps: SourceGap[];
 };
 
+export type OwnershipPosition = {
+  id: number;
+  holder_name: string;
+  holder_type: string;
+  holder_type_label: string;
+  position_type: string;
+  position_type_label: string;
+  economic_ownership_pct: number | null;
+  voting_power_pct: number | null;
+  shares_owned: number | null;
+  share_class: string;
+  filing_date: string | null;
+  report_period: string;
+  disclosure_form: string;
+  evidence_text: string;
+  confidence_score: number;
+  source: CompanyProfileSource | null;
+};
+
+export type InsiderTransaction = {
+  id: number;
+  insider_name: string;
+  insider_role: string;
+  transaction_type: string;
+  transaction_type_label: string;
+  transaction_date: string | null;
+  shares: number | null;
+  price: number | null;
+  value: number | null;
+  planned_sale: boolean;
+  plan_reference: string;
+  ownership_after: number | null;
+  evidence_text: string;
+  confidence_score: number;
+  source: CompanyProfileSource | null;
+};
+
+export type OwnershipInsiderResponse = {
+  status: 'available' | 'partial' | 'unavailable';
+  company: CompanyProfileResponse['company'];
+  snapshot: {
+    id: number;
+    effective_date: string;
+    status: string;
+    summary: string;
+    methodology: string;
+    confidence_score: number;
+    source: CompanyProfileSource | null;
+    updated_at: string;
+  } | null;
+  snapshot_history: {
+    id: number;
+    effective_date: string;
+    status: string;
+    is_current: boolean;
+    position_count: number;
+    transaction_count: number;
+  }[];
+  positions: OwnershipPosition[];
+  insider_transactions: InsiderTransaction[];
+  control_context: {
+    status: 'available' | 'unavailable';
+    economic_ownership_available: boolean;
+    voting_power_available: boolean;
+    reason: string;
+  };
+  filters: {
+    holder_types: string[];
+    transaction_types: string[];
+    selected_holder_type: string;
+    selected_transaction_type: string;
+    as_of: string;
+  };
+  coverage: {
+    position_count: number;
+    insider_context_count: number;
+    ownership_percent_count: number;
+    voting_control_count: number;
+    institutional_position_count: number;
+    transaction_count: number;
+    planned_sale_count: number;
+    source_count: number;
+    last_updated: string;
+  };
+  evidence: CompanyProfileSource[];
+  source_gaps: SourceGap[];
+};
+
 @Injectable({ providedIn: 'root' })
 export class InfoDjApiService {
   private readonly http = inject(HttpClient);
@@ -1213,6 +1301,16 @@ export class InfoDjApiService {
     if (status) params['status'] = status;
     if (marketType) params['market_type'] = marketType;
     return this.http.get<GeographicExpansionResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/geographic-expansion`, {
+      headers: this.authHeaders(token), params
+    });
+  }
+
+  ownershipInsider(token: string, slug: string, asOf = '', holderType = '', transactionType = '') {
+    const params: Record<string, string> = {};
+    if (asOf) params['as_of'] = asOf;
+    if (holderType) params['holder_type'] = holderType;
+    if (transactionType) params['transaction_type'] = transactionType;
+    return this.http.get<OwnershipInsiderResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/ownership-insider`, {
       headers: this.authHeaders(token), params
     });
   }

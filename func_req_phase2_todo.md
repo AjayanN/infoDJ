@@ -714,17 +714,18 @@ Each feature below inherits the shared standards above. Feature sections only de
 
 **MVP tasks:**
 
-- [ ] Define ownership categories and jurisdiction-specific reporting limitations.
-- [ ] Build ownership snapshot and historical trend views.
-- [ ] Track founder, executive, director, institutional, strategic, government, and public ownership where disclosed.
-- [ ] Distinguish economic ownership from voting control.
-- [ ] Record insider purchases, sales, grants, exercises, and planned-sale indicators where available.
-- [ ] Show reporting delay and coverage limitations.
-- [ ] Avoid interpreting individual insider transactions without transaction context.
+- [x] Define ownership categories and jurisdiction-specific reporting limitations.
+- [x] Build ownership snapshot and historical trend views.
+- [x] Track founder, executive, director, institutional, strategic, government, and public ownership where disclosed.
+- [x] Distinguish economic ownership from voting control.
+- [x] Record insider purchases, sales, grants, exercises, and planned-sale indicators where available.
+- [x] Show reporting delay and coverage limitations.
+- [x] Avoid interpreting individual insider transactions without transaction context.
 
 **Acceptance criteria:**
 
 - Users can understand material ownership and control changes without receiving unsupported trading signals.
+- Implemented baseline: all 20 configured companies receive reviewed ownership/insider snapshots; reviewed insider-context rows are published only when source-backed leadership context exists; ownership percentages, voting control, institutional positions, insider transactions, and transaction plans remain explicit source gaps until proxy/Form 4/13D/13G/13F evidence is reviewed.
 
 ---
 
@@ -1124,7 +1125,7 @@ The order below reflects functional dependency and user value. It does not requi
 
 **Exit condition:** a user can place company decisions within ownership, valuation, regulatory, sector, and economic context.
 
-- [ ] Ownership and Insider Activity.
+- [x] Ownership and Insider Activity: all-company reviewed snapshot baseline implemented with ownership categories, economic/voting-control separation, insider context rows where disclosed, explicit source gaps for missing percentages/institutions/transactions/plans, Company 360 entry point, daily ingestion builder, source-gap resolver rules, and authenticated all-company smoke validation.
 - [ ] Valuation Context.
 - [ ] Regulatory and Litigation Calendar.
 - [ ] Sector and Theme Intelligence.

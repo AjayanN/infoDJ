@@ -21,6 +21,7 @@ import {
   AcquisitionLifecycleResponse,
   CustomerSupplierDependencyResponse,
   GeographicExpansionResponse,
+  OwnershipInsiderResponse,
   DashboardSection,
   DashboardResponse,
   HistoryRow,
@@ -47,7 +48,7 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'profile' | 'subscription';
+type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'ownership-insider' | 'profile' | 'subscription';
 type DashboardViewId =
   | 'company-intelligence'
   | 'turn-impact'
@@ -140,6 +141,7 @@ class AppComponent {
   acquisitionLifecycle = signal<AcquisitionLifecycleResponse | null>(null);
   customerSupplierDependency = signal<CustomerSupplierDependencyResponse | null>(null);
   geographicExpansion = signal<GeographicExpansionResponse | null>(null);
+  ownershipInsider = signal<OwnershipInsiderResponse | null>(null);
   searchResults = signal<SearchResponse | null>(null);
   searchPages = signal<Record<SearchResultGroup, number>>({
     companies: 1,
@@ -176,6 +178,7 @@ class AppComponent {
   acquisitionLifecycleLoading = signal(false);
   customerSupplierDependencyLoading = signal(false);
   geographicExpansionLoading = signal(false);
+  ownershipInsiderLoading = signal(false);
   companyProfileDate = '';
   businessModelDate = '';
   businessModelCompareDate = '';
@@ -213,6 +216,9 @@ class AppComponent {
   geographicExpansionDate = '';
   geographicExpansionStatus = '';
   geographicExpansionMarketType = '';
+  ownershipInsiderDate = '';
+  ownershipHolderType = '';
+  insiderTransactionType = '';
   readonly companyProfileSectionOrder = [
     'summary',
     'business_model',
@@ -539,6 +545,9 @@ class AppComponent {
     if (this.activePage() === 'geographic-expansion') {
       return `${this.geographicExpansion()?.company.name || 'Company'} Geographic Expansion Map`;
     }
+    if (this.activePage() === 'ownership-insider') {
+      return `${this.ownershipInsider()?.company.name || 'Company'} Ownership and Insider Activity`;
+    }
     if (this.activePage() === 'profile') {
       return 'Profile';
     }
@@ -584,6 +593,9 @@ class AppComponent {
     }
     if (this.activePage() === 'geographic-expansion') {
       return 'Countries and regions entered or exited, partnerships, regulatory barriers, revenue contribution, outcomes, evidence, and source gaps.';
+    }
+    if (this.activePage() === 'ownership-insider') {
+      return 'Ownership context, economic versus voting control, institutional and insider rows where disclosed, transaction-plan gaps, and evidence.';
     }
     if (this.activePage() === 'profile') {
       return 'Manage account details, avatar preview, and subscription access.';
@@ -1213,6 +1225,39 @@ class AppComponent {
   }
 
   printGeographicExpansionBrief(): void {
+    window.print();
+  }
+
+  openOwnershipInsider(slug: string, asOf = '', holderType = '', transactionType = ''): void {
+    if (!slug || !this.token()) return;
+    this.activePage.set('ownership-insider');
+    this.menuOpen.set(false);
+    this.ownershipInsiderLoading.set(true);
+    this.error.set('');
+    this.api.ownershipInsider(
+      this.token(),
+      slug,
+      asOf || this.ownershipInsiderDate,
+      holderType || this.ownershipHolderType,
+      transactionType || this.insiderTransactionType
+    ).subscribe({
+      next: (response) => {
+        this.ownershipInsider.set(response);
+        this.ownershipInsiderDate = response.snapshot?.effective_date || '';
+        this.ownershipHolderType = response.filters?.selected_holder_type || '';
+        this.insiderTransactionType = response.filters?.selected_transaction_type || '';
+        this.ownershipInsiderLoading.set(false);
+      },
+      error: (response) => { this.ownershipInsiderLoading.set(false); this.showError(response); }
+    });
+  }
+
+  reloadOwnershipInsider(): void {
+    const company = this.ownershipInsider()?.company;
+    if (company) this.openOwnershipInsider(company.slug, this.ownershipInsiderDate, this.ownershipHolderType, this.insiderTransactionType);
+  }
+
+  printOwnershipInsiderBrief(): void {
     window.print();
   }
 

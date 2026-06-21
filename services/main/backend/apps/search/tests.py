@@ -393,6 +393,24 @@ class DashboardSearchApiTests(TestCase):
 
         self.assertEqual(response.status_code, 401)
 
+    @override_settings(INGESTION_API_URL="http://ingestion.test/api/ingestion")
+    @patch("apps.search.api.requests.get")
+    def test_ownership_insider_proxies_filters(self, get):
+        get.return_value = json_response({"status": "available", "company": {"slug": "netflix"}, "positions": []})
+
+        response = self.client.get(
+            "/api/app/companies/netflix/ownership-insider?holder_type=EXECUTIVE&transaction_type=SALE"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(get.call_args.args[0], "http://ingestion.test/api/ingestion/companies/netflix/ownership-insider")
+        self.assertEqual(get.call_args.kwargs["params"], {"holder_type": "EXECUTIVE", "transaction_type": "SALE"})
+
+    def test_ownership_insider_requires_authentication(self):
+        response = APIClient().get("/api/app/companies/netflix/ownership-insider")
+
+        self.assertEqual(response.status_code, 401)
+
 
 def json_response(payload: dict):
     response = Mock()

@@ -1301,3 +1301,138 @@ class GeographicExpansionMarket(models.Model):
 
     def __str__(self) -> str:
         return f"{self.snapshot.company} geography: {self.geography}"
+
+
+class OwnershipHolderType(models.TextChoices):
+    FOUNDER = "FOUNDER", "Founder"
+    EXECUTIVE = "EXECUTIVE", "Executive"
+    DIRECTOR = "DIRECTOR", "Director"
+    INSTITUTIONAL = "INSTITUTIONAL", "Institutional"
+    STRATEGIC = "STRATEGIC", "Strategic holder"
+    GOVERNMENT = "GOVERNMENT", "Government"
+    PUBLIC_MARKET = "PUBLIC_MARKET", "Public market"
+    UNKNOWN = "UNKNOWN", "Unknown"
+
+
+class OwnershipPositionType(models.TextChoices):
+    INSIDER_CONTEXT = "INSIDER_CONTEXT", "Insider context"
+    BENEFICIAL_OWNERSHIP = "BENEFICIAL_OWNERSHIP", "Beneficial ownership"
+    VOTING_CONTROL = "VOTING_CONTROL", "Voting control"
+    INSTITUTIONAL_POSITION = "INSTITUTIONAL_POSITION", "Institutional position"
+    STRATEGIC_STAKE = "STRATEGIC_STAKE", "Strategic stake"
+
+
+class InsiderTransactionType(models.TextChoices):
+    PURCHASE = "PURCHASE", "Purchase"
+    SALE = "SALE", "Sale"
+    GRANT = "GRANT", "Grant"
+    EXERCISE = "EXERCISE", "Exercise"
+    PLANNED_SALE = "PLANNED_SALE", "Planned sale"
+    OTHER = "OTHER", "Other"
+
+
+class OwnershipInsiderSnapshot(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="ownership_insider_snapshots")
+    effective_date = models.DateField(db_index=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="ownership_insider_snapshots",
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=CompanyProfileStatus.choices,
+        default=CompanyProfileStatus.DRAFT,
+        db_index=True,
+    )
+    summary = models.TextField(blank=True)
+    methodology = models.TextField(blank=True)
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-effective_date", "-created_at"]
+        constraints = [
+            models.UniqueConstraint(fields=["company", "effective_date"], name="unique_ownership_insider_snapshot")
+        ]
+        indexes = [models.Index(fields=["company", "status", "effective_date"], name="company_owner_status_idx")]
+
+    def __str__(self) -> str:
+        return f"{self.company} ownership and insider activity at {self.effective_date}"
+
+
+class OwnershipPosition(models.Model):
+    snapshot = models.ForeignKey(OwnershipInsiderSnapshot, on_delete=models.CASCADE, related_name="positions")
+    holder_name = models.CharField(max_length=255)
+    holder_type = models.CharField(max_length=32, choices=OwnershipHolderType.choices, db_index=True)
+    position_type = models.CharField(max_length=32, choices=OwnershipPositionType.choices, db_index=True)
+    economic_ownership_pct = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True)
+    voting_power_pct = models.DecimalField(max_digits=8, decimal_places=4, null=True, blank=True)
+    shares_owned = models.DecimalField(max_digits=24, decimal_places=6, null=True, blank=True)
+    share_class = models.CharField(max_length=128, blank=True)
+    filing_date = models.DateField(null=True, blank=True, db_index=True)
+    report_period = models.CharField(max_length=64, blank=True)
+    disclosure_form = models.CharField(max_length=64, blank=True)
+    evidence_text = models.TextField(blank=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="ownership_positions",
+    )
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    review_status = models.CharField(
+        max_length=32,
+        choices=PromiseReviewStatus.choices,
+        default=PromiseReviewStatus.REVIEWED,
+        db_index=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["holder_type", "holder_name"]
+        constraints = [
+            models.UniqueConstraint(fields=["snapshot", "holder_name", "holder_type", "position_type"], name="unique_ownership_position")
+        ]
+
+
+class InsiderTransaction(models.Model):
+    snapshot = models.ForeignKey(OwnershipInsiderSnapshot, on_delete=models.CASCADE, related_name="insider_transactions")
+    insider_name = models.CharField(max_length=255)
+    insider_role = models.CharField(max_length=255, blank=True)
+    transaction_type = models.CharField(max_length=32, choices=InsiderTransactionType.choices, db_index=True)
+    transaction_date = models.DateField(null=True, blank=True, db_index=True)
+    shares = models.DecimalField(max_digits=24, decimal_places=6, null=True, blank=True)
+    price = models.DecimalField(max_digits=18, decimal_places=6, null=True, blank=True)
+    value = models.DecimalField(max_digits=24, decimal_places=6, null=True, blank=True)
+    planned_sale = models.BooleanField(default=False, db_index=True)
+    plan_reference = models.CharField(max_length=255, blank=True)
+    ownership_after = models.DecimalField(max_digits=24, decimal_places=6, null=True, blank=True)
+    evidence_text = models.TextField(blank=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="insider_transactions",
+    )
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    review_status = models.CharField(
+        max_length=32,
+        choices=PromiseReviewStatus.choices,
+        default=PromiseReviewStatus.REVIEWED,
+        db_index=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-transaction_date", "insider_name"]
+        constraints = [
+            models.UniqueConstraint(fields=["snapshot", "insider_name", "transaction_type", "transaction_date"], name="unique_insider_transaction")
+        ]
