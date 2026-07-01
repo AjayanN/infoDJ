@@ -1043,6 +1043,59 @@ export type OwnershipInsiderResponse = {
   source_gaps: SourceGap[];
 };
 
+export type ValuationObservation = {
+  id: number;
+  measure: string;
+  measure_label: string;
+  value: number | null;
+  unit: string;
+  currency: string;
+  market_price: { ticker: string; provider: string; price_date: string; close_price: number | null } | null;
+  numerator: number | null;
+  numerator_label: string;
+  denominator: number | null;
+  denominator_label: string;
+  formula: string;
+  source_period: string;
+  applicability: string;
+  applicability_label: string;
+  unavailable_reason: string;
+  evidence_text: string;
+  source_facts: { id: number; concept: string; label: string; unit: string; fy: number | null; fp: string; filed: string | null; accession_number: string }[];
+  confidence_score: number;
+  review_status: string;
+  source: CompanyProfileSource | null;
+};
+
+export type ValuationContextResponse = {
+  status: 'available' | 'partial' | 'unavailable';
+  company: CompanyProfileResponse['company'];
+  snapshot: {
+    id: number; effective_date: string; status: string; summary: string; methodology: string;
+    disclaimer: string; currency: string; confidence_score: number; source: CompanyProfileSource | null;
+  } | null;
+  snapshot_history: { id: number; effective_date: string; status: string; observation_count: number; applicable_count: number; selected: boolean }[];
+  observations: ValuationObservation[];
+  historical_ranges: { measure: string; measure_label: string; min_value: number | null; max_value: number | null; observation_count: number; range_note: string }[];
+  peer_comparisons: {
+    id: number; peer_name: string; peer_company: CompanyProfileResponse['company'] | null;
+    measure: string; measure_label: string; peer_value: number | null; company_value: number | null;
+    comparison_note: string; applicability: string; evidence_text: string; confidence_score: number;
+  }[];
+  event_snapshots: {
+    id: number; event_id: number | null; event_date: string; event_label: string; measure: string;
+    measure_label: string; before_value: number | null; after_value: number | null;
+    before_date: string | null; after_date: string | null; context_note: string; confidence_score: number;
+  }[];
+  filters: { measures: string[]; selected_measure: string; as_of: string };
+  coverage: {
+    observation_count: number; applicable_count: number; unavailable_count: number; peer_comparison_count: number;
+    event_snapshot_count: number; source_count: number; last_updated: string;
+  };
+  evidence: CompanyProfileSource[];
+  source_gaps: SourceGap[];
+};
+
 export type LeadershipDecisionResponse = {
   status: 'available' | 'partial' | 'unavailable';
   company: CompanyProfileResponse['company'];
@@ -1345,6 +1398,15 @@ export class InfoDjApiService {
     if (holderType) params['holder_type'] = holderType;
     if (transactionType) params['transaction_type'] = transactionType;
     return this.http.get<OwnershipInsiderResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/ownership-insider`, {
+      headers: this.authHeaders(token), params
+    });
+  }
+
+  valuationContext(token: string, slug: string, asOf = '', measure = '') {
+    const params: Record<string, string> = {};
+    if (asOf) params['as_of'] = asOf;
+    if (measure) params['measure'] = measure;
+    return this.http.get<ValuationContextResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/valuation-context`, {
       headers: this.authHeaders(token), params
     });
   }

@@ -22,6 +22,7 @@ import {
   CustomerSupplierDependencyResponse,
   GeographicExpansionResponse,
   OwnershipInsiderResponse,
+  ValuationContextResponse,
   LeadershipDecisionResponse,
   DashboardSection,
   DashboardResponse,
@@ -49,7 +50,7 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider' | 'profile' | 'subscription';
+type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider' | 'valuation-context' | 'profile' | 'subscription';
 type DashboardViewId =
   | 'company-intelligence'
   | 'turn-impact'
@@ -143,6 +144,7 @@ class AppComponent {
   customerSupplierDependency = signal<CustomerSupplierDependencyResponse | null>(null);
   geographicExpansion = signal<GeographicExpansionResponse | null>(null);
   ownershipInsider = signal<OwnershipInsiderResponse | null>(null);
+  valuationContext = signal<ValuationContextResponse | null>(null);
   leadershipDecisions = signal<LeadershipDecisionResponse | null>(null);
   searchResults = signal<SearchResponse | null>(null);
   searchPages = signal<Record<SearchResultGroup, number>>({
@@ -181,6 +183,7 @@ class AppComponent {
   customerSupplierDependencyLoading = signal(false);
   geographicExpansionLoading = signal(false);
   ownershipInsiderLoading = signal(false);
+  valuationContextLoading = signal(false);
   leadershipDecisionLoading = signal(false);
   companyProfileDate = '';
   businessModelDate = '';
@@ -222,6 +225,8 @@ class AppComponent {
   ownershipInsiderDate = '';
   ownershipHolderType = '';
   insiderTransactionType = '';
+  valuationContextDate = '';
+  valuationMeasure = '';
   leadershipDecisionDate = '';
   leadershipRoleType = '';
   leadershipDecisionType = '';
@@ -554,6 +559,9 @@ class AppComponent {
     if (this.activePage() === 'ownership-insider') {
       return `${this.ownershipInsider()?.company.name || 'Company'} Ownership and Insider Activity`;
     }
+    if (this.activePage() === 'valuation-context') {
+      return `${this.valuationContext()?.company.name || 'Company'} Valuation Context`;
+    }
     if (this.activePage() === 'leadership-decisions') {
       return `${this.leadershipDecisions()?.company.name || 'Company'} Leadership Decision Record`;
     }
@@ -605,6 +613,9 @@ class AppComponent {
     }
     if (this.activePage() === 'ownership-insider') {
       return 'Ownership context, economic versus voting control, institutional and insider rows where disclosed, transaction-plan gaps, and evidence.';
+    }
+    if (this.activePage() === 'valuation-context') {
+      return 'Historical and peer valuation context with formulas, source inputs, event-aligned snapshots, and no investment advice.';
     }
     if (this.activePage() === 'leadership-decisions') {
       return 'Leadership roles, tenure context, stated priorities, material decisions, succession events, evidence, and non-causation guardrails.';
@@ -1270,6 +1281,37 @@ class AppComponent {
   }
 
   printOwnershipInsiderBrief(): void {
+    window.print();
+  }
+
+  openValuationContext(slug: string, asOf = '', measure = ''): void {
+    if (!slug || !this.token()) return;
+    this.activePage.set('valuation-context');
+    this.menuOpen.set(false);
+    this.valuationContextLoading.set(true);
+    this.error.set('');
+    this.api.valuationContext(
+      this.token(),
+      slug,
+      asOf || this.valuationContextDate,
+      measure || this.valuationMeasure
+    ).subscribe({
+      next: (response) => {
+        this.valuationContext.set(response);
+        this.valuationContextDate = response.snapshot?.effective_date || '';
+        this.valuationMeasure = response.filters?.selected_measure || '';
+        this.valuationContextLoading.set(false);
+      },
+      error: (response) => { this.valuationContextLoading.set(false); this.showError(response); }
+    });
+  }
+
+  reloadValuationContext(): void {
+    const company = this.valuationContext()?.company;
+    if (company) this.openValuationContext(company.slug, this.valuationContextDate, this.valuationMeasure);
+  }
+
+  printValuationContextBrief(): void {
     window.print();
   }
 

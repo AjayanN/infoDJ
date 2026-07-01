@@ -614,6 +614,23 @@ BASE_URL=http://localhost:8080/api/app scripts/smoke/phase2_ownership_insider.sh
 
 Requirement 14 verification on June 21, 2026: ownership builder populated all 20 configured companies with reviewed snapshots and 6 reviewed insider-context rows from available leadership data; ingestion API validation passed for all 20 companies with 32 explicit source gaps and no fabricated transactions; source-gap resolver checked 364 gaps and updated 95 candidate mappings; authenticated gateway smoke passed for all 20 companies; ingestion backend `73/73`, main backend `38/38`, frontend `7/7`, and frontend production build passed.
 
+## Valuation Context
+
+Phase 2 Requirement 15 adds Valuation Context for historical market value, reproducible valuation observations, selected peer comparison, event-aligned snapshots, methodology, and source gaps. It is research context only and is not investment advice or a trading recommendation.
+
+The baseline builder creates one reviewed snapshot for every configured company from stored market prices and SEC companyfacts. It calculates market capitalization, price to sales, price to earnings, enterprise value, and EV to revenue only when required inputs are available and meaningful. Missing share counts, non-positive denominators, missing debt/cash inputs, absent peer values, and missing event price windows are shown as source gaps rather than estimated.
+
+Valuation Context endpoints:
+
+```bash
+GET /api/ingestion/companies/<slug>/valuation-context
+GET /api/app/companies/<slug>/valuation-context
+```
+
+Open `Valuation context` from Company 360 for snapshot controls, measure filters, formulas, numerator/denominator inputs, source periods, peer rows, event-aligned non-causal context, evidence cards, and unavailable input states.
+
+Requirement 15 verification on July 1, 2026: valuation builder populated all 20 configured companies with reviewed snapshots and 100 observation rows; 13 companies had at least one applicable measure and seven companies correctly exposed unavailable-input states because required share-count or related inputs were missing; peer context produced 69 rows and event-aligned context produced 12 rows. Ingestion API smoke passed for all 20 configured companies; ingestion backend `84/84`, main backend `42/42`, frontend `7/7`, and frontend production build passed.
+
 ## Source Gap Resolution Guardrail
 
 Open source gaps are now routed back into ingestion instead of remaining as passive UI messages. The daily company update runs `resolve_source_gaps` after the Phase 2 builders and creates reviewed-source candidates from existing `SourceDocument` rows for acquisition lifecycle, competitive market-share, customer/supplier dependency, contract-term, concentration, product-pricing, geographic expansion, leadership, and ownership/insider gaps.

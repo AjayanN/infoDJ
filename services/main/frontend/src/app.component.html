@@ -129,6 +129,7 @@
         <button type="button" *ngIf="geographicExpansion()" [class.active]="activePage() === 'geographic-expansion'" [attr.aria-current]="activePage() === 'geographic-expansion' ? 'page' : null" (click)="setActivePage('geographic-expansion')">Geographies</button>
         <button type="button" *ngIf="leadershipDecisions()" [class.active]="activePage() === 'leadership-decisions'" [attr.aria-current]="activePage() === 'leadership-decisions' ? 'page' : null" (click)="setActivePage('leadership-decisions')">Leadership</button>
         <button type="button" *ngIf="ownershipInsider()" [class.active]="activePage() === 'ownership-insider'" [attr.aria-current]="activePage() === 'ownership-insider' ? 'page' : null" (click)="setActivePage('ownership-insider')">Ownership</button>
+        <button type="button" *ngIf="valuationContext()" [class.active]="activePage() === 'valuation-context'" [attr.aria-current]="activePage() === 'valuation-context' ? 'page' : null" (click)="setActivePage('valuation-context')">Valuation</button>
         <button type="button" [class.active]="activePage() === 'profile'" [attr.aria-current]="activePage() === 'profile' ? 'page' : null" (click)="setActivePage('profile')">Profile</button>
         <button type="button" [class.active]="activePage() === 'subscription'" [attr.aria-current]="activePage() === 'subscription' ? 'page' : null" (click)="setActivePage('subscription')">Subscription</button>
       </nav>
@@ -769,6 +770,7 @@
                   <button type="button" class="ghost-button" (click)="openGeographicExpansion(companyView.company.slug)">Geographic expansion map</button>
                   <button type="button" class="ghost-button" (click)="openLeadershipDecisions(companyView.company.slug)">Leadership decision record</button>
                   <button type="button" class="ghost-button" (click)="openOwnershipInsider(companyView.company.slug)">Ownership and insider activity</button>
+                  <button type="button" class="ghost-button" (click)="openValuationContext(companyView.company.slug)">Valuation context</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('companies-like-mine')">Compare peers</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('latest-moves')">Latest moves</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('risk-signals')">Risk signals</button>
@@ -2093,6 +2095,106 @@
               <section class="panel source-gap-panel" *ngIf="ownerView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable ownership data</h2></div>
                 <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of ownerView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+              </section>
+            </ng-container>
+          </section>
+
+          <section *ngSwitchCase="'valuation-context'" class="company-profile-layout" aria-labelledby="valuation-heading">
+            <div class="loading-panel" *ngIf="valuationContextLoading()">Loading valuation context...</div>
+            <ng-container *ngIf="!valuationContextLoading() && valuationContext() as valuationView">
+              <section class="panel company-profile-hero">
+                <div>
+                  <p class="section-kicker">Valuation Context · {{ valuationView.status }}</p>
+                  <h2 id="valuation-heading">{{ valuationView.company.name }}</h2>
+                  <p>{{ valuationView.snapshot?.summary || 'Reviewed valuation context unavailable.' }}</p>
+                  <p><strong>Research context:</strong> {{ valuationView.snapshot?.disclaimer }}</p>
+                </div>
+                <div class="profile-score-card">
+                  <strong>{{ valuationView.coverage.applicable_count }}</strong>
+                  <span>applicable measures</span>
+                  <small>{{ valuationView.coverage.peer_comparison_count }} peer rows</small>
+                  <small>{{ valuationView.coverage.event_snapshot_count }} event snapshots</small>
+                </div>
+              </section>
+
+              <section class="profile-controls panel">
+                <label>Snapshot at date
+                  <select [(ngModel)]="valuationContextDate">
+                    <option value="">Latest reviewed snapshot</option>
+                    <option *ngFor="let snapshot of valuationView.snapshot_history" [value]="snapshot.effective_date">
+                      {{ snapshot.effective_date }} · {{ snapshot.applicable_count }} applicable of {{ snapshot.observation_count }}
+                    </option>
+                  </select>
+                </label>
+                <label>Measure
+                  <select [(ngModel)]="valuationMeasure">
+                    <option value="">All measures</option>
+                    <option *ngFor="let measure of valuationView.filters.measures" [value]="measure">{{ promiseLabel(measure) }}</option>
+                  </select>
+                </label>
+                <div class="profile-control-actions">
+                  <button type="button" class="primary-button" (click)="reloadValuationContext()">Update filters</button>
+                  <button type="button" class="ghost-button" (click)="openCompany(valuationView.company.slug)">Back to Company 360</button>
+                  <button type="button" class="ghost-button" (click)="printValuationContextBrief()">Print valuation brief</button>
+                </div>
+              </section>
+
+              <section class="dashboard-two-column">
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Measures</p><h2>Reproducible valuation observations</h2></div></div>
+                  <div class="result-row" *ngFor="let row of valuationView.observations">
+                    <strong>{{ row.measure_label }}</strong>
+                    <span>{{ row.applicability_label }} · confidence {{ row.confidence_score | number:'1.2-2' }}</span>
+                    <p>{{ row.formula }}</p>
+                    <small>
+                      value <ng-container *ngIf="row.value === null; else valuationValue">unavailable</ng-container>
+                      <ng-template #valuationValue>{{ row.value | number:'1.2-2' }} {{ row.unit }}</ng-template>
+                      · {{ row.numerator_label || 'numerator' }} {{ row.numerator === null ? 'unavailable' : (row.numerator | number:'1.2-2') }}
+                      · {{ row.denominator_label || 'denominator' }} {{ row.denominator === null ? 'unavailable' : (row.denominator | number:'1.2-2') }}
+                    </small>
+                    <p *ngIf="row.unavailable_reason">{{ row.unavailable_reason }}</p>
+                  </div>
+                  <div class="empty-state unavailable-state" *ngIf="valuationView.observations.length === 0">No valuation observations are available for the selected filters.</div>
+                </article>
+
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Peers</p><h2>Comparable context</h2></div><span>{{ valuationView.peer_comparisons.length }} rows</span></div>
+                  <div class="result-row" *ngFor="let range of valuationView.historical_ranges">
+                    <strong>{{ range.measure_label }} historical range</strong>
+                    <span>{{ range.observation_count }} reviewed observations</span>
+                    <p>{{ range.range_note }}</p>
+                    <small>min {{ range.min_value === null ? 'unavailable' : (range.min_value | number:'1.2-2') }} · max {{ range.max_value === null ? 'unavailable' : (range.max_value | number:'1.2-2') }}</small>
+                  </div>
+                  <div class="result-row" *ngFor="let peer of valuationView.peer_comparisons">
+                    <strong>{{ peer.peer_name }} · {{ peer.measure_label }}</strong>
+                    <span>company {{ peer.company_value === null ? 'unavailable' : (peer.company_value | number:'1.2-2') }} · peer {{ peer.peer_value === null ? 'unavailable' : (peer.peer_value | number:'1.2-2') }}</span>
+                    <p>{{ peer.comparison_note }}</p>
+                  </div>
+                  <div class="empty-state unavailable-state" *ngIf="valuationView.peer_comparisons.length === 0">No reviewed peer valuation rows are available yet.</div>
+                </article>
+              </section>
+
+              <section class="dashboard-two-column">
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Events</p><h2>Event-aligned snapshots</h2></div><span>{{ valuationView.event_snapshots.length }} rows</span></div>
+                  <div class="result-row" *ngFor="let event of valuationView.event_snapshots">
+                    <strong>{{ event.event_label }}</strong>
+                    <span>{{ event.event_date }} · {{ event.measure_label }}</span>
+                    <p>{{ event.context_note }}</p>
+                    <small>before {{ event.before_date || 'date unavailable' }}: {{ event.before_value === null ? 'unavailable' : (event.before_value | number:'1.2-2') }} · after {{ event.after_date || 'date unavailable' }}: {{ event.after_value === null ? 'unavailable' : (event.after_value | number:'1.2-2') }}</small>
+                  </div>
+                  <div class="empty-state unavailable-state" *ngIf="valuationView.event_snapshots.length === 0">No event-aligned valuation context is available. Missing rows do not imply no market movement.</div>
+                </article>
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Valuation evidence</h2></div><span>{{ valuationView.evidence.length }} sources</span></div>
+                  <p>{{ valuationView.snapshot?.methodology }}</p>
+                  <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of valuationView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                </article>
+              </section>
+
+              <section class="panel source-gap-panel" *ngIf="valuationView.source_gaps.length > 0">
+                <div class="panel-header"><h2>Unavailable valuation data</h2></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of valuationView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
               </section>
             </ng-container>
           </section>
