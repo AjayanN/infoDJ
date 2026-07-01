@@ -738,14 +738,14 @@ Each feature below inherits the shared standards above. Feature sections only de
 
 **MVP tasks:**
 
-- [ ] Define supported valuation measures and company-type applicability rules.
-- [ ] Build valuation summary with research-context disclaimer.
-- [ ] Show formulas, dates, currencies, and source periods.
-- [ ] Handle negative, missing, or non-meaningful denominators explicitly.
-- [ ] Add historical range and selected peer comparison.
-- [ ] Add event-aligned valuation snapshots without claiming causation.
-- [ ] Prevent buy/sell language, price targets, or implied recommendations.
-- [ ] Validate split adjustments, share counts, debt, cash, fiscal periods, and currencies.
+- [x] Define supported valuation measures and company-type applicability rules.
+- [x] Build valuation summary with research-context disclaimer.
+- [x] Show formulas, dates, currencies, and source periods.
+- [x] Handle negative, missing, or non-meaningful denominators explicitly.
+- [x] Add historical range and selected peer comparison.
+- [x] Add event-aligned valuation snapshots without claiming causation.
+- [x] Prevent buy/sell language, price targets, or implied recommendations.
+- [x] Validate split adjustments, share counts, debt, cash, fiscal periods, and currencies.
 
 **Acceptance criteria:**
 
@@ -1127,7 +1127,7 @@ The order below reflects functional dependency and user value. It does not requi
 **Exit condition:** a user can place company decisions within ownership, valuation, regulatory, sector, and economic context.
 
 - [x] Ownership and Insider Activity: all-company reviewed snapshot baseline implemented with ownership categories, economic/voting-control separation, insider context rows where disclosed, explicit source gaps for missing percentages/institutions/transactions/plans, Company 360 entry point, daily ingestion builder, source-gap resolver rules, and authenticated all-company smoke validation.
-- [ ] Valuation Context.
+- [x] Valuation Context: all-company reviewed snapshot baseline implemented with reproducible market-cap, P/S, P/E, EV, and EV/revenue observations where inputs are available, explicit unavailable-input states, peer comparison rows, event-aligned non-causal snapshots, Company 360 entry point, daily ingestion builder, and all-company API smoke validation.
 - [ ] Regulatory and Litigation Calendar.
 - [ ] Sector and Theme Intelligence.
 - [ ] Macro Sensitivity Profile.

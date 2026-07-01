@@ -34,6 +34,7 @@ from apps.companies.models import (
     ProductCatalogSnapshot,
     ProductOffering,
     StrategyMilestone,
+    ValuationContextSnapshot,
 )
 from apps.curation.models import BusinessEvent, StrategicTurn, StrategicTurnSource
 from apps.ingestion.models import (
@@ -76,6 +77,7 @@ from apps.ingestion.services.leadership_decision_record import (
     build_leadership_decision_record,
     leadership_decision_quality_issues,
 )
+from apps.ingestion.services.valuation_context import build_valuation_context, valuation_quality_issues
 from apps.ingestion.services.source_gap_resolver import resolve_source_gaps
 from apps.ingestion.services.source_gap_source_collector import forms_for_gap, ticker_for
 from apps.ingestion.services.source_gap_candidate_extractor import extract_source_gap_candidates, full_text_excerpt
@@ -1561,6 +1563,44 @@ class IngestionSearchApiTests(TestCase):
             )[0]["holder_name"],
             "Vanguard Group",
         )
+
+    def test_valuation_context_builder_creates_reproducible_observations(self):
+        MarketPrice.objects.create(
+            company=self.netflix,
+            ticker="NFLX",
+            provider="TEST",
+            price_date=date(2026, 1, 31),
+            close_price="100.000000",
+        )
+        FinancialFact.objects.create(company=self.netflix, taxonomy="us-gaap", concept="EntityCommonStockSharesOutstanding", label="Shares", unit="shares", fy=2025, fp="FY", filed=date(2026, 1, 30), frame="CY2025", value="1000")
+        FinancialFact.objects.create(company=self.netflix, taxonomy="us-gaap", concept="Revenues", label="Revenue", unit="USD", fy=2025, fp="FY", filed=date(2026, 1, 30), frame="CY2025", value="50000")
+        FinancialFact.objects.create(company=self.netflix, taxonomy="us-gaap", concept="NetIncomeLoss", label="Net income", unit="USD", fy=2025, fp="FY", filed=date(2026, 1, 30), frame="CY2025", value="10000")
+
+        result = build_valuation_context(self.netflix)
+
+        self.assertEqual(result["snapshots_created"], 1)
+        snapshot = ValuationContextSnapshot.objects.get(company=self.netflix)
+        self.assertIn("not investment advice", snapshot.disclaimer)
+        market_cap = snapshot.observations.get(measure="MARKET_CAP")
+        self.assertEqual(str(market_cap.value), "100000.000000")
+        price_to_sales = snapshot.observations.get(measure="PRICE_TO_SALES")
+        self.assertEqual(str(price_to_sales.value), "2.000000")
+        self.assertNotIn("market capitalization unavailable", valuation_quality_issues(self.netflix))
+
+    def test_valuation_context_api_exposes_source_gaps_without_recommendations(self):
+        build_valuation_context(self.netflix)
+
+        response = self.client.get("/companies/netflix/valuation-context")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertIn(payload["status"], {"available", "partial"})
+        self.assertIn("not investment advice", payload["snapshot"]["disclaimer"])
+        self.assertTrue(any(gap["key"] in {"market_value", "valuation_inputs"} for gap in payload["source_gaps"]))
+        rendered = str(payload).lower()
+        self.assertNotIn("buy", rendered)
+        self.assertNotIn("sell", rendered)
+        self.assertNotIn("price target", rendered)
 
     def test_leadership_decision_builder_creates_roles_and_decisions(self):
         CompanyProfileSnapshot.objects.create(

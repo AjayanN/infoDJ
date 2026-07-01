@@ -20,6 +20,7 @@ urlpatterns = [
     path("companies/<slug:slug>/geographic-expansion", api.company_geographic_expansion, name="ingestion-company-geographic-expansion"),
     path("companies/<slug:slug>/leadership-decisions", api.company_leadership_decisions, name="ingestion-company-leadership-decisions"),
     path("companies/<slug:slug>/ownership-insider", api.company_ownership_insider, name="ingestion-company-ownership-insider"),
+    path("companies/<slug:slug>/valuation-context", api.company_valuation_context, name="ingestion-company-valuation-context"),
     path("dashboard-data", api.dashboard_data, name="ingestion-dashboard-data"),
     path("search", api.search, name="ingestion-search"),
     path("search/suggest", api.search_suggest, name="ingestion-search-suggest"),

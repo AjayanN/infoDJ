@@ -57,6 +57,12 @@ from apps.companies.models import (
     ProductChange,
     ProductOffering,
     StrategyMilestone,
+    ValuationApplicability,
+    ValuationContextSnapshot,
+    ValuationEventSnapshot,
+    ValuationMeasureType,
+    ValuationObservation,
+    ValuationPeerComparison,
 )
 from apps.curation.models import BusinessEvent, StrategicTurn, StrategicTurnSource
 from apps.ingestion.models import FinancialFact, IngestionJob, MarketPrice, SourceDocument, SourceGap, SourceGapResolutionCandidate
@@ -1105,6 +1111,65 @@ def company_ownership_insider(request: HttpRequest, slug: str) -> JsonResponse:
 
 
 @require_GET
+def company_valuation_context(request: HttpRequest, slug: str) -> JsonResponse:
+    company = get_company(slug)
+    snapshots = list(
+        ValuationContextSnapshot.objects.filter(company=company, status__in=["PUBLISHED", "REVIEWED"])
+        .select_related("source_document")
+        .prefetch_related("observations__source_document", "observations__market_price", "peer_comparisons__peer_company", "event_snapshots__event")
+        .order_by("-effective_date", "-updated_at")
+    )
+    as_of = parse_iso_date(request.GET.get("as_of"))
+    eligible = [row for row in snapshots if as_of is None or row.effective_date <= as_of]
+    current = eligible[0] if eligible else None
+    measure_filter = (request.GET.get("measure") or "").strip().upper()
+    if current is None:
+        gaps = [{
+            "key": "valuation_context_snapshot",
+            "label": "Valuation Context unavailable",
+            "reason": f"No reviewed valuation context snapshot is available for {company.name}.",
+            "source": "valuation-context",
+            "next_action": "Collect market prices and SEC companyfacts, then run build_valuation_contexts.",
+        }]
+        persist_valuation_context_gaps(company, gaps)
+        return JsonResponse({"status": "unavailable", "company": serialize_company_detail(company), "snapshot": None, "snapshot_history": [], "observations": [], "peer_comparisons": [], "event_snapshots": [], "source_gaps": gaps})
+    observations = list(current.observations.all())
+    if measure_filter:
+        observations = [row for row in observations if row.measure == measure_filter]
+    peer_comparisons = [row for row in current.peer_comparisons.all() if not measure_filter or row.measure == measure_filter]
+    event_snapshots = [row for row in current.event_snapshots.all() if not measure_filter or row.measure == measure_filter]
+    gaps = valuation_context_source_gaps(company, current, observations, peer_comparisons, event_snapshots)
+    persist_valuation_context_gaps(company, gaps)
+    evidence = valuation_context_evidence(current, observations)
+    return JsonResponse({
+        "status": "available" if any(row.applicability == ValuationApplicability.APPLICABLE for row in observations) else "partial",
+        "company": serialize_company_detail(company),
+        "snapshot": serialize_valuation_snapshot(current),
+        "snapshot_history": [serialize_valuation_snapshot_history(row, current) for row in snapshots],
+        "observations": [serialize_valuation_observation(row) for row in observations],
+        "historical_ranges": valuation_historical_ranges(snapshots),
+        "peer_comparisons": [serialize_valuation_peer(row) for row in peer_comparisons],
+        "event_snapshots": [serialize_valuation_event(row) for row in event_snapshots],
+        "filters": {
+            "measures": sorted({row.measure for row in current.observations.all()}),
+            "selected_measure": measure_filter,
+            "as_of": as_of.isoformat() if as_of else "",
+        },
+        "coverage": {
+            "observation_count": len(observations),
+            "applicable_count": sum(1 for row in observations if row.applicability == ValuationApplicability.APPLICABLE),
+            "unavailable_count": sum(1 for row in observations if row.applicability != ValuationApplicability.APPLICABLE),
+            "peer_comparison_count": len(peer_comparisons),
+            "event_snapshot_count": len(event_snapshots),
+            "source_count": len(evidence),
+            "last_updated": current.updated_at.isoformat(),
+        },
+        "evidence": evidence,
+        "source_gaps": gaps,
+    })
+
+
+@require_GET
 def company_leadership_decisions(request: HttpRequest, slug: str) -> JsonResponse:
     company = get_company(slug)
     snapshots = list(
@@ -2069,6 +2134,120 @@ def serialize_ownership_position(row: OwnershipPosition) -> dict[str, object]:
     }
 
 
+def serialize_valuation_snapshot(snapshot: ValuationContextSnapshot) -> dict[str, object]:
+    return {
+        "id": snapshot.id,
+        "effective_date": snapshot.effective_date.isoformat(),
+        "status": snapshot.status,
+        "summary": snapshot.summary,
+        "methodology": snapshot.methodology,
+        "disclaimer": snapshot.disclaimer,
+        "currency": snapshot.currency,
+        "confidence_score": decimal_to_float(snapshot.confidence_score),
+        "source": serialize_profile_source(snapshot.source_document) if snapshot.source_document_id else None,
+    }
+
+
+def serialize_valuation_snapshot_history(snapshot: ValuationContextSnapshot, current: ValuationContextSnapshot) -> dict[str, object]:
+    return {
+        "id": snapshot.id,
+        "effective_date": snapshot.effective_date.isoformat(),
+        "status": snapshot.status,
+        "observation_count": snapshot.observations.count(),
+        "applicable_count": snapshot.observations.filter(applicability=ValuationApplicability.APPLICABLE).count(),
+        "selected": snapshot.id == current.id,
+    }
+
+
+def serialize_valuation_observation(row: ValuationObservation) -> dict[str, object]:
+    return {
+        "id": row.id,
+        "measure": row.measure,
+        "measure_label": dict(ValuationMeasureType.choices).get(row.measure, row.measure),
+        "value": decimal_to_float_or_none(row.value),
+        "unit": row.unit,
+        "currency": row.currency,
+        "market_price": serialize_market_price(row.market_price) if row.market_price_id else None,
+        "numerator": decimal_to_float_or_none(row.numerator),
+        "numerator_label": row.numerator_label,
+        "denominator": decimal_to_float_or_none(row.denominator),
+        "denominator_label": row.denominator_label,
+        "formula": row.formula,
+        "source_period": row.source_period,
+        "applicability": row.applicability,
+        "applicability_label": dict(ValuationApplicability.choices).get(row.applicability, row.applicability),
+        "unavailable_reason": row.unavailable_reason,
+        "evidence_text": row.evidence_text,
+        "source_facts": row.source_facts if isinstance(row.source_facts, list) else [],
+        "confidence_score": decimal_to_float(row.confidence_score),
+        "review_status": row.review_status,
+        "source": serialize_profile_source(row.source_document) if row.source_document_id else None,
+    }
+
+
+def serialize_valuation_peer(row: ValuationPeerComparison) -> dict[str, object]:
+    return {
+        "id": row.id,
+        "peer_name": row.peer_name,
+        "peer_company": serialize_company(row.peer_company) if row.peer_company_id else None,
+        "measure": row.measure,
+        "measure_label": dict(ValuationMeasureType.choices).get(row.measure, row.measure),
+        "peer_value": decimal_to_float_or_none(row.peer_value),
+        "company_value": decimal_to_float_or_none(row.company_value),
+        "comparison_note": row.comparison_note,
+        "applicability": row.applicability,
+        "evidence_text": row.evidence_text,
+        "confidence_score": decimal_to_float(row.confidence_score),
+    }
+
+
+def serialize_valuation_event(row: ValuationEventSnapshot) -> dict[str, object]:
+    return {
+        "id": row.id,
+        "event_id": row.event_id,
+        "event_date": row.event_date.isoformat(),
+        "event_label": row.event_label,
+        "measure": row.measure,
+        "measure_label": dict(ValuationMeasureType.choices).get(row.measure, row.measure),
+        "before_value": decimal_to_float_or_none(row.before_value),
+        "after_value": decimal_to_float_or_none(row.after_value),
+        "before_date": row.before_date.isoformat() if row.before_date else None,
+        "after_date": row.after_date.isoformat() if row.after_date else None,
+        "context_note": row.context_note,
+        "confidence_score": decimal_to_float(row.confidence_score),
+    }
+
+
+def valuation_historical_ranges(snapshots: list[ValuationContextSnapshot]) -> list[dict[str, object]]:
+    rows = []
+    measures = sorted({observation.measure for snapshot in snapshots for observation in snapshot.observations.all()})
+    for measure in measures:
+        values = [
+            observation.value
+            for snapshot in snapshots
+            for observation in snapshot.observations.all()
+            if observation.measure == measure and observation.value is not None and observation.applicability == ValuationApplicability.APPLICABLE
+        ]
+        rows.append({
+            "measure": measure,
+            "measure_label": dict(ValuationMeasureType.choices).get(measure, measure),
+            "min_value": decimal_to_float_or_none(min(values)) if values else None,
+            "max_value": decimal_to_float_or_none(max(values)) if values else None,
+            "observation_count": len(values),
+            "range_note": "Range is based only on reviewed valuation snapshots currently stored in InfoDJ.",
+        })
+    return rows
+
+
+def serialize_market_price(price: MarketPrice) -> dict[str, object]:
+    return {
+        "ticker": price.ticker,
+        "provider": price.provider,
+        "price_date": price.price_date.isoformat(),
+        "close_price": decimal_to_float_or_none(price.close_price),
+    }
+
+
 def serialize_insider_transaction(row: InsiderTransaction) -> dict[str, object]:
     return {
         "id": row.id,
@@ -2137,6 +2316,47 @@ def ownership_insider_source_gaps(
         gaps.append({"key": "transaction_plans", "label": "Transaction plans unavailable", "reason": "No reviewed 10b5-1 or other planned-sale indicator is linked to the selected transactions.", "source": "ownership-insider-activity", "next_action": "Review Form 4 footnotes and company disclosures for planned-sale references."})
     if not snapshot.source_document_id:
         gaps.append({"key": "ownership_source_document", "label": "Ownership source unavailable", "reason": "The selected ownership snapshot is not linked to a source document.", "source": "ownership-insider-activity", "next_action": "Rebuild from reviewed Company 360 profiles or ownership filings with source documents."})
+    return gaps
+
+
+def valuation_context_evidence(
+    snapshot: ValuationContextSnapshot,
+    observations: list[ValuationObservation],
+) -> list[dict[str, object]]:
+    sources = []
+    seen = set()
+    if snapshot.source_document_id:
+        sources.append(serialize_profile_source(snapshot.source_document))
+        seen.add(snapshot.source_document_id)
+    for row in observations:
+        if row.source_document_id and row.source_document_id not in seen:
+            sources.append(serialize_profile_source(row.source_document))
+            seen.add(row.source_document_id)
+    return sources
+
+
+def valuation_context_source_gaps(
+    company: Company,
+    snapshot: ValuationContextSnapshot,
+    observations: list[ValuationObservation],
+    peer_comparisons: list[ValuationPeerComparison],
+    event_snapshots: list[ValuationEventSnapshot],
+) -> list[dict[str, str]]:
+    gaps = []
+    if not observations:
+        gaps.append({"key": "valuation_observations", "label": "Valuation observations unavailable", "reason": f"No valuation observations are available for {company.name} under the selected filters.", "source": "valuation-context", "next_action": "Collect market prices and SEC companyfacts, then rebuild valuation context."})
+        return gaps
+    unavailable = [row for row in observations if row.applicability != ValuationApplicability.APPLICABLE]
+    if unavailable:
+        gaps.append({"key": "valuation_inputs", "label": "Valuation inputs incomplete", "reason": "Some valuation measures are unavailable or not meaningful because required inputs are missing or non-positive.", "source": "valuation-context", "next_action": "Review share count, debt, cash, revenue, earnings, fiscal periods, and market price coverage."})
+    if not any(row.measure == ValuationMeasureType.MARKET_CAP and row.applicability == ValuationApplicability.APPLICABLE for row in observations):
+        gaps.append({"key": "market_value", "label": "Market value unavailable", "reason": "Market capitalization requires both a stored close price and reviewed share-count input.", "source": "valuation-context", "next_action": "Collect market prices and share-count companyfacts without estimating split-adjusted shares."})
+    if not peer_comparisons:
+        gaps.append({"key": "valuation_peers", "label": "Peer valuation context unavailable", "reason": "No reviewed peer valuation rows are linked to the selected snapshot.", "source": "valuation-context", "next_action": "Build valuation contexts for reviewed competitive peers with comparable inputs."})
+    if not event_snapshots:
+        gaps.append({"key": "event_aligned_snapshots", "label": "Event-aligned valuation snapshots unavailable", "reason": "No event-aligned before/after valuation context is available for reviewed business events.", "source": "valuation-context", "next_action": "Collect market prices around event dates and keep event context non-causal."})
+    if not snapshot.disclaimer:
+        gaps.append({"key": "valuation_disclaimer", "label": "Research-context disclaimer unavailable", "reason": "Valuation context must explicitly avoid investment advice, price targets, and recommendations.", "source": "valuation-context", "next_action": "Rebuild valuation context with disclaimer text."})
     return gaps
 
 
@@ -3926,6 +4146,33 @@ def persist_ownership_insider_gaps(company: Company, gaps: list[dict[str, str]])
             dashboard="ownership_insider_activity",
             gap_type=gap["key"],
             provider=gap.get("source", "ownership-insider-activity"),
+            defaults={
+                "reason": gap["reason"],
+                "next_ingestion_task": gap.get("next_action", ""),
+                "status": "OPEN",
+                "metadata": {"label": gap.get("label", "")},
+            },
+        )
+
+
+def persist_valuation_context_gaps(company: Company, gaps: list[dict[str, str]]) -> None:
+    active_keys = [gap["key"] for gap in gaps]
+    if active_keys:
+        SourceGap.objects.filter(company=company, dashboard="valuation_context").exclude(
+            gap_type__in=active_keys
+        ).update(status="RESOLVED")
+    else:
+        SourceGap.objects.filter(
+            company=company,
+            dashboard="valuation_context",
+            status__in=["OPEN", "IN_PROGRESS"],
+        ).update(status="RESOLVED")
+    for gap in gaps:
+        SourceGap.objects.update_or_create(
+            company=company,
+            dashboard="valuation_context",
+            gap_type=gap["key"],
+            provider=gap.get("source", "valuation-context"),
             defaults={
                 "reason": gap["reason"],
                 "next_ingestion_task": gap.get("next_action", ""),

@@ -284,6 +284,19 @@ def company_ownership_insider(request, slug: str):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+def company_valuation_context(request, slug: str):
+    params = {}
+    for key in ("as_of", "measure"):
+        if request.GET.get(key):
+            params[key] = request.GET[key]
+    payload, error = ingestion_get(f"companies/{slug}/valuation-context", params or None)
+    if error:
+        return Response({"error": "valuation context unavailable", "detail": error}, status=503)
+    return Response(payload)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def company_leadership_decisions(request, slug: str):
     params = {}
     for key in ("as_of", "role_type", "decision_type"):

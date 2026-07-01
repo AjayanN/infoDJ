@@ -1438,6 +1438,155 @@ class InsiderTransaction(models.Model):
         ]
 
 
+class ValuationMeasureType(models.TextChoices):
+    MARKET_CAP = "MARKET_CAP", "Market capitalization"
+    ENTERPRISE_VALUE = "ENTERPRISE_VALUE", "Enterprise value"
+    PRICE_TO_SALES = "PRICE_TO_SALES", "Price to sales"
+    PRICE_TO_EARNINGS = "PRICE_TO_EARNINGS", "Price to earnings"
+    EV_TO_REVENUE = "EV_TO_REVENUE", "Enterprise value to revenue"
+
+
+class ValuationApplicability(models.TextChoices):
+    APPLICABLE = "APPLICABLE", "Applicable"
+    UNAVAILABLE_INPUT = "UNAVAILABLE_INPUT", "Unavailable input"
+    NOT_MEANINGFUL = "NOT_MEANINGFUL", "Not meaningful"
+    NOT_APPLICABLE = "NOT_APPLICABLE", "Not applicable"
+
+
+class ValuationContextSnapshot(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="valuation_context_snapshots")
+    effective_date = models.DateField(db_index=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="valuation_context_snapshots",
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=CompanyProfileStatus.choices,
+        default=CompanyProfileStatus.REVIEWED,
+        db_index=True,
+    )
+    summary = models.TextField(blank=True)
+    methodology = models.TextField(blank=True)
+    disclaimer = models.TextField(blank=True)
+    currency = models.CharField(max_length=16, default="USD")
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-effective_date", "-created_at"]
+        constraints = [
+            models.UniqueConstraint(fields=["company", "effective_date"], name="unique_valuation_context_snapshot")
+        ]
+        indexes = [models.Index(fields=["company", "status", "effective_date"], name="company_val_status_idx")]
+
+
+class ValuationObservation(models.Model):
+    snapshot = models.ForeignKey(ValuationContextSnapshot, on_delete=models.CASCADE, related_name="observations")
+    measure = models.CharField(max_length=32, choices=ValuationMeasureType.choices, db_index=True)
+    value = models.DecimalField(max_digits=28, decimal_places=6, null=True, blank=True)
+    unit = models.CharField(max_length=32, blank=True)
+    currency = models.CharField(max_length=16, blank=True)
+    market_price = models.ForeignKey(
+        "ingestion.MarketPrice",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="valuation_observations",
+    )
+    numerator = models.DecimalField(max_digits=28, decimal_places=6, null=True, blank=True)
+    numerator_label = models.CharField(max_length=128, blank=True)
+    denominator = models.DecimalField(max_digits=28, decimal_places=6, null=True, blank=True)
+    denominator_label = models.CharField(max_length=128, blank=True)
+    formula = models.TextField(blank=True)
+    source_period = models.CharField(max_length=64, blank=True)
+    applicability = models.CharField(max_length=32, choices=ValuationApplicability.choices, db_index=True)
+    unavailable_reason = models.TextField(blank=True)
+    evidence_text = models.TextField(blank=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="valuation_observations",
+    )
+    source_facts = models.JSONField(default=list, blank=True)
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    review_status = models.CharField(
+        max_length=32,
+        choices=PromiseReviewStatus.choices,
+        default=PromiseReviewStatus.REVIEWED,
+        db_index=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["measure"]
+        constraints = [
+            models.UniqueConstraint(fields=["snapshot", "measure"], name="unique_valuation_observation")
+        ]
+
+
+class ValuationPeerComparison(models.Model):
+    snapshot = models.ForeignKey(ValuationContextSnapshot, on_delete=models.CASCADE, related_name="peer_comparisons")
+    peer_company = models.ForeignKey(
+        Company,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="valuation_peer_mentions",
+    )
+    peer_name = models.CharField(max_length=255)
+    measure = models.CharField(max_length=32, choices=ValuationMeasureType.choices, db_index=True)
+    peer_value = models.DecimalField(max_digits=28, decimal_places=6, null=True, blank=True)
+    company_value = models.DecimalField(max_digits=28, decimal_places=6, null=True, blank=True)
+    comparison_note = models.TextField(blank=True)
+    applicability = models.CharField(max_length=32, choices=ValuationApplicability.choices, db_index=True)
+    evidence_text = models.TextField(blank=True)
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["measure", "peer_name"]
+        constraints = [
+            models.UniqueConstraint(fields=["snapshot", "peer_name", "measure"], name="unique_valuation_peer_comparison")
+        ]
+
+
+class ValuationEventSnapshot(models.Model):
+    snapshot = models.ForeignKey(ValuationContextSnapshot, on_delete=models.CASCADE, related_name="event_snapshots")
+    event = models.ForeignKey(
+        "curation.BusinessEvent",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="valuation_snapshots",
+    )
+    event_date = models.DateField(db_index=True)
+    event_label = models.CharField(max_length=255)
+    measure = models.CharField(max_length=32, choices=ValuationMeasureType.choices, db_index=True)
+    before_value = models.DecimalField(max_digits=28, decimal_places=6, null=True, blank=True)
+    after_value = models.DecimalField(max_digits=28, decimal_places=6, null=True, blank=True)
+    before_date = models.DateField(null=True, blank=True)
+    after_date = models.DateField(null=True, blank=True)
+    context_note = models.TextField(blank=True)
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-event_date", "measure"]
+        constraints = [
+            models.UniqueConstraint(fields=["snapshot", "event_label", "event_date", "measure"], name="unique_valuation_event_snapshot")
+        ]
+
+
 class LeadershipRoleType(models.TextChoices):
     CEO = "CEO", "Chief executive"
     CFO = "CFO", "Chief financial"
