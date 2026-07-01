@@ -79,6 +79,11 @@ from apps.ingestion.services.leadership_decision_record import (
 from apps.ingestion.services.source_gap_resolver import resolve_source_gaps
 from apps.ingestion.services.source_gap_source_collector import forms_for_gap, ticker_for
 from apps.ingestion.services.source_gap_candidate_extractor import extract_source_gap_candidates, full_text_excerpt
+from apps.ingestion.services.source_gap_candidate_promoter import (
+    parse_dependency_concentrations,
+    parse_ownership_rows,
+    promote_source_gap_candidates,
+)
 from apps.ingestion.services.event_extractor import EventSignal, actual_change_for, find_evidence_sentence
 from apps.ingestion.services.earnings_intelligence import (
     build_earnings_periods,
@@ -1105,6 +1110,39 @@ class IngestionSearchApiTests(TestCase):
         self.assertTrue(any(gap["key"] == "named_counterparties" for gap in payload["source_gaps"]))
         self.assertTrue(any(gap["key"] == "dependency_contract_terms" for gap in payload["source_gaps"]))
 
+    def test_source_gap_promotion_adds_customer_concentration_to_dependency_dashboard(self):
+        gap = SourceGap.objects.create(
+            company=self.netflix,
+            dashboard="customer_supplier_dependency",
+            gap_type="concentration_percentages",
+            provider="customer-supplier-dependency",
+            reason="Need disclosed concentration percentages.",
+            next_ingestion_task="Extract customer concentration.",
+        )
+        SourceGapResolutionCandidate.objects.create(
+            company=self.netflix,
+            source_gap=gap,
+            dashboard="customer_supplier_dependency",
+            gap_type="concentration_percentages",
+            candidate_type="dependency_concentration_source",
+            source_document=self.source,
+            evidence_text="Customer Alpha accounted for 12.5% of revenue during the fiscal year.",
+            confidence_score="0.900",
+            extraction_status="EXTRACTED",
+            review_status="NEEDS_REVIEW",
+        )
+
+        result = promote_source_gap_candidates(dashboard="customer_supplier_dependency", gap_type="concentration_percentages")
+
+        self.assertEqual(result.candidates_promoted, 1)
+        response = self.client.get("/companies/netflix/customer-supplier-dependency")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["coverage"]["named_counterparty_count"], 1)
+        self.assertEqual(payload["coverage"]["contract_term_count"], 1)
+        self.assertEqual(payload["dependencies"][0]["counterparty_name"], "Customer Alpha")
+        self.assertEqual(payload["dependencies"][0]["concentration_percent"], 12.5)
+
     def test_companyfacts_builder_creates_idempotent_annual_and_quarterly_series(self):
         for filed, accession, value in (
             (date(2024, 7, 20), "0001-24-000001", "100"),
@@ -1458,6 +1496,71 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(payload["coverage"]["transaction_count"], 0)
         self.assertTrue(any(gap["key"] == "ownership_percentages" for gap in payload["source_gaps"]))
         self.assertTrue(any(gap["key"] == "insider_transactions" for gap in payload["source_gaps"]))
+
+    def test_source_gap_promotion_adds_ownership_percentage_to_dashboard(self):
+        OwnershipInsiderSnapshot.objects.create(
+            company=self.netflix,
+            source_document=self.source,
+            effective_date=date(2026, 1, 1),
+            status="REVIEWED",
+            summary="Current ownership dashboard snapshot.",
+            confidence_score="0.800",
+        )
+        gap = SourceGap.objects.create(
+            company=self.netflix,
+            dashboard="ownership_insider_activity",
+            gap_type="ownership_percentages",
+            provider="ownership-insider-activity",
+            reason="Need disclosed ownership percentages.",
+            next_ingestion_task="Extract proxy ownership table.",
+        )
+        SourceGapResolutionCandidate.objects.create(
+            company=self.netflix,
+            source_gap=gap,
+            dashboard="ownership_insider_activity",
+            gap_type="ownership_percentages",
+            candidate_type="institutional_position_source",
+            source_document=self.source,
+            evidence_text="Schedule 13G ownership candidate.",
+            confidence_score="0.900",
+            extraction_status="EXTRACTED",
+            review_status="NEEDS_REVIEW",
+            metadata={"article_extraction_id": 1},
+        )
+        extraction = ArticleExtraction.objects.create(
+            source_document=self.source,
+            clean_text=(
+                "Item 2(a) - Name of Person Filing: The Vanguard Group - 23-1945930 "
+                "Item 2(b) Address. Aggregate Amount Beneficially Owned by Each Reporting Person 229,805,491 "
+                "Percent of Class Represented by Amount in Row 9 7.23%"
+            ),
+            word_count=24,
+            extraction_status="SUCCEEDED",
+            extractor_name="test",
+        )
+        SourceGapResolutionCandidate.objects.update(metadata={"article_extraction_id": extraction.id})
+
+        result = promote_source_gap_candidates(dashboard="ownership_insider_activity", gap_type="ownership_percentages")
+
+        self.assertEqual(result.candidates_promoted, 1)
+        response = self.client.get("/companies/netflix/ownership-insider")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["coverage"]["ownership_percent_count"], 1)
+        self.assertEqual(payload["positions"][0]["holder_name"], "Vanguard Group")
+        self.assertEqual(payload["positions"][0]["economic_ownership_pct"], 7.23)
+
+    def test_source_gap_promotion_parsers_require_explicit_percentages(self):
+        self.assertEqual(parse_dependency_concentrations("No single customer accounted for 10% or more of revenue."), [])
+        self.assertEqual(parse_ownership_rows("Ownership information is discussed in the proxy.", gap_type="ownership_percentages"), [])
+        self.assertEqual(
+            parse_ownership_rows(
+                "Item 2(a) - Name of Person Filing: The Vanguard Group - 23-1945930 "
+                "Item 2(b) Address. Percent of Class Represented by Amount in Row 9 7.23%",
+                gap_type="institutional_positions",
+            )[0]["holder_name"],
+            "Vanguard Group",
+        )
 
     def test_leadership_decision_builder_creates_roles_and_decisions(self):
         CompanyProfileSnapshot.objects.create(
