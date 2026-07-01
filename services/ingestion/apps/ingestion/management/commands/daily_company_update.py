@@ -93,6 +93,7 @@ class Command(BaseCommand):
         call_command("collect_source_gap_sources", limit=options["limit"], filing_limit=options["sec_limit"])
         call_command("resolve_source_gaps", limit=500)
         call_command("extract_source_gap_candidates", limit=500)
+        call_command("promote_source_gap_candidates", limit=500)
 
         if options["include_quality_scoring"]:
             self.stdout.write(

@@ -643,6 +643,15 @@ Candidate extraction command:
 .venv/bin/python manage.py extract_source_gap_candidates --dashboard ownership_insider_activity --gap-type ownership_percentages --limit 50
 ```
 
+Candidate promotion command:
+
+```bash
+.venv/bin/python manage.py promote_source_gap_candidates --limit 100
+.venv/bin/python manage.py promote_source_gap_candidates --dashboard ownership_insider_activity --gap-type institutional_positions --limit 50
+```
+
+Candidate promotion is intentionally deterministic. It only writes dashboard rows when extracted source text contains explicit structured values, such as Schedule 13G/13D ownership percentages or 10-K customer concentration percentages. Unsupported or ambiguous candidates stay in source-gap review instead of becoming dashboard facts. Proxy prose is not auto-promoted until a structured proxy table parser is available.
+
 Source-gap APIs include the first resolution candidates for review:
 
 ```bash
@@ -650,6 +659,8 @@ GET /api/ingestion/source-gaps?dashboard=acquisition_lifecycle
 ```
 
 The dashboard `Compare peers`/company-situations section also falls back to reviewed Competitive Position peer evidence when no configured same-sector peer row exists. External peers remain labelled as outside the configured company universe.
+
+Candidate promotion verification on July 1, 2026: live promotion checked 163 extracted candidates, promoted 6 source-gap candidates into 3 current-dashboard ownership rows, and left 157 ambiguous candidates in review. The Tesla Ownership and Insider Activity API now returns source-backed Schedule 13G rows for Elon R. Musk `20.5%`, BlackRock `5.9%`, and Vanguard Group `7.23%`; no customer concentration rows were promoted because no extracted candidate contained a deterministic concentration disclosure. Ingestion backend `82/82`, main backend `40/40`, frontend `7/7`, and frontend production build passed.
 
 Candidate extraction verification on June 21, 2026: full-text extraction checked 100 pending source-gap candidates, extracted 79 source documents, updated 96 candidates with source-backed evidence excerpts and extraction metadata, and marked 4 candidates failed for follow-up. Persisted candidate statuses after the run were 96 `EXTRACTED`, 4 `FAILED`, and 72 still `CANDIDATE`; no extracted candidate was promoted into a dashboard fact without review. Ingestion backend `79/79`, main backend `40/40`, frontend `7/7`, and frontend production build passed.
 
