@@ -135,6 +135,7 @@
         <button type="button" *ngIf="macroSensitivity()" [class.active]="activePage() === 'macro-sensitivity'" [attr.aria-current]="activePage() === 'macro-sensitivity' ? 'page' : null" (click)="setActivePage('macro-sensitivity')">Macro</button>
         <button type="button" [class.active]="activePage() === 'strategy-theses'" [attr.aria-current]="activePage() === 'strategy-theses' ? 'page' : null" (click)="openStrategyTheses()">Theses</button>
         <button type="button" [class.active]="activePage() === 'watchlists'" [attr.aria-current]="activePage() === 'watchlists' ? 'page' : null" (click)="openWatchlists()">Alerts</button>
+        <button type="button" [class.active]="activePage() === 'briefings'" [attr.aria-current]="activePage() === 'briefings' ? 'page' : null" (click)="openBriefings()">Briefings</button>
         <button type="button" [class.active]="activePage() === 'profile'" [attr.aria-current]="activePage() === 'profile' ? 'page' : null" (click)="setActivePage('profile')">Profile</button>
         <button type="button" [class.active]="activePage() === 'subscription'" [attr.aria-current]="activePage() === 'subscription' ? 'page' : null" (click)="setActivePage('subscription')">Subscription</button>
       </nav>
@@ -2527,6 +2528,81 @@
               <section class="panel source-gap-panel" *ngIf="macroView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable macro data</h2></div>
                 <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of macroView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+              </section>
+            </ng-container>
+          </section>
+
+          <section *ngSwitchCase="'briefings'" class="company-profile-layout" aria-labelledby="briefing-heading">
+            <div class="loading-panel" *ngIf="briefingLoading()">Loading briefings...</div>
+            <ng-container *ngIf="!briefingLoading()">
+              <section class="panel hero-card">
+                <div>
+                  <p class="section-kicker">Daily and Weekly Briefings</p>
+                  <h2 id="briefing-heading">Personalized source-backed summaries</h2>
+                  <p>Briefings summarize watchlist alerts, rank material changes, include what-next guidance, and expose coverage gaps instead of becoming a raw news feed.</p>
+                </div>
+                <div class="coverage-summary" *ngIf="briefings() as briefingView">
+                  <strong>{{ briefingView.summary.total }}</strong>
+                  <span>archived briefings</span>
+                  <small>{{ briefingView.summary.daily }} daily · {{ briefingView.summary.weekly }} weekly</small>
+                </div>
+              </section>
+
+              <section class="panel company-profile-controls" aria-label="Briefing controls">
+                <label>Cadence
+                  <select name="briefing_cadence" [(ngModel)]="briefingCadence">
+                    <option value="DAILY">Daily</option>
+                    <option value="WEEKLY">Weekly</option>
+                  </select>
+                </label>
+                <label>Status
+                  <select name="briefing_status" [(ngModel)]="briefingStatusFilter">
+                    <option value="">All statuses</option>
+                    <option *ngFor="let status of briefings()?.statuses || []" [value]="status.value">{{ status.label }}</option>
+                  </select>
+                </label>
+                <div class="profile-control-actions">
+                  <button type="button" class="primary-button" (click)="generateBriefing()">Generate briefing</button>
+                  <button type="button" class="ghost-button" (click)="loadBriefings()">Apply filters</button>
+                </div>
+              </section>
+
+              <section class="dashboard-two-column">
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Archive</p><h2>Briefing history</h2></div><span>{{ briefings()?.briefings?.length || 0 }} shown</span></div>
+                  <div class="result-row" *ngFor="let briefing of briefings()?.briefings || []" (click)="selectBriefing(briefing.id)" role="button" tabindex="0">
+                    <strong>{{ briefing.title }}</strong>
+                    <span>{{ briefing.cadence_label }} · {{ briefing.status }} · {{ briefing.period_start }} to {{ briefing.period_end }}</span>
+                    <p>{{ briefing.summary }}</p>
+                    <small>{{ briefing.notification_count }} alerts · {{ briefing.source_gap_count }} coverage gaps</small>
+                  </div>
+                  <div class="empty-state unavailable-state" *ngIf="(briefings()?.briefings?.length || 0) === 0">No briefings match the selected filters.</div>
+                </article>
+                <article class="panel" *ngIf="selectedBriefing() as briefing">
+                  <div class="panel-header"><div><p class="section-kicker">Selected</p><h2>{{ briefing.title }}</h2></div></div>
+                  <p>{{ briefing.summary }}</p>
+                  <p><strong>Scope:</strong> {{ briefing.scope_summary }}</p>
+                  <p><strong>Ranking:</strong> {{ briefing.ranking_note }}</p>
+                  <p><strong>Email:</strong> {{ briefing.email_rendered_at || 'not queued' }}</p>
+                  <div class="profile-control-actions">
+                    <button type="button" class="ghost-button" (click)="archiveBriefing(briefing.id)">Archive</button>
+                    <button type="button" class="ghost-button" (click)="rateBriefing(briefing.id, 'useful')">Useful</button>
+                    <button type="button" class="ghost-button" (click)="rateBriefing(briefing.id, 'too_long')">Too long</button>
+                  </div>
+                </article>
+              </section>
+
+              <section class="panel" *ngIf="selectedBriefing() as briefing">
+                <div class="panel-header"><div><p class="section-kicker">Briefing Items</p><h2>What changed, why it matters, what next</h2></div><span>{{ briefing.items?.length || 0 }} items</span></div>
+                <div class="result-row" *ngFor="let item of briefing.items || []">
+                  <strong>{{ item.section_label }} · {{ item.title }}</strong>
+                  <span>{{ item.source_date || 'date unavailable' }} · {{ item.evidence_label || 'evidence label unavailable' }}</span>
+                  <p><strong>What changed:</strong> {{ item.what_changed }}</p>
+                  <p><strong>Why it matters:</strong> {{ item.why_it_matters }}</p>
+                  <p><strong>What next:</strong> {{ item.what_next }}</p>
+                  <a *ngIf="item.evidence_url" [href]="item.evidence_url" target="_blank" rel="noopener">Open evidence</a>
+                </div>
+                <div class="empty-state unavailable-state" *ngIf="(briefing.items?.length || 0) === 0">No briefing items are available.</div>
               </section>
             </ng-container>
           </section>

@@ -1340,6 +1340,46 @@ export type NotificationResponse = {
   categories: { value: string; label: string }[];
 };
 
+export type Briefing = {
+  id: number;
+  cadence: string;
+  cadence_label: string;
+  status: string;
+  period_start: string;
+  period_end: string;
+  title: string;
+  summary: string;
+  ranking_note: string;
+  scope_summary: string;
+  source_gap_count: number;
+  notification_count: number;
+  email_rendered_at: string | null;
+  generated_at: string;
+  items?: {
+    id: number;
+    notification_id: number | null;
+    section: string;
+    section_label: string;
+    rank: number;
+    title: string;
+    what_changed: string;
+    why_it_matters: string;
+    what_next: string;
+    evidence_label: string;
+    evidence_url: string;
+    source_date: string | null;
+    metadata: Record<string, unknown>;
+  }[];
+  delivery_logs?: { id: number; channel: string; status: string; detail: string; created_at: string }[];
+};
+
+export type BriefingResponse = {
+  briefings: Briefing[];
+  summary: { total: number; daily: number; weekly: number };
+  cadences: { value: string; label: string }[];
+  statuses: { value: string; label: string }[];
+};
+
 export type LeadershipDecisionResponse = {
   status: 'available' | 'partial' | 'unavailable';
   company: CompanyProfileResponse['company'];
@@ -1793,6 +1833,33 @@ export class InfoDjApiService {
 
   alertFeedback(token: string, id: number, rating: string) {
     return this.http.post(`${this.apiBaseUrl}/notifications/${id}/feedback`, { rating }, { headers: this.authHeaders(token) });
+  }
+
+  briefings(token: string, cadence = '', status = '') {
+    const params: Record<string, string> = {};
+    if (cadence) params['cadence'] = cadence;
+    if (status) params['status'] = status;
+    return this.http.get<BriefingResponse>(`${this.apiBaseUrl}/briefings`, { headers: this.authHeaders(token), params });
+  }
+
+  generateBriefing(token: string, cadence: string, refreshAlerts = true) {
+    return this.http.post<{ briefing: Briefing }>(
+      `${this.apiBaseUrl}/briefings`,
+      { cadence, refresh_alerts: refreshAlerts },
+      { headers: this.authHeaders(token) }
+    );
+  }
+
+  briefing(token: string, id: number) {
+    return this.http.get<{ briefing: Briefing }>(`${this.apiBaseUrl}/briefings/${id}`, { headers: this.authHeaders(token) });
+  }
+
+  updateBriefing(token: string, id: number, status: string) {
+    return this.http.patch<{ briefing: Briefing }>(`${this.apiBaseUrl}/briefings/${id}`, { status }, { headers: this.authHeaders(token) });
+  }
+
+  briefingFeedback(token: string, id: number, rating: string) {
+    return this.http.post(`${this.apiBaseUrl}/briefings/${id}/feedback`, { rating }, { headers: this.authHeaders(token) });
   }
 
   leadershipDecisions(token: string, slug: string, asOf = '', roleType = '', decisionType = '') {

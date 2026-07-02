@@ -12,12 +12,16 @@ from apps.alerts.models import (
     AlertFeedback,
     AlertRule,
     AlertStatus,
+    Briefing,
+    BriefingCadence,
+    BriefingStatus,
     DeliveryFrequency,
     FollowableEntityType,
     Notification,
     WatchItem,
     Watchlist,
 )
+from apps.alerts.briefings import briefing_feedback, generate_briefing_for_user, serialize_briefing
 from apps.alerts.services import ensure_default_rules, ensure_default_watchlist, refresh_alerts_for_user
 
 
@@ -172,6 +176,52 @@ def delivery_preference(request):
     return Response({"delivery_preference": serialize_preference(preference)})
 
 
+@api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated])
+def briefings(request):
+    if request.method == "POST":
+        cadence = choice_value(request.data.get("cadence"), BriefingCadence.values, BriefingCadence.DAILY)
+        briefing = generate_briefing_for_user(request.user, cadence=cadence, refresh_alerts=bool(request.data.get("refresh_alerts", True)))
+        return Response({"briefing": serialize_briefing(briefing)}, status=201)
+    rows = Briefing.objects.filter(owner=request.user).prefetch_related("items", "delivery_logs")
+    if request.GET.get("cadence"):
+        rows = rows.filter(cadence=request.GET["cadence"])
+    if request.GET.get("status"):
+        rows = rows.filter(status=request.GET["status"])
+    limit = safe_int(request.GET.get("limit"), 20)
+    return Response(
+        {
+            "briefings": [serialize_briefing(row, include_items=False) for row in rows[:limit]],
+            "summary": briefing_summary(request.user),
+            "cadences": [{"value": value, "label": label} for value, label in BriefingCadence.choices],
+            "statuses": [{"value": value, "label": label} for value, label in BriefingStatus.choices],
+        }
+    )
+
+
+@api_view(["GET", "PATCH"])
+@permission_classes([IsAuthenticated])
+def briefing_detail(request, briefing_id: int):
+    briefing = get_owned_briefing(request.user, briefing_id)
+    if request.method == "PATCH":
+        briefing.status = choice_value(request.data.get("status"), BriefingStatus.values, briefing.status)
+        briefing.save(update_fields=["status", "updated_at"])
+    return Response({"briefing": serialize_briefing(briefing)})
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def briefing_feedback_view(request, briefing_id: int):
+    briefing = get_owned_briefing(request.user, briefing_id)
+    feedback = briefing_feedback(
+        briefing,
+        request.user,
+        clean_string(request.data.get("rating")) or "useful",
+        clean_string(request.data.get("comment")),
+    )
+    return Response({"feedback": {"id": feedback.id, "rating": feedback.rating, "comment": feedback.comment}}, status=201)
+
+
 def get_preference(user) -> AlertDeliveryPreference:
     preference, _created = AlertDeliveryPreference.objects.get_or_create(owner=user)
     return preference
@@ -189,6 +239,13 @@ def get_owned_notification(user, notification_id: int) -> Notification:
         return Notification.objects.filter(owner=user).get(id=notification_id)
     except Notification.DoesNotExist as exc:
         raise Http404("Notification not found") from exc
+
+
+def get_owned_briefing(user, briefing_id: int) -> Briefing:
+    try:
+        return Briefing.objects.filter(owner=user).prefetch_related("items", "delivery_logs").get(id=briefing_id)
+    except Briefing.DoesNotExist as exc:
+        raise Http404("Briefing not found") from exc
 
 
 def serialize_watchlist(watchlist: Watchlist, compact: bool = False) -> dict:
@@ -282,6 +339,12 @@ def alert_quality(user) -> dict:
         "feedback_count": feedback_count,
         "noise_monitoring_note": "Use feedback and duplicate grouping to monitor noisy, duplicated, or missed alerts.",
     }
+
+
+def briefing_summary(user) -> dict:
+    rows = Briefing.objects.filter(owner=user)
+    by_cadence = dict(rows.values("cadence").annotate(count=Count("id")).values_list("cadence", "count"))
+    return {"total": rows.count(), "daily": by_cadence.get(BriefingCadence.DAILY, 0), "weekly": by_cadence.get(BriefingCadence.WEEKLY, 0)}
 
 
 def clean_string(value) -> str:

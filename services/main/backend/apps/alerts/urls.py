@@ -14,4 +14,7 @@ urlpatterns = [
     path("notifications/<int:notification_id>", api.notification_detail, name="app-notification-detail"),
     path("notifications/<int:notification_id>/feedback", api.notification_feedback, name="app-notification-feedback"),
     path("notifications/delivery-preference", api.delivery_preference, name="app-alert-delivery-preference"),
+    path("briefings", api.briefings, name="app-briefings"),
+    path("briefings/<int:briefing_id>", api.briefing_detail, name="app-briefing-detail"),
+    path("briefings/<int:briefing_id>/feedback", api.briefing_feedback_view, name="app-briefing-feedback"),
 ]

@@ -5,6 +5,10 @@ from apps.alerts.models import (
     AlertDeliveryPreference,
     AlertFeedback,
     AlertRule,
+    Briefing,
+    BriefingDeliveryLog,
+    BriefingFeedback,
+    BriefingItem,
     Notification,
     WatchItem,
     Watchlist,
@@ -39,3 +43,20 @@ class NotificationAdmin(admin.ModelAdmin):
 admin.site.register(AlertDeliveryPreference)
 admin.site.register(AlertDeliveryLog)
 admin.site.register(AlertFeedback)
+
+
+class BriefingItemInline(admin.TabularInline):
+    model = BriefingItem
+    extra = 0
+
+
+@admin.register(Briefing)
+class BriefingAdmin(admin.ModelAdmin):
+    list_display = ("title", "owner", "cadence", "status", "period_start", "period_end", "notification_count")
+    list_filter = ("cadence", "status")
+    search_fields = ("title", "summary", "owner__username")
+    inlines = (BriefingItemInline,)
+
+
+admin.site.register(BriefingDeliveryLog)
+admin.site.register(BriefingFeedback)

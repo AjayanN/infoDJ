@@ -7,7 +7,7 @@ from django.test import TestCase, override_settings
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
-from apps.alerts.models import Notification, Watchlist
+from apps.alerts.models import AlertDeliveryPreference, Briefing, Notification, WatchItem, Watchlist
 
 
 class WatchlistAlertApiTests(TestCase):
@@ -115,6 +115,76 @@ class WatchlistAlertApiTests(TestCase):
         self.assertEqual(preference_response.status_code, 200)
         self.assertTrue(preference_response.json()["delivery_preference"]["email_enabled"])
         self.assertEqual(preference_response.json()["delivery_preference"]["email_frequency"], "WEEKLY")
+
+    @override_settings(INGESTION_API_URL="http://ingestion.test/api/ingestion")
+    @patch("apps.alerts.services.requests.get")
+    def test_generate_daily_briefing_groups_alerts_and_coverage_gaps(self, get):
+        get.side_effect = [
+            json_response(
+                {
+                    "latest_events": [
+                        {
+                            "id": 10,
+                            "event_type": "PRICE_CHANGE",
+                            "actual_change": "Netflix raised plan pricing.",
+                            "event_date": "2026-01-01",
+                            "source_count": 2,
+                            "confidence_score": 0.8,
+                        }
+                    ],
+                    "latest_turns": [],
+                    "risk_signals": [],
+                    "sections": {},
+                }
+            ),
+            json_response({"latest_events": [], "latest_turns": [], "risk_signals": [], "sections": {}}),
+        ]
+        self.client.post("/api/app/watchlists/follow-company", {"company_slug": "netflix", "company_name": "Netflix"}, format="json")
+        watchlist = Watchlist.objects.get(owner=self.user)
+        WatchItem.objects.create(watchlist=watchlist, entity_type="COMPANY", entity_id="quiet-company", label="Quiet Company", company_slug="quiet-company")
+
+        response = self.client.post("/api/app/briefings", {"cadence": "DAILY", "refresh_alerts": True}, format="json")
+
+        self.assertEqual(response.status_code, 201)
+        briefing = response.json()["briefing"]
+        self.assertEqual(briefing["cadence"], "DAILY")
+        self.assertEqual(briefing["notification_count"], 1)
+        self.assertEqual(briefing["source_gap_count"], 1)
+        sections = {item["section"] for item in briefing["items"]}
+        self.assertIn("COMPETITIVE_THEME", sections)
+        self.assertIn("COVERAGE_GAPS", sections)
+        self.assertIn("severity", briefing["ranking_note"])
+
+    def test_briefing_detail_archive_feedback_and_email_log(self):
+        watchlist = Watchlist.objects.create(owner=self.user, name="Core companies")
+        notification = Notification.objects.create(
+            owner=self.user,
+            watchlist=watchlist,
+            category="RISK_ESCALATION",
+            severity="HIGH",
+            title="Netflix risk escalation",
+            what_changed="A risk increased.",
+            why_it_matters="It may invalidate a thesis.",
+            dedupe_key="netflix:risk:1",
+        )
+        AlertDeliveryPreference.objects.create(owner=self.user, email_enabled=True, email_frequency="DAILY")
+        response = self.client.post("/api/app/briefings", {"cadence": "DAILY", "refresh_alerts": False}, format="json")
+        self.assertEqual(response.status_code, 201)
+        briefing_id = response.json()["briefing"]["id"]
+
+        detail = self.client.get(f"/api/app/briefings/{briefing_id}")
+        self.assertEqual(detail.status_code, 200)
+        self.assertEqual(detail.json()["briefing"]["status"], "SENT")
+        self.assertEqual(detail.json()["briefing"]["delivery_logs"][0]["channel"], "EMAIL")
+        self.assertEqual(detail.json()["briefing"]["items"][0]["notification_id"], notification.id)
+
+        archive = self.client.patch(f"/api/app/briefings/{briefing_id}", {"status": "ARCHIVED"}, format="json")
+        self.assertEqual(archive.status_code, 200)
+        self.assertEqual(archive.json()["briefing"]["status"], "ARCHIVED")
+
+        feedback = self.client.post(f"/api/app/briefings/{briefing_id}/feedback", {"rating": "useful"}, format="json")
+        self.assertEqual(feedback.status_code, 201)
+        self.assertEqual(Briefing.objects.filter(owner=self.user).count(), 1)
 
 
 def json_response(payload: dict):
