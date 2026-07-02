@@ -843,18 +843,19 @@ Each feature below inherits the shared standards above. Feature sections only de
 
 **MVP tasks:**
 
-- [ ] Define thesis states: draft, active, strengthening, weakening, invalidated, completed, and archived.
-- [ ] Build private thesis workspace.
-- [ ] Allow evidence attachment from any company, event, turn, KPI, promise, or source page.
-- [ ] Keep user-authored notes separate from published facts.
-- [ ] Add assumptions, milestones, indicators, review dates, and time horizon.
-- [ ] Add supporting versus opposing evidence balance.
-- [ ] Add change history with reasons for confidence updates.
-- [ ] Protect private workspaces and clearly label shared user-generated content.
+- [x] Define thesis states: draft, active, strengthening, weakening, invalidated, completed, and archived.
+- [x] Build private thesis workspace.
+- [x] Allow evidence attachment from any company, event, turn, KPI, promise, or source page.
+- [x] Keep user-authored notes separate from published facts.
+- [x] Add assumptions, milestones, indicators, review dates, and time horizon.
+- [x] Add supporting versus opposing evidence balance.
+- [x] Add change history with reasons for confidence updates.
+- [x] Protect private workspaces and clearly label shared user-generated content.
 
 **Acceptance criteria:**
 
 - A user can maintain a falsifiable, evidence-linked thesis and see why it changed over time.
+- Implemented baseline: authenticated users can create private strategy theses, attach supporting/opposing/neutral evidence references, keep private notes separate from referenced evidence, track milestones and indicators, record confidence/state revisions, search ingestion evidence suggestions, and open the workspace from Company 360.
 
 ---
 
@@ -1134,6 +1135,7 @@ The order below reflects functional dependency and user value. It does not requi
 - [x] Regulatory and Litigation Calendar: all-company reviewed snapshot baseline implemented with source-backed matter rows, legal guardrails, source-gated exposure context, explicit source gaps for missing authority/deadline/exposure details, Company 360 entry point, daily ingestion builder, and all-company API smoke validation.
 - [x] Sector and Theme Intelligence: all-company reviewed snapshot baseline implemented with taxonomy labels, narrative-only sector guardrails, operating exposure cards from events/KPIs/capital allocation, theme pages, source gaps for missing KPI/capital/evidence links, Company 360 entry point, daily ingestion builder, and all-company API smoke validation.
 - [x] Macro Sensitivity Profile: all-company reviewed snapshot baseline implemented with macro factor registry, exposure channels, direction labels, management/theme-derived sensitivity rows, calculated relationship placeholders, stress-period context, non-causation guardrails, Company 360 entry point, daily ingestion builder, and all-company API smoke validation.
+- [x] Strategy Thesis Workspace: private authenticated workspace implemented with thesis states, assumptions, review dates, time horizon, supporting/opposing/neutral evidence, user-note separation, evidence suggestions from ingestion search, milestones, indicators, confidence revision history, Company 360 entry point, and privacy labels.
 
 ### Wave 5: Personal Monitoring
 
@@ -1141,7 +1143,7 @@ The order below reflects functional dependency and user value. It does not requi
 
 - [ ] Watchlists and Alerts.
 - [ ] Daily and Weekly Briefings.
-- [ ] Strategy Thesis Workspace.
+- [x] Strategy Thesis Workspace.
 
 ### Wave 6: Advanced Decision Intelligence
 

@@ -26,6 +26,9 @@ import {
   RegulatoryLitigationResponse,
   SectorThemeResponse,
   MacroSensitivityResponse,
+  StrategyThesis,
+  ThesisListResponse,
+  ThesisSuggestionsResponse,
   LeadershipDecisionResponse,
   DashboardSection,
   DashboardResponse,
@@ -53,7 +56,7 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider' | 'valuation-context' | 'regulatory-litigation' | 'sector-themes' | 'macro-sensitivity' | 'profile' | 'subscription';
+type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider' | 'valuation-context' | 'regulatory-litigation' | 'sector-themes' | 'macro-sensitivity' | 'strategy-theses' | 'profile' | 'subscription';
 type DashboardViewId =
   | 'company-intelligence'
   | 'turn-impact'
@@ -151,6 +154,9 @@ class AppComponent {
   regulatoryLitigation = signal<RegulatoryLitigationResponse | null>(null);
   sectorThemes = signal<SectorThemeResponse | null>(null);
   macroSensitivity = signal<MacroSensitivityResponse | null>(null);
+  thesisWorkspace = signal<ThesisListResponse | null>(null);
+  selectedThesis = signal<StrategyThesis | null>(null);
+  thesisSuggestions = signal<ThesisSuggestionsResponse | null>(null);
   leadershipDecisions = signal<LeadershipDecisionResponse | null>(null);
   searchResults = signal<SearchResponse | null>(null);
   searchPages = signal<Record<SearchResultGroup, number>>({
@@ -193,6 +199,7 @@ class AppComponent {
   regulatoryLitigationLoading = signal(false);
   sectorThemesLoading = signal(false);
   macroSensitivityLoading = signal(false);
+  thesisWorkspaceLoading = signal(false);
   leadershipDecisionLoading = signal(false);
   companyProfileDate = '';
   businessModelDate = '';
@@ -245,6 +252,35 @@ class AppComponent {
   macroSensitivityDate = '';
   macroFactorFilter = '';
   macroChannelFilter = '';
+  thesisFilterState = '';
+  thesisFilterCompany = '';
+  thesisSearchQuery = '';
+  thesisTitle = '';
+  thesisStatement = '';
+  thesisCompanySlug = '';
+  thesisCompanyName = '';
+  thesisTimeHorizon = '';
+  thesisReviewDate = '';
+  thesisConfidence = 50;
+  thesisAssumptions = '';
+  thesisEvidenceSide = 'SUPPORTING';
+  thesisEvidenceType = 'NOTE';
+  thesisEvidenceTitle = '';
+  thesisEvidenceSummary = '';
+  thesisEvidenceUrl = '';
+  thesisEvidenceDate = '';
+  thesisEvidenceNote = '';
+  thesisMilestoneTitle = '';
+  thesisMilestoneDue = '';
+  thesisMilestoneCriteria = '';
+  thesisIndicatorName = '';
+  thesisIndicatorDirection = 'QUALITATIVE';
+  thesisIndicatorTarget = '';
+  thesisIndicatorCurrent = '';
+  thesisIndicatorSource = '';
+  thesisRevisionState = 'ACTIVE';
+  thesisRevisionConfidence = 50;
+  thesisRevisionReason = '';
   leadershipDecisionDate = '';
   leadershipRoleType = '';
   leadershipDecisionType = '';
@@ -589,6 +625,9 @@ class AppComponent {
     if (this.activePage() === 'macro-sensitivity') {
       return `${this.macroSensitivity()?.company.name || 'Company'} Macro Sensitivity Profile`;
     }
+    if (this.activePage() === 'strategy-theses') {
+      return 'Strategy Thesis Workspace';
+    }
     if (this.activePage() === 'leadership-decisions') {
       return `${this.leadershipDecisions()?.company.name || 'Company'} Leadership Decision Record`;
     }
@@ -652,6 +691,9 @@ class AppComponent {
     }
     if (this.activePage() === 'macro-sensitivity') {
       return 'Macro factors, exposure channels, disclosed sensitivities, calculated-relationship limitations, and stress-period examples.';
+    }
+    if (this.activePage() === 'strategy-theses') {
+      return 'Private thesis workspace for assumptions, evidence balance, milestones, indicators, confidence updates, and revision history.';
     }
     if (this.activePage() === 'leadership-decisions') {
       return 'Leadership roles, tenure context, stated priorities, material decisions, succession events, evidence, and non-causation guardrails.';
@@ -1448,6 +1490,172 @@ class AppComponent {
 
   printMacroSensitivityBrief(): void {
     window.print();
+  }
+
+  openStrategyTheses(companySlug = '', companyName = ''): void {
+    if (!this.token()) return;
+    this.activePage.set('strategy-theses');
+    this.menuOpen.set(false);
+    if (companySlug) {
+      this.thesisFilterCompany = companySlug;
+      this.thesisCompanySlug = companySlug;
+      this.thesisCompanyName = companyName;
+    }
+    this.loadStrategyTheses();
+  }
+
+  loadStrategyTheses(): void {
+    if (!this.token()) return;
+    this.thesisWorkspaceLoading.set(true);
+    this.error.set('');
+    this.api.theses(this.token(), this.thesisFilterState, this.thesisFilterCompany, this.thesisSearchQuery).subscribe({
+      next: (response) => {
+        this.thesisWorkspace.set(response);
+        const selected = this.selectedThesis();
+        if (!selected && response.theses.length > 0) {
+          this.selectThesis(response.theses[0].id);
+        }
+        this.thesisWorkspaceLoading.set(false);
+      },
+      error: (response) => { this.thesisWorkspaceLoading.set(false); this.showError(response); }
+    });
+  }
+
+  selectThesis(id: number): void {
+    if (!this.token()) return;
+    this.api.thesis(this.token(), id).subscribe({
+      next: (response) => {
+        this.selectedThesis.set(response.thesis);
+        this.thesisRevisionState = response.thesis.state || 'ACTIVE';
+        this.thesisRevisionConfidence = response.thesis.confidence_score || 50;
+      },
+      error: (response) => this.showError(response)
+    });
+  }
+
+  createStrategyThesis(): void {
+    if (!this.token()) return;
+    this.api.createThesis(this.token(), {
+      title: this.thesisTitle,
+      company_slug: this.thesisCompanySlug,
+      company_name: this.thesisCompanyName,
+      statement: this.thesisStatement,
+      state: 'ACTIVE',
+      time_horizon: this.thesisTimeHorizon,
+      review_date: this.thesisReviewDate,
+      confidence_score: this.thesisConfidence,
+      assumptions: this.thesisAssumptions.split('\n').map((row) => row.trim()).filter(Boolean)
+    }).subscribe({
+      next: (response) => {
+        this.message.set('Thesis created.');
+        this.selectedThesis.set(response.thesis);
+        this.thesisTitle = '';
+        this.thesisStatement = '';
+        this.thesisAssumptions = '';
+        this.loadStrategyTheses();
+      },
+      error: (response) => this.showError(response)
+    });
+  }
+
+  addThesisEvidence(): void {
+    const thesis = this.selectedThesis();
+    if (!this.token() || !thesis) return;
+    this.api.addThesisEvidence(this.token(), thesis.id, {
+      side: this.thesisEvidenceSide,
+      evidence_type: this.thesisEvidenceType,
+      company_slug: this.thesisCompanySlug || thesis.company_slug,
+      title: this.thesisEvidenceTitle,
+      summary: this.thesisEvidenceSummary,
+      source_url: this.thesisEvidenceUrl,
+      source_date: this.thesisEvidenceDate,
+      user_note: this.thesisEvidenceNote
+    }).subscribe({
+      next: () => {
+        this.message.set('Evidence attached.');
+        this.thesisEvidenceTitle = '';
+        this.thesisEvidenceSummary = '';
+        this.thesisEvidenceUrl = '';
+        this.thesisEvidenceNote = '';
+        this.selectThesis(thesis.id);
+      },
+      error: (response) => this.showError(response)
+    });
+  }
+
+  addThesisMilestone(): void {
+    const thesis = this.selectedThesis();
+    if (!this.token() || !thesis) return;
+    this.api.addThesisMilestone(this.token(), thesis.id, {
+      title: this.thesisMilestoneTitle,
+      due_date: this.thesisMilestoneDue,
+      success_criteria: this.thesisMilestoneCriteria
+    }).subscribe({
+      next: () => {
+        this.message.set('Milestone added.');
+        this.thesisMilestoneTitle = '';
+        this.thesisMilestoneCriteria = '';
+        this.selectThesis(thesis.id);
+      },
+      error: (response) => this.showError(response)
+    });
+  }
+
+  addThesisIndicator(): void {
+    const thesis = this.selectedThesis();
+    if (!this.token() || !thesis) return;
+    this.api.addThesisIndicator(this.token(), thesis.id, {
+      name: this.thesisIndicatorName,
+      direction: this.thesisIndicatorDirection,
+      target: this.thesisIndicatorTarget,
+      current_value: this.thesisIndicatorCurrent,
+      source_hint: this.thesisIndicatorSource
+    }).subscribe({
+      next: () => {
+        this.message.set('Indicator added.');
+        this.thesisIndicatorName = '';
+        this.thesisIndicatorTarget = '';
+        this.thesisIndicatorCurrent = '';
+        this.thesisIndicatorSource = '';
+        this.selectThesis(thesis.id);
+      },
+      error: (response) => this.showError(response)
+    });
+  }
+
+  updateThesisConfidence(): void {
+    const thesis = this.selectedThesis();
+    if (!this.token() || !thesis) return;
+    this.api.updateThesisConfidence(this.token(), thesis.id, {
+      state: this.thesisRevisionState,
+      confidence_score: this.thesisRevisionConfidence,
+      reason: this.thesisRevisionReason
+    }).subscribe({
+      next: (response) => {
+        this.message.set('Confidence history updated.');
+        this.selectedThesis.set(response.thesis);
+        this.thesisRevisionReason = '';
+        this.loadStrategyTheses();
+      },
+      error: (response) => this.showError(response)
+    });
+  }
+
+  loadThesisEvidenceSuggestions(): void {
+    if (!this.token()) return;
+    this.api.thesisEvidenceSuggestions(this.token(), this.thesisSearchQuery || this.thesisCompanySlug || this.thesisFilterCompany, this.thesisCompanySlug || this.thesisFilterCompany).subscribe({
+      next: (response) => this.thesisSuggestions.set(response),
+      error: (response) => this.showError(response)
+    });
+  }
+
+  useThesisSuggestion(suggestion: ThesisSuggestionsResponse['suggestions'][number]): void {
+    this.thesisEvidenceType = suggestion.evidence_type;
+    this.thesisEvidenceTitle = suggestion.title;
+    this.thesisEvidenceSummary = suggestion.summary;
+    this.thesisEvidenceUrl = suggestion.source_url || '';
+    this.thesisEvidenceDate = suggestion.source_date || '';
+    this.thesisCompanySlug = suggestion.company_slug || this.thesisCompanySlug;
   }
 
   openLeadershipDecisions(slug: string, asOf = '', roleType = '', decisionType = ''): void {
