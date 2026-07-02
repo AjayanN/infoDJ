@@ -881,18 +881,19 @@ Each feature below inherits the shared standards above. Feature sections only de
 
 **MVP tasks:**
 
-- [ ] Define followable entity types and alert categories.
-- [ ] Build watchlist creation, edit, and detail views.
-- [ ] Add follow/unfollow actions throughout InfoDJ.
-- [ ] Add in-product notification center.
-- [ ] Add email delivery with immediate, daily, and weekly options.
-- [ ] Group duplicate updates into one evidence-backed alert.
-- [ ] Show what changed, why it matters, previous state, and source.
-- [ ] Add alert quality monitoring for noise, duplication, and missed events.
+- [x] Define followable entity types and alert categories.
+- [x] Build watchlist creation, edit, and detail views.
+- [x] Add follow/unfollow actions throughout InfoDJ.
+- [x] Add in-product notification center.
+- [x] Add email delivery with immediate, daily, and weekly options.
+- [x] Group duplicate updates into one evidence-backed alert.
+- [x] Show what changed, why it matters, previous state, and source.
+- [x] Add alert quality monitoring for noise, duplication, and missed events.
 
 **Acceptance criteria:**
 
 - Alerts represent meaningful changes rather than every new document or mention.
+- Implemented baseline: authenticated users can create private watchlists, follow companies and topics, configure delivery preferences, refresh source-backed alerts from ingestion, see grouped notifications with what-changed/why-it-matters/source context, mark alerts read or archived, and provide quality feedback.
 
 ---
 
@@ -1141,7 +1142,7 @@ The order below reflects functional dependency and user value. It does not requi
 
 **Exit condition:** users can continuously monitor selected companies and maintain an evidence-linked point of view.
 
-- [ ] Watchlists and Alerts.
+- [x] Watchlists and Alerts: private authenticated watchlists implemented with followable entity types, alert categories, delivery preferences, ingestion-backed alert refresh, duplicate grouping, notification center, status workflow, quality feedback, Company 360 follow action, and refresh command.
 - [ ] Daily and Weekly Briefings.
 - [x] Strategy Thesis Workspace.
 

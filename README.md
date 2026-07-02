@@ -711,6 +711,44 @@ GET  /api/app/theses/evidence-suggestions?q=<query>&company=<slug>
 
 Open `Strategy thesis workspace` from Company 360 or `Theses` in the left navigation. Evidence suggestions depend on ingestion search availability; private thesis records remain available even when ingestion is temporarily unavailable.
 
+## Watchlists and Alerts
+
+Phase 2 Requirement 20 adds private authenticated watchlists and an in-product notification center. Watchlist records, delivery preferences, alert status, and feedback are product data in the main backend. Alert evidence is refreshed from ingestion dashboards and search results.
+
+The baseline includes:
+
+- followable entity types for companies, themes, products, leaders, promises, milestones, risks, and regulatory matters
+- alert categories for strategic moves, earnings/guidance, KPI changes, promises, milestones, leadership/ownership, product/pricing, acquisitions, regulatory/litigation, risk escalation, and source corrections
+- watchlist creation, followed entity management, and a Company 360 `Follow for alerts` action
+- in-product notification center with unread/read/archive status
+- delivery preferences for in-product alerts and email frequency: immediate, daily, weekly, or disabled
+- duplicate grouping using deterministic dedupe keys and source counts
+- alert rows that show what changed, why it matters, previous state when available, source label, source date, and source link
+- alert quality monitoring through duplicate-group ratio and user feedback
+
+Watchlist and alert endpoints:
+
+```bash
+GET  /api/app/watchlists
+POST /api/app/watchlists
+POST /api/app/watchlists/follow-company
+POST /api/app/watchlists/<id>/items
+GET  /api/app/notifications
+POST /api/app/notifications/refresh
+PATCH /api/app/notifications/<id>
+POST /api/app/notifications/<id>/feedback
+GET  /api/app/notifications/delivery-preference
+PATCH /api/app/notifications/delivery-preference
+```
+
+Refresh source-backed alerts for all users:
+
+```bash
+python manage.py refresh_watchlist_alerts --limit 12
+```
+
+Open `Alerts` in the left navigation or use `Follow for alerts` from Company 360. Alerts are intentionally grouped meaningful changes, not every new document or mention.
+
 ## Source Gap Resolution Guardrail
 
 Open source gaps are now routed back into ingestion instead of remaining as passive UI messages. The daily company update runs `resolve_source_gaps` after the Phase 2 builders and creates reviewed-source candidates from existing `SourceDocument` rows for acquisition lifecycle, competitive market-share, customer/supplier dependency, contract-term, concentration, product-pricing, geographic expansion, leadership, and ownership/insider gaps.

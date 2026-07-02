@@ -29,6 +29,9 @@ import {
   StrategyThesis,
   ThesisListResponse,
   ThesisSuggestionsResponse,
+  Watchlist,
+  WatchlistResponse,
+  NotificationResponse,
   LeadershipDecisionResponse,
   DashboardSection,
   DashboardResponse,
@@ -56,7 +59,7 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider' | 'valuation-context' | 'regulatory-litigation' | 'sector-themes' | 'macro-sensitivity' | 'strategy-theses' | 'profile' | 'subscription';
+type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider' | 'valuation-context' | 'regulatory-litigation' | 'sector-themes' | 'macro-sensitivity' | 'strategy-theses' | 'watchlists' | 'profile' | 'subscription';
 type DashboardViewId =
   | 'company-intelligence'
   | 'turn-impact'
@@ -157,6 +160,9 @@ class AppComponent {
   thesisWorkspace = signal<ThesisListResponse | null>(null);
   selectedThesis = signal<StrategyThesis | null>(null);
   thesisSuggestions = signal<ThesisSuggestionsResponse | null>(null);
+  watchlists = signal<WatchlistResponse | null>(null);
+  selectedWatchlist = signal<Watchlist | null>(null);
+  notifications = signal<NotificationResponse | null>(null);
   leadershipDecisions = signal<LeadershipDecisionResponse | null>(null);
   searchResults = signal<SearchResponse | null>(null);
   searchPages = signal<Record<SearchResultGroup, number>>({
@@ -200,6 +206,7 @@ class AppComponent {
   sectorThemesLoading = signal(false);
   macroSensitivityLoading = signal(false);
   thesisWorkspaceLoading = signal(false);
+  watchlistLoading = signal(false);
   leadershipDecisionLoading = signal(false);
   companyProfileDate = '';
   businessModelDate = '';
@@ -281,6 +288,14 @@ class AppComponent {
   thesisRevisionState = 'ACTIVE';
   thesisRevisionConfidence = 50;
   thesisRevisionReason = '';
+  watchlistName = '';
+  watchlistDescription = '';
+  watchItemType = 'COMPANY';
+  watchItemId = '';
+  watchItemLabel = '';
+  watchItemCompanySlug = '';
+  notificationStatusFilter = '';
+  notificationCategoryFilter = '';
   leadershipDecisionDate = '';
   leadershipRoleType = '';
   leadershipDecisionType = '';
@@ -628,6 +643,9 @@ class AppComponent {
     if (this.activePage() === 'strategy-theses') {
       return 'Strategy Thesis Workspace';
     }
+    if (this.activePage() === 'watchlists') {
+      return 'Watchlists and Alerts';
+    }
     if (this.activePage() === 'leadership-decisions') {
       return `${this.leadershipDecisions()?.company.name || 'Company'} Leadership Decision Record`;
     }
@@ -694,6 +712,9 @@ class AppComponent {
     }
     if (this.activePage() === 'strategy-theses') {
       return 'Private thesis workspace for assumptions, evidence balance, milestones, indicators, confidence updates, and revision history.';
+    }
+    if (this.activePage() === 'watchlists') {
+      return 'Follow companies and topics, refresh source-backed alerts, and review grouped notifications.';
     }
     if (this.activePage() === 'leadership-decisions') {
       return 'Leadership roles, tenure context, stated priorities, material decisions, succession events, evidence, and non-causation guardrails.';
@@ -1656,6 +1677,124 @@ class AppComponent {
     this.thesisEvidenceUrl = suggestion.source_url || '';
     this.thesisEvidenceDate = suggestion.source_date || '';
     this.thesisCompanySlug = suggestion.company_slug || this.thesisCompanySlug;
+  }
+
+  openWatchlists(companySlug = '', companyName = ''): void {
+    if (!this.token()) return;
+    this.activePage.set('watchlists');
+    this.menuOpen.set(false);
+    if (companySlug) {
+      this.watchItemType = 'COMPANY';
+      this.watchItemId = companySlug;
+      this.watchItemCompanySlug = companySlug;
+      this.watchItemLabel = companyName || companySlug;
+    }
+    this.loadWatchlists();
+    this.loadNotifications();
+  }
+
+  loadWatchlists(): void {
+    if (!this.token()) return;
+    this.watchlistLoading.set(true);
+    this.api.watchlists(this.token()).subscribe({
+      next: (response) => {
+        this.watchlists.set(response);
+        if (!this.selectedWatchlist() && response.watchlists.length > 0) this.selectWatchlist(response.watchlists[0].id);
+        this.watchlistLoading.set(false);
+      },
+      error: (response) => { this.watchlistLoading.set(false); this.showError(response); }
+    });
+  }
+
+  selectWatchlist(id: number): void {
+    if (!this.token()) return;
+    this.api.watchlist(this.token(), id).subscribe({
+      next: (response) => this.selectedWatchlist.set(response.watchlist),
+      error: (response) => this.showError(response)
+    });
+  }
+
+  createWatchlist(): void {
+    if (!this.token()) return;
+    this.api.createWatchlist(this.token(), { name: this.watchlistName, description: this.watchlistDescription }).subscribe({
+      next: (response) => {
+        this.message.set('Watchlist created.');
+        this.selectedWatchlist.set(response.watchlist);
+        this.watchlistName = '';
+        this.watchlistDescription = '';
+        this.loadWatchlists();
+      },
+      error: (response) => this.showError(response)
+    });
+  }
+
+  addWatchItem(): void {
+    const watchlist = this.selectedWatchlist();
+    if (!this.token() || !watchlist) return;
+    this.api.addWatchlistItem(this.token(), watchlist.id, {
+      entity_type: this.watchItemType,
+      entity_id: this.watchItemId,
+      label: this.watchItemLabel,
+      company_slug: this.watchItemCompanySlug
+    }).subscribe({
+      next: () => {
+        this.message.set('Watch item added.');
+        this.selectWatchlist(watchlist.id);
+        this.loadWatchlists();
+      },
+      error: (response) => this.showError(response)
+    });
+  }
+
+  followCompanyForAlerts(slug: string, name: string): void {
+    if (!this.token()) return;
+    this.api.followCompany(this.token(), slug, name).subscribe({
+      next: (response) => {
+        this.message.set(`${name} followed for alerts.`);
+        this.selectedWatchlist.set(response.watchlist);
+        this.openWatchlists(slug, name);
+      },
+      error: (response) => this.showError(response)
+    });
+  }
+
+  loadNotifications(): void {
+    if (!this.token()) return;
+    this.api.notifications(this.token(), this.notificationStatusFilter, this.notificationCategoryFilter).subscribe({
+      next: (response) => this.notifications.set(response),
+      error: (response) => this.showError(response)
+    });
+  }
+
+  refreshNotifications(): void {
+    if (!this.token()) return;
+    this.api.refreshNotifications(this.token()).subscribe({
+      next: (response) => {
+        this.message.set(`Alerts refreshed: ${response.stats['notifications_created'] || 0} created, ${response.stats['notifications_updated'] || 0} updated.`);
+        this.loadNotifications();
+        this.loadWatchlists();
+      },
+      error: (response) => this.showError(response)
+    });
+  }
+
+  markNotification(id: number, status: string): void {
+    if (!this.token()) return;
+    this.api.updateNotification(this.token(), id, status).subscribe({
+      next: () => this.loadNotifications(),
+      error: (response) => this.showError(response)
+    });
+  }
+
+  rateNotification(id: number, rating: string): void {
+    if (!this.token()) return;
+    this.api.alertFeedback(this.token(), id, rating).subscribe({
+      next: () => {
+        this.message.set('Alert feedback saved.');
+        this.loadNotifications();
+      },
+      error: (response) => this.showError(response)
+    });
   }
 
   openLeadershipDecisions(slug: string, asOf = '', roleType = '', decisionType = ''): void {
