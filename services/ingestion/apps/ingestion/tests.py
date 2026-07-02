@@ -33,6 +33,7 @@ from apps.companies.models import (
     OwnershipInsiderSnapshot,
     ProductCatalogSnapshot,
     ProductOffering,
+    MacroSensitivitySnapshot,
     RegulatoryLitigationSnapshot,
     SectorThemeSnapshot,
     StrategyMilestone,
@@ -82,6 +83,7 @@ from apps.ingestion.services.leadership_decision_record import (
 from apps.ingestion.services.valuation_context import build_valuation_context, valuation_quality_issues
 from apps.ingestion.services.regulatory_litigation import build_regulatory_litigation_calendar, regulatory_litigation_quality_issues
 from apps.ingestion.services.sector_theme_intelligence import build_sector_theme_intelligence, sector_theme_quality_issues
+from apps.ingestion.services.macro_sensitivity_profile import build_macro_sensitivity_profile, macro_sensitivity_quality_issues
 from apps.ingestion.services.source_gap_resolver import resolve_source_gaps
 from apps.ingestion.services.source_gap_source_collector import forms_for_gap, ticker_for
 from apps.ingestion.services.source_gap_candidate_extractor import extract_source_gap_candidates, full_text_excerpt
@@ -1679,6 +1681,33 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(payload["coverage"]["operating_exposure_count"], 0)
         self.assertTrue(any(gap["key"] == "operating_exposure" for gap in payload["source_gaps"]))
         self.assertTrue(any(row["materiality"] == "NARRATIVE_ONLY" for row in payload["exposures"]))
+
+    def test_macro_sensitivity_builder_creates_disclosed_and_placeholder_rows(self):
+        build_sector_theme_intelligence(self.netflix)
+
+        result = build_macro_sensitivity_profile(self.netflix)
+
+        self.assertEqual(result["snapshots_created"], 1)
+        snapshot = MacroSensitivitySnapshot.objects.get(company=self.netflix)
+        self.assertGreaterEqual(snapshot.sensitivities.count(), 2)
+        self.assertTrue(snapshot.sensitivities.filter(evidence_type="MANAGEMENT_DISCLOSED").exists())
+        self.assertTrue(snapshot.sensitivities.filter(evidence_type="CALCULATED_PLACEHOLDER", sample_size=0).exists())
+        self.assertNotIn("no reviewed macro sensitivities", macro_sensitivity_quality_issues(self.netflix))
+        self.assertIn("does not claim causation", snapshot.limitation_note)
+
+    def test_macro_sensitivity_api_exposes_limitations_and_gaps(self):
+        build_macro_sensitivity_profile(self.netflix)
+
+        response = self.client.get("/companies/netflix/macro-sensitivity")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertIn(payload["status"], {"available", "partial"})
+        self.assertGreaterEqual(payload["coverage"]["calculated_placeholder_count"], 1)
+        self.assertTrue(any(gap["key"] == "macro_series_alignment" for gap in payload["source_gaps"]))
+        rendered = str(payload).lower()
+        self.assertNotIn("causes revenue", rendered)
+        self.assertNotIn("will increase", rendered)
 
     def test_leadership_decision_builder_creates_roles_and_decisions(self):
         CompanyProfileSnapshot.objects.create(

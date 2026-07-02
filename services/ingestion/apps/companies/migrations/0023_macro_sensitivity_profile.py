@@ -1,0 +1,98 @@
+from django.db import migrations, models
+import django.db.models.deletion
+
+
+class Migration(migrations.Migration):
+    dependencies = [
+        ("companies", "0022_sector_theme_intelligence"),
+        ("curation", "0001_initial"),
+        ("ingestion", "0007_sourcegapresolutioncandidate"),
+    ]
+
+    operations = [
+        migrations.CreateModel(
+            name="MacroFactor",
+            fields=[
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("slug", models.SlugField(max_length=160, unique=True)),
+                ("name", models.CharField(max_length=255)),
+                ("category", models.CharField(choices=[("DEMAND", "Demand"), ("COST", "Cost"), ("FINANCING", "Financing"), ("CURRENCY", "Currency"), ("COMMODITY", "Commodity"), ("LABOR", "Labor"), ("REGULATORY", "Regulatory")], db_index=True, max_length=32)),
+                ("description", models.TextField(blank=True)),
+                ("canonical_series", models.JSONField(blank=True, default=list)),
+                ("is_active", models.BooleanField(db_index=True, default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+            ],
+            options={"ordering": ["category", "name"]},
+        ),
+        migrations.CreateModel(
+            name="MacroSensitivitySnapshot",
+            fields=[
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("effective_date", models.DateField(db_index=True)),
+                ("status", models.CharField(choices=[("DRAFT", "Draft"), ("REVIEWED", "Reviewed"), ("PUBLISHED", "Published")], db_index=True, default="REVIEWED", max_length=16)),
+                ("summary", models.TextField(blank=True)),
+                ("methodology", models.TextField(blank=True)),
+                ("limitation_note", models.TextField(blank=True)),
+                ("confidence_score", models.DecimalField(decimal_places=3, default=0, max_digits=4)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("company", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name="macro_sensitivity_snapshots", to="companies.company")),
+                ("source_document", models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name="macro_sensitivity_snapshots", to="ingestion.sourcedocument")),
+            ],
+            options={"ordering": ["-effective_date", "-created_at"]},
+        ),
+        migrations.CreateModel(
+            name="MacroSensitivity",
+            fields=[
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("channel", models.CharField(choices=[("REVENUE", "Revenue"), ("COST", "Cost"), ("MARGIN", "Margin"), ("CAPEX", "Capital expenditure"), ("FINANCING", "Financing"), ("DEMAND", "Demand"), ("SUPPLY_CHAIN", "Supply chain"), ("CURRENCY_TRANSLATION", "Currency translation")], db_index=True, max_length=32)),
+                ("direction", models.CharField(choices=[("POSITIVE", "Positive"), ("NEGATIVE", "Negative"), ("MIXED", "Mixed"), ("CHANGING", "Changing"), ("UNCERTAIN", "Uncertain")], db_index=True, max_length=32)),
+                ("evidence_type", models.CharField(choices=[("MANAGEMENT_DISCLOSED", "Management disclosed"), ("THEME_DERIVED", "Theme derived"), ("CAPITAL_DERIVED", "Capital allocation derived"), ("KPI_DERIVED", "KPI derived"), ("CALCULATED_PLACEHOLDER", "Calculated placeholder")], db_index=True, max_length=32)),
+                ("materiality", models.CharField(choices=[("MATERIAL_OPERATING", "Material operating exposure"), ("OPERATING", "Operating exposure"), ("WATCH", "Watch"), ("NARRATIVE_ONLY", "Narrative only"), ("UNKNOWN", "Unknown")], db_index=True, max_length=32)),
+                ("source_key", models.CharField(max_length=255)),
+                ("evidence_date", models.DateField(blank=True, db_index=True, null=True)),
+                ("evidence_summary", models.TextField(blank=True)),
+                ("evidence_text", models.TextField(blank=True)),
+                ("method", models.TextField(blank=True)),
+                ("sample_size", models.PositiveIntegerField(default=0)),
+                ("period_start", models.DateField(blank=True, null=True)),
+                ("period_end", models.DateField(blank=True, null=True)),
+                ("lag_assumption", models.CharField(blank=True, max_length=128)),
+                ("limitation_note", models.TextField(blank=True)),
+                ("confidence_score", models.DecimalField(decimal_places=3, default=0, max_digits=4)),
+                ("review_status", models.CharField(choices=[("DRAFT", "Draft"), ("NEEDS_REVIEW", "Needs review"), ("REVIEWED", "Reviewed"), ("REJECTED", "Rejected")], db_index=True, default="REVIEWED", max_length=32)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("factor", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name="company_sensitivities", to="companies.macrofactor")),
+                ("linked_event", models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name="macro_sensitivities", to="curation.businessevent")),
+                ("linked_theme_exposure", models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name="macro_sensitivities", to="companies.companythemeexposure")),
+                ("snapshot", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name="sensitivities", to="companies.macrosensitivitysnapshot")),
+                ("source_document", models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name="macro_sensitivities", to="ingestion.sourcedocument")),
+            ],
+            options={"ordering": ["factor__name", "channel", "-evidence_date"]},
+        ),
+        migrations.CreateModel(
+            name="MacroStressExample",
+            fields=[
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("label", models.CharField(max_length=255)),
+                ("period_start", models.DateField(blank=True, null=True)),
+                ("period_end", models.DateField(blank=True, null=True)),
+                ("macro_context", models.TextField(blank=True)),
+                ("company_observation", models.TextField(blank=True)),
+                ("limitation_note", models.TextField(blank=True)),
+                ("confidence_score", models.DecimalField(decimal_places=3, default=0, max_digits=4)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("snapshot", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name="stress_examples", to="companies.macrosensitivitysnapshot")),
+                ("source_document", models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name="macro_stress_examples", to="ingestion.sourcedocument")),
+            ],
+            options={"ordering": ["-period_end", "label"]},
+        ),
+        migrations.AddIndex(model_name="macrofactor", index=models.Index(fields=["category", "is_active"], name="macro_factor_cat_active_idx")),
+        migrations.AddConstraint(model_name="macrosensitivitysnapshot", constraint=models.UniqueConstraint(fields=("company", "effective_date"), name="unique_macro_sensitivity_snapshot")),
+        migrations.AddIndex(model_name="macrosensitivitysnapshot", index=models.Index(fields=["company", "status", "effective_date"], name="company_macro_status_idx")),
+        migrations.AddConstraint(model_name="macrosensitivity", constraint=models.UniqueConstraint(fields=("snapshot", "source_key"), name="unique_macro_sensitivity_source")),
+        migrations.AddConstraint(model_name="macrostressexample", constraint=models.UniqueConstraint(fields=("snapshot", "label"), name="unique_macro_stress_example")),
+    ]

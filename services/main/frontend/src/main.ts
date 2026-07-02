@@ -25,6 +25,7 @@ import {
   ValuationContextResponse,
   RegulatoryLitigationResponse,
   SectorThemeResponse,
+  MacroSensitivityResponse,
   LeadershipDecisionResponse,
   DashboardSection,
   DashboardResponse,
@@ -52,7 +53,7 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider' | 'valuation-context' | 'regulatory-litigation' | 'sector-themes' | 'profile' | 'subscription';
+type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider' | 'valuation-context' | 'regulatory-litigation' | 'sector-themes' | 'macro-sensitivity' | 'profile' | 'subscription';
 type DashboardViewId =
   | 'company-intelligence'
   | 'turn-impact'
@@ -149,6 +150,7 @@ class AppComponent {
   valuationContext = signal<ValuationContextResponse | null>(null);
   regulatoryLitigation = signal<RegulatoryLitigationResponse | null>(null);
   sectorThemes = signal<SectorThemeResponse | null>(null);
+  macroSensitivity = signal<MacroSensitivityResponse | null>(null);
   leadershipDecisions = signal<LeadershipDecisionResponse | null>(null);
   searchResults = signal<SearchResponse | null>(null);
   searchPages = signal<Record<SearchResultGroup, number>>({
@@ -190,6 +192,7 @@ class AppComponent {
   valuationContextLoading = signal(false);
   regulatoryLitigationLoading = signal(false);
   sectorThemesLoading = signal(false);
+  macroSensitivityLoading = signal(false);
   leadershipDecisionLoading = signal(false);
   companyProfileDate = '';
   businessModelDate = '';
@@ -239,6 +242,9 @@ class AppComponent {
   sectorThemesDate = '';
   sectorThemeFilter = '';
   sectorThemeExposureType = '';
+  macroSensitivityDate = '';
+  macroFactorFilter = '';
+  macroChannelFilter = '';
   leadershipDecisionDate = '';
   leadershipRoleType = '';
   leadershipDecisionType = '';
@@ -580,6 +586,9 @@ class AppComponent {
     if (this.activePage() === 'sector-themes') {
       return `${this.sectorThemes()?.company.name || 'Company'} Sector and Theme Intelligence`;
     }
+    if (this.activePage() === 'macro-sensitivity') {
+      return `${this.macroSensitivity()?.company.name || 'Company'} Macro Sensitivity Profile`;
+    }
     if (this.activePage() === 'leadership-decisions') {
       return `${this.leadershipDecisions()?.company.name || 'Company'} Leadership Decision Record`;
     }
@@ -640,6 +649,9 @@ class AppComponent {
     }
     if (this.activePage() === 'sector-themes') {
       return 'Evidence-based sector and theme exposure across events, KPIs, risks, capital allocation, and narrative-only context.';
+    }
+    if (this.activePage() === 'macro-sensitivity') {
+      return 'Macro factors, exposure channels, disclosed sensitivities, calculated-relationship limitations, and stress-period examples.';
     }
     if (this.activePage() === 'leadership-decisions') {
       return 'Leadership roles, tenure context, stated priorities, material decisions, succession events, evidence, and non-causation guardrails.';
@@ -1402,6 +1414,39 @@ class AppComponent {
   }
 
   printSectorThemesBrief(): void {
+    window.print();
+  }
+
+  openMacroSensitivity(slug: string, asOf = '', factor = '', channel = ''): void {
+    if (!slug || !this.token()) return;
+    this.activePage.set('macro-sensitivity');
+    this.menuOpen.set(false);
+    this.macroSensitivityLoading.set(true);
+    this.error.set('');
+    this.api.macroSensitivity(
+      this.token(),
+      slug,
+      asOf || this.macroSensitivityDate,
+      factor || this.macroFactorFilter,
+      channel || this.macroChannelFilter
+    ).subscribe({
+      next: (response) => {
+        this.macroSensitivity.set(response);
+        this.macroSensitivityDate = response.snapshot?.effective_date || '';
+        this.macroFactorFilter = response.filters?.selected_factor || '';
+        this.macroChannelFilter = response.filters?.selected_channel || '';
+        this.macroSensitivityLoading.set(false);
+      },
+      error: (response) => { this.macroSensitivityLoading.set(false); this.showError(response); }
+    });
+  }
+
+  reloadMacroSensitivity(): void {
+    const company = this.macroSensitivity()?.company;
+    if (company) this.openMacroSensitivity(company.slug, this.macroSensitivityDate, this.macroFactorFilter, this.macroChannelFilter);
+  }
+
+  printMacroSensitivityBrief(): void {
     window.print();
   }
 
