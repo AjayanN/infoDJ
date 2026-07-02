@@ -682,6 +682,35 @@ Open `Macro sensitivity profile` from Company 360 for macro factor filters, expo
 
 Requirement 18 verification on July 2, 2026: macro sensitivity builder populated all 20 configured companies with reviewed snapshots, 513 sensitivity rows, and 40 stress-example writes. Ingestion API smoke passed for all 20 companies with at least one sensitivity row, calculated relationship placeholder, and explicit non-causation limitation. Authenticated main-backend proxy smoke passed for Netflix. Ingestion backend `90/90`, main backend `48/48`, frontend `7/7`, and frontend production build passed.
 
+## Strategy Thesis Workspace
+
+Phase 2 Requirement 19 adds a private, authenticated Strategy Thesis Workspace for user-authored company theses. This workspace is product data in the main backend, not ingestion-published company facts.
+
+The workspace includes:
+
+- thesis states: draft, active, strengthening, weakening, invalidated, completed, and archived
+- company-linked thesis statements, assumptions, review dates, time horizons, and confidence scores
+- supporting, opposing, and neutral evidence attachments from companies, events, strategic turns, KPIs, promises, source pages, URLs, dashboard rows, or private notes
+- explicit separation between referenced evidence summaries and private user-authored notes
+- milestones, indicators, and confidence/state revision history with reasons
+- ingestion-backed evidence suggestions through authenticated search
+- privacy labels for private and shared user-generated content
+
+Strategy Thesis Workspace endpoints:
+
+```bash
+GET  /api/app/theses
+POST /api/app/theses
+GET  /api/app/theses/<id>
+POST /api/app/theses/<id>/evidence
+POST /api/app/theses/<id>/milestones
+POST /api/app/theses/<id>/indicators
+POST /api/app/theses/<id>/confidence
+GET  /api/app/theses/evidence-suggestions?q=<query>&company=<slug>
+```
+
+Open `Strategy thesis workspace` from Company 360 or `Theses` in the left navigation. Evidence suggestions depend on ingestion search availability; private thesis records remain available even when ingestion is temporarily unavailable.
+
 ## Source Gap Resolution Guardrail
 
 Open source gaps are now routed back into ingestion instead of remaining as passive UI messages. The daily company update runs `resolve_source_gaps` after the Phase 2 builders and creates reviewed-source candidates from existing `SourceDocument` rows for acquisition lifecycle, competitive market-share, customer/supplier dependency, contract-term, concentration, product-pricing, geographic expansion, leadership, and ownership/insider gaps.

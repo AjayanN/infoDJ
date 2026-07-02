@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "apps.review",
     "apps.timelines",
     "apps.search",
+    "apps.theses",
 ]
 
 MIDDLEWARE = [

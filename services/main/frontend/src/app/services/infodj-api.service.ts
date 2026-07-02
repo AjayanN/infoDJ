@@ -1214,6 +1214,72 @@ export type MacroSensitivityResponse = {
   source_gaps: SourceGap[];
 };
 
+export type ThesisEvidence = {
+  id: number;
+  side: string;
+  side_label: string;
+  evidence_type: string;
+  evidence_type_label: string;
+  company_slug: string;
+  external_id: string;
+  title: string;
+  summary: string;
+  source_url: string;
+  source_date: string | null;
+  source_payload: Record<string, unknown>;
+  user_note: string;
+  separation_note: string;
+  updated_at: string;
+};
+
+export type StrategyThesis = {
+  id: number;
+  title: string;
+  company_slug: string;
+  company_name: string;
+  statement: string;
+  state: string;
+  state_label: string;
+  time_horizon: string;
+  review_date: string | null;
+  confidence_score: number;
+  confidence_reason: string;
+  assumptions: string[];
+  is_shared: boolean;
+  shared_label: string;
+  balance: { supporting: number; opposing: number; neutral: number; total: number; support_ratio: number; opposition_ratio: number };
+  evidence?: ThesisEvidence[];
+  milestones?: { id: number; title: string; due_date: string | null; status: string; status_label: string; success_criteria: string; linked_evidence_id: number | null }[];
+  indicators?: { id: number; name: string; direction: string; direction_label: string; target: string; current_value: string; source_hint: string }[];
+  revisions?: { id: number; previous_state: string; new_state: string; previous_confidence_score: number | null; new_confidence_score: number; reason: string; changed_by: string; created_at: string }[];
+  privacy_note?: string;
+  updated_at: string;
+  created_at: string;
+};
+
+export type ThesisListResponse = {
+  theses: StrategyThesis[];
+  summary: { total: number; by_state: { state: string; label: string; count: number }[] };
+  states: { value: string; label: string }[];
+  evidence_sides: { value: string; label: string }[];
+  evidence_types: { value: string; label: string }[];
+};
+
+export type ThesisSuggestionsResponse = {
+  suggestions: {
+    evidence_type: string;
+    company_slug: string;
+    external_id: string;
+    title: string;
+    summary: string;
+    source_url?: string;
+    source_date?: string;
+    source_payload: Record<string, unknown>;
+  }[];
+  source: string;
+  source_gaps: { key: string; reason: string; next_action: string }[];
+};
+
 export type LeadershipDecisionResponse = {
   status: 'available' | 'partial' | 'unavailable';
   company: CompanyProfileResponse['company'];
@@ -1556,6 +1622,69 @@ export class InfoDjApiService {
     if (channel) params['channel'] = channel;
     return this.http.get<MacroSensitivityResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/macro-sensitivity`, {
       headers: this.authHeaders(token), params
+    });
+  }
+
+  theses(token: string, state = '', company = '', query = '') {
+    const params: Record<string, string> = {};
+    if (state) params['state'] = state;
+    if (company) params['company'] = company;
+    if (query) params['q'] = query;
+    return this.http.get<ThesisListResponse>(`${this.apiBaseUrl}/theses`, {
+      headers: this.authHeaders(token),
+      params
+    });
+  }
+
+  createThesis(token: string, payload: Record<string, unknown>) {
+    return this.http.post<{ thesis: StrategyThesis }>(`${this.apiBaseUrl}/theses`, payload, {
+      headers: this.authHeaders(token)
+    });
+  }
+
+  thesis(token: string, id: number) {
+    return this.http.get<{ thesis: StrategyThesis }>(`${this.apiBaseUrl}/theses/${id}`, {
+      headers: this.authHeaders(token)
+    });
+  }
+
+  addThesisEvidence(token: string, thesisId: number, payload: Record<string, unknown>) {
+    return this.http.post<{ evidence: ThesisEvidence; balance: StrategyThesis['balance'] }>(
+      `${this.apiBaseUrl}/theses/${thesisId}/evidence`,
+      payload,
+      { headers: this.authHeaders(token) }
+    );
+  }
+
+  addThesisMilestone(token: string, thesisId: number, payload: Record<string, unknown>) {
+    return this.http.post<{ milestone: NonNullable<StrategyThesis['milestones']>[number] }>(
+      `${this.apiBaseUrl}/theses/${thesisId}/milestones`,
+      payload,
+      { headers: this.authHeaders(token) }
+    );
+  }
+
+  addThesisIndicator(token: string, thesisId: number, payload: Record<string, unknown>) {
+    return this.http.post<{ indicator: NonNullable<StrategyThesis['indicators']>[number] }>(
+      `${this.apiBaseUrl}/theses/${thesisId}/indicators`,
+      payload,
+      { headers: this.authHeaders(token) }
+    );
+  }
+
+  updateThesisConfidence(token: string, thesisId: number, payload: Record<string, unknown>) {
+    return this.http.post<{ thesis: StrategyThesis }>(`${this.apiBaseUrl}/theses/${thesisId}/confidence`, payload, {
+      headers: this.authHeaders(token)
+    });
+  }
+
+  thesisEvidenceSuggestions(token: string, query: string, company = '') {
+    const params: Record<string, string> = {};
+    if (query) params['q'] = query;
+    if (company) params['company'] = company;
+    return this.http.get<ThesisSuggestionsResponse>(`${this.apiBaseUrl}/theses/evidence-suggestions`, {
+      headers: this.authHeaders(token),
+      params
     });
   }
 
