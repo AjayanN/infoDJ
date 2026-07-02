@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "apps.timelines",
     "apps.search",
     "apps.theses",
+    "apps.alerts",
 ]
 
 MIDDLEWARE = [

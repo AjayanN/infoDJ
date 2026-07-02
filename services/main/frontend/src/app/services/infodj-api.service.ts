@@ -1280,6 +1280,66 @@ export type ThesisSuggestionsResponse = {
   source_gaps: { key: string; reason: string; next_action: string }[];
 };
 
+export type WatchlistItem = {
+  id: number;
+  entity_type: string;
+  entity_type_label: string;
+  entity_id: string;
+  label: string;
+  company_slug: string;
+  is_active: boolean;
+};
+
+export type Watchlist = {
+  id: number;
+  name: string;
+  description: string;
+  is_active: boolean;
+  item_count: number;
+  notification_count: number;
+  unread_count: number;
+  updated_at: string;
+  items?: WatchlistItem[];
+  rules?: { id: number; category: string; category_label: string; is_enabled: boolean; minimum_severity: string }[];
+};
+
+export type NotificationAlert = {
+  id: number;
+  watchlist_id: number | null;
+  watchlist_name: string;
+  watch_item_label: string;
+  category: string;
+  category_label: string;
+  severity: string;
+  severity_label: string;
+  status: string;
+  title: string;
+  what_changed: string;
+  why_it_matters: string;
+  previous_state: string;
+  source_label: string;
+  source_url: string;
+  source_date: string | null;
+  duplicate_count: number;
+  generated_at: string;
+};
+
+export type WatchlistResponse = {
+  watchlists: Watchlist[];
+  summary: { total: number; active: number; followed_items: number };
+  entity_types: { value: string; label: string }[];
+  alert_categories: { value: string; label: string }[];
+  delivery_preference: { in_product_enabled: boolean; email_enabled: boolean; email_frequency: string; timezone: string; quiet_hours_start: string | null; quiet_hours_end: string | null };
+};
+
+export type NotificationResponse = {
+  notifications: NotificationAlert[];
+  summary: { total: number; unread: number; read: number; archived: number };
+  quality: { total_alerts: number; duplicate_group_count: number; duplicate_group_ratio: number; feedback_count: number; noise_monitoring_note: string };
+  statuses: { value: string; label: string }[];
+  categories: { value: string; label: string }[];
+};
+
 export type LeadershipDecisionResponse = {
   status: 'available' | 'partial' | 'unavailable';
   company: CompanyProfileResponse['company'];
@@ -1686,6 +1746,53 @@ export class InfoDjApiService {
       headers: this.authHeaders(token),
       params
     });
+  }
+
+  watchlists(token: string) {
+    return this.http.get<WatchlistResponse>(`${this.apiBaseUrl}/watchlists`, { headers: this.authHeaders(token) });
+  }
+
+  createWatchlist(token: string, payload: Record<string, unknown>) {
+    return this.http.post<{ watchlist: Watchlist }>(`${this.apiBaseUrl}/watchlists`, payload, { headers: this.authHeaders(token) });
+  }
+
+  watchlist(token: string, id: number) {
+    return this.http.get<{ watchlist: Watchlist }>(`${this.apiBaseUrl}/watchlists/${id}`, { headers: this.authHeaders(token) });
+  }
+
+  addWatchlistItem(token: string, watchlistId: number, payload: Record<string, unknown>) {
+    return this.http.post<{ item: WatchlistItem }>(`${this.apiBaseUrl}/watchlists/${watchlistId}/items`, payload, { headers: this.authHeaders(token) });
+  }
+
+  followCompany(token: string, companySlug: string, companyName: string) {
+    return this.http.post<{ watchlist: Watchlist; status: string }>(
+      `${this.apiBaseUrl}/watchlists/follow-company`,
+      { company_slug: companySlug, company_name: companyName },
+      { headers: this.authHeaders(token) }
+    );
+  }
+
+  notifications(token: string, status = '', category = '') {
+    const params: Record<string, string> = {};
+    if (status) params['status'] = status;
+    if (category) params['category'] = category;
+    return this.http.get<NotificationResponse>(`${this.apiBaseUrl}/notifications`, { headers: this.authHeaders(token), params });
+  }
+
+  refreshNotifications(token: string) {
+    return this.http.post<{ status: string; stats: Record<string, number>; summary: NotificationResponse['summary'] }>(
+      `${this.apiBaseUrl}/notifications/refresh`,
+      {},
+      { headers: this.authHeaders(token) }
+    );
+  }
+
+  updateNotification(token: string, id: number, status: string) {
+    return this.http.patch<{ notification: NotificationAlert }>(`${this.apiBaseUrl}/notifications/${id}`, { status }, { headers: this.authHeaders(token) });
+  }
+
+  alertFeedback(token: string, id: number, rating: string) {
+    return this.http.post(`${this.apiBaseUrl}/notifications/${id}/feedback`, { rating }, { headers: this.authHeaders(token) });
   }
 
   leadershipDecisions(token: string, slug: string, asOf = '', roleType = '', decisionType = '') {

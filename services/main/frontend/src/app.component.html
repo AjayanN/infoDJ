@@ -134,6 +134,7 @@
         <button type="button" *ngIf="sectorThemes()" [class.active]="activePage() === 'sector-themes'" [attr.aria-current]="activePage() === 'sector-themes' ? 'page' : null" (click)="setActivePage('sector-themes')">Themes</button>
         <button type="button" *ngIf="macroSensitivity()" [class.active]="activePage() === 'macro-sensitivity'" [attr.aria-current]="activePage() === 'macro-sensitivity' ? 'page' : null" (click)="setActivePage('macro-sensitivity')">Macro</button>
         <button type="button" [class.active]="activePage() === 'strategy-theses'" [attr.aria-current]="activePage() === 'strategy-theses' ? 'page' : null" (click)="openStrategyTheses()">Theses</button>
+        <button type="button" [class.active]="activePage() === 'watchlists'" [attr.aria-current]="activePage() === 'watchlists' ? 'page' : null" (click)="openWatchlists()">Alerts</button>
         <button type="button" [class.active]="activePage() === 'profile'" [attr.aria-current]="activePage() === 'profile' ? 'page' : null" (click)="setActivePage('profile')">Profile</button>
         <button type="button" [class.active]="activePage() === 'subscription'" [attr.aria-current]="activePage() === 'subscription' ? 'page' : null" (click)="setActivePage('subscription')">Subscription</button>
       </nav>
@@ -779,6 +780,7 @@
                   <button type="button" class="ghost-button" (click)="openSectorThemes(companyView.company.slug)">Sector and theme intelligence</button>
                   <button type="button" class="ghost-button" (click)="openMacroSensitivity(companyView.company.slug)">Macro sensitivity profile</button>
                   <button type="button" class="ghost-button" (click)="openStrategyTheses(companyView.company.slug, companyView.company.name)">Strategy thesis workspace</button>
+                  <button type="button" class="ghost-button" (click)="followCompanyForAlerts(companyView.company.slug, companyView.company.name)">Follow for alerts</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('companies-like-mine')">Compare peers</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('latest-moves')">Latest moves</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('risk-signals')">Risk signals</button>
@@ -2525,6 +2527,108 @@
               <section class="panel source-gap-panel" *ngIf="macroView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable macro data</h2></div>
                 <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of macroView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+              </section>
+            </ng-container>
+          </section>
+
+          <section *ngSwitchCase="'watchlists'" class="company-profile-layout" aria-labelledby="watchlist-heading">
+            <div class="loading-panel" *ngIf="watchlistLoading()">Loading watchlists and alerts...</div>
+            <ng-container *ngIf="!watchlistLoading()">
+              <section class="panel hero-card">
+                <div>
+                  <p class="section-kicker">Watchlists and Alerts</p>
+                  <h2 id="watchlist-heading">Meaningful source-backed change notifications</h2>
+                  <p>Follow companies and topics, refresh alerts from ingestion evidence, review duplicate-grouped notifications, and provide feedback on alert quality.</p>
+                </div>
+                <div class="coverage-summary" *ngIf="notifications() as noteView">
+                  <strong>{{ noteView.summary.unread }}</strong>
+                  <span>unread alerts</span>
+                  <small>{{ noteView.summary.total }} total · duplicate groups {{ noteView.quality.duplicate_group_count }}</small>
+                  <small>{{ noteView.quality.noise_monitoring_note }}</small>
+                </div>
+              </section>
+
+              <section class="dashboard-two-column">
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Create</p><h2>Watchlist</h2></div></div>
+                  <form class="auth-form" (ngSubmit)="createWatchlist()">
+                    <label>Name <input name="watchlist_name" [(ngModel)]="watchlistName" required /></label>
+                    <label>Description <textarea name="watchlist_description" [(ngModel)]="watchlistDescription" rows="3"></textarea></label>
+                    <button type="submit" class="primary-button">Create watchlist</button>
+                  </form>
+                </article>
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Followed</p><h2>My watchlists</h2></div><span>{{ watchlists()?.summary?.followed_items || 0 }} items</span></div>
+                  <div class="result-row" *ngFor="let row of watchlists()?.watchlists || []" (click)="selectWatchlist(row.id)" role="button" tabindex="0">
+                    <strong>{{ row.name }}</strong>
+                    <span>{{ row.item_count }} items · {{ row.unread_count }} unread · {{ row.is_active ? 'active' : 'inactive' }}</span>
+                    <p>{{ row.description || 'No description.' }}</p>
+                  </div>
+                  <div class="empty-state unavailable-state" *ngIf="(watchlists()?.watchlists?.length || 0) === 0">No watchlists yet.</div>
+                </article>
+              </section>
+
+              <section class="dashboard-two-column" *ngIf="selectedWatchlist() as watchlist">
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Selected</p><h2>{{ watchlist.name }}</h2></div></div>
+                  <form class="auth-form" (ngSubmit)="addWatchItem()">
+                    <label>Entity type
+                      <select name="watch_item_type" [(ngModel)]="watchItemType">
+                        <option *ngFor="let type of watchlists()?.entity_types || []" [value]="type.value">{{ type.label }}</option>
+                      </select>
+                    </label>
+                    <label>Entity ID <input name="watch_item_id" [(ngModel)]="watchItemId" placeholder="netflix or AI" required /></label>
+                    <label>Label <input name="watch_item_label" [(ngModel)]="watchItemLabel" placeholder="Netflix" required /></label>
+                    <label>Company slug <input name="watch_item_company_slug" [(ngModel)]="watchItemCompanySlug" placeholder="netflix" /></label>
+                    <button type="submit" class="primary-button">Follow entity</button>
+                  </form>
+                </article>
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Items</p><h2>Followed entities</h2></div><span>{{ watchlist.items?.length || 0 }} items</span></div>
+                  <div class="result-row" *ngFor="let item of watchlist.items || []">
+                    <strong>{{ item.label }}</strong>
+                    <span>{{ item.entity_type_label }} · {{ item.entity_id }}</span>
+                    <p>{{ item.company_slug || 'No company scope' }}</p>
+                  </div>
+                </article>
+              </section>
+
+              <section class="panel company-profile-controls" aria-label="Notification controls">
+                <label>Status
+                  <select name="notification_status" [(ngModel)]="notificationStatusFilter">
+                    <option value="">All statuses</option>
+                    <option *ngFor="let status of notifications()?.statuses || []" [value]="status.value">{{ status.label }}</option>
+                  </select>
+                </label>
+                <label>Category
+                  <select name="notification_category" [(ngModel)]="notificationCategoryFilter">
+                    <option value="">All categories</option>
+                    <option *ngFor="let category of notifications()?.categories || []" [value]="category.value">{{ category.label }}</option>
+                  </select>
+                </label>
+                <div class="profile-control-actions">
+                  <button type="button" class="primary-button" (click)="refreshNotifications()">Refresh alerts</button>
+                  <button type="button" class="ghost-button" (click)="loadNotifications()">Apply filters</button>
+                </div>
+              </section>
+
+              <section class="panel" *ngIf="notifications() as noteView">
+                <div class="panel-header"><div><p class="section-kicker">Notification Center</p><h2>Grouped alerts</h2></div><span>{{ noteView.notifications.length }} visible</span></div>
+                <div class="result-row" *ngFor="let alert of noteView.notifications">
+                  <strong>{{ alert.title }}</strong>
+                  <span>{{ alert.category_label }} · {{ alert.severity_label }} · {{ alert.status }} · {{ alert.source_date || 'date unavailable' }}</span>
+                  <p><strong>What changed:</strong> {{ alert.what_changed }}</p>
+                  <p><strong>Why it matters:</strong> {{ alert.why_it_matters }}</p>
+                  <small>{{ alert.watchlist_name }} · {{ alert.watch_item_label }} · grouped sources {{ alert.duplicate_count }} · {{ alert.source_label }}</small>
+                  <div class="profile-control-actions">
+                    <button type="button" class="ghost-button" (click)="markNotification(alert.id, 'READ')">Mark read</button>
+                    <button type="button" class="ghost-button" (click)="markNotification(alert.id, 'ARCHIVED')">Archive</button>
+                    <button type="button" class="ghost-button" (click)="rateNotification(alert.id, 'useful')">Useful</button>
+                    <button type="button" class="ghost-button" (click)="rateNotification(alert.id, 'noisy')">Noisy</button>
+                    <a *ngIf="alert.source_url" [href]="alert.source_url" target="_blank" rel="noopener">Open source</a>
+                  </div>
+                </div>
+                <div class="empty-state unavailable-state" *ngIf="noteView.notifications.length === 0">No alerts match the selected filters. Refresh after adding followed entities.</div>
               </section>
             </ng-container>
           </section>
