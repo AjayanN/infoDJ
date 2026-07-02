@@ -297,6 +297,19 @@ def company_valuation_context(request, slug: str):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+def company_regulatory_litigation(request, slug: str):
+    params = {}
+    for key in ("as_of", "matter_type", "status"):
+        if request.GET.get(key):
+            params[key] = request.GET[key]
+    payload, error = ingestion_get(f"companies/{slug}/regulatory-litigation", params or None)
+    if error:
+        return Response({"error": "regulatory and litigation calendar unavailable", "detail": error}, status=503)
+    return Response(payload)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def company_leadership_decisions(request, slug: str):
     params = {}
     for key in ("as_of", "role_type", "decision_type"):

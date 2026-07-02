@@ -56,6 +56,12 @@ from apps.companies.models import (
     ProductCatalogSnapshot,
     ProductChange,
     ProductOffering,
+    RegulatoryLitigationMatter,
+    RegulatoryLitigationSnapshot,
+    RegulatoryMateriality,
+    RegulatoryMatterStage,
+    RegulatoryMatterStatus,
+    RegulatoryMatterType,
     StrategyMilestone,
     ValuationApplicability,
     ValuationContextSnapshot,
@@ -1161,6 +1167,79 @@ def company_valuation_context(request: HttpRequest, slug: str) -> JsonResponse:
             "unavailable_count": sum(1 for row in observations if row.applicability != ValuationApplicability.APPLICABLE),
             "peer_comparison_count": len(peer_comparisons),
             "event_snapshot_count": len(event_snapshots),
+            "source_count": len(evidence),
+            "last_updated": current.updated_at.isoformat(),
+        },
+        "evidence": evidence,
+        "source_gaps": gaps,
+    })
+
+
+@require_GET
+def company_regulatory_litigation(request: HttpRequest, slug: str) -> JsonResponse:
+    company = get_company(slug)
+    snapshots = list(
+        RegulatoryLitigationSnapshot.objects.filter(company=company, status__in=["PUBLISHED", "REVIEWED"])
+        .select_related("source_document")
+        .prefetch_related("matters__source_document", "matters__linked_event")
+        .order_by("-effective_date", "-updated_at")
+    )
+    as_of = parse_iso_date(request.GET.get("as_of"))
+    eligible = [row for row in snapshots if as_of is None or row.effective_date <= as_of]
+    current = eligible[0] if eligible else None
+    matter_type = (request.GET.get("matter_type") or "").strip().upper()
+    matter_status = (request.GET.get("status") or "").strip().upper()
+    if current is None:
+        gaps = [{
+            "key": "regulatory_litigation_snapshot",
+            "label": "Regulatory and Litigation Calendar unavailable",
+            "reason": f"No reviewed regulatory or litigation snapshot is available for {company.name}.",
+            "source": "regulatory-litigation",
+            "next_action": "Run build_regulatory_litigation_calendars after collecting 10-K, 10-Q, 8-K, complaint, settlement, approval, and regulator-source evidence.",
+        }]
+        persist_regulatory_litigation_gaps(company, gaps)
+        return JsonResponse({
+            "status": "unavailable",
+            "company": serialize_company_detail(company),
+            "snapshot": None,
+            "snapshot_history": [],
+            "matters": [],
+            "calendar": [],
+            "summary": {"by_type": [], "by_status": [], "by_materiality": [], "open_matters": []},
+            "filters": {"matter_types": [], "statuses": [], "selected_matter_type": matter_type, "selected_status": matter_status, "as_of": as_of.isoformat() if as_of else ""},
+            "coverage": {"matter_count": 0, "open_or_pending_count": 0, "dated_matter_count": 0, "next_date_count": 0, "exposure_context_count": 0, "source_count": 0, "last_updated": None},
+            "evidence": [],
+            "source_gaps": gaps,
+        })
+    matters = list(current.matters.all())
+    if matter_type:
+        matters = [row for row in matters if row.matter_type == matter_type]
+    if matter_status:
+        matters = [row for row in matters if row.matter_status == matter_status]
+    gaps = regulatory_litigation_source_gaps(company, current, matters)
+    persist_regulatory_litigation_gaps(company, gaps)
+    evidence = regulatory_litigation_evidence(current, matters)
+    return JsonResponse({
+        "status": "available" if matters else "partial",
+        "company": serialize_company_detail(company),
+        "snapshot": serialize_regulatory_litigation_snapshot(current),
+        "snapshot_history": [serialize_regulatory_litigation_history(row, current) for row in snapshots],
+        "matters": [serialize_regulatory_litigation_matter(row) for row in matters],
+        "calendar": regulatory_litigation_calendar(matters),
+        "summary": regulatory_litigation_summary(matters),
+        "filters": {
+            "matter_types": sorted({row.matter_type for row in current.matters.all()}),
+            "statuses": sorted({row.matter_status for row in current.matters.all()}),
+            "selected_matter_type": matter_type,
+            "selected_status": matter_status,
+            "as_of": as_of.isoformat() if as_of else "",
+        },
+        "coverage": {
+            "matter_count": len(matters),
+            "open_or_pending_count": sum(1 for row in matters if row.matter_status in {RegulatoryMatterStatus.OPEN, RegulatoryMatterStatus.PENDING}),
+            "dated_matter_count": sum(1 for row in matters if row.opened_date),
+            "next_date_count": sum(1 for row in matters if row.next_date),
+            "exposure_context_count": sum(1 for row in matters if row.exposure_context),
             "source_count": len(evidence),
             "last_updated": current.updated_at.isoformat(),
         },
@@ -2358,6 +2437,140 @@ def valuation_context_source_gaps(
     if not snapshot.disclaimer:
         gaps.append({"key": "valuation_disclaimer", "label": "Research-context disclaimer unavailable", "reason": "Valuation context must explicitly avoid investment advice, price targets, and recommendations.", "source": "valuation-context", "next_action": "Rebuild valuation context with disclaimer text."})
     return gaps
+
+
+def serialize_regulatory_litigation_snapshot(snapshot: RegulatoryLitigationSnapshot) -> dict[str, object]:
+    return {
+        "id": snapshot.id,
+        "effective_date": snapshot.effective_date.isoformat(),
+        "status": snapshot.status,
+        "summary": snapshot.summary,
+        "methodology": snapshot.methodology,
+        "legal_guardrail": snapshot.legal_guardrail,
+        "confidence_score": decimal_to_float(snapshot.confidence_score),
+        "source": serialize_profile_source(snapshot.source_document) if snapshot.source_document_id else None,
+        "updated_at": snapshot.updated_at.isoformat(),
+    }
+
+
+def serialize_regulatory_litigation_history(snapshot: RegulatoryLitigationSnapshot, current: RegulatoryLitigationSnapshot) -> dict[str, object]:
+    return {
+        "id": snapshot.id,
+        "effective_date": snapshot.effective_date.isoformat(),
+        "status": snapshot.status,
+        "matter_count": snapshot.matters.count(),
+        "open_or_pending_count": snapshot.matters.filter(matter_status__in=[RegulatoryMatterStatus.OPEN, RegulatoryMatterStatus.PENDING]).count(),
+        "selected": snapshot.id == current.id,
+    }
+
+
+def serialize_regulatory_litigation_matter(row: RegulatoryLitigationMatter) -> dict[str, object]:
+    return {
+        "id": row.id,
+        "title": row.title,
+        "matter_type": row.matter_type,
+        "matter_type_label": dict(RegulatoryMatterType.choices).get(row.matter_type, row.matter_type),
+        "jurisdiction": row.jurisdiction,
+        "authority": row.authority,
+        "business_area": row.business_area,
+        "stage": row.stage,
+        "stage_label": dict(RegulatoryMatterStage.choices).get(row.stage, row.stage),
+        "matter_status": row.matter_status,
+        "matter_status_label": dict(RegulatoryMatterStatus.choices).get(row.matter_status, row.matter_status),
+        "materiality": row.materiality,
+        "materiality_label": dict(RegulatoryMateriality.choices).get(row.materiality, row.materiality),
+        "opened_date": row.opened_date.isoformat() if row.opened_date else None,
+        "next_date": row.next_date.isoformat() if row.next_date else None,
+        "next_date_type": row.next_date_type,
+        "allegation_or_issue": row.allegation_or_issue,
+        "company_response": row.company_response,
+        "interim_decision": row.interim_decision,
+        "final_outcome": row.final_outcome,
+        "exposure_context": row.exposure_context,
+        "evidence_text": row.evidence_text,
+        "confidence_score": decimal_to_float(row.confidence_score),
+        "review_status": row.review_status,
+        "source": serialize_profile_source(row.source_document) if row.source_document_id else None,
+        "linked_event": serialize_business_event(row.linked_event) if row.linked_event_id else None,
+    }
+
+
+def regulatory_litigation_calendar(matters: list[RegulatoryLitigationMatter]) -> list[dict[str, object]]:
+    rows = []
+    for matter in matters:
+        if matter.opened_date:
+            rows.append({
+                "date": matter.opened_date.isoformat(),
+                "date_type": "opened_or_disclosed",
+                "matter_id": matter.id,
+                "title": matter.title,
+                "status": matter.matter_status,
+            })
+        if matter.next_date:
+            rows.append({
+                "date": matter.next_date.isoformat(),
+                "date_type": matter.next_date_type or "next_event",
+                "matter_id": matter.id,
+                "title": matter.title,
+                "status": matter.matter_status,
+            })
+    return sorted(rows, key=lambda row: row["date"])
+
+
+def regulatory_litigation_summary(matters: list[RegulatoryLitigationMatter]) -> dict[str, object]:
+    return {
+        "by_type": counts_by(matters, "matter_type"),
+        "by_status": counts_by(matters, "matter_status"),
+        "by_materiality": counts_by(matters, "materiality"),
+        "open_matters": [row.title for row in matters if row.matter_status in {RegulatoryMatterStatus.OPEN, RegulatoryMatterStatus.PENDING}],
+    }
+
+
+def regulatory_litigation_evidence(snapshot: RegulatoryLitigationSnapshot, matters: list[RegulatoryLitigationMatter]) -> list[dict[str, object]]:
+    sources = []
+    seen = set()
+    if snapshot.source_document_id:
+        sources.append(serialize_profile_source(snapshot.source_document))
+        seen.add(snapshot.source_document_id)
+    for matter in matters:
+        if matter.source_document_id and matter.source_document_id not in seen:
+            sources.append(serialize_profile_source(matter.source_document))
+            seen.add(matter.source_document_id)
+    return sources
+
+
+def regulatory_litigation_source_gaps(
+    company: Company,
+    snapshot: RegulatoryLitigationSnapshot,
+    matters: list[RegulatoryLitigationMatter],
+) -> list[dict[str, str]]:
+    gaps = []
+    if not matters:
+        gaps.append({
+            "key": "matter_list",
+            "label": "Matter list unavailable",
+            "reason": f"No reviewed regulatory-response events or structured legal matters are available for {company.name}.",
+            "source": "regulatory-litigation",
+            "next_action": "Collect 10-K/10-Q legal proceedings, 8-K settlements, regulator releases, court dockets, and approval notices; extract only source-stated matter details.",
+        })
+        return gaps
+    if not any(row.authority for row in matters):
+        gaps.append({"key": "authorities", "label": "Authorities unavailable", "reason": "No reviewed matter identifies a regulator, court, or authority.", "source": "regulatory-litigation", "next_action": "Extract authority names from filings, regulator pages, court records, or settlement/approval notices."})
+    if not any(row.next_date for row in matters):
+        gaps.append({"key": "future_dates", "label": "Future dates unavailable", "reason": "No sourced hearing, response, decision, appeal, compliance, or expiration date is available.", "source": "regulatory-litigation", "next_action": "Collect procedural calendars, orders, regulator deadlines, and company disclosed compliance timelines."})
+    if not any(row.exposure_context for row in matters):
+        gaps.append({"key": "exposure_context", "label": "Exposure context unavailable", "reason": "No matter has sourced fine, penalty, remedy, operating restriction, or quantified business exposure context.", "source": "regulatory-litigation", "next_action": "Extract exposure language only where a filing, order, or settlement states the amount, range, remedy, or uncertainty."})
+    if not snapshot.legal_guardrail:
+        gaps.append({"key": "legal_guardrail", "label": "Legal guardrail unavailable", "reason": "The dashboard must avoid legal conclusions, outcome predictions, and unsupported exposure estimates.", "source": "regulatory-litigation", "next_action": "Rebuild the calendar with legal guardrail text."})
+    return gaps
+
+
+def counts_by(rows: list[object], field: str) -> list[dict[str, object]]:
+    counts: dict[str, int] = {}
+    for row in rows:
+        key = getattr(row, field)
+        counts[key] = counts.get(key, 0) + 1
+    return [{"key": key, "count": count} for key, count in sorted(counts.items())]
 
 
 def serialize_leadership_decision_snapshot(snapshot: LeadershipDecisionSnapshot) -> dict[str, object]:
@@ -4173,6 +4386,33 @@ def persist_valuation_context_gaps(company: Company, gaps: list[dict[str, str]])
             dashboard="valuation_context",
             gap_type=gap["key"],
             provider=gap.get("source", "valuation-context"),
+            defaults={
+                "reason": gap["reason"],
+                "next_ingestion_task": gap.get("next_action", ""),
+                "status": "OPEN",
+                "metadata": {"label": gap.get("label", "")},
+            },
+        )
+
+
+def persist_regulatory_litigation_gaps(company: Company, gaps: list[dict[str, str]]) -> None:
+    active_keys = [gap["key"] for gap in gaps]
+    if active_keys:
+        SourceGap.objects.filter(company=company, dashboard="regulatory_litigation_calendar").exclude(
+            gap_type__in=active_keys
+        ).update(status="RESOLVED")
+    else:
+        SourceGap.objects.filter(
+            company=company,
+            dashboard="regulatory_litigation_calendar",
+            status__in=["OPEN", "IN_PROGRESS"],
+        ).update(status="RESOLVED")
+    for gap in gaps:
+        SourceGap.objects.update_or_create(
+            company=company,
+            dashboard="regulatory_litigation_calendar",
+            gap_type=gap["key"],
+            provider=gap.get("source", "regulatory-litigation"),
             defaults={
                 "reason": gap["reason"],
                 "next_ingestion_task": gap.get("next_action", ""),

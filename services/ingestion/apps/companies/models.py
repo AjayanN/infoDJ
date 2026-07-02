@@ -1587,6 +1587,127 @@ class ValuationEventSnapshot(models.Model):
         ]
 
 
+class RegulatoryMatterType(models.TextChoices):
+    LITIGATION = "LITIGATION", "Litigation"
+    INVESTIGATION = "INVESTIGATION", "Investigation"
+    REGULATORY_REVIEW = "REGULATORY_REVIEW", "Regulatory review"
+    APPROVAL = "APPROVAL", "Approval"
+    COMPLIANCE_OBLIGATION = "COMPLIANCE_OBLIGATION", "Compliance obligation"
+    SETTLEMENT = "SETTLEMENT", "Settlement"
+    OTHER = "OTHER", "Other"
+
+
+class RegulatoryMatterStage(models.TextChoices):
+    IDENTIFIED = "IDENTIFIED", "Identified"
+    FILED = "FILED", "Filed"
+    INVESTIGATION = "INVESTIGATION", "Investigation"
+    REVIEW = "REVIEW", "Review"
+    HEARING = "HEARING", "Hearing"
+    DECISION_PENDING = "DECISION_PENDING", "Decision pending"
+    APPEAL = "APPEAL", "Appeal"
+    COMPLIANCE = "COMPLIANCE", "Compliance"
+    CLOSED = "CLOSED", "Closed"
+    UNKNOWN = "UNKNOWN", "Unknown"
+
+
+class RegulatoryMatterStatus(models.TextChoices):
+    OPEN = "OPEN", "Open"
+    PENDING = "PENDING", "Pending"
+    APPROVED = "APPROVED", "Approved"
+    SETTLED = "SETTLED", "Settled"
+    DISMISSED = "DISMISSED", "Dismissed"
+    CLOSED = "CLOSED", "Closed"
+    UNKNOWN = "UNKNOWN", "Unknown"
+
+
+class RegulatoryMateriality(models.TextChoices):
+    MATERIAL = "MATERIAL", "Material"
+    WATCH = "WATCH", "Watch"
+    DISCLOSED = "DISCLOSED", "Disclosed"
+    UNKNOWN = "UNKNOWN", "Unknown"
+
+
+class RegulatoryLitigationSnapshot(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="regulatory_litigation_snapshots")
+    effective_date = models.DateField(db_index=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="regulatory_litigation_snapshots",
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=CompanyProfileStatus.choices,
+        default=CompanyProfileStatus.REVIEWED,
+        db_index=True,
+    )
+    summary = models.TextField(blank=True)
+    methodology = models.TextField(blank=True)
+    legal_guardrail = models.TextField(blank=True)
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-effective_date", "-created_at"]
+        constraints = [
+            models.UniqueConstraint(fields=["company", "effective_date"], name="unique_reg_lit_snapshot")
+        ]
+        indexes = [models.Index(fields=["company", "status", "effective_date"], name="company_reglit_status_idx")]
+
+
+class RegulatoryLitigationMatter(models.Model):
+    snapshot = models.ForeignKey(RegulatoryLitigationSnapshot, on_delete=models.CASCADE, related_name="matters")
+    linked_event = models.ForeignKey(
+        "curation.BusinessEvent",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="regulatory_litigation_matters",
+    )
+    title = models.CharField(max_length=255)
+    matter_type = models.CharField(max_length=32, choices=RegulatoryMatterType.choices, db_index=True)
+    jurisdiction = models.CharField(max_length=128, blank=True)
+    authority = models.CharField(max_length=255, blank=True)
+    business_area = models.CharField(max_length=255, blank=True)
+    stage = models.CharField(max_length=32, choices=RegulatoryMatterStage.choices, default=RegulatoryMatterStage.UNKNOWN, db_index=True)
+    matter_status = models.CharField(max_length=32, choices=RegulatoryMatterStatus.choices, default=RegulatoryMatterStatus.UNKNOWN, db_index=True)
+    materiality = models.CharField(max_length=32, choices=RegulatoryMateriality.choices, default=RegulatoryMateriality.UNKNOWN, db_index=True)
+    opened_date = models.DateField(null=True, blank=True)
+    next_date = models.DateField(null=True, blank=True)
+    next_date_type = models.CharField(max_length=64, blank=True)
+    allegation_or_issue = models.TextField(blank=True)
+    company_response = models.TextField(blank=True)
+    interim_decision = models.TextField(blank=True)
+    final_outcome = models.TextField(blank=True)
+    exposure_context = models.TextField(blank=True)
+    evidence_text = models.TextField(blank=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="regulatory_litigation_matters",
+    )
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    review_status = models.CharField(
+        max_length=32,
+        choices=PromiseReviewStatus.choices,
+        default=PromiseReviewStatus.REVIEWED,
+        db_index=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["matter_status", "next_date", "-opened_date", "title"]
+        constraints = [
+            models.UniqueConstraint(fields=["snapshot", "title", "matter_type", "opened_date"], name="unique_reg_lit_matter")
+        ]
+
+
 class LeadershipRoleType(models.TextChoices):
     CEO = "CEO", "Chief executive"
     CFO = "CFO", "Chief financial"

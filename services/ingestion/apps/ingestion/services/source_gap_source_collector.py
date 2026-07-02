@@ -39,6 +39,10 @@ SOURCE_GAP_FORM_RULES: dict[tuple[str, str], tuple[str, ...]] = {
     ("ownership_insider_activity", "institutional_positions"): ("DEF 14A", "SC 13D", "SC 13D/A", "SC 13G", "SC 13G/A"),
     ("ownership_insider_activity", "insider_transactions"): ("4", "4/A"),
     ("ownership_insider_activity", "transaction_plans"): ("4", "4/A", "8-K", "DEF 14A"),
+    ("regulatory_litigation_calendar", "matter_list"): ("10-K", "10-Q", "8-K"),
+    ("regulatory_litigation_calendar", "authorities"): ("10-K", "10-Q", "8-K"),
+    ("regulatory_litigation_calendar", "future_dates"): ("8-K", "10-Q", "10-K"),
+    ("regulatory_litigation_calendar", "exposure_context"): ("10-K", "10-Q", "8-K"),
 }
 
 

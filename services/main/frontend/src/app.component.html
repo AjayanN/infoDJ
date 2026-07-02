@@ -130,6 +130,7 @@
         <button type="button" *ngIf="leadershipDecisions()" [class.active]="activePage() === 'leadership-decisions'" [attr.aria-current]="activePage() === 'leadership-decisions' ? 'page' : null" (click)="setActivePage('leadership-decisions')">Leadership</button>
         <button type="button" *ngIf="ownershipInsider()" [class.active]="activePage() === 'ownership-insider'" [attr.aria-current]="activePage() === 'ownership-insider' ? 'page' : null" (click)="setActivePage('ownership-insider')">Ownership</button>
         <button type="button" *ngIf="valuationContext()" [class.active]="activePage() === 'valuation-context'" [attr.aria-current]="activePage() === 'valuation-context' ? 'page' : null" (click)="setActivePage('valuation-context')">Valuation</button>
+        <button type="button" *ngIf="regulatoryLitigation()" [class.active]="activePage() === 'regulatory-litigation'" [attr.aria-current]="activePage() === 'regulatory-litigation' ? 'page' : null" (click)="setActivePage('regulatory-litigation')">Regulatory</button>
         <button type="button" [class.active]="activePage() === 'profile'" [attr.aria-current]="activePage() === 'profile' ? 'page' : null" (click)="setActivePage('profile')">Profile</button>
         <button type="button" [class.active]="activePage() === 'subscription'" [attr.aria-current]="activePage() === 'subscription' ? 'page' : null" (click)="setActivePage('subscription')">Subscription</button>
       </nav>
@@ -771,6 +772,7 @@
                   <button type="button" class="ghost-button" (click)="openLeadershipDecisions(companyView.company.slug)">Leadership decision record</button>
                   <button type="button" class="ghost-button" (click)="openOwnershipInsider(companyView.company.slug)">Ownership and insider activity</button>
                   <button type="button" class="ghost-button" (click)="openValuationContext(companyView.company.slug)">Valuation context</button>
+                  <button type="button" class="ghost-button" (click)="openRegulatoryLitigation(companyView.company.slug)">Regulatory and litigation calendar</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('companies-like-mine')">Compare peers</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('latest-moves')">Latest moves</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('risk-signals')">Risk signals</button>
@@ -2195,6 +2197,109 @@
               <section class="panel source-gap-panel" *ngIf="valuationView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable valuation data</h2></div>
                 <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of valuationView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+              </section>
+            </ng-container>
+          </section>
+
+          <section *ngSwitchCase="'regulatory-litigation'" class="company-profile-layout" aria-labelledby="regulatory-heading">
+            <div class="loading-panel" *ngIf="regulatoryLitigationLoading()">Loading regulatory and litigation calendar...</div>
+            <ng-container *ngIf="!regulatoryLitigationLoading() && regulatoryLitigation() as regulatoryView">
+              <section class="panel company-profile-hero">
+                <div>
+                  <p class="section-kicker">Regulatory and Litigation Calendar · {{ regulatoryView.status }}</p>
+                  <h2 id="regulatory-heading">{{ regulatoryView.company.name }}</h2>
+                  <p>{{ regulatoryView.snapshot?.summary || 'Reviewed regulatory and litigation calendar unavailable.' }}</p>
+                  <p><strong>Guardrail:</strong> {{ regulatoryView.snapshot?.legal_guardrail }}</p>
+                </div>
+                <div class="profile-score-card">
+                  <strong>{{ regulatoryView.coverage.matter_count }}</strong>
+                  <span>reviewed matters</span>
+                  <small>{{ regulatoryView.coverage.open_or_pending_count }} open or pending</small>
+                  <small>{{ regulatoryView.coverage.next_date_count }} future dates</small>
+                </div>
+              </section>
+
+              <section class="profile-controls panel">
+                <label>Snapshot at date
+                  <select [(ngModel)]="regulatoryLitigationDate">
+                    <option value="">Latest reviewed snapshot</option>
+                    <option *ngFor="let snapshot of regulatoryView.snapshot_history" [value]="snapshot.effective_date">
+                      {{ snapshot.effective_date }} · {{ snapshot.matter_count }} matters
+                    </option>
+                  </select>
+                </label>
+                <label>Matter type
+                  <select [(ngModel)]="regulatoryMatterType">
+                    <option value="">All matter types</option>
+                    <option *ngFor="let type of regulatoryView.filters.matter_types" [value]="type">{{ promiseLabel(type) }}</option>
+                  </select>
+                </label>
+                <label>Status
+                  <select [(ngModel)]="regulatoryMatterStatus">
+                    <option value="">All statuses</option>
+                    <option *ngFor="let status of regulatoryView.filters.statuses" [value]="status">{{ promiseLabel(status) }}</option>
+                  </select>
+                </label>
+                <div class="profile-control-actions">
+                  <button type="button" class="primary-button" (click)="reloadRegulatoryLitigation()">Update filters</button>
+                  <button type="button" class="ghost-button" (click)="openCompany(regulatoryView.company.slug)">Back to Company 360</button>
+                  <button type="button" class="ghost-button" (click)="printRegulatoryLitigationBrief()">Print regulatory brief</button>
+                </div>
+              </section>
+
+              <section class="metric-grid">
+                <article class="metric-card"><strong>{{ regulatoryView.coverage.dated_matter_count }}</strong><span>dated disclosures</span></article>
+                <article class="metric-card"><strong>{{ regulatoryView.coverage.exposure_context_count }}</strong><span>sourced exposure rows</span></article>
+                <article class="metric-card"><strong>{{ regulatoryView.coverage.source_count }}</strong><span>evidence sources</span></article>
+              </section>
+
+              <section class="dashboard-two-column">
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Matter List</p><h2>Cases, reviews, approvals, and obligations</h2></div><span>{{ regulatoryView.matters.length }} rows</span></div>
+                  <div class="result-row" *ngFor="let matter of regulatoryView.matters">
+                    <strong>{{ matter.title }}</strong>
+                    <span>{{ matter.matter_type_label }} · {{ matter.matter_status_label }} · {{ matter.stage_label }}</span>
+                    <p *ngIf="matter.allegation_or_issue"><strong>Issue:</strong> {{ matter.allegation_or_issue }}</p>
+                    <p *ngIf="matter.company_response"><strong>Company response:</strong> {{ matter.company_response }}</p>
+                    <p *ngIf="matter.exposure_context"><strong>Exposure context:</strong> {{ matter.exposure_context }}</p>
+                    <small>
+                      {{ matter.opened_date || 'date unavailable' }}
+                      · {{ matter.jurisdiction || 'jurisdiction unavailable' }}
+                      · {{ matter.authority || 'authority unavailable' }}
+                      · {{ matter.business_area || 'business area unavailable' }}
+                    </small>
+                  </div>
+                  <div class="empty-state unavailable-state" *ngIf="regulatoryView.matters.length === 0">No reviewed regulatory or litigation matters are available for the selected filters.</div>
+                </article>
+
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Calendar</p><h2>What happens next</h2></div><span>{{ regulatoryView.calendar.length }} dates</span></div>
+                  <div class="result-row" *ngFor="let item of regulatoryView.calendar">
+                    <strong>{{ item.date }}</strong>
+                    <span>{{ promiseLabel(item.date_type) }} · {{ item.status }}</span>
+                    <p>{{ item.title }}</p>
+                  </div>
+                  <div class="empty-state unavailable-state" *ngIf="regulatoryView.calendar.length === 0">No sourced hearing, response, decision, appeal, compliance, or expiration dates are available yet.</div>
+                </article>
+              </section>
+
+              <section class="dashboard-two-column">
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Summary</p><h2>Status and materiality</h2></div></div>
+                  <div class="result-row" *ngFor="let row of regulatoryView.summary.by_status"><strong>{{ promiseLabel(row.key) }}</strong><span>{{ row.count }} matters</span></div>
+                  <div class="result-row" *ngFor="let row of regulatoryView.summary.by_materiality"><strong>{{ promiseLabel(row.key) }}</strong><span>{{ row.count }} matters</span></div>
+                  <div class="empty-state unavailable-state" *ngIf="regulatoryView.summary.by_status.length === 0">No summary buckets are available.</div>
+                </article>
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Regulatory evidence</h2></div><span>{{ regulatoryView.evidence.length }} sources</span></div>
+                  <p>{{ regulatoryView.snapshot?.methodology }}</p>
+                  <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of regulatoryView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                </article>
+              </section>
+
+              <section class="panel source-gap-panel" *ngIf="regulatoryView.source_gaps.length > 0">
+                <div class="panel-header"><h2>Unavailable regulatory data</h2></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of regulatoryView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
               </section>
             </ng-container>
           </section>

@@ -631,6 +631,23 @@ Open `Valuation context` from Company 360 for snapshot controls, measure filters
 
 Requirement 15 verification on July 1, 2026: valuation builder populated all 20 configured companies with reviewed snapshots and 100 observation rows; 13 companies had at least one applicable measure and seven companies correctly exposed unavailable-input states because required share-count or related inputs were missing; peer context produced 69 rows and event-aligned context produced 12 rows. Ingestion API smoke passed for all 20 configured companies; ingestion backend `84/84`, main backend `42/42`, frontend `7/7`, and frontend production build passed.
 
+## Regulatory and Litigation Calendar
+
+Phase 2 Requirement 16 adds Regulatory and Litigation Calendar for reviewed regulatory reviews, investigations, litigation, approvals, compliance obligations, deadlines, exposure context, evidence, and legal guardrails.
+
+The baseline builder creates one reviewed snapshot for every configured company from reviewed `REGULATORY_RESPONSE` business events and linked source documents. It classifies matter type, stage, status, jurisdiction, authority, business area, materiality, allegation or issue, company response, interim/final outcome, and exposure context only when supported by source text. Missing authorities, future procedural dates, and quantified exposure/remedy context are shown as source gaps and routed to the source-gap collector for `10-K`, `10-Q`, and `8-K` sources.
+
+Regulatory and Litigation Calendar endpoints:
+
+```bash
+GET /api/ingestion/companies/<slug>/regulatory-litigation
+GET /api/app/companies/<slug>/regulatory-litigation
+```
+
+Open `Regulatory and litigation calendar` from Company 360 for matter filters, status and materiality summaries, calendar rows, legal guardrail text, evidence cards, and unavailable data states. The dashboard records disclosed procedural context only; it does not make legal conclusions, predict outcomes, or estimate exposure unless a reviewed source states it.
+
+Requirement 16 verification on July 2, 2026: regulatory/litigation builder populated all 20 configured companies with reviewed snapshots and 32 reviewed matter rows. Ingestion API smoke passed for all 20 companies with at least one reviewed matter, explicit legal guardrails, and source gaps for missing authority/deadline/exposure details where applicable. Authenticated main-backend proxy smoke passed for Netflix. Ingestion backend `86/86`, main backend `44/44`, frontend `7/7`, and frontend production build passed.
+
 ## Source Gap Resolution Guardrail
 
 Open source gaps are now routed back into ingestion instead of remaining as passive UI messages. The daily company update runs `resolve_source_gaps` after the Phase 2 builders and creates reviewed-source candidates from existing `SourceDocument` rows for acquisition lifecycle, competitive market-share, customer/supplier dependency, contract-term, concentration, product-pricing, geographic expansion, leadership, and ownership/insider gaps.

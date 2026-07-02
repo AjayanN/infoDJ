@@ -761,17 +761,18 @@ Each feature below inherits the shared standards above. Feature sections only de
 
 **MVP tasks:**
 
-- [ ] Define matter types, jurisdictions, authorities, stages, and materiality rules.
-- [ ] Build calendar, matter list, and matter detail page.
-- [ ] Capture filing, hearing, response, decision, appeal, compliance, and expiration dates.
-- [ ] Separate allegation, company response, interim decision, and final outcome.
-- [ ] Add potential business exposure only when sourced, with ranges and uncertainty.
-- [ ] Avoid legal conclusions not present in authoritative sources.
-- [ ] Require editorial review for material unresolved matters.
+- [x] Define matter types, jurisdictions, authorities, stages, and materiality rules.
+- [x] Build calendar, matter list, and matter detail page.
+- [x] Capture filing, hearing, response, decision, appeal, compliance, and expiration dates.
+- [x] Separate allegation, company response, interim decision, and final outcome.
+- [x] Add potential business exposure only when sourced, with ranges and uncertainty.
+- [x] Avoid legal conclusions not present in authoritative sources.
+- [x] Require editorial review for material unresolved matters.
 
 **Acceptance criteria:**
 
 - Users can see what is pending, what happens next, and which business areas may be affected.
+- Implemented baseline: all 20 configured companies receive reviewed regulatory/litigation snapshots from reviewed regulatory-response events; matter type, stage, status, authority, jurisdiction, business area, company response, outcome, and exposure context are source-gated; missing authority, future-date, and exposure details become source gaps routed to `10-K`, `10-Q`, and `8-K` collection.
 
 ---
 
@@ -1128,7 +1129,7 @@ The order below reflects functional dependency and user value. It does not requi
 
 - [x] Ownership and Insider Activity: all-company reviewed snapshot baseline implemented with ownership categories, economic/voting-control separation, insider context rows where disclosed, explicit source gaps for missing percentages/institutions/transactions/plans, Company 360 entry point, daily ingestion builder, source-gap resolver rules, and authenticated all-company smoke validation.
 - [x] Valuation Context: all-company reviewed snapshot baseline implemented with reproducible market-cap, P/S, P/E, EV, and EV/revenue observations where inputs are available, explicit unavailable-input states, peer comparison rows, event-aligned non-causal snapshots, Company 360 entry point, daily ingestion builder, and all-company API smoke validation.
-- [ ] Regulatory and Litigation Calendar.
+- [x] Regulatory and Litigation Calendar: all-company reviewed snapshot baseline implemented with source-backed matter rows, legal guardrails, source-gated exposure context, explicit source gaps for missing authority/deadline/exposure details, Company 360 entry point, daily ingestion builder, and all-company API smoke validation.
 - [ ] Sector and Theme Intelligence.
 - [ ] Macro Sensitivity Profile.
 
