@@ -34,6 +34,7 @@ from apps.companies.models import (
     ProductCatalogSnapshot,
     ProductOffering,
     RegulatoryLitigationSnapshot,
+    SectorThemeSnapshot,
     StrategyMilestone,
     ValuationContextSnapshot,
 )
@@ -80,6 +81,7 @@ from apps.ingestion.services.leadership_decision_record import (
 )
 from apps.ingestion.services.valuation_context import build_valuation_context, valuation_quality_issues
 from apps.ingestion.services.regulatory_litigation import build_regulatory_litigation_calendar, regulatory_litigation_quality_issues
+from apps.ingestion.services.sector_theme_intelligence import build_sector_theme_intelligence, sector_theme_quality_issues
 from apps.ingestion.services.source_gap_resolver import resolve_source_gaps
 from apps.ingestion.services.source_gap_source_collector import forms_for_gap, ticker_for
 from apps.ingestion.services.source_gap_candidate_extractor import extract_source_gap_candidates, full_text_excerpt
@@ -1641,6 +1643,42 @@ class IngestionSearchApiTests(TestCase):
         self.assertTrue(any(gap["key"] == "matter_list" for gap in payload["source_gaps"]))
         self.assertNotIn("liable", str(payload).lower())
         self.assertNotIn("guilty", str(payload).lower())
+
+    def test_sector_theme_builder_creates_event_and_kpi_exposures(self):
+        KpiDefinition.objects.create(
+            company=self.netflix,
+            slug="advertising-revenue",
+            name="Advertising revenue",
+            description="Revenue from advertising products.",
+            unit="USD",
+            cadence="QUARTERLY",
+            scope="Advertising",
+            peer_comparable=True,
+        )
+
+        result = build_sector_theme_intelligence(self.netflix)
+
+        self.assertEqual(result["snapshots_created"], 1)
+        snapshot = SectorThemeSnapshot.objects.get(company=self.netflix)
+        self.assertGreaterEqual(snapshot.exposures.count(), 3)
+        event_exposure = snapshot.exposures.get(source_key__startswith="event:")
+        self.assertEqual(event_exposure.theme.name, "Advertising Cycle")
+        self.assertEqual(event_exposure.exposure_type, "REVENUE")
+        self.assertEqual(event_exposure.materiality, "OPERATING")
+        self.assertNotIn("no event-linked theme exposure", sector_theme_quality_issues(self.netflix))
+
+    def test_sector_theme_api_distinguishes_narrative_only_context(self):
+        company = Company.objects.create(name="Theme Only Co", industry="Utilities", country="United States")
+        build_sector_theme_intelligence(company)
+
+        response = self.client.get(f"/companies/{company.slug}/sector-themes")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "partial")
+        self.assertEqual(payload["coverage"]["operating_exposure_count"], 0)
+        self.assertTrue(any(gap["key"] == "operating_exposure" for gap in payload["source_gaps"]))
+        self.assertTrue(any(row["materiality"] == "NARRATIVE_ONLY" for row in payload["exposures"]))
 
     def test_leadership_decision_builder_creates_roles_and_decisions(self):
         CompanyProfileSnapshot.objects.create(

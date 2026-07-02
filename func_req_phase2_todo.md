@@ -784,16 +784,17 @@ Each feature below inherits the shared standards above. Feature sections only de
 
 **MVP tasks:**
 
-- [ ] Define reviewed hierarchy of sectors, industries, themes, and subthemes.
-- [ ] Define exposure types: revenue, cost, capex, product, customer, supply chain, regulatory, and narrative.
-- [ ] Build theme pages and company exposure cards.
-- [ ] Distinguish material operating exposure from management mentions or marketing language.
-- [ ] Show companies, strategic moves, KPIs, risks, and capital allocation associated with a theme.
-- [ ] Validate taxonomy overlap and prevent duplicate or overly broad labels.
+- [x] Define reviewed hierarchy of sectors, industries, themes, and subthemes.
+- [x] Define exposure types: revenue, cost, capex, product, customer, supply chain, regulatory, and narrative.
+- [x] Build theme pages and company exposure cards.
+- [x] Distinguish material operating exposure from management mentions or marketing language.
+- [x] Show companies, strategic moves, KPIs, risks, and capital allocation associated with a theme.
+- [x] Validate taxonomy overlap and prevent duplicate or overly broad labels.
 
 **Acceptance criteria:**
 
 - Theme exposure is evidence-based, dated, and more meaningful than keyword frequency.
+- Implemented baseline: all 20 configured companies receive reviewed sector/theme snapshots; broad sector rows are marked narrative-only, operating exposure requires reviewed event/KPI/capital-allocation evidence, and missing operating/KPI/capital links become source gaps routed to `10-K`, `10-Q`, `8-K`, official sources, and reviewed extraction candidates.
 
 ---
 
@@ -1130,7 +1131,7 @@ The order below reflects functional dependency and user value. It does not requi
 - [x] Ownership and Insider Activity: all-company reviewed snapshot baseline implemented with ownership categories, economic/voting-control separation, insider context rows where disclosed, explicit source gaps for missing percentages/institutions/transactions/plans, Company 360 entry point, daily ingestion builder, source-gap resolver rules, and authenticated all-company smoke validation.
 - [x] Valuation Context: all-company reviewed snapshot baseline implemented with reproducible market-cap, P/S, P/E, EV, and EV/revenue observations where inputs are available, explicit unavailable-input states, peer comparison rows, event-aligned non-causal snapshots, Company 360 entry point, daily ingestion builder, and all-company API smoke validation.
 - [x] Regulatory and Litigation Calendar: all-company reviewed snapshot baseline implemented with source-backed matter rows, legal guardrails, source-gated exposure context, explicit source gaps for missing authority/deadline/exposure details, Company 360 entry point, daily ingestion builder, and all-company API smoke validation.
-- [ ] Sector and Theme Intelligence.
+- [x] Sector and Theme Intelligence: all-company reviewed snapshot baseline implemented with taxonomy labels, narrative-only sector guardrails, operating exposure cards from events/KPIs/capital allocation, theme pages, source gaps for missing KPI/capital/evidence links, Company 360 entry point, daily ingestion builder, and all-company API smoke validation.
 - [ ] Macro Sensitivity Profile.
 
 ### Wave 5: Personal Monitoring

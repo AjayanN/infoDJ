@@ -24,4 +24,5 @@ urlpatterns = [
     path("companies/<slug:slug>/ownership-insider", api.company_ownership_insider, name="app-company-ownership-insider"),
     path("companies/<slug:slug>/valuation-context", api.company_valuation_context, name="app-company-valuation-context"),
     path("companies/<slug:slug>/regulatory-litigation", api.company_regulatory_litigation, name="app-company-regulatory-litigation"),
+    path("companies/<slug:slug>/sector-themes", api.company_sector_themes, name="app-company-sector-themes"),
 ]

@@ -154,6 +154,36 @@ SOURCE_RULES = {
         "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT", "OFFICIAL_WEBSITE", "GDELT_DOC_2"),
         "next_action": "Extract only source-stated amounts, ranges, remedies, restrictions, uncertainty language, and affected business area.",
     },
+    ("sector_theme_intelligence", "theme_exposures"): {
+        "candidate_type": "theme_exposure_source",
+        "keywords": ("artificial intelligence", "AI", "cloud", "advertising", "electric vehicle", "energy transition", "commodity", "interest rates", "supply chain", "cybersecurity", "data privacy"),
+        "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT", "OFFICIAL_WEBSITE", "GDELT_DOC_2"),
+        "next_action": "Extract theme, exposure type, source-stated evidence, date, and whether it is operating exposure or narrative context.",
+    },
+    ("sector_theme_intelligence", "operating_exposure"): {
+        "candidate_type": "theme_operating_exposure_source",
+        "keywords": ("revenue", "cost", "capital expenditure", "capex", "R&D", "customers", "suppliers", "production", "capacity", "demand", "operating results"),
+        "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT", "OFFICIAL_WEBSITE", "GDELT_DOC_2"),
+        "next_action": "Extract operating evidence that links a theme to revenue, cost, capex, product, customer, supply-chain, or regulatory exposure.",
+    },
+    ("sector_theme_intelligence", "strategic_move_links"): {
+        "candidate_type": "theme_event_link_source",
+        "keywords": ("announced", "launched", "expanded", "invested", "partnership", "acquisition", "restructuring", "regulatory", "approval"),
+        "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT", "OFFICIAL_WEBSITE", "GDELT_DOC_2"),
+        "next_action": "Link reviewed strategic move evidence to a reviewed theme without treating generic mentions as exposure.",
+    },
+    ("sector_theme_intelligence", "kpi_links"): {
+        "candidate_type": "theme_kpi_source",
+        "keywords": ("users", "subscribers", "customers", "ARPU", "occupancy", "production", "deliveries", "bookings", "churn", "volume"),
+        "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT", "OFFICIAL_WEBSITE"),
+        "next_action": "Map company-specific KPI definitions and observations to theme exposure only when the metric directly measures exposure.",
+    },
+    ("sector_theme_intelligence", "capital_allocation_links"): {
+        "candidate_type": "theme_capital_source",
+        "keywords": ("capital expenditures", "research and development", "R&D", "acquisition", "investment", "content", "debt", "repurchase", "dividend"),
+        "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT"),
+        "next_action": "Map reviewed capital deployment rows to relevant themes with amount, period, category, and source evidence.",
+    },
     ("leadership_decision_record", "tenure_dates"): {
         "candidate_type": "leadership_tenure_source",
         "keywords": ("chief executive", "CEO", "appointed", "named", "effective", "retired", "resigned", "succession"),
