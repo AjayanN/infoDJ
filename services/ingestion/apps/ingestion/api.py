@@ -63,6 +63,14 @@ from apps.companies.models import (
     RegulatoryMatterStatus,
     RegulatoryMatterType,
     CompanyThemeExposure,
+    MacroEvidenceType,
+    MacroExposureChannel,
+    MacroFactor,
+    MacroFactorCategory,
+    MacroSensitivity,
+    MacroSensitivityDirection,
+    MacroSensitivitySnapshot,
+    MacroStressExample,
     SectorTheme,
     SectorThemeSnapshot,
     StrategyMilestone,
@@ -1333,6 +1341,94 @@ def company_sector_themes(request: HttpRequest, slug: str) -> JsonResponse:
             "event_link_count": sum(1 for row in exposures if row.linked_event_id),
             "kpi_link_count": sum(1 for row in exposures if row.linked_kpi_id),
             "capital_link_count": sum(1 for row in exposures if row.linked_capital_allocation_item_id),
+            "source_count": len(evidence),
+            "last_updated": current.updated_at.isoformat(),
+        },
+        "evidence": evidence,
+        "source_gaps": gaps,
+    })
+
+
+@require_GET
+def company_macro_sensitivity(request: HttpRequest, slug: str) -> JsonResponse:
+    company = get_company(slug)
+    snapshots = list(
+        MacroSensitivitySnapshot.objects.filter(company=company, status__in=["PUBLISHED", "REVIEWED"])
+        .select_related("source_document")
+        .prefetch_related(
+            "sensitivities__factor",
+            "sensitivities__source_document",
+            "sensitivities__linked_event",
+            "sensitivities__linked_theme_exposure__theme",
+            "stress_examples__source_document",
+        )
+        .order_by("-effective_date", "-updated_at")
+    )
+    as_of = parse_iso_date(request.GET.get("as_of"))
+    eligible = [row for row in snapshots if as_of is None or row.effective_date <= as_of]
+    current = eligible[0] if eligible else None
+    factor_filter = (request.GET.get("factor") or "").strip()
+    channel_filter = (request.GET.get("channel") or "").strip().upper()
+    if current is None:
+        gaps = [{
+            "key": "macro_snapshot",
+            "label": "Macro Sensitivity Profile unavailable",
+            "reason": f"No reviewed macro sensitivity snapshot is available for {company.name}.",
+            "source": "macro-sensitivity-profile",
+            "next_action": "Run build_macro_sensitivity_profiles after events, theme exposures, financial facts, market data, and macro source mappings are refreshed.",
+        }]
+        persist_macro_sensitivity_gaps(company, gaps)
+        return JsonResponse({
+            "status": "unavailable",
+            "company": serialize_company_detail(company),
+            "snapshot": None,
+            "snapshot_history": [],
+            "factors": [],
+            "sensitivities": [],
+            "calculated_relationships": [],
+            "stress_examples": [],
+            "summary": {"by_factor": [], "by_channel": [], "by_direction": [], "by_evidence_type": []},
+            "filters": {"factors": [], "channels": [], "selected_factor": factor_filter, "selected_channel": channel_filter, "as_of": as_of.isoformat() if as_of else ""},
+            "coverage": {"sensitivity_count": 0, "management_disclosed_count": 0, "calculated_placeholder_count": 0, "stress_example_count": 0, "source_count": 0, "last_updated": None},
+            "evidence": [],
+            "source_gaps": gaps,
+        })
+    sensitivities = list(current.sensitivities.all())
+    if factor_filter:
+        sensitivities = [row for row in sensitivities if row.factor.slug == factor_filter]
+    if channel_filter:
+        sensitivities = [row for row in sensitivities if row.channel == channel_filter]
+    gaps = macro_sensitivity_source_gaps(company, current, sensitivities)
+    persist_macro_sensitivity_gaps(company, gaps)
+    evidence = macro_sensitivity_evidence(current, sensitivities, list(current.stress_examples.all()))
+    calculated = [row for row in sensitivities if row.evidence_type == MacroEvidenceType.CALCULATED_PLACEHOLDER]
+    return JsonResponse({
+        "status": "available" if sensitivities else "partial",
+        "company": serialize_company_detail(company),
+        "snapshot": serialize_macro_snapshot(current),
+        "snapshot_history": [serialize_macro_history(row, current) for row in snapshots],
+        "factors": serialize_macro_factors(),
+        "sensitivities": [serialize_macro_sensitivity(row) for row in sensitivities],
+        "calculated_relationships": [serialize_macro_sensitivity(row) for row in calculated],
+        "stress_examples": [serialize_macro_stress_example(row) for row in current.stress_examples.all()],
+        "summary": {
+            "by_factor": macro_factor_counts(sensitivities),
+            "by_channel": counts_by(sensitivities, "channel"),
+            "by_direction": counts_by(sensitivities, "direction"),
+            "by_evidence_type": counts_by(sensitivities, "evidence_type"),
+        },
+        "filters": {
+            "factors": sorted({row.factor.slug for row in current.sensitivities.all()}),
+            "channels": sorted({row.channel for row in current.sensitivities.all()}),
+            "selected_factor": factor_filter,
+            "selected_channel": channel_filter,
+            "as_of": as_of.isoformat() if as_of else "",
+        },
+        "coverage": {
+            "sensitivity_count": len(sensitivities),
+            "management_disclosed_count": sum(1 for row in sensitivities if row.evidence_type == MacroEvidenceType.MANAGEMENT_DISCLOSED),
+            "calculated_placeholder_count": len(calculated),
+            "stress_example_count": current.stress_examples.count(),
             "source_count": len(evidence),
             "last_updated": current.updated_at.isoformat(),
         },
@@ -2829,6 +2925,123 @@ def sector_theme_source_gaps(company: Company, snapshot: SectorThemeSnapshot, ex
         gaps.append({"key": "kpi_links", "label": "KPI links unavailable", "reason": "No operating KPI is linked to the selected theme exposure rows.", "source": "sector-theme-intelligence", "next_action": "Map company-specific KPI definitions to theme exposure types only where the KPI measures exposure directly."})
     if not any(row.linked_capital_allocation_item_id for row in exposures):
         gaps.append({"key": "capital_allocation_links", "label": "Capital allocation links unavailable", "reason": "No reviewed capital-allocation row is linked to the selected theme exposure rows.", "source": "sector-theme-intelligence", "next_action": "Map reviewed capex, R&D, content, acquisition, or debt deployment rows to relevant themes."})
+    return gaps
+
+
+def serialize_macro_snapshot(snapshot: MacroSensitivitySnapshot) -> dict[str, object]:
+    return {
+        "id": snapshot.id,
+        "effective_date": snapshot.effective_date.isoformat(),
+        "status": snapshot.status,
+        "summary": snapshot.summary,
+        "methodology": snapshot.methodology,
+        "limitation_note": snapshot.limitation_note,
+        "confidence_score": decimal_to_float(snapshot.confidence_score),
+        "source": serialize_profile_source(snapshot.source_document) if snapshot.source_document_id else None,
+        "updated_at": snapshot.updated_at.isoformat(),
+    }
+
+
+def serialize_macro_history(snapshot: MacroSensitivitySnapshot, current: MacroSensitivitySnapshot) -> dict[str, object]:
+    return {
+        "id": snapshot.id,
+        "effective_date": snapshot.effective_date.isoformat(),
+        "status": snapshot.status,
+        "sensitivity_count": snapshot.sensitivities.count(),
+        "stress_example_count": snapshot.stress_examples.count(),
+        "selected": snapshot.id == current.id,
+    }
+
+
+def serialize_macro_factors() -> list[dict[str, object]]:
+    return [
+        {
+            "id": row.id,
+            "slug": row.slug,
+            "name": row.name,
+            "category": row.category,
+            "category_label": dict(MacroFactorCategory.choices).get(row.category, row.category),
+            "description": row.description,
+            "canonical_series": row.canonical_series if isinstance(row.canonical_series, list) else [],
+        }
+        for row in MacroFactor.objects.filter(is_active=True).order_by("category", "name")
+    ]
+
+
+def serialize_macro_sensitivity(row: MacroSensitivity) -> dict[str, object]:
+    return {
+        "id": row.id,
+        "factor": {"id": row.factor_id, "slug": row.factor.slug, "name": row.factor.name, "category": row.factor.category},
+        "channel": row.channel,
+        "channel_label": dict(MacroExposureChannel.choices).get(row.channel, row.channel),
+        "direction": row.direction,
+        "direction_label": dict(MacroSensitivityDirection.choices).get(row.direction, row.direction),
+        "evidence_type": row.evidence_type,
+        "evidence_type_label": dict(MacroEvidenceType.choices).get(row.evidence_type, row.evidence_type),
+        "materiality": row.materiality,
+        "materiality_label": dict(ThemeMateriality.choices).get(row.materiality, row.materiality),
+        "evidence_date": row.evidence_date.isoformat() if row.evidence_date else None,
+        "evidence_summary": row.evidence_summary,
+        "evidence_text": row.evidence_text,
+        "method": row.method,
+        "sample_size": row.sample_size,
+        "period_start": row.period_start.isoformat() if row.period_start else None,
+        "period_end": row.period_end.isoformat() if row.period_end else None,
+        "lag_assumption": row.lag_assumption,
+        "limitation_note": row.limitation_note,
+        "confidence_score": decimal_to_float(row.confidence_score),
+        "review_status": row.review_status,
+        "source": serialize_profile_source(row.source_document) if row.source_document_id else None,
+        "linked_event": serialize_business_event(row.linked_event) if row.linked_event_id else None,
+        "linked_theme_exposure": serialize_theme_exposure(row.linked_theme_exposure) if row.linked_theme_exposure_id else None,
+    }
+
+
+def serialize_macro_stress_example(row: MacroStressExample) -> dict[str, object]:
+    return {
+        "id": row.id,
+        "label": row.label,
+        "period_start": row.period_start.isoformat() if row.period_start else None,
+        "period_end": row.period_end.isoformat() if row.period_end else None,
+        "macro_context": row.macro_context,
+        "company_observation": row.company_observation,
+        "limitation_note": row.limitation_note,
+        "confidence_score": decimal_to_float(row.confidence_score),
+        "source": serialize_profile_source(row.source_document) if row.source_document_id else None,
+    }
+
+
+def macro_factor_counts(rows: list[MacroSensitivity]) -> list[dict[str, object]]:
+    counts: dict[str, dict[str, object]] = {}
+    for row in rows:
+        item = counts.setdefault(row.factor.slug, {"slug": row.factor.slug, "name": row.factor.name, "count": 0})
+        item["count"] = int(item["count"]) + 1
+    return sorted(counts.values(), key=lambda row: str(row["name"]))
+
+
+def macro_sensitivity_evidence(snapshot: MacroSensitivitySnapshot, sensitivities: list[MacroSensitivity], examples: list[MacroStressExample]) -> list[dict[str, object]]:
+    sources = []
+    seen = set()
+    for source in [snapshot.source_document] + [row.source_document for row in sensitivities] + [row.source_document for row in examples]:
+        if source and source.id not in seen:
+            sources.append(serialize_profile_source(source))
+            seen.add(source.id)
+    return sources
+
+
+def macro_sensitivity_source_gaps(company: Company, snapshot: MacroSensitivitySnapshot, sensitivities: list[MacroSensitivity]) -> list[dict[str, str]]:
+    gaps = []
+    if not sensitivities:
+        gaps.append({"key": "macro_sensitivities", "label": "Macro sensitivities unavailable", "reason": f"No reviewed macro sensitivity rows are available for {company.name}.", "source": "macro-sensitivity-profile", "next_action": "Refresh reviewed events, sector/theme exposures, financial facts, market prices, and macro factor mappings."})
+        return gaps
+    if not any(row.evidence_type == MacroEvidenceType.MANAGEMENT_DISCLOSED for row in sensitivities):
+        gaps.append({"key": "management_disclosures", "label": "Management-disclosed sensitivities unavailable", "reason": "No management-disclosed macro sensitivity is linked to the selected rows.", "source": "macro-sensitivity-profile", "next_action": "Extract macro sensitivity statements from filings, earnings materials, and official company sources."})
+    if not any(row.evidence_type == MacroEvidenceType.CALCULATED_PLACEHOLDER for row in sensitivities):
+        gaps.append({"key": "calculated_relationships", "label": "Calculated relationship placeholder unavailable", "reason": "The profile must show whether calculated relationships are available and why they are limited.", "source": "macro-sensitivity-profile", "next_action": "Create calculated relationship placeholders until aligned macro/company series are available."})
+    if any(row.evidence_type == MacroEvidenceType.CALCULATED_PLACEHOLDER and row.sample_size == 0 for row in sensitivities):
+        gaps.append({"key": "macro_series_alignment", "label": "Macro series alignment unavailable", "reason": "Calculated relationships need aligned macro series, company metrics, sample size, lag assumptions, currency handling, and reporting-period alignment.", "source": "macro-sensitivity-profile", "next_action": "Collect FRED or equivalent macro series and align them to company reporting periods before publishing correlations."})
+    if not snapshot.stress_examples.exists():
+        gaps.append({"key": "stress_examples", "label": "Stress-period examples unavailable", "reason": "No reviewed stress-period example is linked to this profile.", "source": "macro-sensitivity-profile", "next_action": "Collect company observations and macro period definitions for inflation, recession, rate, currency, commodity, or demand shocks."})
     return gaps
 
 
@@ -4699,6 +4912,33 @@ def persist_sector_theme_gaps(company: Company, gaps: list[dict[str, str]]) -> N
             dashboard="sector_theme_intelligence",
             gap_type=gap["key"],
             provider=gap.get("source", "sector-theme-intelligence"),
+            defaults={
+                "reason": gap["reason"],
+                "next_ingestion_task": gap.get("next_action", ""),
+                "status": "OPEN",
+                "metadata": {"label": gap.get("label", "")},
+            },
+        )
+
+
+def persist_macro_sensitivity_gaps(company: Company, gaps: list[dict[str, str]]) -> None:
+    active_keys = [gap["key"] for gap in gaps]
+    if active_keys:
+        SourceGap.objects.filter(company=company, dashboard="macro_sensitivity_profile").exclude(
+            gap_type__in=active_keys
+        ).update(status="RESOLVED")
+    else:
+        SourceGap.objects.filter(
+            company=company,
+            dashboard="macro_sensitivity_profile",
+            status__in=["OPEN", "IN_PROGRESS"],
+        ).update(status="RESOLVED")
+    for gap in gaps:
+        SourceGap.objects.update_or_create(
+            company=company,
+            dashboard="macro_sensitivity_profile",
+            gap_type=gap["key"],
+            provider=gap.get("source", "macro-sensitivity-profile"),
             defaults={
                 "reason": gap["reason"],
                 "next_ingestion_task": gap.get("next_action", ""),

@@ -48,6 +48,11 @@ SOURCE_GAP_FORM_RULES: dict[tuple[str, str], tuple[str, ...]] = {
     ("sector_theme_intelligence", "strategic_move_links"): ("8-K", "10-Q", "10-K"),
     ("sector_theme_intelligence", "kpi_links"): ("10-K", "10-Q", "8-K"),
     ("sector_theme_intelligence", "capital_allocation_links"): ("10-K", "10-Q", "8-K"),
+    ("macro_sensitivity_profile", "macro_sensitivities"): ("10-K", "10-Q", "8-K"),
+    ("macro_sensitivity_profile", "management_disclosures"): ("10-K", "10-Q", "8-K"),
+    ("macro_sensitivity_profile", "calculated_relationships"): ("10-K", "10-Q"),
+    ("macro_sensitivity_profile", "macro_series_alignment"): ("10-K", "10-Q"),
+    ("macro_sensitivity_profile", "stress_examples"): ("10-K", "10-Q", "8-K"),
 }
 
 

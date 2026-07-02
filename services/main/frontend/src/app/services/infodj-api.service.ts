@@ -1173,6 +1173,47 @@ export type SectorThemeResponse = {
   source_gaps: SourceGap[];
 };
 
+export type MacroSensitivityRow = {
+  id: number; factor: { id: number; slug: string; name: string; category: string };
+  channel: string; channel_label: string; direction: string; direction_label: string;
+  evidence_type: string; evidence_type_label: string; materiality: string; materiality_label: string;
+  evidence_date: string | null; evidence_summary: string; evidence_text: string; method: string;
+  sample_size: number; period_start: string | null; period_end: string | null; lag_assumption: string;
+  limitation_note: string; confidence_score: number; review_status: string; source: CompanyProfileSource | null;
+  linked_event: DashboardEvent | null; linked_theme_exposure: SectorThemeResponse['exposures'][number] | null;
+};
+
+export type MacroSensitivityResponse = {
+  status: 'available' | 'partial' | 'unavailable';
+  company: CompanyProfileResponse['company'];
+  snapshot: {
+    id: number; effective_date: string; status: string; summary: string; methodology: string;
+    limitation_note: string; confidence_score: number; source: CompanyProfileSource | null; updated_at: string;
+  } | null;
+  snapshot_history: { id: number; effective_date: string; status: string; sensitivity_count: number; stress_example_count: number; selected: boolean }[];
+  factors: { id: number; slug: string; name: string; category: string; category_label: string; description: string; canonical_series: string[] }[];
+  sensitivities: MacroSensitivityRow[];
+  calculated_relationships: MacroSensitivityRow[];
+  stress_examples: {
+    id: number; label: string; period_start: string | null; period_end: string | null;
+    macro_context: string; company_observation: string; limitation_note: string;
+    confidence_score: number; source: CompanyProfileSource | null;
+  }[];
+  summary: {
+    by_factor: { slug: string; name: string; count: number }[];
+    by_channel: { key: string; count: number }[];
+    by_direction: { key: string; count: number }[];
+    by_evidence_type: { key: string; count: number }[];
+  };
+  filters: { factors: string[]; channels: string[]; selected_factor: string; selected_channel: string; as_of: string };
+  coverage: {
+    sensitivity_count: number; management_disclosed_count: number; calculated_placeholder_count: number;
+    stress_example_count: number; source_count: number; last_updated: string | null;
+  };
+  evidence: CompanyProfileSource[];
+  source_gaps: SourceGap[];
+};
+
 export type LeadershipDecisionResponse = {
   status: 'available' | 'partial' | 'unavailable';
   company: CompanyProfileResponse['company'];
@@ -1504,6 +1545,16 @@ export class InfoDjApiService {
     if (theme) params['theme'] = theme;
     if (exposureType) params['exposure_type'] = exposureType;
     return this.http.get<SectorThemeResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/sector-themes`, {
+      headers: this.authHeaders(token), params
+    });
+  }
+
+  macroSensitivity(token: string, slug: string, asOf = '', factor = '', channel = '') {
+    const params: Record<string, string> = {};
+    if (asOf) params['as_of'] = asOf;
+    if (factor) params['factor'] = factor;
+    if (channel) params['channel'] = channel;
+    return this.http.get<MacroSensitivityResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/macro-sensitivity`, {
       headers: this.authHeaders(token), params
     });
   }

@@ -23,6 +23,7 @@ urlpatterns = [
     path("companies/<slug:slug>/valuation-context", api.company_valuation_context, name="ingestion-company-valuation-context"),
     path("companies/<slug:slug>/regulatory-litigation", api.company_regulatory_litigation, name="ingestion-company-regulatory-litigation"),
     path("companies/<slug:slug>/sector-themes", api.company_sector_themes, name="ingestion-company-sector-themes"),
+    path("companies/<slug:slug>/macro-sensitivity", api.company_macro_sensitivity, name="ingestion-company-macro-sensitivity"),
     path("dashboard-data", api.dashboard_data, name="ingestion-dashboard-data"),
     path("search", api.search, name="ingestion-search"),
     path("search/suggest", api.search_suggest, name="ingestion-search-suggest"),

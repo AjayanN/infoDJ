@@ -132,6 +132,7 @@
         <button type="button" *ngIf="valuationContext()" [class.active]="activePage() === 'valuation-context'" [attr.aria-current]="activePage() === 'valuation-context' ? 'page' : null" (click)="setActivePage('valuation-context')">Valuation</button>
         <button type="button" *ngIf="regulatoryLitigation()" [class.active]="activePage() === 'regulatory-litigation'" [attr.aria-current]="activePage() === 'regulatory-litigation' ? 'page' : null" (click)="setActivePage('regulatory-litigation')">Regulatory</button>
         <button type="button" *ngIf="sectorThemes()" [class.active]="activePage() === 'sector-themes'" [attr.aria-current]="activePage() === 'sector-themes' ? 'page' : null" (click)="setActivePage('sector-themes')">Themes</button>
+        <button type="button" *ngIf="macroSensitivity()" [class.active]="activePage() === 'macro-sensitivity'" [attr.aria-current]="activePage() === 'macro-sensitivity' ? 'page' : null" (click)="setActivePage('macro-sensitivity')">Macro</button>
         <button type="button" [class.active]="activePage() === 'profile'" [attr.aria-current]="activePage() === 'profile' ? 'page' : null" (click)="setActivePage('profile')">Profile</button>
         <button type="button" [class.active]="activePage() === 'subscription'" [attr.aria-current]="activePage() === 'subscription' ? 'page' : null" (click)="setActivePage('subscription')">Subscription</button>
       </nav>
@@ -775,6 +776,7 @@
                   <button type="button" class="ghost-button" (click)="openValuationContext(companyView.company.slug)">Valuation context</button>
                   <button type="button" class="ghost-button" (click)="openRegulatoryLitigation(companyView.company.slug)">Regulatory and litigation calendar</button>
                   <button type="button" class="ghost-button" (click)="openSectorThemes(companyView.company.slug)">Sector and theme intelligence</button>
+                  <button type="button" class="ghost-button" (click)="openMacroSensitivity(companyView.company.slug)">Macro sensitivity profile</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('companies-like-mine')">Compare peers</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('latest-moves')">Latest moves</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('risk-signals')">Risk signals</button>
@@ -2411,6 +2413,116 @@
               <section class="panel source-gap-panel" *ngIf="themeView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable theme data</h2></div>
                 <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of themeView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+              </section>
+            </ng-container>
+          </section>
+
+          <section *ngSwitchCase="'macro-sensitivity'" class="company-profile-layout" aria-labelledby="macro-heading">
+            <div class="loading-panel" *ngIf="macroSensitivityLoading()">Loading macro sensitivity profile...</div>
+            <ng-container *ngIf="!macroSensitivityLoading() && macroSensitivity() as macroView">
+              <section class="panel company-profile-hero">
+                <div>
+                  <p class="section-kicker">Macro Sensitivity Profile · {{ macroView.status }}</p>
+                  <h2 id="macro-heading">{{ macroView.company.name }}</h2>
+                  <p>{{ macroView.snapshot?.summary || 'Reviewed macro sensitivity profile unavailable.' }}</p>
+                  <p><strong>Limitation:</strong> {{ macroView.snapshot?.limitation_note }}</p>
+                </div>
+                <div class="profile-score-card">
+                  <strong>{{ macroView.coverage.sensitivity_count }}</strong>
+                  <span>sensitivity rows</span>
+                  <small>{{ macroView.coverage.management_disclosed_count }} disclosed</small>
+                  <small>{{ macroView.coverage.calculated_placeholder_count }} calculation placeholders</small>
+                </div>
+              </section>
+
+              <section class="profile-controls panel">
+                <label>Snapshot at date
+                  <select [(ngModel)]="macroSensitivityDate">
+                    <option value="">Latest reviewed snapshot</option>
+                    <option *ngFor="let snapshot of macroView.snapshot_history" [value]="snapshot.effective_date">
+                      {{ snapshot.effective_date }} · {{ snapshot.sensitivity_count }} sensitivities
+                    </option>
+                  </select>
+                </label>
+                <label>Factor
+                  <select [(ngModel)]="macroFactorFilter">
+                    <option value="">All factors</option>
+                    <option *ngFor="let factor of macroView.factors" [value]="factor.slug">{{ factor.name }}</option>
+                  </select>
+                </label>
+                <label>Channel
+                  <select [(ngModel)]="macroChannelFilter">
+                    <option value="">All channels</option>
+                    <option *ngFor="let channel of macroView.filters.channels" [value]="channel">{{ promiseLabel(channel) }}</option>
+                  </select>
+                </label>
+                <div class="profile-control-actions">
+                  <button type="button" class="primary-button" (click)="reloadMacroSensitivity()">Update filters</button>
+                  <button type="button" class="ghost-button" (click)="openCompany(macroView.company.slug)">Back to Company 360</button>
+                  <button type="button" class="ghost-button" (click)="printMacroSensitivityBrief()">Print macro brief</button>
+                </div>
+              </section>
+
+              <section class="dashboard-two-column">
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Sensitivities</p><h2>Factors and exposure channels</h2></div><span>{{ macroView.sensitivities.length }} rows</span></div>
+                  <div class="result-row" *ngFor="let row of macroView.sensitivities">
+                    <strong>{{ row.factor.name }} · {{ row.channel_label }}</strong>
+                    <span>{{ row.direction_label }} · {{ row.evidence_type_label }} · {{ row.materiality_label }}</span>
+                    <p>{{ row.evidence_summary }}</p>
+                    <p>{{ row.method }}</p>
+                    <small>sample {{ row.sample_size }} · lag {{ row.lag_assumption }} · {{ row.evidence_date || 'date unavailable' }}</small>
+                  </div>
+                  <div class="empty-state unavailable-state" *ngIf="macroView.sensitivities.length === 0">No reviewed macro sensitivities are available for the selected filters.</div>
+                </article>
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Factor Registry</p><h2>Macro factors and series</h2></div><span>{{ macroView.factors.length }} factors</span></div>
+                  <div class="result-row" *ngFor="let factor of macroView.factors">
+                    <strong>{{ factor.name }}</strong>
+                    <span>{{ factor.category_label }}</span>
+                    <p>{{ factor.description }}</p>
+                    <small>{{ factor.canonical_series.join(', ') || 'Series mapping unavailable' }}</small>
+                  </div>
+                </article>
+              </section>
+
+              <section class="dashboard-two-column">
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Calculated Relationships</p><h2>Methods and limitations</h2></div><span>{{ macroView.calculated_relationships.length }} rows</span></div>
+                  <div class="result-row" *ngFor="let row of macroView.calculated_relationships">
+                    <strong>{{ row.factor.name }}</strong>
+                    <span>{{ row.direction_label }} · sample {{ row.sample_size }}</span>
+                    <p>{{ row.evidence_summary }}</p>
+                    <p>{{ row.limitation_note }}</p>
+                  </div>
+                </article>
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Stress Periods</p><h2>Examples and caveats</h2></div><span>{{ macroView.stress_examples.length }} rows</span></div>
+                  <div class="result-row" *ngFor="let example of macroView.stress_examples">
+                    <strong>{{ example.label }}</strong>
+                    <span>{{ example.period_start || 'start unavailable' }} to {{ example.period_end || 'end unavailable' }}</span>
+                    <p>{{ example.macro_context }}</p>
+                    <p>{{ example.company_observation }}</p>
+                    <small>{{ example.limitation_note }}</small>
+                  </div>
+                </article>
+              </section>
+
+              <section class="dashboard-two-column">
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Summary</p><h2>Direction and evidence type</h2></div></div>
+                  <div class="result-row" *ngFor="let row of macroView.summary.by_direction"><strong>{{ promiseLabel(row.key) }}</strong><span>{{ row.count }} rows</span></div>
+                  <div class="result-row" *ngFor="let row of macroView.summary.by_evidence_type"><strong>{{ promiseLabel(row.key) }}</strong><span>{{ row.count }} rows</span></div>
+                </article>
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Macro evidence</h2></div><span>{{ macroView.evidence.length }} sources</span></div>
+                  <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of macroView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                </article>
+              </section>
+
+              <section class="panel source-gap-panel" *ngIf="macroView.source_gaps.length > 0">
+                <div class="panel-header"><h2>Unavailable macro data</h2></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of macroView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
               </section>
             </ng-container>
           </section>

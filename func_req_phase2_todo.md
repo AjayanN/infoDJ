@@ -820,17 +820,18 @@ Each feature below inherits the shared standards above. Feature sections only de
 
 **MVP tasks:**
 
-- [ ] Define macro factors and exposure channels.
-- [ ] Build sensitivity profile with positive, negative, mixed, changing, and uncertain labels.
-- [ ] Add management-disclosed sensitivities separately from calculated historical relationships.
-- [ ] Show periods, methods, sample size, and limitations.
-- [ ] Add prior stress-period examples.
-- [ ] Avoid causal claims from simple correlations.
-- [ ] Validate series alignment, lag assumptions, currencies, and reporting periods.
+- [x] Define macro factors and exposure channels.
+- [x] Build sensitivity profile with positive, negative, mixed, changing, and uncertain labels.
+- [x] Add management-disclosed sensitivities separately from calculated historical relationships.
+- [x] Show periods, methods, sample size, and limitations.
+- [x] Add prior stress-period examples.
+- [x] Avoid causal claims from simple correlations.
+- [x] Validate series alignment, lag assumptions, currencies, and reporting periods.
 
 **Acceptance criteria:**
 
 - Users can identify material macro exposure, supporting evidence, and analytical limitations.
+- Implemented baseline: all 20 configured companies receive reviewed macro sensitivity snapshots; management/theme-derived sensitivity rows are separated from calculated relationship placeholders, every calculated row shows sample size and limitation text, stress examples are contextual only, and missing macro-series alignment becomes a source gap.
 
 ---
 
@@ -1132,7 +1133,7 @@ The order below reflects functional dependency and user value. It does not requi
 - [x] Valuation Context: all-company reviewed snapshot baseline implemented with reproducible market-cap, P/S, P/E, EV, and EV/revenue observations where inputs are available, explicit unavailable-input states, peer comparison rows, event-aligned non-causal snapshots, Company 360 entry point, daily ingestion builder, and all-company API smoke validation.
 - [x] Regulatory and Litigation Calendar: all-company reviewed snapshot baseline implemented with source-backed matter rows, legal guardrails, source-gated exposure context, explicit source gaps for missing authority/deadline/exposure details, Company 360 entry point, daily ingestion builder, and all-company API smoke validation.
 - [x] Sector and Theme Intelligence: all-company reviewed snapshot baseline implemented with taxonomy labels, narrative-only sector guardrails, operating exposure cards from events/KPIs/capital allocation, theme pages, source gaps for missing KPI/capital/evidence links, Company 360 entry point, daily ingestion builder, and all-company API smoke validation.
-- [ ] Macro Sensitivity Profile.
+- [x] Macro Sensitivity Profile: all-company reviewed snapshot baseline implemented with macro factor registry, exposure channels, direction labels, management/theme-derived sensitivity rows, calculated relationship placeholders, stress-period context, non-causation guardrails, Company 360 entry point, daily ingestion builder, and all-company API smoke validation.
 
 ### Wave 5: Personal Monitoring
 

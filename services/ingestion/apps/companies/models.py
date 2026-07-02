@@ -1838,6 +1838,173 @@ class CompanyThemeExposure(models.Model):
         ]
 
 
+class MacroFactorCategory(models.TextChoices):
+    DEMAND = "DEMAND", "Demand"
+    COST = "COST", "Cost"
+    FINANCING = "FINANCING", "Financing"
+    CURRENCY = "CURRENCY", "Currency"
+    COMMODITY = "COMMODITY", "Commodity"
+    LABOR = "LABOR", "Labor"
+    REGULATORY = "REGULATORY", "Regulatory"
+
+
+class MacroExposureChannel(models.TextChoices):
+    REVENUE = "REVENUE", "Revenue"
+    COST = "COST", "Cost"
+    MARGIN = "MARGIN", "Margin"
+    CAPEX = "CAPEX", "Capital expenditure"
+    FINANCING = "FINANCING", "Financing"
+    DEMAND = "DEMAND", "Demand"
+    SUPPLY_CHAIN = "SUPPLY_CHAIN", "Supply chain"
+    CURRENCY_TRANSLATION = "CURRENCY_TRANSLATION", "Currency translation"
+
+
+class MacroSensitivityDirection(models.TextChoices):
+    POSITIVE = "POSITIVE", "Positive"
+    NEGATIVE = "NEGATIVE", "Negative"
+    MIXED = "MIXED", "Mixed"
+    CHANGING = "CHANGING", "Changing"
+    UNCERTAIN = "UNCERTAIN", "Uncertain"
+
+
+class MacroEvidenceType(models.TextChoices):
+    MANAGEMENT_DISCLOSED = "MANAGEMENT_DISCLOSED", "Management disclosed"
+    THEME_DERIVED = "THEME_DERIVED", "Theme derived"
+    CAPITAL_DERIVED = "CAPITAL_DERIVED", "Capital allocation derived"
+    KPI_DERIVED = "KPI_DERIVED", "KPI derived"
+    CALCULATED_PLACEHOLDER = "CALCULATED_PLACEHOLDER", "Calculated placeholder"
+
+
+class MacroFactor(models.Model):
+    slug = models.SlugField(max_length=160, unique=True)
+    name = models.CharField(max_length=255)
+    category = models.CharField(max_length=32, choices=MacroFactorCategory.choices, db_index=True)
+    description = models.TextField(blank=True)
+    canonical_series = models.JSONField(default=list, blank=True)
+    is_active = models.BooleanField(default=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["category", "name"]
+        indexes = [models.Index(fields=["category", "is_active"], name="macro_factor_cat_active_idx")]
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class MacroSensitivitySnapshot(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="macro_sensitivity_snapshots")
+    effective_date = models.DateField(db_index=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="macro_sensitivity_snapshots",
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=CompanyProfileStatus.choices,
+        default=CompanyProfileStatus.REVIEWED,
+        db_index=True,
+    )
+    summary = models.TextField(blank=True)
+    methodology = models.TextField(blank=True)
+    limitation_note = models.TextField(blank=True)
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-effective_date", "-created_at"]
+        constraints = [
+            models.UniqueConstraint(fields=["company", "effective_date"], name="unique_macro_sensitivity_snapshot")
+        ]
+        indexes = [models.Index(fields=["company", "status", "effective_date"], name="company_macro_status_idx")]
+
+
+class MacroSensitivity(models.Model):
+    snapshot = models.ForeignKey(MacroSensitivitySnapshot, on_delete=models.CASCADE, related_name="sensitivities")
+    factor = models.ForeignKey(MacroFactor, on_delete=models.CASCADE, related_name="company_sensitivities")
+    channel = models.CharField(max_length=32, choices=MacroExposureChannel.choices, db_index=True)
+    direction = models.CharField(max_length=32, choices=MacroSensitivityDirection.choices, db_index=True)
+    evidence_type = models.CharField(max_length=32, choices=MacroEvidenceType.choices, db_index=True)
+    materiality = models.CharField(max_length=32, choices=ThemeMateriality.choices, db_index=True)
+    source_key = models.CharField(max_length=255)
+    evidence_date = models.DateField(null=True, blank=True, db_index=True)
+    evidence_summary = models.TextField(blank=True)
+    evidence_text = models.TextField(blank=True)
+    method = models.TextField(blank=True)
+    sample_size = models.PositiveIntegerField(default=0)
+    period_start = models.DateField(null=True, blank=True)
+    period_end = models.DateField(null=True, blank=True)
+    lag_assumption = models.CharField(max_length=128, blank=True)
+    limitation_note = models.TextField(blank=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="macro_sensitivities",
+    )
+    linked_event = models.ForeignKey(
+        "curation.BusinessEvent",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="macro_sensitivities",
+    )
+    linked_theme_exposure = models.ForeignKey(
+        CompanyThemeExposure,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="macro_sensitivities",
+    )
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    review_status = models.CharField(
+        max_length=32,
+        choices=PromiseReviewStatus.choices,
+        default=PromiseReviewStatus.REVIEWED,
+        db_index=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["factor__name", "channel", "-evidence_date"]
+        constraints = [
+            models.UniqueConstraint(fields=["snapshot", "source_key"], name="unique_macro_sensitivity_source")
+        ]
+
+
+class MacroStressExample(models.Model):
+    snapshot = models.ForeignKey(MacroSensitivitySnapshot, on_delete=models.CASCADE, related_name="stress_examples")
+    label = models.CharField(max_length=255)
+    period_start = models.DateField(null=True, blank=True)
+    period_end = models.DateField(null=True, blank=True)
+    macro_context = models.TextField(blank=True)
+    company_observation = models.TextField(blank=True)
+    limitation_note = models.TextField(blank=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="macro_stress_examples",
+    )
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-period_end", "label"]
+        constraints = [
+            models.UniqueConstraint(fields=["snapshot", "label"], name="unique_macro_stress_example")
+        ]
+
+
 class LeadershipRoleType(models.TextChoices):
     CEO = "CEO", "Chief executive"
     CFO = "CFO", "Chief financial"

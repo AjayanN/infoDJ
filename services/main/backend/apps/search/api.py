@@ -323,6 +323,19 @@ def company_sector_themes(request, slug: str):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+def company_macro_sensitivity(request, slug: str):
+    params = {}
+    for key in ("as_of", "factor", "channel"):
+        if request.GET.get(key):
+            params[key] = request.GET[key]
+    payload, error = ingestion_get(f"companies/{slug}/macro-sensitivity", params or None)
+    if error:
+        return Response({"error": "macro sensitivity profile unavailable", "detail": error}, status=503)
+    return Response(payload)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def company_leadership_decisions(request, slug: str):
     params = {}
     for key in ("as_of", "role_type", "decision_type"):

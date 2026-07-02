@@ -184,6 +184,30 @@ SOURCE_RULES = {
         "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT"),
         "next_action": "Map reviewed capital deployment rows to relevant themes with amount, period, category, and source evidence.",
     },
+    ("macro_sensitivity_profile", "macro_sensitivities"): {
+        "candidate_type": "macro_sensitivity_source",
+        "keywords": ("inflation", "interest rates", "foreign currency", "exchange rates", "commodity", "energy prices", "consumer demand", "credit conditions", "freight", "labor"),
+        "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT", "OFFICIAL_WEBSITE", "GDELT_DOC_2"),
+        "next_action": "Extract factor, exposure channel, direction, source-stated evidence, period, and limitations without claiming causation.",
+    },
+    ("macro_sensitivity_profile", "management_disclosures"): {
+        "candidate_type": "macro_management_disclosure_source",
+        "keywords": ("risk factors", "inflation", "interest rates", "currency", "commodity prices", "macroeconomic", "economic conditions"),
+        "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT", "OFFICIAL_WEBSITE"),
+        "next_action": "Extract management-disclosed macro sensitivity statements separately from calculated relationships.",
+    },
+    ("macro_sensitivity_profile", "macro_series_alignment"): {
+        "candidate_type": "macro_series_alignment_source",
+        "keywords": ("revenue", "sales", "operating income", "period", "currency", "segment", "same period", "macro"),
+        "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT"),
+        "next_action": "Identify company metric series, reporting frequency, currency, and period labels needed to align external macro series.",
+    },
+    ("macro_sensitivity_profile", "stress_examples"): {
+        "candidate_type": "macro_stress_example_source",
+        "keywords": ("recession", "inflation", "COVID", "pandemic", "financial crisis", "commodity price", "interest rate", "foreign exchange"),
+        "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT", "OFFICIAL_WEBSITE", "GDELT_DOC_2"),
+        "next_action": "Extract company observations during stress periods and label limitations before publishing examples.",
+    },
     ("leadership_decision_record", "tenure_dates"): {
         "candidate_type": "leadership_tenure_source",
         "keywords": ("chief executive", "CEO", "appointed", "named", "effective", "retired", "resigned", "succession"),

@@ -665,6 +665,23 @@ Open `Sector and theme intelligence` from Company 360 for taxonomy labels, theme
 
 Requirement 17 verification on July 2, 2026: sector/theme builder populated all 20 configured companies with reviewed snapshots and 324 exposure rows. Ingestion API smoke passed for all 20 companies with at least one operating exposure and at least one theme page per company; gaps remain explicit where KPI or capital-allocation links are not yet available. Authenticated main-backend proxy smoke passed for Netflix. Ingestion backend `88/88`, main backend `46/46`, frontend `7/7`, and frontend production build passed.
 
+## Macro Sensitivity Profile
+
+Phase 2 Requirement 18 adds Macro Sensitivity Profile for macro factor registry, exposure channels, direction labels, management-disclosed sensitivities, calculated-relationship limitations, stress-period examples, evidence, and source gaps.
+
+The baseline builder creates one reviewed snapshot for every configured company from reviewed company events, sector/theme exposures, financial facts, and market data availability. It separates management-disclosed or theme-derived sensitivity context from calculated historical relationships. Calculated relationships stay as explicit placeholders until aligned macro series, company metric series, sample size, lag assumptions, currency handling, and reporting-period alignment are available. The dashboard does not claim causation from simple correlations.
+
+Macro Sensitivity Profile endpoints:
+
+```bash
+GET /api/ingestion/companies/<slug>/macro-sensitivity
+GET /api/app/companies/<slug>/macro-sensitivity
+```
+
+Open `Macro sensitivity profile` from Company 360 for macro factor filters, exposure channel filters, direction labels, methods, sample sizes, stress-period examples, limitations, evidence cards, and unavailable data states.
+
+Requirement 18 verification on July 2, 2026: macro sensitivity builder populated all 20 configured companies with reviewed snapshots, 513 sensitivity rows, and 40 stress-example writes. Ingestion API smoke passed for all 20 companies with at least one sensitivity row, calculated relationship placeholder, and explicit non-causation limitation. Authenticated main-backend proxy smoke passed for Netflix. Ingestion backend `90/90`, main backend `48/48`, frontend `7/7`, and frontend production build passed.
+
 ## Source Gap Resolution Guardrail
 
 Open source gaps are now routed back into ingestion instead of remaining as passive UI messages. The daily company update runs `resolve_source_gaps` after the Phase 2 builders and creates reviewed-source candidates from existing `SourceDocument` rows for acquisition lifecycle, competitive market-share, customer/supplier dependency, contract-term, concentration, product-pricing, geographic expansion, leadership, and ownership/insider gaps.
