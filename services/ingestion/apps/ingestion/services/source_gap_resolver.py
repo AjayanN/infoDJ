@@ -130,6 +130,30 @@ SOURCE_RULES = {
         "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT", "OFFICIAL_WEBSITE"),
         "next_action": "Extract plan reference, adoption or termination date, related Form 4 footnote, and transaction scope.",
     },
+    ("regulatory_litigation_calendar", "matter_list"): {
+        "candidate_type": "regulatory_matter_source",
+        "keywords": ("legal proceedings", "litigation", "lawsuit", "investigation", "regulatory", "proceeding", "settlement", "consent decree"),
+        "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT", "OFFICIAL_WEBSITE", "GDELT_DOC_2"),
+        "next_action": "Extract matter title, type, jurisdiction, authority, allegation or issue, company response, and current status without legal conclusions.",
+    },
+    ("regulatory_litigation_calendar", "authorities"): {
+        "candidate_type": "regulatory_authority_source",
+        "keywords": ("SEC", "FTC", "DOJ", "European Commission", "court", "regulator", "agency", "authority", "commission"),
+        "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT", "OFFICIAL_WEBSITE", "GDELT_DOC_2"),
+        "next_action": "Extract named regulator, court, jurisdiction, and matter reference from authoritative source text.",
+    },
+    ("regulatory_litigation_calendar", "future_dates"): {
+        "candidate_type": "regulatory_deadline_source",
+        "keywords": ("hearing", "deadline", "response due", "decision", "appeal", "compliance", "expiration", "approval expected"),
+        "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT", "OFFICIAL_WEBSITE", "GDELT_DOC_2"),
+        "next_action": "Extract sourced hearing, response, decision, appeal, compliance, or expiration dates with date type and uncertainty.",
+    },
+    ("regulatory_litigation_calendar", "exposure_context"): {
+        "candidate_type": "regulatory_exposure_source",
+        "keywords": ("fine", "penalty", "settlement", "remedy", "injunction", "restriction", "material adverse", "liability", "loss contingency"),
+        "sources": ("SEC", "SEC_EDGAR", "SEC_EDGAR_EXHIBIT", "OFFICIAL_WEBSITE", "GDELT_DOC_2"),
+        "next_action": "Extract only source-stated amounts, ranges, remedies, restrictions, uncertainty language, and affected business area.",
+    },
     ("leadership_decision_record", "tenure_dates"): {
         "candidate_type": "leadership_tenure_source",
         "keywords": ("chief executive", "CEO", "appointed", "named", "effective", "retired", "resigned", "succession"),

@@ -23,6 +23,7 @@ import {
   GeographicExpansionResponse,
   OwnershipInsiderResponse,
   ValuationContextResponse,
+  RegulatoryLitigationResponse,
   LeadershipDecisionResponse,
   DashboardSection,
   DashboardResponse,
@@ -50,7 +51,7 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider' | 'valuation-context' | 'profile' | 'subscription';
+type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider' | 'valuation-context' | 'regulatory-litigation' | 'profile' | 'subscription';
 type DashboardViewId =
   | 'company-intelligence'
   | 'turn-impact'
@@ -145,6 +146,7 @@ class AppComponent {
   geographicExpansion = signal<GeographicExpansionResponse | null>(null);
   ownershipInsider = signal<OwnershipInsiderResponse | null>(null);
   valuationContext = signal<ValuationContextResponse | null>(null);
+  regulatoryLitigation = signal<RegulatoryLitigationResponse | null>(null);
   leadershipDecisions = signal<LeadershipDecisionResponse | null>(null);
   searchResults = signal<SearchResponse | null>(null);
   searchPages = signal<Record<SearchResultGroup, number>>({
@@ -184,6 +186,7 @@ class AppComponent {
   geographicExpansionLoading = signal(false);
   ownershipInsiderLoading = signal(false);
   valuationContextLoading = signal(false);
+  regulatoryLitigationLoading = signal(false);
   leadershipDecisionLoading = signal(false);
   companyProfileDate = '';
   businessModelDate = '';
@@ -227,6 +230,9 @@ class AppComponent {
   insiderTransactionType = '';
   valuationContextDate = '';
   valuationMeasure = '';
+  regulatoryLitigationDate = '';
+  regulatoryMatterType = '';
+  regulatoryMatterStatus = '';
   leadershipDecisionDate = '';
   leadershipRoleType = '';
   leadershipDecisionType = '';
@@ -562,6 +568,9 @@ class AppComponent {
     if (this.activePage() === 'valuation-context') {
       return `${this.valuationContext()?.company.name || 'Company'} Valuation Context`;
     }
+    if (this.activePage() === 'regulatory-litigation') {
+      return `${this.regulatoryLitigation()?.company.name || 'Company'} Regulatory and Litigation Calendar`;
+    }
     if (this.activePage() === 'leadership-decisions') {
       return `${this.leadershipDecisions()?.company.name || 'Company'} Leadership Decision Record`;
     }
@@ -616,6 +625,9 @@ class AppComponent {
     }
     if (this.activePage() === 'valuation-context') {
       return 'Historical and peer valuation context with formulas, source inputs, event-aligned snapshots, and no investment advice.';
+    }
+    if (this.activePage() === 'regulatory-litigation') {
+      return 'Regulatory reviews, investigations, litigation, approvals, deadlines, exposure context, evidence, and legal guardrails.';
     }
     if (this.activePage() === 'leadership-decisions') {
       return 'Leadership roles, tenure context, stated priorities, material decisions, succession events, evidence, and non-causation guardrails.';
@@ -1312,6 +1324,39 @@ class AppComponent {
   }
 
   printValuationContextBrief(): void {
+    window.print();
+  }
+
+  openRegulatoryLitigation(slug: string, asOf = '', matterType = '', status = ''): void {
+    if (!slug || !this.token()) return;
+    this.activePage.set('regulatory-litigation');
+    this.menuOpen.set(false);
+    this.regulatoryLitigationLoading.set(true);
+    this.error.set('');
+    this.api.regulatoryLitigation(
+      this.token(),
+      slug,
+      asOf || this.regulatoryLitigationDate,
+      matterType || this.regulatoryMatterType,
+      status || this.regulatoryMatterStatus
+    ).subscribe({
+      next: (response) => {
+        this.regulatoryLitigation.set(response);
+        this.regulatoryLitigationDate = response.snapshot?.effective_date || '';
+        this.regulatoryMatterType = response.filters?.selected_matter_type || '';
+        this.regulatoryMatterStatus = response.filters?.selected_status || '';
+        this.regulatoryLitigationLoading.set(false);
+      },
+      error: (response) => { this.regulatoryLitigationLoading.set(false); this.showError(response); }
+    });
+  }
+
+  reloadRegulatoryLitigation(): void {
+    const company = this.regulatoryLitigation()?.company;
+    if (company) this.openRegulatoryLitigation(company.slug, this.regulatoryLitigationDate, this.regulatoryMatterType, this.regulatoryMatterStatus);
+  }
+
+  printRegulatoryLitigationBrief(): void {
     window.print();
   }
 

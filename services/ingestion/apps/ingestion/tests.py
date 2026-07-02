@@ -33,6 +33,7 @@ from apps.companies.models import (
     OwnershipInsiderSnapshot,
     ProductCatalogSnapshot,
     ProductOffering,
+    RegulatoryLitigationSnapshot,
     StrategyMilestone,
     ValuationContextSnapshot,
 )
@@ -78,6 +79,7 @@ from apps.ingestion.services.leadership_decision_record import (
     leadership_decision_quality_issues,
 )
 from apps.ingestion.services.valuation_context import build_valuation_context, valuation_quality_issues
+from apps.ingestion.services.regulatory_litigation import build_regulatory_litigation_calendar, regulatory_litigation_quality_issues
 from apps.ingestion.services.source_gap_resolver import resolve_source_gaps
 from apps.ingestion.services.source_gap_source_collector import forms_for_gap, ticker_for
 from apps.ingestion.services.source_gap_candidate_extractor import extract_source_gap_candidates, full_text_excerpt
@@ -1601,6 +1603,44 @@ class IngestionSearchApiTests(TestCase):
         self.assertNotIn("buy", rendered)
         self.assertNotIn("sell", rendered)
         self.assertNotIn("price target", rendered)
+
+    def test_regulatory_litigation_builder_creates_reviewed_matter_from_event(self):
+        BusinessEvent.objects.create(
+            company=self.netflix,
+            source_document=self.source,
+            event_date=date(2026, 1, 20),
+            event_type="REGULATORY_RESPONSE",
+            source_claim="The FTC investigation remains pending and could require compliance remedies.",
+            actual_change="Netflix disclosed it is responding to the FTC investigation.",
+            outcome="The investigation remains pending.",
+            evidence_text="FTC investigation remains pending and could require compliance remedies.",
+            confidence_score="0.820",
+            review_status="APPROVED",
+        )
+
+        result = build_regulatory_litigation_calendar(self.netflix)
+
+        self.assertEqual(result["snapshots_created"], 1)
+        snapshot = RegulatoryLitigationSnapshot.objects.get(company=self.netflix)
+        matter = snapshot.matters.get()
+        self.assertEqual(matter.matter_type, "INVESTIGATION")
+        self.assertEqual(matter.authority, "FTC")
+        self.assertEqual(matter.matter_status, "PENDING")
+        self.assertIn("does not make legal conclusions", snapshot.legal_guardrail)
+        self.assertIn("no sourced future deadlines", regulatory_litigation_quality_issues(self.netflix))
+
+    def test_regulatory_litigation_api_exposes_gaps_without_legal_conclusions(self):
+        build_regulatory_litigation_calendar(self.netflix)
+
+        response = self.client.get("/companies/netflix/regulatory-litigation")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "partial")
+        self.assertIn("does not make legal conclusions", payload["snapshot"]["legal_guardrail"])
+        self.assertTrue(any(gap["key"] == "matter_list" for gap in payload["source_gaps"]))
+        self.assertNotIn("liable", str(payload).lower())
+        self.assertNotIn("guilty", str(payload).lower())
 
     def test_leadership_decision_builder_creates_roles_and_decisions(self):
         CompanyProfileSnapshot.objects.create(

@@ -1096,6 +1096,38 @@ export type ValuationContextResponse = {
   source_gaps: SourceGap[];
 };
 
+export type RegulatoryLitigationResponse = {
+  status: 'available' | 'partial' | 'unavailable';
+  company: CompanyProfileResponse['company'];
+  snapshot: {
+    id: number; effective_date: string; status: string; summary: string; methodology: string;
+    legal_guardrail: string; confidence_score: number; source: CompanyProfileSource | null; updated_at: string;
+  } | null;
+  snapshot_history: { id: number; effective_date: string; status: string; matter_count: number; open_or_pending_count: number; selected: boolean }[];
+  matters: {
+    id: number; title: string; matter_type: string; matter_type_label: string; jurisdiction: string; authority: string;
+    business_area: string; stage: string; stage_label: string; matter_status: string; matter_status_label: string;
+    materiality: string; materiality_label: string; opened_date: string | null; next_date: string | null;
+    next_date_type: string; allegation_or_issue: string; company_response: string; interim_decision: string;
+    final_outcome: string; exposure_context: string; evidence_text: string; confidence_score: number;
+    review_status: string; source: CompanyProfileSource | null; linked_event: DashboardEvent | null;
+  }[];
+  calendar: { date: string; date_type: string; matter_id: number; title: string; status: string }[];
+  summary: {
+    by_type: { key: string; count: number }[];
+    by_status: { key: string; count: number }[];
+    by_materiality: { key: string; count: number }[];
+    open_matters: string[];
+  };
+  filters: { matter_types: string[]; statuses: string[]; selected_matter_type: string; selected_status: string; as_of: string };
+  coverage: {
+    matter_count: number; open_or_pending_count: number; dated_matter_count: number; next_date_count: number;
+    exposure_context_count: number; source_count: number; last_updated: string;
+  };
+  evidence: CompanyProfileSource[];
+  source_gaps: SourceGap[];
+};
+
 export type LeadershipDecisionResponse = {
   status: 'available' | 'partial' | 'unavailable';
   company: CompanyProfileResponse['company'];
@@ -1407,6 +1439,16 @@ export class InfoDjApiService {
     if (asOf) params['as_of'] = asOf;
     if (measure) params['measure'] = measure;
     return this.http.get<ValuationContextResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/valuation-context`, {
+      headers: this.authHeaders(token), params
+    });
+  }
+
+  regulatoryLitigation(token: string, slug: string, asOf = '', matterType = '', status = '') {
+    const params: Record<string, string> = {};
+    if (asOf) params['as_of'] = asOf;
+    if (matterType) params['matter_type'] = matterType;
+    if (status) params['status'] = status;
+    return this.http.get<RegulatoryLitigationResponse>(`${this.apiBaseUrl}/companies/${encodeURIComponent(slug)}/regulatory-litigation`, {
       headers: this.authHeaders(token), params
     });
   }
