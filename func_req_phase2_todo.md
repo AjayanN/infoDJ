@@ -940,19 +940,20 @@ Each feature below inherits the shared standards above. Feature sections only de
 
 **MVP tasks:**
 
-- [ ] Define scenario templates and required assumption fields.
-- [ ] Build three-scenario comparison workspace.
-- [ ] Keep user-created and reviewed InfoDJ scenarios visibly distinct.
-- [ ] Link assumptions to KPIs, macro factors, promises, milestones, and risks.
-- [ ] Allow ranges and qualitative outcomes without false precision.
-- [ ] Show which assumptions differ between scenarios.
-- [ ] Add indicator monitoring and scenario-status updates.
-- [ ] Add comparison with actual outcomes after the horizon.
-- [ ] Prevent scenarios from being displayed as predictions or investment recommendations.
+- [x] Define scenario templates and required assumption fields.
+- [x] Build three-scenario comparison workspace.
+- [x] Keep user-created and reviewed InfoDJ scenarios visibly distinct.
+- [x] Link assumptions to KPIs, macro factors, promises, milestones, and risks.
+- [x] Allow ranges and qualitative outcomes without false precision.
+- [x] Show which assumptions differ between scenarios.
+- [x] Add indicator monitoring and scenario-status updates.
+- [x] Add comparison with actual outcomes after the horizon.
+- [x] Prevent scenarios from being displayed as predictions or investment recommendations.
 
 **Acceptance criteria:**
 
 - Every scenario is reproducible from visible assumptions and linked evidence.
+- Implemented baseline: authenticated users can create company-linked best/base/worst scenario sets, add driver assumptions with evidence links, monitor indicators, compare actual results after the horizon, inspect assumption differences, track status revisions, and see explicit non-prediction guardrails.
 
 ---
 
@@ -1151,7 +1152,7 @@ The order below reflects functional dependency and user value. It does not requi
 
 **Exit condition:** users can test future possibilities, challenge narratives, and learn from reviewed historical failures.
 
-- [ ] Scenario Explorer.
+- [x] Scenario Explorer: private authenticated scenario workspace implemented with best/base/worst templates, user-created versus reviewed labels, KPI/macro/promise/milestone/risk driver assumptions, qualitative/range outcomes, assumption-difference view, indicators, actual-result comparison, evidence suggestions, Company 360 entry point, and non-prediction guardrails.
 - [ ] Contradiction View.
 - [ ] Strategy Failure Library.
 

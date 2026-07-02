@@ -785,6 +785,40 @@ python manage.py generate_briefings --cadence WEEKLY
 
 Open `Briefings` in the left navigation. Generate a daily or weekly briefing after following companies/topics and refreshing alerts.
 
+## Scenario Explorer
+
+Phase 2 Requirement 22 adds a private authenticated Scenario Explorer. Scenarios are user assumption workspaces, not predictions, investment advice, or probability-weighted forecasts.
+
+The baseline includes:
+
+- best, base, and worst case templates for every scenario set
+- visible user-created versus InfoDJ-reviewed source labels
+- explicit thesis, company scope, horizon start, and horizon end
+- assumptions linked to KPIs, macro factors, promises, milestones, risks, competitive factors, regulatory factors, or other drivers
+- qualitative outcomes and optional low/high ranges without false precision
+- assumption-difference view showing how best/base/worst cases diverge
+- indicator monitoring with status labels
+- scenario status revisions and archive workflow
+- actual-result comparison after the horizon
+- source-backed evidence suggestions from ingestion search
+- non-prediction guardrails on API and frontend surfaces
+
+Scenario endpoints:
+
+```bash
+GET  /api/app/scenarios
+POST /api/app/scenarios
+GET  /api/app/scenarios/<id>
+PATCH /api/app/scenarios/<id>
+PATCH /api/app/scenarios/<id>/cases/<case_id>
+POST /api/app/scenarios/<id>/cases/<case_id>/assumptions
+POST /api/app/scenarios/<id>/indicators
+POST /api/app/scenarios/<id>/actual-results
+GET  /api/app/scenarios/evidence-suggestions?q=<query>&company=<slug>
+```
+
+Open `Scenario explorer` from Company 360 or `Scenarios` in the left navigation.
+
 ## Source Gap Resolution Guardrail
 
 Open source gaps are now routed back into ingestion instead of remaining as passive UI messages. The daily company update runs `resolve_source_gaps` after the Phase 2 builders and creates reviewed-source candidates from existing `SourceDocument` rows for acquisition lifecycle, competitive market-share, customer/supplier dependency, contract-term, concentration, product-pricing, geographic expansion, leadership, and ownership/insider gaps.

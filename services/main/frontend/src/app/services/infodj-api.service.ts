@@ -1380,6 +1380,61 @@ export type BriefingResponse = {
   statuses: { value: string; label: string }[];
 };
 
+export type ScenarioSet = {
+  id: number;
+  title: string;
+  company_slug: string;
+  company_name: string;
+  thesis: string;
+  horizon_start: string | null;
+  horizon_end: string | null;
+  status: string;
+  status_label: string;
+  source_type: string;
+  source_type_label: string;
+  non_prediction_note: string;
+  is_shared: boolean;
+  updated_at: string;
+  created_at: string;
+  cases?: {
+    id: number;
+    kind: string;
+    kind_label: string;
+    title: string;
+    narrative: string;
+    qualitative_outcome: string;
+    low_value: number | null;
+    high_value: number | null;
+    unit: string;
+    probability_label: string;
+    assumptions: {
+      id: number;
+      driver_type: string;
+      driver_type_label: string;
+      driver_label: string;
+      assumption: string;
+      rationale: string;
+      evidence_type: string;
+      evidence_id: string;
+      evidence_label: string;
+      evidence_url: string;
+      confidence_label: string;
+    }[];
+  }[];
+  indicators?: { id: number; name: string; driver_type: string; target: string; current_value: string; status: string; status_label: string; source_hint: string }[];
+  actual_results?: { id: number; result_date: string; metric_label: string; actual_value: string; comparison_note: string; evidence_label: string; evidence_url: string }[];
+  revisions?: { id: number; previous_status: string; new_status: string; reason: string; created_at: string; changed_by: string }[];
+  differences?: { driver_type: string; driver_label: string; cases: Record<string, string> }[];
+};
+
+export type ScenarioListResponse = {
+  scenario_sets: ScenarioSet[];
+  templates: { kind: string; required_fields: string[] }[];
+  statuses: { value: string; label: string }[];
+  driver_types: { value: string; label: string }[];
+  non_prediction_note: string;
+};
+
 export type LeadershipDecisionResponse = {
   status: 'available' | 'partial' | 'unavailable';
   company: CompanyProfileResponse['company'];
@@ -1860,6 +1915,37 @@ export class InfoDjApiService {
 
   briefingFeedback(token: string, id: number, rating: string) {
     return this.http.post(`${this.apiBaseUrl}/briefings/${id}/feedback`, { rating }, { headers: this.authHeaders(token) });
+  }
+
+  scenarios(token: string, company = '', status = '') {
+    const params: Record<string, string> = {};
+    if (company) params['company'] = company;
+    if (status) params['status'] = status;
+    return this.http.get<ScenarioListResponse>(`${this.apiBaseUrl}/scenarios`, { headers: this.authHeaders(token), params });
+  }
+
+  createScenario(token: string, payload: Record<string, unknown>) {
+    return this.http.post<{ scenario_set: ScenarioSet }>(`${this.apiBaseUrl}/scenarios`, payload, { headers: this.authHeaders(token) });
+  }
+
+  scenario(token: string, id: number) {
+    return this.http.get<{ scenario_set: ScenarioSet }>(`${this.apiBaseUrl}/scenarios/${id}`, { headers: this.authHeaders(token) });
+  }
+
+  updateScenario(token: string, id: number, payload: Record<string, unknown>) {
+    return this.http.patch<{ scenario_set: ScenarioSet }>(`${this.apiBaseUrl}/scenarios/${id}`, payload, { headers: this.authHeaders(token) });
+  }
+
+  addScenarioAssumption(token: string, scenarioId: number, caseId: number, payload: Record<string, unknown>) {
+    return this.http.post(`${this.apiBaseUrl}/scenarios/${scenarioId}/cases/${caseId}/assumptions`, payload, { headers: this.authHeaders(token) });
+  }
+
+  addScenarioIndicator(token: string, scenarioId: number, payload: Record<string, unknown>) {
+    return this.http.post(`${this.apiBaseUrl}/scenarios/${scenarioId}/indicators`, payload, { headers: this.authHeaders(token) });
+  }
+
+  addScenarioActual(token: string, scenarioId: number, payload: Record<string, unknown>) {
+    return this.http.post(`${this.apiBaseUrl}/scenarios/${scenarioId}/actual-results`, payload, { headers: this.authHeaders(token) });
   }
 
   leadershipDecisions(token: string, slug: string, asOf = '', roleType = '', decisionType = '') {

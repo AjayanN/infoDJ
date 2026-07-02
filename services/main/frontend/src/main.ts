@@ -34,6 +34,8 @@ import {
   NotificationResponse,
   Briefing,
   BriefingResponse,
+  ScenarioSet,
+  ScenarioListResponse,
   LeadershipDecisionResponse,
   DashboardSection,
   DashboardResponse,
@@ -61,7 +63,7 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider' | 'valuation-context' | 'regulatory-litigation' | 'sector-themes' | 'macro-sensitivity' | 'strategy-theses' | 'watchlists' | 'briefings' | 'profile' | 'subscription';
+type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider' | 'valuation-context' | 'regulatory-litigation' | 'sector-themes' | 'macro-sensitivity' | 'strategy-theses' | 'watchlists' | 'briefings' | 'scenarios' | 'profile' | 'subscription';
 type DashboardViewId =
   | 'company-intelligence'
   | 'turn-impact'
@@ -167,6 +169,8 @@ class AppComponent {
   notifications = signal<NotificationResponse | null>(null);
   briefings = signal<BriefingResponse | null>(null);
   selectedBriefing = signal<Briefing | null>(null);
+  scenarios = signal<ScenarioListResponse | null>(null);
+  selectedScenario = signal<ScenarioSet | null>(null);
   leadershipDecisions = signal<LeadershipDecisionResponse | null>(null);
   searchResults = signal<SearchResponse | null>(null);
   searchPages = signal<Record<SearchResultGroup, number>>({
@@ -212,6 +216,7 @@ class AppComponent {
   thesisWorkspaceLoading = signal(false);
   watchlistLoading = signal(false);
   briefingLoading = signal(false);
+  scenarioLoading = signal(false);
   leadershipDecisionLoading = signal(false);
   companyProfileDate = '';
   businessModelDate = '';
@@ -303,6 +308,29 @@ class AppComponent {
   notificationCategoryFilter = '';
   briefingCadence = 'DAILY';
   briefingStatusFilter = '';
+  scenarioCompanyFilter = '';
+  scenarioStatusFilter = '';
+  scenarioTitle = '';
+  scenarioCompanySlug = '';
+  scenarioCompanyName = '';
+  scenarioThesis = '';
+  scenarioHorizonStart = '';
+  scenarioHorizonEnd = '';
+  scenarioCaseKind = 'BASE';
+  scenarioDriverType = 'KPI';
+  scenarioDriverLabel = '';
+  scenarioAssumption = '';
+  scenarioRationale = '';
+  scenarioEvidenceLabel = '';
+  scenarioEvidenceUrl = '';
+  scenarioIndicatorName = '';
+  scenarioIndicatorTarget = '';
+  scenarioIndicatorCurrent = '';
+  scenarioIndicatorStatus = 'UNKNOWN';
+  scenarioActualDate = '';
+  scenarioActualMetric = '';
+  scenarioActualValue = '';
+  scenarioActualNote = '';
   leadershipDecisionDate = '';
   leadershipRoleType = '';
   leadershipDecisionType = '';
@@ -656,6 +684,9 @@ class AppComponent {
     if (this.activePage() === 'briefings') {
       return 'Daily and Weekly Briefings';
     }
+    if (this.activePage() === 'scenarios') {
+      return 'Scenario Explorer';
+    }
     if (this.activePage() === 'leadership-decisions') {
       return `${this.leadershipDecisions()?.company.name || 'Company'} Leadership Decision Record`;
     }
@@ -728,6 +759,9 @@ class AppComponent {
     }
     if (this.activePage() === 'briefings') {
       return 'Personalized daily and weekly summaries of material followed-company changes, evidence, next steps, and coverage gaps.';
+    }
+    if (this.activePage() === 'scenarios') {
+      return 'Best, base, and worst case assumption workspace with linked evidence and non-prediction guardrails.';
     }
     if (this.activePage() === 'leadership-decisions') {
       return 'Leadership roles, tenure context, stated priorities, material decisions, succession events, evidence, and non-causation guardrails.';
@@ -1867,6 +1901,136 @@ class AppComponent {
     if (!this.token()) return;
     this.api.briefingFeedback(this.token(), id, rating).subscribe({
       next: () => this.message.set('Briefing feedback saved.'),
+      error: (response) => this.showError(response)
+    });
+  }
+
+  openScenarios(companySlug = '', companyName = ''): void {
+    if (!this.token()) return;
+    this.activePage.set('scenarios');
+    this.menuOpen.set(false);
+    if (companySlug) {
+      this.scenarioCompanyFilter = companySlug;
+      this.scenarioCompanySlug = companySlug;
+      this.scenarioCompanyName = companyName;
+    }
+    this.loadScenarios();
+  }
+
+  loadScenarios(): void {
+    if (!this.token()) return;
+    this.scenarioLoading.set(true);
+    this.api.scenarios(this.token(), this.scenarioCompanyFilter, this.scenarioStatusFilter).subscribe({
+      next: (response) => {
+        this.scenarios.set(response);
+        if (!this.selectedScenario() && response.scenario_sets.length > 0) this.selectScenario(response.scenario_sets[0].id);
+        this.scenarioLoading.set(false);
+      },
+      error: (response) => { this.scenarioLoading.set(false); this.showError(response); }
+    });
+  }
+
+  createScenario(): void {
+    if (!this.token()) return;
+    this.api.createScenario(this.token(), {
+      title: this.scenarioTitle,
+      company_slug: this.scenarioCompanySlug,
+      company_name: this.scenarioCompanyName,
+      thesis: this.scenarioThesis,
+      horizon_start: this.scenarioHorizonStart,
+      horizon_end: this.scenarioHorizonEnd,
+      status: 'ACTIVE'
+    }).subscribe({
+      next: (response) => {
+        this.message.set('Scenario set created.');
+        this.selectedScenario.set(response.scenario_set);
+        this.scenarioTitle = '';
+        this.scenarioThesis = '';
+        this.loadScenarios();
+      },
+      error: (response) => this.showError(response)
+    });
+  }
+
+  selectScenario(id: number): void {
+    if (!this.token()) return;
+    this.api.scenario(this.token(), id).subscribe({
+      next: (response) => this.selectedScenario.set(response.scenario_set),
+      error: (response) => this.showError(response)
+    });
+  }
+
+  addScenarioAssumption(): void {
+    const scenario = this.selectedScenario();
+    const scenarioCase = scenario?.cases?.find((row) => row.kind === this.scenarioCaseKind);
+    if (!this.token() || !scenario || !scenarioCase) return;
+    this.api.addScenarioAssumption(this.token(), scenario.id, scenarioCase.id, {
+      driver_type: this.scenarioDriverType,
+      driver_label: this.scenarioDriverLabel,
+      assumption: this.scenarioAssumption,
+      rationale: this.scenarioRationale,
+      evidence_label: this.scenarioEvidenceLabel,
+      evidence_url: this.scenarioEvidenceUrl
+    }).subscribe({
+      next: () => {
+        this.message.set('Scenario assumption added.');
+        this.scenarioAssumption = '';
+        this.scenarioRationale = '';
+        this.selectScenario(scenario.id);
+      },
+      error: (response) => this.showError(response)
+    });
+  }
+
+  addScenarioIndicator(): void {
+    const scenario = this.selectedScenario();
+    if (!this.token() || !scenario) return;
+    this.api.addScenarioIndicator(this.token(), scenario.id, {
+      name: this.scenarioIndicatorName,
+      driver_type: this.scenarioDriverType,
+      target: this.scenarioIndicatorTarget,
+      current_value: this.scenarioIndicatorCurrent,
+      status: this.scenarioIndicatorStatus
+    }).subscribe({
+      next: () => {
+        this.message.set('Scenario indicator added.');
+        this.scenarioIndicatorName = '';
+        this.selectScenario(scenario.id);
+      },
+      error: (response) => this.showError(response)
+    });
+  }
+
+  addScenarioActual(): void {
+    const scenario = this.selectedScenario();
+    if (!this.token() || !scenario) return;
+    this.api.addScenarioActual(this.token(), scenario.id, {
+      result_date: this.scenarioActualDate,
+      metric_label: this.scenarioActualMetric,
+      actual_value: this.scenarioActualValue,
+      comparison_note: this.scenarioActualNote,
+      evidence_label: this.scenarioEvidenceLabel,
+      evidence_url: this.scenarioEvidenceUrl
+    }).subscribe({
+      next: () => {
+        this.message.set('Actual result comparison added.');
+        this.scenarioActualMetric = '';
+        this.scenarioActualValue = '';
+        this.scenarioActualNote = '';
+        this.selectScenario(scenario.id);
+      },
+      error: (response) => this.showError(response)
+    });
+  }
+
+  updateScenarioStatus(status: string): void {
+    const scenario = this.selectedScenario();
+    if (!this.token() || !scenario) return;
+    this.api.updateScenario(this.token(), scenario.id, { status, reason: `Scenario marked ${status}.` }).subscribe({
+      next: (response) => {
+        this.selectedScenario.set(response.scenario_set);
+        this.loadScenarios();
+      },
       error: (response) => this.showError(response)
     });
   }
