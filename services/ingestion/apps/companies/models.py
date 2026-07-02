@@ -1708,6 +1708,136 @@ class RegulatoryLitigationMatter(models.Model):
         ]
 
 
+class ThemeTaxonomyType(models.TextChoices):
+    SECTOR = "SECTOR", "Sector"
+    INDUSTRY = "INDUSTRY", "Industry"
+    THEME = "THEME", "Theme"
+    SUBTHEME = "SUBTHEME", "Subtheme"
+
+
+class ThemeExposureType(models.TextChoices):
+    REVENUE = "REVENUE", "Revenue"
+    COST = "COST", "Cost"
+    CAPEX = "CAPEX", "Capital expenditure"
+    PRODUCT = "PRODUCT", "Product"
+    CUSTOMER = "CUSTOMER", "Customer"
+    SUPPLY_CHAIN = "SUPPLY_CHAIN", "Supply chain"
+    REGULATORY = "REGULATORY", "Regulatory"
+    NARRATIVE = "NARRATIVE", "Narrative"
+
+
+class ThemeMateriality(models.TextChoices):
+    MATERIAL_OPERATING = "MATERIAL_OPERATING", "Material operating exposure"
+    OPERATING = "OPERATING", "Operating exposure"
+    WATCH = "WATCH", "Watch"
+    NARRATIVE_ONLY = "NARRATIVE_ONLY", "Narrative only"
+    UNKNOWN = "UNKNOWN", "Unknown"
+
+
+class SectorTheme(models.Model):
+    slug = models.SlugField(max_length=160, unique=True)
+    name = models.CharField(max_length=255)
+    taxonomy_type = models.CharField(max_length=32, choices=ThemeTaxonomyType.choices, db_index=True)
+    parent = models.ForeignKey("self", null=True, blank=True, on_delete=models.SET_NULL, related_name="children")
+    description = models.TextField(blank=True)
+    aliases = models.JSONField(default=list, blank=True)
+    is_active = models.BooleanField(default=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["taxonomy_type", "name"]
+        indexes = [models.Index(fields=["taxonomy_type", "is_active"], name="theme_tax_type_active_idx")]
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class SectorThemeSnapshot(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="sector_theme_snapshots")
+    effective_date = models.DateField(db_index=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="sector_theme_snapshots",
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=CompanyProfileStatus.choices,
+        default=CompanyProfileStatus.REVIEWED,
+        db_index=True,
+    )
+    summary = models.TextField(blank=True)
+    methodology = models.TextField(blank=True)
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-effective_date", "-created_at"]
+        constraints = [
+            models.UniqueConstraint(fields=["company", "effective_date"], name="unique_sector_theme_snapshot")
+        ]
+        indexes = [models.Index(fields=["company", "status", "effective_date"], name="company_theme_status_idx")]
+
+
+class CompanyThemeExposure(models.Model):
+    snapshot = models.ForeignKey(SectorThemeSnapshot, on_delete=models.CASCADE, related_name="exposures")
+    theme = models.ForeignKey(SectorTheme, on_delete=models.CASCADE, related_name="company_exposures")
+    exposure_type = models.CharField(max_length=32, choices=ThemeExposureType.choices, db_index=True)
+    materiality = models.CharField(max_length=32, choices=ThemeMateriality.choices, db_index=True)
+    source_key = models.CharField(max_length=255)
+    evidence_date = models.DateField(null=True, blank=True, db_index=True)
+    evidence_summary = models.TextField(blank=True)
+    evidence_text = models.TextField(blank=True)
+    exposure_rationale = models.TextField(blank=True)
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="theme_exposures",
+    )
+    linked_event = models.ForeignKey(
+        "curation.BusinessEvent",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="theme_exposures",
+    )
+    linked_kpi = models.ForeignKey(
+        KpiDefinition,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="theme_exposures",
+    )
+    linked_capital_allocation_item = models.ForeignKey(
+        CapitalAllocationItem,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="theme_exposures",
+    )
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    review_status = models.CharField(
+        max_length=32,
+        choices=PromiseReviewStatus.choices,
+        default=PromiseReviewStatus.REVIEWED,
+        db_index=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["theme__name", "exposure_type", "-evidence_date"]
+        constraints = [
+            models.UniqueConstraint(fields=["snapshot", "source_key"], name="unique_theme_exposure_source")
+        ]
+
+
 class LeadershipRoleType(models.TextChoices):
     CEO = "CEO", "Chief executive"
     CFO = "CFO", "Chief financial"

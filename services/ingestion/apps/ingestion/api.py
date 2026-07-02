@@ -62,7 +62,13 @@ from apps.companies.models import (
     RegulatoryMatterStage,
     RegulatoryMatterStatus,
     RegulatoryMatterType,
+    CompanyThemeExposure,
+    SectorTheme,
+    SectorThemeSnapshot,
     StrategyMilestone,
+    ThemeExposureType,
+    ThemeMateriality,
+    ThemeTaxonomyType,
     ValuationApplicability,
     ValuationContextSnapshot,
     ValuationEventSnapshot,
@@ -1240,6 +1246,93 @@ def company_regulatory_litigation(request: HttpRequest, slug: str) -> JsonRespon
             "dated_matter_count": sum(1 for row in matters if row.opened_date),
             "next_date_count": sum(1 for row in matters if row.next_date),
             "exposure_context_count": sum(1 for row in matters if row.exposure_context),
+            "source_count": len(evidence),
+            "last_updated": current.updated_at.isoformat(),
+        },
+        "evidence": evidence,
+        "source_gaps": gaps,
+    })
+
+
+@require_GET
+def company_sector_themes(request: HttpRequest, slug: str) -> JsonResponse:
+    company = get_company(slug)
+    snapshots = list(
+        SectorThemeSnapshot.objects.filter(company=company, status__in=["PUBLISHED", "REVIEWED"])
+        .select_related("source_document")
+        .prefetch_related(
+            "exposures__theme",
+            "exposures__source_document",
+            "exposures__linked_event",
+            "exposures__linked_kpi",
+            "exposures__linked_capital_allocation_item",
+        )
+        .order_by("-effective_date", "-updated_at")
+    )
+    as_of = parse_iso_date(request.GET.get("as_of"))
+    eligible = [row for row in snapshots if as_of is None or row.effective_date <= as_of]
+    current = eligible[0] if eligible else None
+    theme_filter = (request.GET.get("theme") or "").strip()
+    exposure_type = (request.GET.get("exposure_type") or "").strip().upper()
+    if current is None:
+        gaps = [{
+            "key": "theme_snapshot",
+            "label": "Sector and Theme Intelligence unavailable",
+            "reason": f"No reviewed sector/theme snapshot is available for {company.name}.",
+            "source": "sector-theme-intelligence",
+            "next_action": "Run build_sector_theme_intelligence after events, KPIs, capital allocation, and source documents are refreshed.",
+        }]
+        persist_sector_theme_gaps(company, gaps)
+        return JsonResponse({
+            "status": "unavailable",
+            "company": serialize_company_detail(company),
+            "snapshot": None,
+            "snapshot_history": [],
+            "taxonomy": [],
+            "exposures": [],
+            "theme_pages": [],
+            "related": {"events": [], "kpis": [], "capital_allocation": [], "risk_signals": []},
+            "summary": {"by_theme": [], "by_exposure_type": [], "by_materiality": []},
+            "filters": {"themes": [], "exposure_types": [], "selected_theme": theme_filter, "selected_exposure_type": exposure_type, "as_of": as_of.isoformat() if as_of else ""},
+            "coverage": {"exposure_count": 0, "operating_exposure_count": 0, "event_link_count": 0, "kpi_link_count": 0, "capital_link_count": 0, "source_count": 0, "last_updated": None},
+            "evidence": [],
+            "source_gaps": gaps,
+        })
+    exposures = list(current.exposures.all())
+    if theme_filter:
+        exposures = [row for row in exposures if row.theme.slug == theme_filter]
+    if exposure_type:
+        exposures = [row for row in exposures if row.exposure_type == exposure_type]
+    gaps = sector_theme_source_gaps(company, current, exposures)
+    persist_sector_theme_gaps(company, gaps)
+    evidence = sector_theme_evidence(current, exposures)
+    return JsonResponse({
+        "status": "available" if any(row.materiality != ThemeMateriality.NARRATIVE_ONLY for row in exposures) else "partial",
+        "company": serialize_company_detail(company),
+        "snapshot": serialize_sector_theme_snapshot(current),
+        "snapshot_history": [serialize_sector_theme_history(row, current) for row in snapshots],
+        "taxonomy": serialize_theme_taxonomy(company),
+        "exposures": [serialize_theme_exposure(row) for row in exposures],
+        "theme_pages": sector_theme_pages(exposures),
+        "related": sector_theme_related(exposures),
+        "summary": {
+            "by_theme": theme_counts(exposures),
+            "by_exposure_type": counts_by(exposures, "exposure_type"),
+            "by_materiality": counts_by(exposures, "materiality"),
+        },
+        "filters": {
+            "themes": sorted({row.theme.slug for row in current.exposures.all()}),
+            "exposure_types": sorted({row.exposure_type for row in current.exposures.all()}),
+            "selected_theme": theme_filter,
+            "selected_exposure_type": exposure_type,
+            "as_of": as_of.isoformat() if as_of else "",
+        },
+        "coverage": {
+            "exposure_count": len(exposures),
+            "operating_exposure_count": sum(1 for row in exposures if row.materiality != ThemeMateriality.NARRATIVE_ONLY),
+            "event_link_count": sum(1 for row in exposures if row.linked_event_id),
+            "kpi_link_count": sum(1 for row in exposures if row.linked_kpi_id),
+            "capital_link_count": sum(1 for row in exposures if row.linked_capital_allocation_item_id),
             "source_count": len(evidence),
             "last_updated": current.updated_at.isoformat(),
         },
@@ -2571,6 +2664,172 @@ def counts_by(rows: list[object], field: str) -> list[dict[str, object]]:
         key = getattr(row, field)
         counts[key] = counts.get(key, 0) + 1
     return [{"key": key, "count": count} for key, count in sorted(counts.items())]
+
+
+def serialize_sector_theme_snapshot(snapshot: SectorThemeSnapshot) -> dict[str, object]:
+    return {
+        "id": snapshot.id,
+        "effective_date": snapshot.effective_date.isoformat(),
+        "status": snapshot.status,
+        "summary": snapshot.summary,
+        "methodology": snapshot.methodology,
+        "confidence_score": decimal_to_float(snapshot.confidence_score),
+        "source": serialize_profile_source(snapshot.source_document) if snapshot.source_document_id else None,
+        "updated_at": snapshot.updated_at.isoformat(),
+    }
+
+
+def serialize_sector_theme_history(snapshot: SectorThemeSnapshot, current: SectorThemeSnapshot) -> dict[str, object]:
+    return {
+        "id": snapshot.id,
+        "effective_date": snapshot.effective_date.isoformat(),
+        "status": snapshot.status,
+        "exposure_count": snapshot.exposures.count(),
+        "operating_exposure_count": snapshot.exposures.exclude(materiality=ThemeMateriality.NARRATIVE_ONLY).count(),
+        "selected": snapshot.id == current.id,
+    }
+
+
+def serialize_theme_taxonomy(company: Company) -> list[dict[str, object]]:
+    themes = SectorTheme.objects.filter(is_active=True).order_by("taxonomy_type", "name")
+    sector_slug = ""
+    if company.industry:
+        sector = themes.filter(taxonomy_type=ThemeTaxonomyType.SECTOR, name=company.industry).first()
+        sector_slug = sector.slug if sector else ""
+    rows = []
+    for theme in themes:
+        if theme.taxonomy_type == ThemeTaxonomyType.SECTOR and theme.slug != sector_slug:
+            continue
+        rows.append({
+            "id": theme.id,
+            "slug": theme.slug,
+            "name": theme.name,
+            "taxonomy_type": theme.taxonomy_type,
+            "taxonomy_type_label": dict(ThemeTaxonomyType.choices).get(theme.taxonomy_type, theme.taxonomy_type),
+            "parent_slug": theme.parent.slug if theme.parent_id else "",
+            "description": theme.description,
+            "aliases": theme.aliases if isinstance(theme.aliases, list) else [],
+        })
+    return rows
+
+
+def serialize_theme_exposure(row: CompanyThemeExposure) -> dict[str, object]:
+    return {
+        "id": row.id,
+        "theme": {
+            "id": row.theme_id,
+            "slug": row.theme.slug,
+            "name": row.theme.name,
+            "taxonomy_type": row.theme.taxonomy_type,
+            "parent_slug": row.theme.parent.slug if row.theme.parent_id else "",
+        },
+        "exposure_type": row.exposure_type,
+        "exposure_type_label": dict(ThemeExposureType.choices).get(row.exposure_type, row.exposure_type),
+        "materiality": row.materiality,
+        "materiality_label": dict(ThemeMateriality.choices).get(row.materiality, row.materiality),
+        "evidence_date": row.evidence_date.isoformat() if row.evidence_date else None,
+        "evidence_summary": row.evidence_summary,
+        "evidence_text": row.evidence_text,
+        "exposure_rationale": row.exposure_rationale,
+        "confidence_score": decimal_to_float(row.confidence_score),
+        "review_status": row.review_status,
+        "source": serialize_profile_source(row.source_document) if row.source_document_id else None,
+        "linked_event": serialize_business_event(row.linked_event) if row.linked_event_id else None,
+        "linked_kpi": serialize_kpi_definition(row.linked_kpi) if row.linked_kpi_id else None,
+        "linked_capital_allocation_item": serialize_theme_capital_item(row.linked_capital_allocation_item) if row.linked_capital_allocation_item_id else None,
+    }
+
+
+def serialize_theme_capital_item(item: CapitalAllocationItem | None) -> dict[str, object] | None:
+    if item is None:
+        return None
+    return {
+        "id": item.id,
+        "category": item.category,
+        "category_label": dict(CapitalAllocationCategory.choices).get(item.category, item.category),
+        "label": item.label,
+        "value": decimal_to_float_or_none(item.value),
+        "unit": item.unit,
+        "evidence_text": item.evidence_text,
+    }
+
+
+def sector_theme_pages(exposures: list[CompanyThemeExposure]) -> list[dict[str, object]]:
+    pages = []
+    for theme_slug in sorted({row.theme.slug for row in exposures}):
+        rows = [row for row in exposures if row.theme.slug == theme_slug]
+        theme = rows[0].theme
+        pages.append({
+            "theme": {"slug": theme.slug, "name": theme.name, "description": theme.description},
+            "exposure_count": len(rows),
+            "operating_exposure_count": sum(1 for row in rows if row.materiality != ThemeMateriality.NARRATIVE_ONLY),
+            "exposure_types": sorted({row.exposure_type for row in rows}),
+            "latest_evidence_date": max([row.evidence_date for row in rows if row.evidence_date], default=None).isoformat()
+            if any(row.evidence_date for row in rows)
+            else None,
+        })
+    return pages
+
+
+def sector_theme_related(exposures: list[CompanyThemeExposure]) -> dict[str, list[dict[str, object]]]:
+    events = []
+    kpis = []
+    capital = []
+    risk = []
+    seen_events = set()
+    seen_kpis = set()
+    seen_capital = set()
+    for row in exposures:
+        if row.linked_event_id and row.linked_event_id not in seen_events:
+            payload = serialize_business_event(row.linked_event)
+            events.append(payload)
+            if row.linked_event.event_type in RISK_EVENT_TYPES:
+                risk.append(payload)
+            seen_events.add(row.linked_event_id)
+        if row.linked_kpi_id and row.linked_kpi_id not in seen_kpis:
+            kpis.append(serialize_kpi_definition(row.linked_kpi))
+            seen_kpis.add(row.linked_kpi_id)
+        if row.linked_capital_allocation_item_id and row.linked_capital_allocation_item_id not in seen_capital:
+            capital.append(serialize_theme_capital_item(row.linked_capital_allocation_item))
+            seen_capital.add(row.linked_capital_allocation_item_id)
+    return {"events": events, "kpis": kpis, "capital_allocation": capital, "risk_signals": risk}
+
+
+def theme_counts(exposures: list[CompanyThemeExposure]) -> list[dict[str, object]]:
+    counts: dict[str, dict[str, object]] = {}
+    for row in exposures:
+        entry = counts.setdefault(row.theme.slug, {"slug": row.theme.slug, "name": row.theme.name, "count": 0})
+        entry["count"] = int(entry["count"]) + 1
+    return sorted(counts.values(), key=lambda row: str(row["name"]))
+
+
+def sector_theme_evidence(snapshot: SectorThemeSnapshot, exposures: list[CompanyThemeExposure]) -> list[dict[str, object]]:
+    sources = []
+    seen = set()
+    if snapshot.source_document_id:
+        sources.append(serialize_profile_source(snapshot.source_document))
+        seen.add(snapshot.source_document_id)
+    for row in exposures:
+        if row.source_document_id and row.source_document_id not in seen:
+            sources.append(serialize_profile_source(row.source_document))
+            seen.add(row.source_document_id)
+    return sources
+
+
+def sector_theme_source_gaps(company: Company, snapshot: SectorThemeSnapshot, exposures: list[CompanyThemeExposure]) -> list[dict[str, str]]:
+    gaps = []
+    if not exposures:
+        gaps.append({"key": "theme_exposures", "label": "Theme exposures unavailable", "reason": f"No reviewed theme exposure rows are available for {company.name}.", "source": "sector-theme-intelligence", "next_action": "Refresh reviewed events, KPI definitions, capital allocation, and source-backed company profile data."})
+        return gaps
+    if not any(row.materiality != ThemeMateriality.NARRATIVE_ONLY for row in exposures):
+        gaps.append({"key": "operating_exposure", "label": "Operating exposure unavailable", "reason": "Current rows are narrative-only sector or theme context and do not yet include event, KPI, or capital-allocation evidence.", "source": "sector-theme-intelligence", "next_action": "Extract source-backed events, KPIs, or capital allocation tied to concrete operating exposure."})
+    if not any(row.linked_event_id for row in exposures):
+        gaps.append({"key": "strategic_move_links", "label": "Strategic move links unavailable", "reason": "No reviewed business event is linked to the selected theme exposure rows.", "source": "sector-theme-intelligence", "next_action": "Review event extraction outputs and map decision themes to the reviewed taxonomy."})
+    if not any(row.linked_kpi_id for row in exposures):
+        gaps.append({"key": "kpi_links", "label": "KPI links unavailable", "reason": "No operating KPI is linked to the selected theme exposure rows.", "source": "sector-theme-intelligence", "next_action": "Map company-specific KPI definitions to theme exposure types only where the KPI measures exposure directly."})
+    if not any(row.linked_capital_allocation_item_id for row in exposures):
+        gaps.append({"key": "capital_allocation_links", "label": "Capital allocation links unavailable", "reason": "No reviewed capital-allocation row is linked to the selected theme exposure rows.", "source": "sector-theme-intelligence", "next_action": "Map reviewed capex, R&D, content, acquisition, or debt deployment rows to relevant themes."})
+    return gaps
 
 
 def serialize_leadership_decision_snapshot(snapshot: LeadershipDecisionSnapshot) -> dict[str, object]:
@@ -4413,6 +4672,33 @@ def persist_regulatory_litigation_gaps(company: Company, gaps: list[dict[str, st
             dashboard="regulatory_litigation_calendar",
             gap_type=gap["key"],
             provider=gap.get("source", "regulatory-litigation"),
+            defaults={
+                "reason": gap["reason"],
+                "next_ingestion_task": gap.get("next_action", ""),
+                "status": "OPEN",
+                "metadata": {"label": gap.get("label", "")},
+            },
+        )
+
+
+def persist_sector_theme_gaps(company: Company, gaps: list[dict[str, str]]) -> None:
+    active_keys = [gap["key"] for gap in gaps]
+    if active_keys:
+        SourceGap.objects.filter(company=company, dashboard="sector_theme_intelligence").exclude(
+            gap_type__in=active_keys
+        ).update(status="RESOLVED")
+    else:
+        SourceGap.objects.filter(
+            company=company,
+            dashboard="sector_theme_intelligence",
+            status__in=["OPEN", "IN_PROGRESS"],
+        ).update(status="RESOLVED")
+    for gap in gaps:
+        SourceGap.objects.update_or_create(
+            company=company,
+            dashboard="sector_theme_intelligence",
+            gap_type=gap["key"],
+            provider=gap.get("source", "sector-theme-intelligence"),
             defaults={
                 "reason": gap["reason"],
                 "next_ingestion_task": gap.get("next_action", ""),

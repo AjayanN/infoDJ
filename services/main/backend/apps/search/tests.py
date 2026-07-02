@@ -449,6 +449,24 @@ class DashboardSearchApiTests(TestCase):
 
     @override_settings(INGESTION_API_URL="http://ingestion.test/api/ingestion")
     @patch("apps.search.api.requests.get")
+    def test_sector_themes_proxies_filters(self, get):
+        get.return_value = json_response({"status": "available", "company": {"slug": "netflix"}, "exposures": []})
+
+        response = self.client.get(
+            "/api/app/companies/netflix/sector-themes?theme=advertising-cycle&exposure_type=REVENUE&as_of=2026-01-31"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(get.call_args.args[0], "http://ingestion.test/api/ingestion/companies/netflix/sector-themes")
+        self.assertEqual(get.call_args.kwargs["params"], {"as_of": "2026-01-31", "theme": "advertising-cycle", "exposure_type": "REVENUE"})
+
+    def test_sector_themes_requires_authentication(self):
+        response = APIClient().get("/api/app/companies/netflix/sector-themes")
+
+        self.assertEqual(response.status_code, 401)
+
+    @override_settings(INGESTION_API_URL="http://ingestion.test/api/ingestion")
+    @patch("apps.search.api.requests.get")
     def test_leadership_decisions_proxies_filters(self, get):
         get.return_value = json_response({"status": "available", "company": {"slug": "netflix"}, "roles": []})
 

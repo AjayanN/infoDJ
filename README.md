@@ -648,6 +648,23 @@ Open `Regulatory and litigation calendar` from Company 360 for matter filters, s
 
 Requirement 16 verification on July 2, 2026: regulatory/litigation builder populated all 20 configured companies with reviewed snapshots and 32 reviewed matter rows. Ingestion API smoke passed for all 20 companies with at least one reviewed matter, explicit legal guardrails, and source gaps for missing authority/deadline/exposure details where applicable. Authenticated main-backend proxy smoke passed for Netflix. Ingestion backend `86/86`, main backend `44/44`, frontend `7/7`, and frontend production build passed.
 
+## Sector and Theme Intelligence
+
+Phase 2 Requirement 17 adds Sector and Theme Intelligence for reviewed sector/theme taxonomy, company exposure cards, materiality labels, effective evidence dates, related events, KPI links, risk signals, capital allocation links, evidence, and source gaps.
+
+The baseline builder creates one reviewed snapshot for every configured company from reviewed event themes, active KPI definitions, reviewed capital-allocation rows, and company sector metadata. Broad sector classification is kept as `Narrative only`; operating exposure requires evidence from a reviewed event, KPI, or capital-allocation row. Missing operating exposure, strategic-move links, KPI links, or capital-allocation links are routed to source-gap collection for `10-K`, `10-Q`, `8-K`, official sources, and reviewed extraction candidates.
+
+Sector and Theme Intelligence endpoints:
+
+```bash
+GET /api/ingestion/companies/<slug>/sector-themes
+GET /api/app/companies/<slug>/sector-themes
+```
+
+Open `Sector and theme intelligence` from Company 360 for taxonomy labels, theme pages, exposure cards, materiality filters, related events/KPIs/capital rows, evidence cards, and unavailable data states.
+
+Requirement 17 verification on July 2, 2026: sector/theme builder populated all 20 configured companies with reviewed snapshots and 324 exposure rows. Ingestion API smoke passed for all 20 companies with at least one operating exposure and at least one theme page per company; gaps remain explicit where KPI or capital-allocation links are not yet available. Authenticated main-backend proxy smoke passed for Netflix. Ingestion backend `88/88`, main backend `46/46`, frontend `7/7`, and frontend production build passed.
+
 ## Source Gap Resolution Guardrail
 
 Open source gaps are now routed back into ingestion instead of remaining as passive UI messages. The daily company update runs `resolve_source_gaps` after the Phase 2 builders and creates reviewed-source candidates from existing `SourceDocument` rows for acquisition lifecycle, competitive market-share, customer/supplier dependency, contract-term, concentration, product-pricing, geographic expansion, leadership, and ownership/insider gaps.

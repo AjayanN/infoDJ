@@ -131,6 +131,7 @@
         <button type="button" *ngIf="ownershipInsider()" [class.active]="activePage() === 'ownership-insider'" [attr.aria-current]="activePage() === 'ownership-insider' ? 'page' : null" (click)="setActivePage('ownership-insider')">Ownership</button>
         <button type="button" *ngIf="valuationContext()" [class.active]="activePage() === 'valuation-context'" [attr.aria-current]="activePage() === 'valuation-context' ? 'page' : null" (click)="setActivePage('valuation-context')">Valuation</button>
         <button type="button" *ngIf="regulatoryLitigation()" [class.active]="activePage() === 'regulatory-litigation'" [attr.aria-current]="activePage() === 'regulatory-litigation' ? 'page' : null" (click)="setActivePage('regulatory-litigation')">Regulatory</button>
+        <button type="button" *ngIf="sectorThemes()" [class.active]="activePage() === 'sector-themes'" [attr.aria-current]="activePage() === 'sector-themes' ? 'page' : null" (click)="setActivePage('sector-themes')">Themes</button>
         <button type="button" [class.active]="activePage() === 'profile'" [attr.aria-current]="activePage() === 'profile' ? 'page' : null" (click)="setActivePage('profile')">Profile</button>
         <button type="button" [class.active]="activePage() === 'subscription'" [attr.aria-current]="activePage() === 'subscription' ? 'page' : null" (click)="setActivePage('subscription')">Subscription</button>
       </nav>
@@ -773,6 +774,7 @@
                   <button type="button" class="ghost-button" (click)="openOwnershipInsider(companyView.company.slug)">Ownership and insider activity</button>
                   <button type="button" class="ghost-button" (click)="openValuationContext(companyView.company.slug)">Valuation context</button>
                   <button type="button" class="ghost-button" (click)="openRegulatoryLitigation(companyView.company.slug)">Regulatory and litigation calendar</button>
+                  <button type="button" class="ghost-button" (click)="openSectorThemes(companyView.company.slug)">Sector and theme intelligence</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('companies-like-mine')">Compare peers</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('latest-moves')">Latest moves</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('risk-signals')">Risk signals</button>
@@ -2300,6 +2302,115 @@
               <section class="panel source-gap-panel" *ngIf="regulatoryView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable regulatory data</h2></div>
                 <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of regulatoryView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+              </section>
+            </ng-container>
+          </section>
+
+          <section *ngSwitchCase="'sector-themes'" class="company-profile-layout" aria-labelledby="themes-heading">
+            <div class="loading-panel" *ngIf="sectorThemesLoading()">Loading sector and theme intelligence...</div>
+            <ng-container *ngIf="!sectorThemesLoading() && sectorThemes() as themeView">
+              <section class="panel company-profile-hero">
+                <div>
+                  <p class="section-kicker">Sector and Theme Intelligence · {{ themeView.status }}</p>
+                  <h2 id="themes-heading">{{ themeView.company.name }}</h2>
+                  <p>{{ themeView.snapshot?.summary || 'Reviewed sector and theme intelligence unavailable.' }}</p>
+                  <p>{{ themeView.snapshot?.methodology }}</p>
+                </div>
+                <div class="profile-score-card">
+                  <strong>{{ themeView.coverage.operating_exposure_count }}</strong>
+                  <span>operating exposures</span>
+                  <small>{{ themeView.coverage.event_link_count }} event links</small>
+                  <small>{{ themeView.coverage.kpi_link_count }} KPI links</small>
+                </div>
+              </section>
+
+              <section class="profile-controls panel">
+                <label>Snapshot at date
+                  <select [(ngModel)]="sectorThemesDate">
+                    <option value="">Latest reviewed snapshot</option>
+                    <option *ngFor="let snapshot of themeView.snapshot_history" [value]="snapshot.effective_date">
+                      {{ snapshot.effective_date }} · {{ snapshot.operating_exposure_count }} operating of {{ snapshot.exposure_count }}
+                    </option>
+                  </select>
+                </label>
+                <label>Theme
+                  <select [(ngModel)]="sectorThemeFilter">
+                    <option value="">All themes</option>
+                    <option *ngFor="let theme of themeView.theme_pages" [value]="theme.theme.slug">{{ theme.theme.name }}</option>
+                  </select>
+                </label>
+                <label>Exposure type
+                  <select [(ngModel)]="sectorThemeExposureType">
+                    <option value="">All exposure types</option>
+                    <option *ngFor="let type of themeView.filters.exposure_types" [value]="type">{{ promiseLabel(type) }}</option>
+                  </select>
+                </label>
+                <div class="profile-control-actions">
+                  <button type="button" class="primary-button" (click)="reloadSectorThemes()">Update filters</button>
+                  <button type="button" class="ghost-button" (click)="openCompany(themeView.company.slug)">Back to Company 360</button>
+                  <button type="button" class="ghost-button" (click)="printSectorThemesBrief()">Print theme brief</button>
+                </div>
+              </section>
+
+              <section class="metric-grid">
+                <article class="metric-card"><strong>{{ themeView.coverage.exposure_count }}</strong><span>total exposure rows</span></article>
+                <article class="metric-card"><strong>{{ themeView.coverage.capital_link_count }}</strong><span>capital links</span></article>
+                <article class="metric-card"><strong>{{ themeView.coverage.source_count }}</strong><span>evidence sources</span></article>
+              </section>
+
+              <section class="dashboard-two-column">
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Theme Pages</p><h2>Reviewed exposure map</h2></div><span>{{ themeView.theme_pages.length }} themes</span></div>
+                  <div class="result-row" *ngFor="let page of themeView.theme_pages">
+                    <strong>{{ page.theme.name }}</strong>
+                    <span>{{ page.operating_exposure_count }} operating of {{ page.exposure_count }} · latest {{ page.latest_evidence_date || 'date unavailable' }}</span>
+                    <p>{{ page.theme.description }}</p>
+                    <small>{{ page.exposure_types.join(', ') || 'No exposure type' }}</small>
+                  </div>
+                  <div class="empty-state unavailable-state" *ngIf="themeView.theme_pages.length === 0">No reviewed theme pages are available.</div>
+                </article>
+
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Taxonomy</p><h2>Sectors, themes, and subthemes</h2></div><span>{{ themeView.taxonomy.length }} labels</span></div>
+                  <div class="result-row" *ngFor="let item of themeView.taxonomy">
+                    <strong>{{ item.name }}</strong>
+                    <span>{{ item.taxonomy_type_label }} · {{ item.parent_slug || 'root' }}</span>
+                    <p>{{ item.description }}</p>
+                  </div>
+                </article>
+              </section>
+
+              <section class="panel">
+                <div class="panel-header"><div><p class="section-kicker">Exposure Cards</p><h2>Evidence-based company exposure</h2></div><span>{{ themeView.exposures.length }} rows</span></div>
+                <div class="result-row" *ngFor="let exposure of themeView.exposures">
+                  <strong>{{ exposure.theme.name }} · {{ exposure.exposure_type_label }}</strong>
+                  <span>{{ exposure.materiality_label }} · {{ exposure.evidence_date || 'date unavailable' }} · confidence {{ exposure.confidence_score | number:'1.2-2' }}</span>
+                  <p>{{ exposure.evidence_summary }}</p>
+                  <p>{{ exposure.exposure_rationale }}</p>
+                  <small *ngIf="exposure.linked_event">Event: {{ exposure.linked_event.event_type }} · {{ exposure.linked_event.event_date || 'date unavailable' }}</small>
+                  <small *ngIf="exposure.linked_kpi">KPI: {{ exposure.linked_kpi.name }}</small>
+                  <small *ngIf="exposure.linked_capital_allocation_item">Capital: {{ exposure.linked_capital_allocation_item.label }} · {{ exposure.linked_capital_allocation_item.value === null ? 'value unavailable' : (exposure.linked_capital_allocation_item.value | number:'1.0-0') }} {{ exposure.linked_capital_allocation_item.unit }}</small>
+                </div>
+                <div class="empty-state unavailable-state" *ngIf="themeView.exposures.length === 0">No reviewed exposure rows are available for the selected filters.</div>
+              </section>
+
+              <section class="dashboard-two-column">
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Related Evidence</p><h2>Moves, KPIs, risks, and capital</h2></div></div>
+                  <div class="result-row" *ngFor="let event of themeView.related.events"><strong>{{ event.event_type }}</strong><span>{{ event.event_date || 'No date' }} · {{ event.decision_theme || 'No theme' }}</span><p>{{ event.actual_change }}</p></div>
+                  <div class="result-row" *ngFor="let kpi of themeView.related.kpis"><strong>{{ kpi.name }}</strong><span>{{ kpi.unit }} · {{ kpi.cadence }}</span><p>{{ kpi.description }}</p></div>
+                  <div class="result-row" *ngFor="let item of themeView.related.capital_allocation"><strong>{{ item.category_label }}</strong><span>{{ item.value === null ? 'value unavailable' : (item.value | number:'1.0-0') }} {{ item.unit }}</span><p>{{ item.label }}</p></div>
+                  <div class="empty-state unavailable-state" *ngIf="themeView.related.events.length === 0 && themeView.related.kpis.length === 0 && themeView.related.capital_allocation.length === 0">No related event, KPI, or capital-allocation rows are linked to the selected themes.</div>
+                </article>
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Theme evidence</h2></div><span>{{ themeView.evidence.length }} sources</span></div>
+                  <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of themeView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                </article>
+              </section>
+
+              <section class="panel source-gap-panel" *ngIf="themeView.source_gaps.length > 0">
+                <div class="panel-header"><h2>Unavailable theme data</h2></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of themeView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
               </section>
             </ng-container>
           </section>

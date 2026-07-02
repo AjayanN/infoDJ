@@ -24,6 +24,7 @@ import {
   OwnershipInsiderResponse,
   ValuationContextResponse,
   RegulatoryLitigationResponse,
+  SectorThemeResponse,
   LeadershipDecisionResponse,
   DashboardSection,
   DashboardResponse,
@@ -51,7 +52,7 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider' | 'valuation-context' | 'regulatory-litigation' | 'profile' | 'subscription';
+type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider' | 'valuation-context' | 'regulatory-litigation' | 'sector-themes' | 'profile' | 'subscription';
 type DashboardViewId =
   | 'company-intelligence'
   | 'turn-impact'
@@ -147,6 +148,7 @@ class AppComponent {
   ownershipInsider = signal<OwnershipInsiderResponse | null>(null);
   valuationContext = signal<ValuationContextResponse | null>(null);
   regulatoryLitigation = signal<RegulatoryLitigationResponse | null>(null);
+  sectorThemes = signal<SectorThemeResponse | null>(null);
   leadershipDecisions = signal<LeadershipDecisionResponse | null>(null);
   searchResults = signal<SearchResponse | null>(null);
   searchPages = signal<Record<SearchResultGroup, number>>({
@@ -187,6 +189,7 @@ class AppComponent {
   ownershipInsiderLoading = signal(false);
   valuationContextLoading = signal(false);
   regulatoryLitigationLoading = signal(false);
+  sectorThemesLoading = signal(false);
   leadershipDecisionLoading = signal(false);
   companyProfileDate = '';
   businessModelDate = '';
@@ -233,6 +236,9 @@ class AppComponent {
   regulatoryLitigationDate = '';
   regulatoryMatterType = '';
   regulatoryMatterStatus = '';
+  sectorThemesDate = '';
+  sectorThemeFilter = '';
+  sectorThemeExposureType = '';
   leadershipDecisionDate = '';
   leadershipRoleType = '';
   leadershipDecisionType = '';
@@ -571,6 +577,9 @@ class AppComponent {
     if (this.activePage() === 'regulatory-litigation') {
       return `${this.regulatoryLitigation()?.company.name || 'Company'} Regulatory and Litigation Calendar`;
     }
+    if (this.activePage() === 'sector-themes') {
+      return `${this.sectorThemes()?.company.name || 'Company'} Sector and Theme Intelligence`;
+    }
     if (this.activePage() === 'leadership-decisions') {
       return `${this.leadershipDecisions()?.company.name || 'Company'} Leadership Decision Record`;
     }
@@ -628,6 +637,9 @@ class AppComponent {
     }
     if (this.activePage() === 'regulatory-litigation') {
       return 'Regulatory reviews, investigations, litigation, approvals, deadlines, exposure context, evidence, and legal guardrails.';
+    }
+    if (this.activePage() === 'sector-themes') {
+      return 'Evidence-based sector and theme exposure across events, KPIs, risks, capital allocation, and narrative-only context.';
     }
     if (this.activePage() === 'leadership-decisions') {
       return 'Leadership roles, tenure context, stated priorities, material decisions, succession events, evidence, and non-causation guardrails.';
@@ -1357,6 +1369,39 @@ class AppComponent {
   }
 
   printRegulatoryLitigationBrief(): void {
+    window.print();
+  }
+
+  openSectorThemes(slug: string, asOf = '', theme = '', exposureType = ''): void {
+    if (!slug || !this.token()) return;
+    this.activePage.set('sector-themes');
+    this.menuOpen.set(false);
+    this.sectorThemesLoading.set(true);
+    this.error.set('');
+    this.api.sectorThemes(
+      this.token(),
+      slug,
+      asOf || this.sectorThemesDate,
+      theme || this.sectorThemeFilter,
+      exposureType || this.sectorThemeExposureType
+    ).subscribe({
+      next: (response) => {
+        this.sectorThemes.set(response);
+        this.sectorThemesDate = response.snapshot?.effective_date || '';
+        this.sectorThemeFilter = response.filters?.selected_theme || '';
+        this.sectorThemeExposureType = response.filters?.selected_exposure_type || '';
+        this.sectorThemesLoading.set(false);
+      },
+      error: (response) => { this.sectorThemesLoading.set(false); this.showError(response); }
+    });
+  }
+
+  reloadSectorThemes(): void {
+    const company = this.sectorThemes()?.company;
+    if (company) this.openSectorThemes(company.slug, this.sectorThemesDate, this.sectorThemeFilter, this.sectorThemeExposureType);
+  }
+
+  printSectorThemesBrief(): void {
     window.print();
   }
 
