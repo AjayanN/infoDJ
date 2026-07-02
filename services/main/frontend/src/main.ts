@@ -32,6 +32,8 @@ import {
   Watchlist,
   WatchlistResponse,
   NotificationResponse,
+  Briefing,
+  BriefingResponse,
   LeadershipDecisionResponse,
   DashboardSection,
   DashboardResponse,
@@ -59,7 +61,7 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider' | 'valuation-context' | 'regulatory-litigation' | 'sector-themes' | 'macro-sensitivity' | 'strategy-theses' | 'watchlists' | 'profile' | 'subscription';
+type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider' | 'valuation-context' | 'regulatory-litigation' | 'sector-themes' | 'macro-sensitivity' | 'strategy-theses' | 'watchlists' | 'briefings' | 'profile' | 'subscription';
 type DashboardViewId =
   | 'company-intelligence'
   | 'turn-impact'
@@ -163,6 +165,8 @@ class AppComponent {
   watchlists = signal<WatchlistResponse | null>(null);
   selectedWatchlist = signal<Watchlist | null>(null);
   notifications = signal<NotificationResponse | null>(null);
+  briefings = signal<BriefingResponse | null>(null);
+  selectedBriefing = signal<Briefing | null>(null);
   leadershipDecisions = signal<LeadershipDecisionResponse | null>(null);
   searchResults = signal<SearchResponse | null>(null);
   searchPages = signal<Record<SearchResultGroup, number>>({
@@ -207,6 +211,7 @@ class AppComponent {
   macroSensitivityLoading = signal(false);
   thesisWorkspaceLoading = signal(false);
   watchlistLoading = signal(false);
+  briefingLoading = signal(false);
   leadershipDecisionLoading = signal(false);
   companyProfileDate = '';
   businessModelDate = '';
@@ -296,6 +301,8 @@ class AppComponent {
   watchItemCompanySlug = '';
   notificationStatusFilter = '';
   notificationCategoryFilter = '';
+  briefingCadence = 'DAILY';
+  briefingStatusFilter = '';
   leadershipDecisionDate = '';
   leadershipRoleType = '';
   leadershipDecisionType = '';
@@ -646,6 +653,9 @@ class AppComponent {
     if (this.activePage() === 'watchlists') {
       return 'Watchlists and Alerts';
     }
+    if (this.activePage() === 'briefings') {
+      return 'Daily and Weekly Briefings';
+    }
     if (this.activePage() === 'leadership-decisions') {
       return `${this.leadershipDecisions()?.company.name || 'Company'} Leadership Decision Record`;
     }
@@ -715,6 +725,9 @@ class AppComponent {
     }
     if (this.activePage() === 'watchlists') {
       return 'Follow companies and topics, refresh source-backed alerts, and review grouped notifications.';
+    }
+    if (this.activePage() === 'briefings') {
+      return 'Personalized daily and weekly summaries of material followed-company changes, evidence, next steps, and coverage gaps.';
     }
     if (this.activePage() === 'leadership-decisions') {
       return 'Leadership roles, tenure context, stated priorities, material decisions, succession events, evidence, and non-causation guardrails.';
@@ -1793,6 +1806,67 @@ class AppComponent {
         this.message.set('Alert feedback saved.');
         this.loadNotifications();
       },
+      error: (response) => this.showError(response)
+    });
+  }
+
+  openBriefings(): void {
+    if (!this.token()) return;
+    this.activePage.set('briefings');
+    this.menuOpen.set(false);
+    this.loadBriefings();
+  }
+
+  loadBriefings(): void {
+    if (!this.token()) return;
+    this.briefingLoading.set(true);
+    this.api.briefings(this.token(), this.briefingCadence, this.briefingStatusFilter).subscribe({
+      next: (response) => {
+        this.briefings.set(response);
+        if (!this.selectedBriefing() && response.briefings.length > 0) this.selectBriefing(response.briefings[0].id);
+        this.briefingLoading.set(false);
+      },
+      error: (response) => { this.briefingLoading.set(false); this.showError(response); }
+    });
+  }
+
+  generateBriefing(): void {
+    if (!this.token()) return;
+    this.briefingLoading.set(true);
+    this.api.generateBriefing(this.token(), this.briefingCadence, true).subscribe({
+      next: (response) => {
+        this.message.set(`${response.briefing.cadence_label} briefing generated.`);
+        this.selectedBriefing.set(response.briefing);
+        this.briefingLoading.set(false);
+        this.loadBriefings();
+      },
+      error: (response) => { this.briefingLoading.set(false); this.showError(response); }
+    });
+  }
+
+  selectBriefing(id: number): void {
+    if (!this.token()) return;
+    this.api.briefing(this.token(), id).subscribe({
+      next: (response) => this.selectedBriefing.set(response.briefing),
+      error: (response) => this.showError(response)
+    });
+  }
+
+  archiveBriefing(id: number): void {
+    if (!this.token()) return;
+    this.api.updateBriefing(this.token(), id, 'ARCHIVED').subscribe({
+      next: (response) => {
+        this.selectedBriefing.set(response.briefing);
+        this.loadBriefings();
+      },
+      error: (response) => this.showError(response)
+    });
+  }
+
+  rateBriefing(id: number, rating: string): void {
+    if (!this.token()) return;
+    this.api.briefingFeedback(this.token(), id, rating).subscribe({
+      next: () => this.message.set('Briefing feedback saved.'),
       error: (response) => this.showError(response)
     });
   }

@@ -916,18 +916,19 @@ Each feature below inherits the shared standards above. Feature sections only de
 
 **MVP tasks:**
 
-- [ ] Define materiality, prioritization, and duplicate-grouping rules.
-- [ ] Build in-product daily and weekly briefing pages.
-- [ ] Add personalized scope based on watchlists and preferences.
-- [ ] Add concise what-changed, why-it-matters, and what-next summaries with evidence.
-- [ ] Add links to underlying dashboards and source documents.
-- [ ] Add email delivery and archive.
-- [ ] Prevent repeated items unless status materially changed.
-- [ ] Add coverage-gap notices when followed entities lack current evidence.
+- [x] Define materiality, prioritization, and duplicate-grouping rules.
+- [x] Build in-product daily and weekly briefing pages.
+- [x] Add personalized scope based on watchlists and preferences.
+- [x] Add concise what-changed, why-it-matters, and what-next summaries with evidence.
+- [x] Add links to underlying dashboards and source documents.
+- [x] Add email delivery and archive.
+- [x] Prevent repeated items unless status materially changed.
+- [x] Add coverage-gap notices when followed entities lack current evidence.
 
 **Acceptance criteria:**
 
 - A briefing is concise, personalized, source-backed, and materially different from a raw news feed.
+- Implemented baseline: daily and weekly briefings are generated from watchlist alerts, ranked by severity/source grouping/recency, archived in-product, include what-changed/why-it-matters/what-next/evidence links, log email delivery when preferences match, and include coverage-gap items for followed entities with no current alert evidence.
 
 ---
 
@@ -1143,7 +1144,7 @@ The order below reflects functional dependency and user value. It does not requi
 **Exit condition:** users can continuously monitor selected companies and maintain an evidence-linked point of view.
 
 - [x] Watchlists and Alerts: private authenticated watchlists implemented with followable entity types, alert categories, delivery preferences, ingestion-backed alert refresh, duplicate grouping, notification center, status workflow, quality feedback, Company 360 follow action, and refresh command.
-- [ ] Daily and Weekly Briefings.
+- [x] Daily and Weekly Briefings: personalized briefing archive implemented with daily/weekly cadence, alert-based ranking, source-backed item summaries, what-next guidance, coverage-gap notices, email delivery logs, feedback, frontend Briefings page, and generation command.
 - [x] Strategy Thesis Workspace.
 
 ### Wave 6: Advanced Decision Intelligence

@@ -749,6 +749,42 @@ python manage.py refresh_watchlist_alerts --limit 12
 
 Open `Alerts` in the left navigation or use `Follow for alerts` from Company 360. Alerts are intentionally grouped meaningful changes, not every new document or mention.
 
+## Daily and Weekly Briefings
+
+Phase 2 Requirement 21 adds personalized daily and weekly briefings. Briefings summarize the user’s watchlist alerts and coverage gaps; they do not create independent event logic.
+
+The baseline includes:
+
+- daily and weekly briefing cadences
+- materiality ranking by severity, duplicate grouping, recency, and followed-entity scope
+- in-product briefing archive with ready, sent, and archived states
+- concise what-changed, why-it-matters, and what-next fields for every briefing item
+- evidence labels, source dates, and source links from the underlying notification
+- personalized scope from active watchlists and followed entities
+- repeated alert suppression through notification dedupe keys
+- coverage-gap notices for followed entities with no current source-backed alert evidence
+- email delivery logs when user delivery preferences match the briefing cadence
+- briefing feedback for relevance monitoring
+
+Briefing endpoints:
+
+```bash
+GET  /api/app/briefings
+POST /api/app/briefings
+GET  /api/app/briefings/<id>
+PATCH /api/app/briefings/<id>
+POST /api/app/briefings/<id>/feedback
+```
+
+Generate briefings for all users with active watchlists:
+
+```bash
+python manage.py generate_briefings --cadence DAILY
+python manage.py generate_briefings --cadence WEEKLY
+```
+
+Open `Briefings` in the left navigation. Generate a daily or weekly briefing after following companies/topics and refreshing alerts.
+
 ## Source Gap Resolution Guardrail
 
 Open source gaps are now routed back into ingestion instead of remaining as passive UI messages. The daily company update runs `resolve_source_gaps` after the Phase 2 builders and creates reviewed-source candidates from existing `SourceDocument` rows for acquisition lifecycle, competitive market-share, customer/supplier dependency, contract-term, concentration, product-pricing, geographic expansion, leadership, and ownership/insider gaps.
