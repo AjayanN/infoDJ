@@ -1013,18 +1013,19 @@ Each feature below inherits the shared standards above. Feature sections only de
 
 **MVP tasks:**
 
-- [ ] Define failure, partial failure, temporary setback, incomplete, and too early to judge.
-- [ ] Define minimum evidence and review period for each classification.
-- [ ] Build searchable library with category, sector, stage, and outcome filters.
-- [ ] Build case-study pages covering context, decision, thesis, execution, warning signs, outcome, and lessons.
-- [ ] Include management rationale and avoid hindsight-only framing.
-- [ ] Show early indicators observable at the time.
-- [ ] Link promises, milestones, KPIs, capital allocation, leadership, and market context.
-- [ ] Require editorial review and clear appeals/correction path.
+- [x] Define failure, partial failure, temporary setback, incomplete, and too early to judge.
+- [x] Define minimum evidence and review period for each classification.
+- [x] Build searchable library with category, sector, stage, and outcome filters.
+- [x] Build case-study pages covering context, decision, thesis, execution, warning signs, outcome, and lessons.
+- [x] Include management rationale and avoid hindsight-only framing.
+- [x] Show early indicators observable at the time.
+- [x] Link promises, milestones, KPIs, capital allocation, leadership, and market context.
+- [x] Require editorial review and clear appeals/correction path.
 
 **Acceptance criteria:**
 
 - Every case has a defensible outcome definition, sufficient elapsed time, and evidence available to the user.
+- Implemented baseline: authenticated users can create private failure case studies, classify failure/partial failure/temporary setback/incomplete/too early, define minimum evidence and elapsed review periods, attach evidence and time-observable warning signs, link related Phase 2 records, review through editorial statuses, and block publication until reviewed with evidence, warning signs, review period, and outcome definition present.
 
 ---
 
@@ -1155,7 +1156,7 @@ The order below reflects functional dependency and user value. It does not requi
 
 - [x] Scenario Explorer: private authenticated scenario workspace implemented with best/base/worst templates, user-created versus reviewed labels, KPI/macro/promise/milestone/risk driver assumptions, qualitative/range outcomes, assumption-difference view, indicators, actual-result comparison, evidence suggestions, Company 360 entry point, and non-prediction guardrails.
 - [x] Contradiction View: private authenticated contradiction queue implemented with claim comparison, neutral conflict types, review labels, materiality/confidence, explanation/correction path, human-review publication guardrail, evidence suggestions, Company 360 entry point, and no-deception neutrality language.
-- [ ] Strategy Failure Library.
+- [x] Strategy Failure Library: private authenticated case-study library implemented with categories, classifications, stage filters, decision context, management rationale, thesis, expected and actual outcomes, counterexamples, lessons, correction path, evidence records, observable warning signs, related Phase 2 links, editorial review history, publication guardrails, Company 360 entry point, and ingestion evidence suggestions.
 
 ---
 

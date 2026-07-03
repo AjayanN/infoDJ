@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "apps.alerts",
     "apps.scenarios",
     "apps.contradictions",
+    "apps.failures",
 ]
 
 MIDDLEWARE = [

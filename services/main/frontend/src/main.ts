@@ -38,6 +38,8 @@ import {
   ScenarioListResponse,
   ContradictionCase,
   ContradictionListResponse,
+  StrategyFailureCase,
+  StrategyFailureListResponse,
   LeadershipDecisionResponse,
   DashboardSection,
   DashboardResponse,
@@ -65,7 +67,7 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider' | 'valuation-context' | 'regulatory-litigation' | 'sector-themes' | 'macro-sensitivity' | 'strategy-theses' | 'watchlists' | 'briefings' | 'scenarios' | 'contradictions' | 'profile' | 'subscription';
+type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider' | 'valuation-context' | 'regulatory-litigation' | 'sector-themes' | 'macro-sensitivity' | 'strategy-theses' | 'watchlists' | 'briefings' | 'scenarios' | 'contradictions' | 'strategy-failures' | 'profile' | 'subscription';
 type DashboardViewId =
   | 'company-intelligence'
   | 'turn-impact'
@@ -175,6 +177,8 @@ class AppComponent {
   selectedScenario = signal<ScenarioSet | null>(null);
   contradictions = signal<ContradictionListResponse | null>(null);
   selectedContradiction = signal<ContradictionCase | null>(null);
+  strategyFailures = signal<StrategyFailureListResponse | null>(null);
+  selectedStrategyFailure = signal<StrategyFailureCase | null>(null);
   leadershipDecisions = signal<LeadershipDecisionResponse | null>(null);
   searchResults = signal<SearchResponse | null>(null);
   searchPages = signal<Record<SearchResultGroup, number>>({
@@ -222,6 +226,7 @@ class AppComponent {
   briefingLoading = signal(false);
   scenarioLoading = signal(false);
   contradictionLoading = signal(false);
+  strategyFailureLoading = signal(false);
   leadershipDecisionLoading = signal(false);
   companyProfileDate = '';
   businessModelDate = '';
@@ -358,6 +363,45 @@ class AppComponent {
   contradictionExplanation = '';
   contradictionCorrectionPath = '';
   contradictionPublish = false;
+  failureCompanyFilter = '';
+  failureCategoryFilter = '';
+  failureClassificationFilter = '';
+  failureStageFilter = '';
+  failureTitle = '';
+  failureCompanySlug = '';
+  failureCompanyName = '';
+  failureSector = '';
+  failureCategory = 'EXECUTION_BREAKDOWN';
+  failureClassification = 'TOO_EARLY';
+  failureStage = 'THESIS';
+  failureDecisionDate = '';
+  failureReviewStart = '';
+  failureReviewEnd = '';
+  failureMinimumEvidence = '';
+  failureElapsedTime = '';
+  failureDecisionContext = '';
+  failureManagementRationale = '';
+  failureOriginalThesis = '';
+  failureExpectedResult = '';
+  failureExecutionIssue = '';
+  failureOutcomeDefinition = '';
+  failureActualOutcome = '';
+  failureCounterexamples = '';
+  failureLessons = '';
+  failureCorrectionPath = '';
+  failureEvidenceLabel = '';
+  failureEvidenceSummary = '';
+  failureEvidenceDate = '';
+  failureEvidenceUrl = '';
+  failureWarningSignal = '';
+  failureWarningWhy = '';
+  failureWarningDate = '';
+  failureLinkType = 'MILESTONE';
+  failureLinkLabel = '';
+  failureLinkNote = '';
+  failureReviewStatus = 'IN_REVIEW';
+  failureReviewNote = '';
+  failurePublish = false;
   leadershipDecisionDate = '';
   leadershipRoleType = '';
   leadershipDecisionType = '';
@@ -717,6 +761,9 @@ class AppComponent {
     if (this.activePage() === 'contradictions') {
       return 'Contradiction View';
     }
+    if (this.activePage() === 'strategy-failures') {
+      return 'Strategy Failure Library';
+    }
     if (this.activePage() === 'leadership-decisions') {
       return `${this.leadershipDecisions()?.company.name || 'Company'} Leadership Decision Record`;
     }
@@ -795,6 +842,9 @@ class AppComponent {
     }
     if (this.activePage() === 'contradictions') {
       return 'Neutral claim comparison queue for reviewed contradictions, clarifications, revisions, and normal evolution.';
+    }
+    if (this.activePage() === 'strategy-failures') {
+      return 'Reviewed case-study library for failed or underperforming strategic moves, warning signs, outcomes, and lessons.';
     }
     if (this.activePage() === 'leadership-decisions') {
       return 'Leadership roles, tenure context, stated priorities, material decisions, succession events, evidence, and non-causation guardrails.';
@@ -2143,6 +2193,168 @@ class AppComponent {
         this.message.set('Contradiction review saved.');
         this.selectedContradiction.set(response.case);
         this.loadContradictions();
+      },
+      error: (response) => this.showError(response)
+    });
+  }
+
+  openStrategyFailures(companySlug = '', companyName = '', sector = ''): void {
+    if (!this.token()) return;
+    this.activePage.set('strategy-failures');
+    this.menuOpen.set(false);
+    if (companySlug) {
+      this.failureCompanyFilter = companySlug;
+      this.failureCompanySlug = companySlug;
+      this.failureCompanyName = companyName;
+      this.failureSector = sector;
+    }
+    this.loadStrategyFailures();
+  }
+
+  loadStrategyFailures(): void {
+    if (!this.token()) return;
+    this.strategyFailureLoading.set(true);
+    this.api.strategyFailures(this.token(), this.failureCompanyFilter, this.failureCategoryFilter, this.failureClassificationFilter, this.failureStageFilter).subscribe({
+      next: (response) => {
+        this.strategyFailures.set(response);
+        if (!this.selectedStrategyFailure() && response.cases.length > 0) this.selectStrategyFailure(response.cases[0].id);
+        this.strategyFailureLoading.set(false);
+      },
+      error: (response) => { this.strategyFailureLoading.set(false); this.showError(response); }
+    });
+  }
+
+  createStrategyFailure(): void {
+    if (!this.token()) return;
+    this.api.createStrategyFailure(this.token(), {
+      title: this.failureTitle,
+      company_slug: this.failureCompanySlug,
+      company_name: this.failureCompanyName,
+      sector: this.failureSector,
+      category: this.failureCategory,
+      classification: this.failureClassification,
+      stage: this.failureStage,
+      decision_date: this.failureDecisionDate,
+      review_start: this.failureReviewStart,
+      review_end: this.failureReviewEnd,
+      minimum_evidence: this.failureMinimumEvidence,
+      elapsed_time_definition: this.failureElapsedTime,
+      decision_context: this.failureDecisionContext,
+      management_rationale: this.failureManagementRationale,
+      original_thesis: this.failureOriginalThesis,
+      expected_result: this.failureExpectedResult,
+      execution_issue: this.failureExecutionIssue,
+      outcome_definition: this.failureOutcomeDefinition,
+      actual_outcome: this.failureActualOutcome,
+      counterexamples: this.failureCounterexamples,
+      lessons: this.failureLessons,
+      correction_path: this.failureCorrectionPath,
+      evidence: [{ label: this.failureEvidenceLabel, summary: this.failureEvidenceSummary, evidence_date: this.failureEvidenceDate, source_url: this.failureEvidenceUrl }],
+      warning_signs: [{ signal: this.failureWarningSignal, why_it_mattered: this.failureWarningWhy, signal_date: this.failureWarningDate }]
+    }).subscribe({
+      next: (response) => {
+        this.message.set('Strategy failure case created.');
+        this.selectedStrategyFailure.set(response.case);
+        this.failureTitle = '';
+        this.failureDecisionContext = '';
+        this.failureManagementRationale = '';
+        this.failureOriginalThesis = '';
+        this.failureExpectedResult = '';
+        this.failureExecutionIssue = '';
+        this.failureOutcomeDefinition = '';
+        this.failureActualOutcome = '';
+        this.failureCounterexamples = '';
+        this.failureLessons = '';
+        this.failureEvidenceLabel = '';
+        this.failureEvidenceSummary = '';
+        this.failureWarningSignal = '';
+        this.failureWarningWhy = '';
+        this.loadStrategyFailures();
+      },
+      error: (response) => this.showError(response)
+    });
+  }
+
+  selectStrategyFailure(id: number): void {
+    if (!this.token()) return;
+    this.api.strategyFailure(this.token(), id).subscribe({
+      next: (response) => this.selectedStrategyFailure.set(response.case),
+      error: (response) => this.showError(response)
+    });
+  }
+
+  addStrategyFailureEvidence(): void {
+    const selected = this.selectedStrategyFailure();
+    if (!this.token() || !selected) return;
+    this.api.addStrategyFailureEvidence(this.token(), selected.id, {
+      label: this.failureEvidenceLabel,
+      summary: this.failureEvidenceSummary,
+      evidence_date: this.failureEvidenceDate,
+      source_url: this.failureEvidenceUrl
+    }).subscribe({
+      next: () => {
+        this.message.set('Failure evidence added.');
+        this.failureEvidenceLabel = '';
+        this.failureEvidenceSummary = '';
+        this.selectStrategyFailure(selected.id);
+        this.loadStrategyFailures();
+      },
+      error: (response) => this.showError(response)
+    });
+  }
+
+  addStrategyFailureWarning(): void {
+    const selected = this.selectedStrategyFailure();
+    if (!this.token() || !selected) return;
+    this.api.addStrategyFailureWarning(this.token(), selected.id, {
+      signal: this.failureWarningSignal,
+      why_it_mattered: this.failureWarningWhy,
+      signal_date: this.failureWarningDate,
+      observable_at_time: true
+    }).subscribe({
+      next: () => {
+        this.message.set('Warning sign added.');
+        this.failureWarningSignal = '';
+        this.failureWarningWhy = '';
+        this.selectStrategyFailure(selected.id);
+        this.loadStrategyFailures();
+      },
+      error: (response) => this.showError(response)
+    });
+  }
+
+  addStrategyFailureLink(): void {
+    const selected = this.selectedStrategyFailure();
+    if (!this.token() || !selected) return;
+    this.api.addStrategyFailureLink(this.token(), selected.id, {
+      feature_type: this.failureLinkType,
+      object_label: this.failureLinkLabel,
+      relationship_note: this.failureLinkNote
+    }).subscribe({
+      next: () => {
+        this.message.set('Related record linked.');
+        this.failureLinkLabel = '';
+        this.failureLinkNote = '';
+        this.selectStrategyFailure(selected.id);
+      },
+      error: (response) => this.showError(response)
+    });
+  }
+
+  reviewStrategyFailure(): void {
+    const selected = this.selectedStrategyFailure();
+    if (!this.token() || !selected) return;
+    this.api.reviewStrategyFailure(this.token(), selected.id, {
+      editorial_status: this.failureReviewStatus,
+      classification: this.failureClassification,
+      note: this.failureReviewNote,
+      correction_path: this.failureCorrectionPath,
+      is_published: this.failurePublish
+    }).subscribe({
+      next: (response) => {
+        this.message.set('Strategy failure review saved.');
+        this.selectedStrategyFailure.set(response.case);
+        this.loadStrategyFailures();
       },
       error: (response) => this.showError(response)
     });
