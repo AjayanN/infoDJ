@@ -1480,6 +1480,59 @@ export type ContradictionListResponse = {
   neutrality_note: string;
 };
 
+export type StrategyFailureCase = {
+  id: number;
+  title: string;
+  company_slug: string;
+  company_name: string;
+  sector: string;
+  category: string;
+  category_label: string;
+  classification: string;
+  classification_label: string;
+  stage: string;
+  stage_label: string;
+  decision_date: string | null;
+  review_start: string | null;
+  review_end: string | null;
+  minimum_evidence: string;
+  elapsed_time_definition: string;
+  decision_context: string;
+  management_rationale: string;
+  original_thesis: string;
+  expected_result: string;
+  execution_issue: string;
+  outcome_definition: string;
+  actual_outcome: string;
+  counterexamples: string;
+  lessons: string;
+  correction_path: string;
+  editorial_status: string;
+  editorial_status_label: string;
+  evidence_count: number;
+  warning_sign_count: number;
+  confidence_score: number;
+  is_published: boolean;
+  guardrail_note: string;
+  updated_at: string;
+  created_at: string;
+  evidence?: { id: number; evidence_type: string; label: string; summary: string; evidence_date: string | null; source_url: string; source_payload: Record<string, unknown> }[];
+  warning_signs?: { id: number; signal_date: string | null; signal: string; why_it_mattered: string; observable_at_time: boolean; source_label: string; source_url: string }[];
+  related_links?: { id: number; feature_type: string; feature_type_label: string; object_label: string; object_id: string; relationship_note: string; source_url: string }[];
+  reviews?: { id: number; previous_status: string; new_status: string; classification: string; note: string; changed_by: string; created_at: string }[];
+  quality?: { checks: Record<string, boolean>; ready_for_review: boolean };
+};
+
+export type StrategyFailureListResponse = {
+  cases: StrategyFailureCase[];
+  categories: { value: string; label: string }[];
+  classifications: { value: string; label: string }[];
+  stages: { value: string; label: string }[];
+  editorial_statuses: { value: string; label: string }[];
+  related_feature_types: { value: string; label: string }[];
+  guardrail_note: string;
+};
+
 export type LeadershipDecisionResponse = {
   status: 'available' | 'partial' | 'unavailable';
   company: CompanyProfileResponse['company'];
@@ -2015,6 +2068,39 @@ export class InfoDjApiService {
 
   reviewContradiction(token: string, id: number, payload: Record<string, unknown>) {
     return this.http.post<{ case: ContradictionCase }>(`${this.apiBaseUrl}/contradictions/${id}/review`, payload, { headers: this.authHeaders(token) });
+  }
+
+  strategyFailures(token: string, company = '', category = '', classification = '', stage = '') {
+    const params: Record<string, string> = {};
+    if (company) params['company'] = company;
+    if (category) params['category'] = category;
+    if (classification) params['classification'] = classification;
+    if (stage) params['stage'] = stage;
+    return this.http.get<StrategyFailureListResponse>(`${this.apiBaseUrl}/strategy-failures`, { headers: this.authHeaders(token), params });
+  }
+
+  createStrategyFailure(token: string, payload: Record<string, unknown>) {
+    return this.http.post<{ case: StrategyFailureCase }>(`${this.apiBaseUrl}/strategy-failures`, payload, { headers: this.authHeaders(token) });
+  }
+
+  strategyFailure(token: string, id: number) {
+    return this.http.get<{ case: StrategyFailureCase }>(`${this.apiBaseUrl}/strategy-failures/${id}`, { headers: this.authHeaders(token) });
+  }
+
+  addStrategyFailureEvidence(token: string, id: number, payload: Record<string, unknown>) {
+    return this.http.post(`${this.apiBaseUrl}/strategy-failures/${id}/evidence`, payload, { headers: this.authHeaders(token) });
+  }
+
+  addStrategyFailureWarning(token: string, id: number, payload: Record<string, unknown>) {
+    return this.http.post(`${this.apiBaseUrl}/strategy-failures/${id}/warning-signs`, payload, { headers: this.authHeaders(token) });
+  }
+
+  addStrategyFailureLink(token: string, id: number, payload: Record<string, unknown>) {
+    return this.http.post(`${this.apiBaseUrl}/strategy-failures/${id}/related-links`, payload, { headers: this.authHeaders(token) });
+  }
+
+  reviewStrategyFailure(token: string, id: number, payload: Record<string, unknown>) {
+    return this.http.post<{ case: StrategyFailureCase }>(`${this.apiBaseUrl}/strategy-failures/${id}/review`, payload, { headers: this.authHeaders(token) });
   }
 
   leadershipDecisions(token: string, slug: string, asOf = '', roleType = '', decisionType = '') {

@@ -849,6 +849,39 @@ GET  /api/app/contradictions/evidence-suggestions?q=<query>&company=<slug>
 
 Open `Contradiction view` from Company 360 or `Contradictions` in the left navigation.
 
+## Strategy Failure Library
+
+Phase 2 Requirement 24 adds a private authenticated Strategy Failure Library for reviewed case studies of failed or materially underperforming strategic moves.
+
+The baseline includes:
+
+- failure categories for pivots, acquisitions, market expansions, product/pricing moves, restructurings, delayed programs, regulatory blockages, capital allocation, competitive displacement, and execution breakdowns
+- classifications for failure, partial failure, temporary setback, incomplete, and too early to judge
+- searchable/filterable library by company, category, classification, and stage
+- case-study detail covering decision context, management rationale, original thesis, expected result, execution issue, outcome definition, actual outcome, counterexamples, lessons, and correction path
+- minimum evidence and elapsed review period fields
+- evidence records with dates, summaries, source URLs, and source payloads
+- early warning signs marked as observable at the time
+- links to promises, milestones, KPIs, capital allocation, leadership, market context, acquisitions, and contradiction records
+- editorial review status, review history, confidence score, and publication guardrail
+- source-backed evidence suggestions from ingestion search
+
+Strategy failure endpoints:
+
+```bash
+GET  /api/app/strategy-failures
+POST /api/app/strategy-failures
+GET  /api/app/strategy-failures/<id>
+PATCH /api/app/strategy-failures/<id>
+POST /api/app/strategy-failures/<id>/evidence
+POST /api/app/strategy-failures/<id>/warning-signs
+POST /api/app/strategy-failures/<id>/related-links
+POST /api/app/strategy-failures/<id>/review
+GET  /api/app/strategy-failures/evidence-suggestions?q=<query>&company=<slug>
+```
+
+Open `Strategy failure library` from Company 360 or `Failures` in the left navigation.
+
 ## Source Gap Resolution Guardrail
 
 Open source gaps are now routed back into ingestion instead of remaining as passive UI messages. The daily company update runs `resolve_source_gaps` after the Phase 2 builders and creates reviewed-source candidates from existing `SourceDocument` rows for acquisition lifecycle, competitive market-share, customer/supplier dependency, contract-term, concentration, product-pricing, geographic expansion, leadership, and ownership/insider gaps.
