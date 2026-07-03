@@ -976,18 +976,19 @@ Each feature below inherits the shared standards above. Feature sections only de
 
 **MVP tasks:**
 
-- [ ] Define contradiction, clarification, revision, and normal evolution separately.
-- [ ] Build contradiction queue and detail comparison.
-- [ ] Display both claims with dates, speakers, scopes, and sources.
-- [ ] Add materiality, confidence, and review status.
-- [ ] Allow explanations such as changed conditions, definition changes, or incomplete evidence.
-- [ ] Add reviewed labels: confirmed contradiction, likely contradiction, apparent conflict, resolved, or not a contradiction.
-- [ ] Require human review before publication.
-- [ ] Avoid language implying intent or deception.
+- [x] Define contradiction, clarification, revision, and normal evolution separately.
+- [x] Build contradiction queue and detail comparison.
+- [x] Display both claims with dates, speakers, scopes, and sources.
+- [x] Add materiality, confidence, and review status.
+- [x] Allow explanations such as changed conditions, definition changes, or incomplete evidence.
+- [x] Add reviewed labels: confirmed contradiction, likely contradiction, apparent conflict, resolved, or not a contradiction.
+- [x] Require human review before publication.
+- [x] Avoid language implying intent or deception.
 
 **Acceptance criteria:**
 
 - The view presents evidence neutrally and never implies deception without authoritative support.
+- Implemented baseline: authenticated users can create neutral contradiction-review cases, compare sourced claims with dates/speakers/scopes/sources, classify contradiction versus clarification/revision/normal evolution, apply reviewed labels through human review, block publication while unreviewed, and retain neutral resolution history.
 
 ---
 
@@ -1153,7 +1154,7 @@ The order below reflects functional dependency and user value. It does not requi
 **Exit condition:** users can test future possibilities, challenge narratives, and learn from reviewed historical failures.
 
 - [x] Scenario Explorer: private authenticated scenario workspace implemented with best/base/worst templates, user-created versus reviewed labels, KPI/macro/promise/milestone/risk driver assumptions, qualitative/range outcomes, assumption-difference view, indicators, actual-result comparison, evidence suggestions, Company 360 entry point, and non-prediction guardrails.
-- [ ] Contradiction View.
+- [x] Contradiction View: private authenticated contradiction queue implemented with claim comparison, neutral conflict types, review labels, materiality/confidence, explanation/correction path, human-review publication guardrail, evidence suggestions, Company 360 entry point, and no-deception neutrality language.
 - [ ] Strategy Failure Library.
 
 ---
