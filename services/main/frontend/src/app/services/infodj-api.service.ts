@@ -1435,6 +1435,51 @@ export type ScenarioListResponse = {
   non_prediction_note: string;
 };
 
+export type ContradictionCase = {
+  id: number;
+  company_slug: string;
+  company_name: string;
+  title: string;
+  category: string;
+  category_label: string;
+  conflict_type: string;
+  conflict_type_label: string;
+  review_label: string;
+  review_label_display: string;
+  materiality: string;
+  materiality_label: string;
+  confidence_score: number;
+  neutral_summary: string;
+  explanation: string;
+  correction_path: string;
+  human_review_required: boolean;
+  is_published: boolean;
+  neutrality_note: string;
+  updated_at: string;
+  claims?: {
+    id: number;
+    label: string;
+    claim_text: string;
+    claim_date: string | null;
+    speaker: string;
+    scope: string;
+    source_label: string;
+    source_url: string;
+    source_type: string;
+    source_payload: Record<string, unknown>;
+  }[];
+  resolutions?: { id: number; previous_label: string; new_label: string; explanation: string; changed_by: string; created_at: string }[];
+};
+
+export type ContradictionListResponse = {
+  cases: ContradictionCase[];
+  categories: { value: string; label: string }[];
+  conflict_types: { value: string; label: string }[];
+  review_labels: { value: string; label: string }[];
+  materialities: { value: string; label: string }[];
+  neutrality_note: string;
+};
+
 export type LeadershipDecisionResponse = {
   status: 'available' | 'partial' | 'unavailable';
   company: CompanyProfileResponse['company'];
@@ -1946,6 +1991,30 @@ export class InfoDjApiService {
 
   addScenarioActual(token: string, scenarioId: number, payload: Record<string, unknown>) {
     return this.http.post(`${this.apiBaseUrl}/scenarios/${scenarioId}/actual-results`, payload, { headers: this.authHeaders(token) });
+  }
+
+  contradictions(token: string, company = '', reviewLabel = '', category = '') {
+    const params: Record<string, string> = {};
+    if (company) params['company'] = company;
+    if (reviewLabel) params['review_label'] = reviewLabel;
+    if (category) params['category'] = category;
+    return this.http.get<ContradictionListResponse>(`${this.apiBaseUrl}/contradictions`, { headers: this.authHeaders(token), params });
+  }
+
+  createContradiction(token: string, payload: Record<string, unknown>) {
+    return this.http.post<{ case: ContradictionCase }>(`${this.apiBaseUrl}/contradictions`, payload, { headers: this.authHeaders(token) });
+  }
+
+  contradiction(token: string, id: number) {
+    return this.http.get<{ case: ContradictionCase }>(`${this.apiBaseUrl}/contradictions/${id}`, { headers: this.authHeaders(token) });
+  }
+
+  addContradictionClaim(token: string, id: number, payload: Record<string, unknown>) {
+    return this.http.post(`${this.apiBaseUrl}/contradictions/${id}/claims`, payload, { headers: this.authHeaders(token) });
+  }
+
+  reviewContradiction(token: string, id: number, payload: Record<string, unknown>) {
+    return this.http.post<{ case: ContradictionCase }>(`${this.apiBaseUrl}/contradictions/${id}/review`, payload, { headers: this.authHeaders(token) });
   }
 
   leadershipDecisions(token: string, slug: string, asOf = '', roleType = '', decisionType = '') {

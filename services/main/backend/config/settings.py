@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "apps.theses",
     "apps.alerts",
     "apps.scenarios",
+    "apps.contradictions",
 ]
 
 MIDDLEWARE = [

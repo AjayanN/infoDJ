@@ -137,6 +137,7 @@
         <button type="button" [class.active]="activePage() === 'watchlists'" [attr.aria-current]="activePage() === 'watchlists' ? 'page' : null" (click)="openWatchlists()">Alerts</button>
         <button type="button" [class.active]="activePage() === 'briefings'" [attr.aria-current]="activePage() === 'briefings' ? 'page' : null" (click)="openBriefings()">Briefings</button>
         <button type="button" [class.active]="activePage() === 'scenarios'" [attr.aria-current]="activePage() === 'scenarios' ? 'page' : null" (click)="openScenarios()">Scenarios</button>
+        <button type="button" [class.active]="activePage() === 'contradictions'" [attr.aria-current]="activePage() === 'contradictions' ? 'page' : null" (click)="openContradictions()">Contradictions</button>
         <button type="button" [class.active]="activePage() === 'profile'" [attr.aria-current]="activePage() === 'profile' ? 'page' : null" (click)="setActivePage('profile')">Profile</button>
         <button type="button" [class.active]="activePage() === 'subscription'" [attr.aria-current]="activePage() === 'subscription' ? 'page' : null" (click)="setActivePage('subscription')">Subscription</button>
       </nav>
@@ -784,6 +785,7 @@
                   <button type="button" class="ghost-button" (click)="openStrategyTheses(companyView.company.slug, companyView.company.name)">Strategy thesis workspace</button>
                   <button type="button" class="ghost-button" (click)="followCompanyForAlerts(companyView.company.slug, companyView.company.name)">Follow for alerts</button>
                   <button type="button" class="ghost-button" (click)="openScenarios(companyView.company.slug, companyView.company.name)">Scenario explorer</button>
+                  <button type="button" class="ghost-button" (click)="openContradictions(companyView.company.slug, companyView.company.name)">Contradiction view</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('companies-like-mine')">Compare peers</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('latest-moves')">Latest moves</button>
                   <button type="button" class="ghost-button" (click)="openCompanyDashboard('risk-signals')">Risk signals</button>
@@ -2531,6 +2533,123 @@
                 <div class="panel-header"><h2>Unavailable macro data</h2></div>
                 <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of macroView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
               </section>
+            </ng-container>
+          </section>
+
+          <section *ngSwitchCase="'contradictions'" class="company-profile-layout" aria-labelledby="contradiction-heading">
+            <div class="loading-panel" *ngIf="contradictionLoading()">Loading contradiction queue...</div>
+            <ng-container *ngIf="!contradictionLoading()">
+              <section class="panel hero-card">
+                <div>
+                  <p class="section-kicker">Contradiction View</p>
+                  <h2 id="contradiction-heading">Neutral claim comparison and review</h2>
+                  <p>{{ contradictions()?.neutrality_note || 'This view compares sourced claims neutrally and must not imply deception, intent, or wrongdoing without authoritative support.' }}</p>
+                </div>
+                <div class="coverage-summary">
+                  <strong>{{ contradictions()?.cases?.length || 0 }}</strong>
+                  <span>visible cases</span>
+                  <small>Human review required before publication.</small>
+                </div>
+              </section>
+
+              <section class="panel company-profile-controls" aria-label="Contradiction filters">
+                <label>Company <input name="contradiction_company_filter" [(ngModel)]="contradictionCompanyFilter" placeholder="company slug" /></label>
+                <label>Review label
+                  <select name="contradiction_review_filter" [(ngModel)]="contradictionReviewFilter">
+                    <option value="">All labels</option>
+                    <option *ngFor="let label of contradictions()?.review_labels || []" [value]="label.value">{{ label.label }}</option>
+                  </select>
+                </label>
+                <label>Category
+                  <select name="contradiction_category_filter" [(ngModel)]="contradictionCategoryFilter">
+                    <option value="">All categories</option>
+                    <option *ngFor="let category of contradictions()?.categories || []" [value]="category.value">{{ category.label }}</option>
+                  </select>
+                </label>
+                <div class="profile-control-actions">
+                  <button type="button" class="primary-button" (click)="loadContradictions()">Apply filters</button>
+                </div>
+              </section>
+
+              <section class="dashboard-two-column">
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Create</p><h2>Review case</h2></div></div>
+                  <form class="auth-form" (ngSubmit)="createContradiction()">
+                    <label>Title <input name="contradiction_title" [(ngModel)]="contradictionTitle" required /></label>
+                    <label>Company slug <input name="contradiction_company_slug" [(ngModel)]="contradictionCompanySlug" /></label>
+                    <label>Company name <input name="contradiction_company_name" [(ngModel)]="contradictionCompanyName" /></label>
+                    <label>Category <select name="contradiction_category" [(ngModel)]="contradictionCategory"><option *ngFor="let category of contradictions()?.categories || []" [value]="category.value">{{ category.label }}</option></select></label>
+                    <label>Conflict type <select name="contradiction_conflict_type" [(ngModel)]="contradictionConflictType"><option *ngFor="let type of contradictions()?.conflict_types || []" [value]="type.value">{{ type.label }}</option></select></label>
+                    <label>Neutral summary <textarea name="contradiction_summary" [(ngModel)]="contradictionSummary" rows="3"></textarea></label>
+                    <label>Claim A <textarea name="contradiction_claim_a" [(ngModel)]="contradictionClaimAText" rows="3" required></textarea></label>
+                    <label>Claim A date <input name="contradiction_claim_a_date" [(ngModel)]="contradictionClaimADate" type="date" /></label>
+                    <label>Claim A source <input name="contradiction_claim_a_source" [(ngModel)]="contradictionClaimASource" /></label>
+                    <label>Claim B <textarea name="contradiction_claim_b" [(ngModel)]="contradictionClaimBText" rows="3" required></textarea></label>
+                    <label>Claim B date <input name="contradiction_claim_b_date" [(ngModel)]="contradictionClaimBDate" type="date" /></label>
+                    <label>Claim B source <input name="contradiction_claim_b_source" [(ngModel)]="contradictionClaimBSource" /></label>
+                    <button type="submit" class="primary-button">Create review case</button>
+                  </form>
+                </article>
+
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Queue</p><h2>Review cases</h2></div><span>{{ contradictions()?.cases?.length || 0 }} shown</span></div>
+                  <div class="result-row" *ngFor="let row of contradictions()?.cases || []" (click)="selectContradiction(row.id)" role="button" tabindex="0">
+                    <strong>{{ row.title }}</strong>
+                    <span>{{ row.company_name || row.company_slug || 'company not set' }} · {{ row.review_label_display }} · {{ row.materiality_label }}</span>
+                    <p>{{ row.neutral_summary }}</p>
+                    <small>{{ row.category_label }} · {{ row.conflict_type_label }} · published {{ row.is_published ? 'yes' : 'no' }}</small>
+                  </div>
+                  <div class="empty-state unavailable-state" *ngIf="(contradictions()?.cases?.length || 0) === 0">No contradiction cases match the selected filters.</div>
+                </article>
+              </section>
+
+              <ng-container *ngIf="selectedContradiction() as selected">
+                <section class="panel hero-card">
+                  <div>
+                    <p class="section-kicker">Selected case · {{ selected.review_label_display }}</p>
+                    <h2>{{ selected.title }}</h2>
+                    <p>{{ selected.neutral_summary }}</p>
+                    <p><strong>Neutrality:</strong> {{ selected.neutrality_note }}</p>
+                  </div>
+                  <div class="coverage-summary">
+                    <strong>{{ selected.claims?.length || 0 }}</strong>
+                    <span>claims compared</span>
+                    <small>{{ selected.category_label }} · {{ selected.conflict_type_label }}</small>
+                  </div>
+                </section>
+
+                <section class="dashboard-two-column">
+                  <article class="panel" *ngFor="let claim of selected.claims || []">
+                    <div class="panel-header"><div><p class="section-kicker">{{ claim.label }}</p><h2>{{ claim.source_label || 'Source unavailable' }}</h2></div></div>
+                    <p>{{ claim.claim_text }}</p>
+                    <small>{{ claim.claim_date || 'date unavailable' }} · {{ claim.speaker || 'speaker unavailable' }} · {{ claim.scope || 'scope unavailable' }}</small>
+                    <a *ngIf="claim.source_url" [href]="claim.source_url" target="_blank" rel="noopener">Open source</a>
+                  </article>
+                </section>
+
+                <section class="dashboard-two-column">
+                  <article class="panel">
+                    <div class="panel-header"><div><p class="section-kicker">Review</p><h2>Human label</h2></div></div>
+                    <form class="auth-form" (ngSubmit)="reviewContradiction()">
+                      <label>Review label <select name="contradiction_review_label" [(ngModel)]="contradictionReviewLabel"><option *ngFor="let label of contradictions()?.review_labels || []" [value]="label.value">{{ label.label }}</option></select></label>
+                      <label>Conflict type <select name="contradiction_review_conflict_type" [(ngModel)]="contradictionConflictType"><option *ngFor="let type of contradictions()?.conflict_types || []" [value]="type.value">{{ type.label }}</option></select></label>
+                      <label>Explanation <textarea name="contradiction_explanation" [(ngModel)]="contradictionExplanation" rows="3" required></textarea></label>
+                      <label>Correction path <textarea name="contradiction_correction_path" [(ngModel)]="contradictionCorrectionPath" rows="2"></textarea></label>
+                      <label><input name="contradiction_publish" [(ngModel)]="contradictionPublish" type="checkbox" /> Publish after review</label>
+                      <button type="submit" class="primary-button">Save review</button>
+                    </form>
+                  </article>
+                  <article class="panel">
+                    <div class="panel-header"><div><p class="section-kicker">Resolution</p><h2>History</h2></div><span>{{ selected.resolutions?.length || 0 }} updates</span></div>
+                    <div class="result-row" *ngFor="let resolution of selected.resolutions || []">
+                      <strong>{{ resolution.new_label }}</strong>
+                      <span>{{ resolution.created_at | date:'medium' }} · {{ resolution.changed_by }}</span>
+                      <p>{{ resolution.explanation }}</p>
+                    </div>
+                    <div class="empty-state unavailable-state" *ngIf="(selected.resolutions?.length || 0) === 0">No human review history yet.</div>
+                  </article>
+                </section>
+              </ng-container>
             </ng-container>
           </section>
 

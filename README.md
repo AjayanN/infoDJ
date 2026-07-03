@@ -819,6 +819,36 @@ GET  /api/app/scenarios/evidence-suggestions?q=<query>&company=<slug>
 
 Open `Scenario explorer` from Company 360 or `Scenarios` in the left navigation.
 
+## Contradiction View
+
+Phase 2 Requirement 23 adds a neutral Contradiction View for comparing sourced claims. The workflow is designed to avoid implying deception, intent, or wrongdoing without authoritative support.
+
+The baseline includes:
+
+- contradiction, clarification, revision, and normal-evolution conflict types
+- categories such as guidance versus actual outcome, promise versus action, source versus source, and metric-definition changes
+- review queue and detail comparison for two or more claims
+- claim dates, speakers, scopes, source labels, source URLs, and source payloads
+- materiality, confidence score, explanation, correction path, and review status
+- reviewed labels: confirmed contradiction, likely contradiction, apparent conflict, resolved, and not a contradiction
+- human-review requirement before publication
+- resolution history and correction/dispute notes
+- source-backed evidence suggestions from ingestion search
+
+Contradiction endpoints:
+
+```bash
+GET  /api/app/contradictions
+POST /api/app/contradictions
+GET  /api/app/contradictions/<id>
+PATCH /api/app/contradictions/<id>
+POST /api/app/contradictions/<id>/claims
+POST /api/app/contradictions/<id>/review
+GET  /api/app/contradictions/evidence-suggestions?q=<query>&company=<slug>
+```
+
+Open `Contradiction view` from Company 360 or `Contradictions` in the left navigation.
+
 ## Source Gap Resolution Guardrail
 
 Open source gaps are now routed back into ingestion instead of remaining as passive UI messages. The daily company update runs `resolve_source_gaps` after the Phase 2 builders and creates reviewed-source candidates from existing `SourceDocument` rows for acquisition lifecycle, competitive market-share, customer/supplier dependency, contract-term, concentration, product-pricing, geographic expansion, leadership, and ownership/insider gaps.

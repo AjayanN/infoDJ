@@ -36,6 +36,8 @@ import {
   BriefingResponse,
   ScenarioSet,
   ScenarioListResponse,
+  ContradictionCase,
+  ContradictionListResponse,
   LeadershipDecisionResponse,
   DashboardSection,
   DashboardResponse,
@@ -63,7 +65,7 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider' | 'valuation-context' | 'regulatory-litigation' | 'sector-themes' | 'macro-sensitivity' | 'strategy-theses' | 'watchlists' | 'briefings' | 'scenarios' | 'profile' | 'subscription';
+type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider' | 'valuation-context' | 'regulatory-litigation' | 'sector-themes' | 'macro-sensitivity' | 'strategy-theses' | 'watchlists' | 'briefings' | 'scenarios' | 'contradictions' | 'profile' | 'subscription';
 type DashboardViewId =
   | 'company-intelligence'
   | 'turn-impact'
@@ -171,6 +173,8 @@ class AppComponent {
   selectedBriefing = signal<Briefing | null>(null);
   scenarios = signal<ScenarioListResponse | null>(null);
   selectedScenario = signal<ScenarioSet | null>(null);
+  contradictions = signal<ContradictionListResponse | null>(null);
+  selectedContradiction = signal<ContradictionCase | null>(null);
   leadershipDecisions = signal<LeadershipDecisionResponse | null>(null);
   searchResults = signal<SearchResponse | null>(null);
   searchPages = signal<Record<SearchResultGroup, number>>({
@@ -217,6 +221,7 @@ class AppComponent {
   watchlistLoading = signal(false);
   briefingLoading = signal(false);
   scenarioLoading = signal(false);
+  contradictionLoading = signal(false);
   leadershipDecisionLoading = signal(false);
   companyProfileDate = '';
   businessModelDate = '';
@@ -331,6 +336,28 @@ class AppComponent {
   scenarioActualMetric = '';
   scenarioActualValue = '';
   scenarioActualNote = '';
+  contradictionCompanyFilter = '';
+  contradictionReviewFilter = '';
+  contradictionCategoryFilter = '';
+  contradictionTitle = '';
+  contradictionCompanySlug = '';
+  contradictionCompanyName = '';
+  contradictionCategory = 'SOURCE_VS_SOURCE';
+  contradictionConflictType = 'CONTRADICTION';
+  contradictionMateriality = 'MEDIUM';
+  contradictionSummary = '';
+  contradictionClaimALabel = 'Claim A';
+  contradictionClaimAText = '';
+  contradictionClaimADate = '';
+  contradictionClaimASource = '';
+  contradictionClaimBLabel = 'Claim B';
+  contradictionClaimBText = '';
+  contradictionClaimBDate = '';
+  contradictionClaimBSource = '';
+  contradictionReviewLabel = 'APPARENT_CONFLICT';
+  contradictionExplanation = '';
+  contradictionCorrectionPath = '';
+  contradictionPublish = false;
   leadershipDecisionDate = '';
   leadershipRoleType = '';
   leadershipDecisionType = '';
@@ -687,6 +714,9 @@ class AppComponent {
     if (this.activePage() === 'scenarios') {
       return 'Scenario Explorer';
     }
+    if (this.activePage() === 'contradictions') {
+      return 'Contradiction View';
+    }
     if (this.activePage() === 'leadership-decisions') {
       return `${this.leadershipDecisions()?.company.name || 'Company'} Leadership Decision Record`;
     }
@@ -762,6 +792,9 @@ class AppComponent {
     }
     if (this.activePage() === 'scenarios') {
       return 'Best, base, and worst case assumption workspace with linked evidence and non-prediction guardrails.';
+    }
+    if (this.activePage() === 'contradictions') {
+      return 'Neutral claim comparison queue for reviewed contradictions, clarifications, revisions, and normal evolution.';
     }
     if (this.activePage() === 'leadership-decisions') {
       return 'Leadership roles, tenure context, stated priorities, material decisions, succession events, evidence, and non-causation guardrails.';
@@ -2030,6 +2063,86 @@ class AppComponent {
       next: (response) => {
         this.selectedScenario.set(response.scenario_set);
         this.loadScenarios();
+      },
+      error: (response) => this.showError(response)
+    });
+  }
+
+  openContradictions(companySlug = '', companyName = ''): void {
+    if (!this.token()) return;
+    this.activePage.set('contradictions');
+    this.menuOpen.set(false);
+    if (companySlug) {
+      this.contradictionCompanyFilter = companySlug;
+      this.contradictionCompanySlug = companySlug;
+      this.contradictionCompanyName = companyName;
+    }
+    this.loadContradictions();
+  }
+
+  loadContradictions(): void {
+    if (!this.token()) return;
+    this.contradictionLoading.set(true);
+    this.api.contradictions(this.token(), this.contradictionCompanyFilter, this.contradictionReviewFilter, this.contradictionCategoryFilter).subscribe({
+      next: (response) => {
+        this.contradictions.set(response);
+        if (!this.selectedContradiction() && response.cases.length > 0) this.selectContradiction(response.cases[0].id);
+        this.contradictionLoading.set(false);
+      },
+      error: (response) => { this.contradictionLoading.set(false); this.showError(response); }
+    });
+  }
+
+  createContradiction(): void {
+    if (!this.token()) return;
+    this.api.createContradiction(this.token(), {
+      title: this.contradictionTitle,
+      company_slug: this.contradictionCompanySlug,
+      company_name: this.contradictionCompanyName,
+      category: this.contradictionCategory,
+      conflict_type: this.contradictionConflictType,
+      materiality: this.contradictionMateriality,
+      neutral_summary: this.contradictionSummary,
+      claims: [
+        { label: this.contradictionClaimALabel, claim_text: this.contradictionClaimAText, claim_date: this.contradictionClaimADate, source_label: this.contradictionClaimASource },
+        { label: this.contradictionClaimBLabel, claim_text: this.contradictionClaimBText, claim_date: this.contradictionClaimBDate, source_label: this.contradictionClaimBSource }
+      ]
+    }).subscribe({
+      next: (response) => {
+        this.message.set('Contradiction review case created.');
+        this.selectedContradiction.set(response.case);
+        this.contradictionTitle = '';
+        this.contradictionSummary = '';
+        this.contradictionClaimAText = '';
+        this.contradictionClaimBText = '';
+        this.loadContradictions();
+      },
+      error: (response) => this.showError(response)
+    });
+  }
+
+  selectContradiction(id: number): void {
+    if (!this.token()) return;
+    this.api.contradiction(this.token(), id).subscribe({
+      next: (response) => this.selectedContradiction.set(response.case),
+      error: (response) => this.showError(response)
+    });
+  }
+
+  reviewContradiction(): void {
+    const selected = this.selectedContradiction();
+    if (!this.token() || !selected) return;
+    this.api.reviewContradiction(this.token(), selected.id, {
+      review_label: this.contradictionReviewLabel,
+      conflict_type: this.contradictionConflictType,
+      explanation: this.contradictionExplanation,
+      correction_path: this.contradictionCorrectionPath,
+      is_published: this.contradictionPublish
+    }).subscribe({
+      next: (response) => {
+        this.message.set('Contradiction review saved.');
+        this.selectedContradiction.set(response.case);
+        this.loadContradictions();
       },
       error: (response) => this.showError(response)
     });
