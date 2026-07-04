@@ -5182,11 +5182,14 @@ def peer_business_model_rows(company: Company, current: BusinessModelSnapshot | 
     for snapshot in candidates:
         latest_by_company.setdefault(snapshot.company_id, snapshot)
     current_components = {(row.component_type, row.name.lower()) for row in current.components.all()} if current else set()
+    current_types = {component_type for component_type, _name in current_components}
     rows = []
     for snapshot in latest_by_company.values():
         components = list(snapshot.components.all())
         peer_components = {(row.component_type, row.name.lower()) for row in components}
+        peer_types = {component.component_type for component in components}
         shared = sorted(current_components & peer_components)
+        compatibility = business_model_peer_compatibility(current_types, peer_types, shared)
         rows.append(
             {
                 "company": snapshot.company.name,
@@ -5195,10 +5198,65 @@ def peer_business_model_rows(company: Company, current: BusinessModelSnapshot | 
                 "summary": snapshot.summary,
                 "component_count": len(components),
                 "shared_components": [{"component_type": item[0], "name": item[1]} for item in shared],
+                "shared_component_type_count": len(current_types & peer_types),
+                "component_type_overlap_percent": compatibility["component_type_overlap_percent"],
+                "compatibility_status": compatibility["status"],
+                "compatibility_label": compatibility["label"],
+                "comparison_warning": compatibility["warning"],
+                "comparison_basis": compatibility["basis"],
                 "confidence_score": decimal_to_float(snapshot.confidence_score),
             }
         )
     return rows
+
+
+def business_model_peer_compatibility(current_types: set[str], peer_types: set[str], shared_components: list[tuple[str, str]]) -> dict[str, object]:
+    critical_types = {
+        BusinessModelComponentType.PAYER,
+        BusinessModelComponentType.OFFERING,
+        BusinessModelComponentType.REVENUE,
+        BusinessModelComponentType.CHANNEL,
+    }
+    if not current_types or not peer_types:
+        return {
+            "status": "incompatible",
+            "label": "Insufficient model evidence",
+            "warning": "Peer comparison is withheld because one side lacks reviewed business-model components.",
+            "basis": "No comparable component-type coverage is available.",
+            "component_type_overlap_percent": 0,
+        }
+    shared_types = current_types & peer_types
+    denominator = max(len(current_types), 1)
+    overlap_percent = round((len(shared_types) / denominator) * 100)
+    missing_critical = sorted(critical_types - shared_types)
+    shared_named_count = len(shared_components)
+    if len(shared_types) >= 7 and len(missing_critical) == 0:
+        status = "comparable"
+        label = "Comparable model context"
+        warning = "Peer has broad reviewed component overlap; comparison is still descriptive, not a performance or valuation conclusion."
+    elif len(shared_types) >= 4 and len(missing_critical) <= 1:
+        status = "partial"
+        label = "Partial model overlap"
+        warning = "Peer shares some reviewed model dimensions, but missing or different components may make conclusions non-comparable."
+    else:
+        status = "incompatible"
+        label = "Incompatible or weak model overlap"
+        warning = "Peer is same-sector context only; business-model conclusions should not be compared without stronger payer, offering, revenue, and channel overlap."
+    labels = dict(BusinessModelComponentType.choices)
+    missing_labels = [labels.get(component_type, component_type) for component_type in missing_critical]
+    basis = (
+        f"{len(shared_types)} of {len(current_types)} component types overlap; "
+        f"{shared_named_count} exact named components overlap"
+    )
+    if missing_labels:
+        basis += f"; missing critical overlap: {', '.join(missing_labels)}"
+    return {
+        "status": status,
+        "label": label,
+        "warning": warning,
+        "basis": basis + ".",
+        "component_type_overlap_percent": overlap_percent,
+    }
 
 
 def serialize_business_event(event: BusinessEvent) -> dict[str, object]:

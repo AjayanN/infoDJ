@@ -319,7 +319,9 @@ Each feature below inherits the shared standards above. Feature sections only de
 
 - [x] Strengthen semantic validation across all 20 configured companies.
 - [x] Ensure Company 360 uses reviewed Business Model Map summaries before fallback profile text.
-- [ ] Add additional peer comparison safeguards for incompatible business models.
+- [x] Add additional peer comparison safeguards for incompatible business models.
+
+Implemented improvement: Business Model Map peer rows now expose compatibility status, warning text, comparison basis, shared component-type count, and component-type overlap percentage. Same-sector peers with weak payer, offering, revenue, and channel overlap are labelled as same-sector context only instead of directly comparable models.
 
 **Acceptance criteria:**
 
