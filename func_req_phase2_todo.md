@@ -1096,11 +1096,13 @@ The order below reflects functional dependency and user value. It does not requi
 
 **Exit condition:** shared evidence, identity, claim, period, confidence, review, and freshness rules are stable enough for feature work.
 
-- [ ] Confirm shared evidence, claim, metric, period, company identity, and confidence rules.
-- [ ] Define common partial, unavailable, stale, and conflict states.
-- [ ] Select pilot company and review period.
-- [ ] Establish functional review and correction workflows.
-- [ ] Define freshness expectations by information type.
+- [x] Confirm shared evidence, claim, metric, period, company identity, and confidence rules.
+- [x] Define common partial, unavailable, stale, and conflict states.
+- [x] Select pilot company and review period.
+- [x] Establish functional review and correction workflows.
+- [x] Define freshness expectations by information type.
+
+Implemented baseline: authenticated users can open the Foundation Standards page and inspect shared Phase 2 rules for evidence, claims, metrics, periods, company identity, confidence, availability states, source-gap/correction/editorial workflows, pilot scope, and freshness expectations.
 
 ### Wave 1: Company Understanding
 

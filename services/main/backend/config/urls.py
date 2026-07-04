@@ -21,5 +21,6 @@ urlpatterns = [
     path("api/app/", include("apps.scenarios.urls")),
     path("api/app/", include("apps.contradictions.urls")),
     path("api/app/", include("apps.failures.urls")),
+    path("api/app/", include("apps.foundations.urls")),
     re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
 ]

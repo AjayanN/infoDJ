@@ -1533,6 +1533,16 @@ export type StrategyFailureListResponse = {
   guardrail_note: string;
 };
 
+export type FoundationStandardsResponse = {
+  status: string;
+  purpose: string;
+  pilot: { company_slug: string; company_name: string; review_period_start: string; review_period_end: string; reason: string };
+  rules: { key: string; label: string; summary: string; requirements: string[] }[];
+  states: { key: string; label: string; meaning: string }[];
+  review_workflows: { key: string; label: string; steps: string[] }[];
+  freshness: { information_type: string; expectation: string }[];
+};
+
 export type LeadershipDecisionResponse = {
   status: 'available' | 'partial' | 'unavailable';
   company: CompanyProfileResponse['company'];
@@ -2101,6 +2111,10 @@ export class InfoDjApiService {
 
   reviewStrategyFailure(token: string, id: number, payload: Record<string, unknown>) {
     return this.http.post<{ case: StrategyFailureCase }>(`${this.apiBaseUrl}/strategy-failures/${id}/review`, payload, { headers: this.authHeaders(token) });
+  }
+
+  foundationStandards(token: string) {
+    return this.http.get<FoundationStandardsResponse>(`${this.apiBaseUrl}/foundations/standards`, { headers: this.authHeaders(token) });
   }
 
   leadershipDecisions(token: string, slug: string, asOf = '', roleType = '', decisionType = '') {
