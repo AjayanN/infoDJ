@@ -1094,8 +1094,14 @@
 
               <section class="panel">
                 <div class="panel-header"><div><p class="section-kicker">Peer normalization</p><h2>Comparable peer metrics</h2></div></div>
+                <p class="formula-note">{{ kpiView.peer_comparison_warning }}</p>
+                <small>{{ kpiView.peer_comparison_basis }}</small>
                 <div class="empty-state unavailable-state" *ngIf="kpiView.peer_comparisons.length === 0">Peer comparison is blocked until reviewed definitions and units are sufficiently comparable.</div>
-                <div class="result-row" *ngFor="let peer of kpiView.peer_comparisons"><strong>{{ peer.company }}</strong><span>{{ peer.metric }} · {{ peer.unit }}</span></div>
+                <div class="result-row" *ngFor="let peer of kpiView.peer_comparisons"><strong>{{ peer.company }}</strong><span>{{ peer.metric }} · {{ peer.unit }} · {{ peer.cadence }}</span><p>{{ peer.rationale }}</p><small>Reviewed {{ peer.reviewed_at }}</small></div>
+                <div class="empty-state unavailable-state" *ngIf="kpiView.blocked_peer_metrics.length > 0">
+                  <strong>Blocked same-sector KPI candidates</strong>
+                  <div class="result-row" *ngFor="let peer of kpiView.blocked_peer_metrics"><strong>{{ peer.company }}</strong><span>{{ peer.metric }} · {{ peer.unit }} · {{ peer.cadence }}</span><p>{{ peer.reason }}</p></div>
+                </div>
               </section>
 
               <section class="panel source-gap-panel" *ngIf="kpiView.source_gaps.length > 0">

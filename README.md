@@ -285,6 +285,8 @@ The tracker includes:
 - movement and target-crossing alerts, related strategic-event overlays, definition history, and export-ready rows
 - peer comparisons only after definition and unit comparability are reviewed
 
+Peer normalization is guarded separately from same-sector discovery. Reviewed comparable peer metrics appear only when the selected KPI and peer KPI share reviewed comparability, matching unit, matching cadence, active status, and peer-comparable flags. Same-sector KPI candidates that fail those checks are shown as blocked with the exact reason, such as missing reviewed comparability, unit mismatch, cadence mismatch, or a reviewed non-comparable status.
+
 The Netflix pilot contains source-backed 2022 paid streaming memberships, regional Q4 observations, and calculated quarter-over-quarter growth. Every company in the current 20-company universe also receives annual and quarterly SEC Company Facts series for every stored concept. Those baseline series are labeled `Company-wide reported financial context`; they are not presented as company-specific operating KPIs such as subscribers, stores, deliveries, occupancy, or production.
 
 Open any company from search or Company 360 and select `Operating KPI tracker`; after loading, `Operating KPIs` remains in the left navigation.
