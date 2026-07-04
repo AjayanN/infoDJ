@@ -882,6 +882,26 @@ GET  /api/app/strategy-failures/evidence-suggestions?q=<query>&company=<slug>
 
 Open `Strategy failure library` from Company 360 or `Failures` in the left navigation.
 
+## Foundation Standards
+
+Phase 2 Wave 0 adds an authenticated Foundation Standards page so shared product rules are visible and testable before deeper feature maturity work.
+
+The baseline includes:
+
+- shared evidence, claim, metric, period, company identity, and confidence rules
+- common available, partial, unavailable, stale, and conflict states
+- a selected pilot company and review period
+- source-gap, correction, and editorial-review workflows
+- freshness expectations by information type
+
+Foundation endpoint:
+
+```bash
+GET /api/app/foundations/standards
+```
+
+Open `Standards` in the left navigation.
+
 ## Source Gap Resolution Guardrail
 
 Open source gaps are now routed back into ingestion instead of remaining as passive UI messages. The daily company update runs `resolve_source_gaps` after the Phase 2 builders and creates reviewed-source candidates from existing `SourceDocument` rows for acquisition lifecycle, competitive market-share, customer/supplier dependency, contract-term, concentration, product-pricing, geographic expansion, leadership, and ownership/insider gaps.

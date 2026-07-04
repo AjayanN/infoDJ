@@ -139,6 +139,7 @@
         <button type="button" [class.active]="activePage() === 'scenarios'" [attr.aria-current]="activePage() === 'scenarios' ? 'page' : null" (click)="openScenarios()">Scenarios</button>
         <button type="button" [class.active]="activePage() === 'contradictions'" [attr.aria-current]="activePage() === 'contradictions' ? 'page' : null" (click)="openContradictions()">Contradictions</button>
         <button type="button" [class.active]="activePage() === 'strategy-failures'" [attr.aria-current]="activePage() === 'strategy-failures' ? 'page' : null" (click)="openStrategyFailures()">Failures</button>
+        <button type="button" [class.active]="activePage() === 'foundations'" [attr.aria-current]="activePage() === 'foundations' ? 'page' : null" (click)="openFoundations()">Standards</button>
         <button type="button" [class.active]="activePage() === 'profile'" [attr.aria-current]="activePage() === 'profile' ? 'page' : null" (click)="setActivePage('profile')">Profile</button>
         <button type="button" [class.active]="activePage() === 'subscription'" [attr.aria-current]="activePage() === 'subscription' ? 'page' : null" (click)="setActivePage('subscription')">Subscription</button>
       </nav>
@@ -3336,6 +3337,75 @@
                     <div class="panel-header"><div><p class="section-kicker">History</p><h2>Revision trail</h2></div><span>{{ thesis.revisions?.length || 0 }} updates</span></div>
                     <div class="result-row" *ngFor="let revision of thesis.revisions || []"><strong>{{ revision.new_state }}</strong><span>{{ revision.previous_confidence_score === null ? 'new' : revision.previous_confidence_score }} to {{ revision.new_confidence_score }} · {{ revision.created_at | date:'medium' }}</span><p>{{ revision.reason }}</p><small>{{ revision.changed_by }}</small></div>
                   </article>
+                </section>
+              </ng-container>
+            </ng-container>
+          </section>
+
+          <section *ngSwitchCase="'foundations'" class="company-profile-layout" aria-labelledby="foundation-heading">
+            <div class="loading-panel" *ngIf="foundationLoading()">Loading foundation standards...</div>
+            <ng-container *ngIf="!foundationLoading()">
+              <section class="panel hero-card">
+                <div>
+                  <p class="section-kicker">Foundation Standards</p>
+                  <h2 id="foundation-heading">Shared Phase 2 operating rules</h2>
+                  <p>{{ foundationStandards()?.purpose || 'Shared rules for evidence, claims, metrics, periods, company identity, confidence, review, state labels, and freshness.' }}</p>
+                </div>
+                <div class="coverage-summary" *ngIf="foundationStandards() as standards">
+                  <strong>{{ standards.rules.length }}</strong>
+                  <span>rule groups</span>
+                  <small>Pilot: {{ standards.pilot.company_name }} · {{ standards.pilot.review_period_start }} to {{ standards.pilot.review_period_end }}</small>
+                </div>
+              </section>
+
+              <ng-container *ngIf="foundationStandards() as standards">
+                <section class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Pilot</p><h2>Selected company and review period</h2></div></div>
+                  <p><strong>{{ standards.pilot.company_name }}</strong> uses slug <code>{{ standards.pilot.company_slug }}</code>.</p>
+                  <p>{{ standards.pilot.reason }}</p>
+                </section>
+
+                <section class="dashboard-two-column">
+                  <article class="panel" *ngFor="let rule of standards.rules">
+                    <div class="panel-header"><div><p class="section-kicker">{{ rule.key }}</p><h2>{{ rule.label }}</h2></div></div>
+                    <p>{{ rule.summary }}</p>
+                    <div class="source-gap-grid">
+                      <article class="source-gap" *ngFor="let requirement of rule.requirements">
+                        <strong>Requirement</strong>
+                        <p>{{ requirement }}</p>
+                      </article>
+                    </div>
+                  </article>
+                </section>
+
+                <section class="dashboard-two-column">
+                  <article class="panel">
+                    <div class="panel-header"><div><p class="section-kicker">States</p><h2>Common availability labels</h2></div></div>
+                    <div class="result-row" *ngFor="let state of standards.states">
+                      <strong>{{ state.label }}</strong>
+                      <span>{{ state.key }}</span>
+                      <p>{{ state.meaning }}</p>
+                    </div>
+                  </article>
+
+                  <article class="panel">
+                    <div class="panel-header"><div><p class="section-kicker">Freshness</p><h2>Update expectations</h2></div></div>
+                    <div class="result-row" *ngFor="let item of standards.freshness">
+                      <strong>{{ item.information_type }}</strong>
+                      <p>{{ item.expectation }}</p>
+                    </div>
+                  </article>
+                </section>
+
+                <section class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Review</p><h2>Correction and review workflows</h2></div></div>
+                  <div class="dashboard-two-column">
+                    <article class="result-row" *ngFor="let workflow of standards.review_workflows">
+                      <strong>{{ workflow.label }}</strong>
+                      <span>{{ workflow.key }}</span>
+                      <p>{{ workflow.steps.join(' -> ') }}</p>
+                    </article>
+                  </div>
                 </section>
               </ng-container>
             </ng-container>

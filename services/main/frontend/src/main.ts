@@ -40,6 +40,7 @@ import {
   ContradictionListResponse,
   StrategyFailureCase,
   StrategyFailureListResponse,
+  FoundationStandardsResponse,
   LeadershipDecisionResponse,
   DashboardSection,
   DashboardResponse,
@@ -67,7 +68,7 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider' | 'valuation-context' | 'regulatory-litigation' | 'sector-themes' | 'macro-sensitivity' | 'strategy-theses' | 'watchlists' | 'briefings' | 'scenarios' | 'contradictions' | 'strategy-failures' | 'profile' | 'subscription';
+type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider' | 'valuation-context' | 'regulatory-litigation' | 'sector-themes' | 'macro-sensitivity' | 'strategy-theses' | 'watchlists' | 'briefings' | 'scenarios' | 'contradictions' | 'strategy-failures' | 'foundations' | 'profile' | 'subscription';
 type DashboardViewId =
   | 'company-intelligence'
   | 'turn-impact'
@@ -179,6 +180,7 @@ class AppComponent {
   selectedContradiction = signal<ContradictionCase | null>(null);
   strategyFailures = signal<StrategyFailureListResponse | null>(null);
   selectedStrategyFailure = signal<StrategyFailureCase | null>(null);
+  foundationStandards = signal<FoundationStandardsResponse | null>(null);
   leadershipDecisions = signal<LeadershipDecisionResponse | null>(null);
   searchResults = signal<SearchResponse | null>(null);
   searchPages = signal<Record<SearchResultGroup, number>>({
@@ -227,6 +229,7 @@ class AppComponent {
   scenarioLoading = signal(false);
   contradictionLoading = signal(false);
   strategyFailureLoading = signal(false);
+  foundationLoading = signal(false);
   leadershipDecisionLoading = signal(false);
   companyProfileDate = '';
   businessModelDate = '';
@@ -764,6 +767,9 @@ class AppComponent {
     if (this.activePage() === 'strategy-failures') {
       return 'Strategy Failure Library';
     }
+    if (this.activePage() === 'foundations') {
+      return 'Foundation Standards';
+    }
     if (this.activePage() === 'leadership-decisions') {
       return `${this.leadershipDecisions()?.company.name || 'Company'} Leadership Decision Record`;
     }
@@ -845,6 +851,9 @@ class AppComponent {
     }
     if (this.activePage() === 'strategy-failures') {
       return 'Reviewed case-study library for failed or underperforming strategic moves, warning signs, outcomes, and lessons.';
+    }
+    if (this.activePage() === 'foundations') {
+      return 'Shared Phase 2 rules for evidence, claims, metrics, periods, identity, confidence, review, state labels, and freshness.';
     }
     if (this.activePage() === 'leadership-decisions') {
       return 'Leadership roles, tenure context, stated priorities, material decisions, succession events, evidence, and non-causation guardrails.';
@@ -2357,6 +2366,25 @@ class AppComponent {
         this.loadStrategyFailures();
       },
       error: (response) => this.showError(response)
+    });
+  }
+
+  openFoundations(): void {
+    if (!this.token()) return;
+    this.activePage.set('foundations');
+    this.menuOpen.set(false);
+    this.loadFoundations();
+  }
+
+  loadFoundations(): void {
+    if (!this.token()) return;
+    this.foundationLoading.set(true);
+    this.api.foundationStandards(this.token()).subscribe({
+      next: (response) => {
+        this.foundationStandards.set(response);
+        this.foundationLoading.set(false);
+      },
+      error: (response) => { this.foundationLoading.set(false); this.showError(response); }
     });
   }
 
