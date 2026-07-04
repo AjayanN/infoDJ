@@ -38,6 +38,7 @@ from apps.companies.models import (
     GeographicExpansionSnapshot,
     GeographicExpansionStatus,
     InsiderTransaction,
+    KpiComparability,
     KpiDefinition,
     KpiObservation,
     LeadershipDecisionRecord,
@@ -364,6 +365,7 @@ def company_operating_kpis(request: HttpRequest, slug: str) -> JsonResponse:
             if observation.source_document_id and observation.source_document_id not in seen_sources:
                 sources.append(serialize_profile_source(observation.source_document))
                 seen_sources.add(observation.source_document_id)
+    peer_context = kpi_peer_context(company, selected)
     return JsonResponse({
         "status": "available" if definitions and observations else "partial" if definitions else "unavailable",
         "company": serialize_company_detail(company), "dictionary": [serialize_kpi_definition(row) for row in definitions],
@@ -371,7 +373,11 @@ def company_operating_kpis(request: HttpRequest, slug: str) -> JsonResponse:
         "missing_periods": missing_kpi_periods(selected, observations),
         "filters": {"segments": sorted({row.segment for definition in definitions for row in definition.observations.all() if row.segment}), "geographies": sorted({row.geography for definition in definitions for row in definition.observations.all() if row.geography}), "selected_segment": segment, "selected_geography": geography, "selected_start": start_date.isoformat() if start_date else "", "selected_end": end_date.isoformat() if end_date else "", "comparable_only": comparable_only},
         "alerts": kpi_alerts(selected, observations), "event_overlays": [serialize_business_event(row) for row in events],
-        "peer_comparisons": peer_kpi_rows(company, selected), "export_rows": [serialize_kpi_export_row(row) for row in observations],
+        "peer_comparisons": peer_context["comparisons"],
+        "blocked_peer_metrics": peer_context["blocked"],
+        "peer_comparison_warning": peer_context["warning"],
+        "peer_comparison_basis": peer_context["basis"],
+        "export_rows": [serialize_kpi_export_row(row) for row in observations],
         "related_surfaces": [
             {"key": "events", "label": "Strategic events", "status": "available"},
             {"key": "earnings", "label": "Earnings intelligence", "status": "unavailable", "requirement": 5},
@@ -5040,11 +5046,101 @@ def kpi_alerts(kpi: KpiDefinition | None, observations: list[KpiObservation]) ->
     return alerts
 
 
-def peer_kpi_rows(company: Company, kpi: KpiDefinition | None) -> list[dict[str, object]]:
-    if kpi is None or not kpi.peer_comparable or not company.industry:
-        return []
-    peers = KpiDefinition.objects.filter(company__industry=company.industry, peer_comparable=True, slug=kpi.slug).exclude(company=company).select_related("company")
-    return [{"company": row.company.name, "company_slug": row.company.slug, "metric": row.name, "unit": row.unit, "comparable": True} for row in peers]
+def kpi_peer_context(company: Company, kpi: KpiDefinition | None) -> dict[str, object]:
+    empty = {
+        "comparisons": [],
+        "blocked": [],
+        "warning": "Select a reviewed KPI before peer normalization is evaluated.",
+        "basis": "No selected KPI.",
+    }
+    if kpi is None:
+        return empty
+    if not company.industry:
+        return {
+            "comparisons": [],
+            "blocked": [],
+            "warning": "Peer normalization is unavailable until the company has reviewed sector classification.",
+            "basis": "Company sector is unavailable.",
+        }
+
+    candidates = list(
+        KpiDefinition.objects.filter(company__industry=company.industry, is_active=True)
+        .exclude(company=company)
+        .select_related("company")
+        .order_by("company__name", "name")[:40]
+    )
+    if not candidates:
+        return {
+            "comparisons": [],
+            "blocked": [],
+            "warning": "No same-sector KPI candidates are available for peer normalization.",
+            "basis": f"No active KPI definitions found for other {company.industry} companies.",
+        }
+
+    candidate_by_id = {row.id: row for row in candidates}
+    records = list(
+        KpiComparability.objects.filter(
+            Q(kpi=kpi, comparable_kpi_id__in=candidate_by_id)
+            | Q(comparable_kpi=kpi, kpi_id__in=candidate_by_id)
+        ).select_related("kpi", "comparable_kpi")
+    )
+    reviewed_pairs = {}
+    for record in records:
+        peer_id = record.comparable_kpi_id if record.kpi_id == kpi.id else record.kpi_id
+        reviewed_pairs[peer_id] = record
+
+    comparisons = []
+    blocked = []
+    for candidate in candidates:
+        record = reviewed_pairs.get(candidate.id)
+        reasons = []
+        if not kpi.peer_comparable or not candidate.peer_comparable:
+            reasons.append("metric is not marked peer-comparable")
+        if kpi.unit.strip().lower() != candidate.unit.strip().lower():
+            reasons.append("unit mismatch")
+        if kpi.cadence != candidate.cadence:
+            reasons.append("cadence mismatch")
+        if record is None:
+            reasons.append("no reviewed comparability record")
+        elif not record.is_comparable:
+            reasons.append("reviewed as non-comparable")
+
+        if not reasons:
+            comparisons.append({
+                "company": candidate.company.name,
+                "company_slug": candidate.company.slug,
+                "metric": candidate.name,
+                "unit": candidate.unit,
+                "cadence": candidate.cadence,
+                "comparable": True,
+                "rationale": record.rationale,
+                "reviewed_at": record.reviewed_at.isoformat(),
+            })
+        else:
+            blocked.append({
+                "company": candidate.company.name,
+                "company_slug": candidate.company.slug,
+                "metric": candidate.name,
+                "unit": candidate.unit,
+                "cadence": candidate.cadence,
+                "comparable": False,
+                "reason": "; ".join(dict.fromkeys(reasons)),
+                "rationale": record.rationale if record else "",
+                "reviewed_at": record.reviewed_at.isoformat() if record else None,
+            })
+
+    if comparisons and blocked:
+        warning = "Only reviewed comparable peer metrics are shown; same-sector candidates that fail definition, unit, cadence, or review checks are blocked below."
+    elif comparisons:
+        warning = "Peer normalization is limited to reviewed metrics with matching definition, unit, and cadence."
+    else:
+        warning = "Same-sector KPI peers are present, but peer normalization is blocked until definitions, units, cadence, and reviewed comparability match."
+    return {
+        "comparisons": comparisons,
+        "blocked": blocked,
+        "warning": warning,
+        "basis": "Reviewed KpiComparability records plus matching unit, cadence, active status, and peer-comparable flags.",
+    }
 
 
 def persist_operating_kpi_gaps(company: Company, gaps: list[dict[str, str]], has_definitions: bool, has_observations: bool) -> None:

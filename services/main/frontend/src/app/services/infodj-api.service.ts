@@ -563,7 +563,16 @@ export type OperatingKpiResponse = {
   filters: { segments: string[]; geographies: string[]; selected_segment: string; selected_geography: string; selected_start: string; selected_end: string; comparable_only: boolean };
   alerts: { period_end: string | null; type: string; change_percent: number | null; message: string }[];
   event_overlays: DashboardEvent[];
-  peer_comparisons: { company: string; company_slug: string; metric: string; unit: string; comparable: boolean }[];
+  peer_comparisons: {
+    company: string; company_slug: string; metric: string; unit: string; cadence: string; comparable: boolean;
+    rationale: string; reviewed_at: string;
+  }[];
+  blocked_peer_metrics: {
+    company: string; company_slug: string; metric: string; unit: string; cadence: string; comparable: boolean;
+    reason: string; rationale: string; reviewed_at: string | null;
+  }[];
+  peer_comparison_warning: string;
+  peer_comparison_basis: string;
   export_rows: Record<string, unknown>[];
   coverage: { metric_count: number; observation_count: number; reported_count: number; calculated_count: number; last_period: string | null };
   evidence: CompanyProfileSource[];

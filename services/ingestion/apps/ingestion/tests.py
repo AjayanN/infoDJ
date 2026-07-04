@@ -23,6 +23,7 @@ from apps.companies.models import (
     EarningsPeriod,
     EarningsPeriodDocument,
     GeographicExpansionSnapshot,
+    KpiComparability,
     KpiDefinition,
     KpiDefinitionVersion,
     KpiObservation,
@@ -546,6 +547,65 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(payload["missing_periods"], [])
         self.assertEqual(payload["alerts"][0]["type"], "ACCELERATION")
         self.assertEqual(payload["export_rows"][0]["metric_slug"], "paid-memberships")
+
+    def test_operating_kpis_blocks_unreviewed_same_sector_peer_metrics(self):
+        metric = KpiDefinition.objects.create(
+            company=self.netflix, slug="paid-memberships", name="Paid memberships",
+            description="Period-end paid memberships.", unit="million", cadence="QUARTERLY",
+            value_type="REPORTED", scope="Global streaming", peer_comparable=True,
+        )
+        KpiObservation.objects.create(
+            kpi=metric, period_start=date(2022, 1, 1), period_end=date(2022, 3, 31),
+            fiscal_year=2022, fiscal_period="Q1", value="220", source_document=self.source,
+            confidence_score="0.9",
+        )
+        peer = Company.objects.create(name="StreamPeer", industry=self.netflix.industry)
+        KpiDefinition.objects.create(
+            company=peer, slug="paid-memberships", name="Paid memberships",
+            description="Similar label without reviewed definition mapping.", unit="million",
+            cadence="QUARTERLY", value_type="REPORTED", scope="Streaming", peer_comparable=True,
+        )
+
+        response = self.client.get("/companies/netflix/operating-kpis?metric=paid-memberships")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["peer_comparisons"], [])
+        self.assertEqual(payload["blocked_peer_metrics"][0]["company"], "StreamPeer")
+        self.assertIn("no reviewed comparability record", payload["blocked_peer_metrics"][0]["reason"])
+        self.assertIn("peer normalization is blocked", payload["peer_comparison_warning"])
+
+    def test_operating_kpis_shows_only_reviewed_comparable_peer_metrics(self):
+        metric = KpiDefinition.objects.create(
+            company=self.netflix, slug="paid-memberships", name="Paid memberships",
+            description="Period-end paid memberships.", unit="million", cadence="QUARTERLY",
+            value_type="REPORTED", scope="Global streaming", peer_comparable=True,
+        )
+        KpiObservation.objects.create(
+            kpi=metric, period_start=date(2022, 1, 1), period_end=date(2022, 3, 31),
+            fiscal_year=2022, fiscal_period="Q1", value="220", source_document=self.source,
+            confidence_score="0.9",
+        )
+        peer = Company.objects.create(name="StreamPeer", industry=self.netflix.industry)
+        peer_metric = KpiDefinition.objects.create(
+            company=peer, slug="paid-memberships", name="Paid memberships",
+            description="Period-end paid memberships.", unit="million", cadence="QUARTERLY",
+            value_type="REPORTED", scope="Global streaming", peer_comparable=True,
+        )
+        KpiComparability.objects.create(
+            kpi=metric, comparable_kpi=peer_metric, is_comparable=True,
+            rationale="Both definitions measure period-end paid memberships in millions.",
+            reviewed_at=date(2026, 7, 4),
+        )
+
+        response = self.client.get("/companies/netflix/operating-kpis?metric=paid-memberships")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["peer_comparisons"][0]["company"], "StreamPeer")
+        self.assertEqual(payload["peer_comparisons"][0]["reviewed_at"], "2026-07-04")
+        self.assertEqual(payload["blocked_peer_metrics"], [])
+        self.assertIn("matching definition", payload["peer_comparison_warning"])
 
     def test_operating_kpis_does_not_treat_missing_data_as_zero(self):
         response = self.client.get("/companies/netflix/operating-kpis")

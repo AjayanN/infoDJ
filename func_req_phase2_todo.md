@@ -352,7 +352,9 @@ Implemented improvement: Business Model Map peer rows now expose compatibility s
 
 - [ ] Deepen reviewed baseline series across the active universe.
 - [ ] Improve dependency links to Earnings Intelligence, Management Promise Tracker, and Strategy Milestone Tracker.
-- [ ] Add stricter UI warnings for non-comparable peer metrics.
+- [x] Add stricter UI warnings for non-comparable peer metrics.
+
+Implemented improvement: Operating KPI peer normalization now separates reviewed comparable peer metrics from blocked same-sector candidates. The API exposes dashboard-level warning and basis text, plus blocked peer reasons such as missing reviewed comparability, unit mismatch, cadence mismatch, or non-comparable review status. The frontend shows these warnings directly in the KPI peer panel so users cannot mistake same-sector metrics for peer-normalized comparisons.
 
 **Acceptance criteria:**
 
