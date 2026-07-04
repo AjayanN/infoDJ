@@ -505,6 +505,12 @@ export type BusinessModelResponse = {
     summary: string;
     component_count: number;
     shared_components: { component_type: string; name: string }[];
+    shared_component_type_count: number;
+    component_type_overlap_percent: number;
+    compatibility_status: 'comparable' | 'partial' | 'incompatible';
+    compatibility_label: string;
+    comparison_warning: string;
+    comparison_basis: string;
     confidence_score: number;
   }[];
   related_surfaces: {

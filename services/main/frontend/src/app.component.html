@@ -976,8 +976,10 @@
                 <div class="peer-model-grid">
                   <article class="peer-model-card" *ngFor="let peer of modelView.peer_models">
                     <strong>{{ peer.company }}</strong><span>{{ peer.effective_date }} · {{ peer.component_count }} components</span>
+                    <span class="status-pill" [class.available]="peer.compatibility_status === 'comparable'">{{ peer.compatibility_label }}</span>
                     <p>{{ peer.summary }}</p>
-                    <small>{{ peer.shared_components.length }} shared named components · confidence {{ peer.confidence_score | number:'1.2-2' }}</small>
+                    <p>{{ peer.comparison_warning }}</p>
+                    <small>{{ peer.comparison_basis }} · {{ peer.shared_components.length }} shared named components · confidence {{ peer.confidence_score | number:'1.2-2' }}</small>
                     <button type="button" class="ghost-button" (click)="openBusinessModel(peer.company_slug)">Open peer map</button>
                   </article>
                 </div>

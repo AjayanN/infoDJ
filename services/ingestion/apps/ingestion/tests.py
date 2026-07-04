@@ -507,6 +507,10 @@ class IngestionSearchApiTests(TestCase):
         self.assertIn("DVD-by-mail", [row["name"] for row in payload["changes"]["components_removed"]])
         self.assertEqual(payload["peer_models"][0]["company"], "StreamPeer")
         self.assertEqual(payload["peer_models"][0]["shared_components"][0]["name"], "streaming members")
+        self.assertEqual(payload["peer_models"][0]["compatibility_status"], "incompatible")
+        self.assertIn("same-sector context only", payload["peer_models"][0]["comparison_warning"])
+        self.assertEqual(payload["peer_models"][0]["shared_component_type_count"], 1)
+        self.assertLess(payload["peer_models"][0]["component_type_overlap_percent"], 50)
 
     def test_business_model_reports_unavailable_without_reviewed_snapshot(self):
         response = self.client.get("/companies/netflix/business-model")

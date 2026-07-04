@@ -263,6 +263,8 @@ History:   GET /api/app/companies/{slug}/business-model?as_of=YYYY-MM-DD&compare
 
 Open the map from the `Business model map` action on Company 360. Once opened, `Business Model` remains available in the left navigation.
 
+Peer context includes compatibility safeguards. Same-sector companies can still appear as context, but each peer row is labelled as comparable, partial, or incompatible based on reviewed component-type overlap and critical payer, offering, revenue, and channel coverage. Weak matches show a visible warning so users do not treat unlike business models as directly comparable.
+
 Business Model smoke check:
 
 ```bash
