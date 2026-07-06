@@ -350,13 +350,15 @@ Implemented improvement: Business Model Map peer rows now expose compatibility s
 
 **Next improvement tasks:**
 
-- [ ] Deepen reviewed baseline series across the active universe.
+- [x] Deepen reviewed baseline series across the active universe.
 - [x] Improve dependency links to Earnings Intelligence, Management Promise Tracker, and Strategy Milestone Tracker.
 - [x] Add stricter UI warnings for non-comparable peer metrics.
 
 Implemented improvement: Operating KPI peer normalization now separates reviewed comparable peer metrics from blocked same-sector candidates. The API exposes dashboard-level warning and basis text, plus blocked peer reasons such as missing reviewed comparability, unit mismatch, cadence mismatch, or non-comparable review status. The frontend shows these warnings directly in the KPI peer panel so users cannot mistake same-sector metrics for peer-normalized comparisons.
 
 Implemented improvement: KPI dependencies now carry explicit labels into Earnings Intelligence, Management Promise Tracker, and Strategy Milestone Tracker. Earnings KPI rows identify operating movement as context rather than causation, promises identify KPI links as evaluation metrics, milestones identify KPI links as execution evidence, and the KPI dashboard shows availability counts for each dependent surface.
+
+Implemented improvement: Operating KPI Tracker now exposes reviewed SEC-backed baseline-depth coverage for each company, including baseline definition count, observation count, annual and quarterly observation counts, source count, first/latest period, and limitation text that separates company-wide financial context from company-specific operating KPIs. `validate_operating_kpi_baselines` provides an all-company validation gate, and the smoke script fails when baseline coverage is missing.
 
 **Acceptance criteria:**
 

@@ -578,7 +578,21 @@ export type OperatingKpiResponse = {
     dependency_label: string; dependency_description: string;
   }[];
   export_rows: Record<string, unknown>[];
-  coverage: { metric_count: number; observation_count: number; reported_count: number; calculated_count: number; last_period: string | null };
+  coverage: {
+    metric_count: number; observation_count: number; reported_count: number; calculated_count: number; last_period: string | null;
+    baseline: {
+      status: 'available' | 'unavailable';
+      definition_count: number;
+      observation_count: number;
+      annual_observation_count: number;
+      quarterly_observation_count: number;
+      source_count: number;
+      first_period: string | null;
+      latest_period: string | null;
+      coverage_label: string;
+      limitation: string;
+    };
+  };
   evidence: CompanyProfileSource[];
   source_gaps: SourceGap[];
 };

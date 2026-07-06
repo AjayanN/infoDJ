@@ -285,6 +285,7 @@ The tracker includes:
 - movement and target-crossing alerts, related strategic-event overlays, definition history, and export-ready rows
 - peer comparisons only after definition and unit comparability are reviewed
 - dependency labels showing where a selected KPI is used by Earnings Intelligence, Management Promise Tracker, and Strategy Milestone Tracker
+- reviewed SEC-backed baseline-depth coverage showing definition count, observation count, annual and quarterly coverage, source count, and first/latest covered period
 
 Peer normalization is guarded separately from same-sector discovery. Reviewed comparable peer metrics appear only when the selected KPI and peer KPI share reviewed comparability, matching unit, matching cadence, active status, and peer-comparable flags. Same-sector KPI candidates that fail those checks are shown as blocked with the exact reason, such as missing reviewed comparability, unit mismatch, cadence mismatch, or a reviewed non-comparable status.
 
@@ -302,6 +303,13 @@ sudo docker compose -f infra/docker-compose.yml exec -T ingestion \
 ```
 
 `build_companyfacts_kpis --all` remains available to rebuild from facts already stored in the database without making network requests.
+
+Validate all-company baseline depth without fetching new data:
+
+```bash
+sudo docker compose -f infra/docker-compose.yml exec -T ingestion \
+  .venv/bin/python manage.py validate_operating_kpi_baselines --all
+```
 
 Companies outside the United States require equivalent connectors for their home regulator, exchange filings, and official investor-relations downloads. The same KPI dictionary and observation schema can ingest those sources while retaining their regulator and evidence links.
 
