@@ -30,11 +30,23 @@ for path in paths:
     assert data["status"] in {"available", "partial"}, slug
     assert data["snapshot"], slug
     assert data["markets"], slug
+    assert data["definitions"]["geography_levels"], slug
+    assert data["definitions"]["event_types"], slug
+    assert "market-list" in data["definitions"]["accessible_views"], slug
+    assert data["validation_context"]["geography_validation_status"] == "available", slug
+    assert data["validation_context"]["currency_validation_status"] in {"available", "blocked"}, slug
     assert data["coverage"]["market_count"] == len(data["markets"]), slug
     assert any(gap["key"] in {"market_entry_dates", "revenue_contribution", "local_partnerships", "regulatory_barriers", "expansion_outcomes"} for gap in data["source_gaps"]), slug
     for market in data["markets"]:
         assert market["geography"], slug
+        assert market["geography_level"], slug
         assert market["current_status"], slug
+        assert "announcement_date" in market["event_dates"], slug
+        assert isinstance(market["products"], list), slug
+        assert isinstance(market["customer_segments"], list), slug
+        assert isinstance(market["channels"], list), slug
+        assert isinstance(market["regulatory_approvals"], list), slug
+        assert isinstance(market["outcome_metrics"], list), slug
         assert market["expansion_rationale"], slug
         assert market["revenue_contribution"] is None or market["revenue_currency"], slug
     for gap in data["source_gaps"]:

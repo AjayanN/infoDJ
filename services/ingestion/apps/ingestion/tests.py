@@ -1580,6 +1580,7 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(snapshot.status, "REVIEWED")
         self.assertEqual(snapshot.markets.count(), 2)
         self.assertNotIn("no reviewed geographic markets", geographic_expansion_quality_issues(self.netflix))
+        call_command("validate_geographic_expansion", "--company", "netflix")
 
     def test_geographic_expansion_api_exposes_gaps_without_estimating_revenue(self):
         build_geographic_expansion(self.netflix)
@@ -1591,7 +1592,45 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(payload["status"], "available")
         self.assertGreaterEqual(payload["coverage"]["market_count"], 1)
         self.assertEqual(payload["coverage"]["revenue_contribution_count"], 0)
+        self.assertIn("geography_levels", payload["definitions"])
+        self.assertEqual(payload["validation_context"]["geography_validation_status"], "available")
+        self.assertEqual(payload["validation_context"]["currency_validation_status"], "available")
+        self.assertIn("event_dates", payload["markets"][0])
+        self.assertIn("products", payload["markets"][0])
+        self.assertIn("outcome_metrics", payload["markets"][0])
         self.assertTrue(any(gap["key"] == "revenue_contribution" for gap in payload["source_gaps"]))
+
+    def test_geographic_expansion_validator_blocks_revenue_without_currency(self):
+        snapshot = GeographicExpansionSnapshot.objects.create(
+            company=self.netflix,
+            effective_date=date(2026, 1, 1),
+            source_document=self.source,
+            status="REVIEWED",
+            summary="Reviewed expansion.",
+            methodology="Test methodology.",
+            confidence_score="0.850",
+        )
+        snapshot.markets.create(
+            geography="United States",
+            market_type="COUNTRY_OR_MARKET",
+            current_status="ACTIVE",
+            revenue_contribution="100",
+            revenue_currency="",
+            revenue_period="FY2026",
+            expansion_rationale="Reviewed market.",
+            outcome_summary="Reviewed outcome.",
+            evidence_text="Reviewed market evidence.",
+            source_document=self.source,
+            confidence_score="0.850",
+            review_status="REVIEWED",
+        )
+
+        payload = self.client.get("/companies/netflix/geographic-expansion").json()
+
+        self.assertEqual(payload["validation_context"]["currency_validation_status"], "blocked")
+        self.assertTrue(any(gap["key"] == "market_revenue_currency" for gap in payload["source_gaps"]))
+        with self.assertRaisesMessage(Exception, "revenue contribution without currency"):
+            call_command("validate_geographic_expansion", "--company", "netflix")
 
     def test_ownership_insider_builder_creates_reviewed_insider_context(self):
         CompanyProfileSnapshot.objects.create(

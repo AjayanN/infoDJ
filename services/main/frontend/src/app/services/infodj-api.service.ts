@@ -973,15 +973,26 @@ export type GeographicExpansionMarket = {
   id: number;
   geography: string;
   market_type: string;
+  geography_level: string;
   current_status: string;
   current_status_label: string;
   entry_date: string | null;
   exit_date: string | null;
+  event_dates: {
+    announcement_date: string | null; launch_date: string | null; operational_start_date: string | null;
+    scale_up_date: string | null; reduction_date: string | null; exit_date: string | null;
+  };
+  products: string[];
+  customer_segments: string[];
+  channels: string[];
   local_partnerships: string[];
   regulatory_barriers: string[];
+  regulatory_approvals: string[];
+  regulatory_restrictions: string[];
   revenue_contribution: number | null;
   revenue_currency: string;
   revenue_period: string;
+  outcome_metrics: { metric: string; value: number | null; unit: string; period: string; status: string }[];
   expansion_rationale: string;
   outcome_summary: string;
   evidence_text: string;
@@ -1000,7 +1011,21 @@ export type GeographicExpansionResponse = {
   } | null;
   snapshot_history: { id: number; effective_date: string; status: string; confidence_score: number; market_count: number; selected: boolean }[];
   markets: GeographicExpansionMarket[];
-  timeline: { market_id: number; geography: string; entry_date: string | null; exit_date: string | null; status: string; summary: string }[];
+  timeline: { market_id: number; geography: string; event_type: string; entry_date: string | null; exit_date: string | null; status: string; summary: string }[];
+  definitions: {
+    geography_levels: { key: string; label: string; description: string }[];
+    event_types: { key: string; label: string; description: string }[];
+    accessible_views: string[];
+  };
+  validation_context: {
+    geography_validation_status: 'available' | 'blocked';
+    country_naming_policy: string;
+    historical_boundary_policy: string;
+    currency_validation_status: 'available' | 'blocked';
+    reporting_scope_policy: string;
+    market_type_count: number;
+    dated_event_count: number;
+  };
   filters: { statuses: string[]; market_types: string[]; selected_status: string; selected_market_type: string; as_of: string };
   coverage: {
     market_count: number; entered_count: number; exited_count: number; revenue_contribution_count: number;

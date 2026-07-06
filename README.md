@@ -571,6 +571,8 @@ Phase 2 Requirement 12 adds a Geographic Expansion Map for reviewed countries an
 
 The baseline builder uses reviewed Company 360 geographies and source-backed international expansion, market-entry, and regulatory events. Generic geographic presence is not treated as a dated market entry. Missing revenue contribution, local partnerships, regulatory barriers, and outcomes are shown as source gaps instead of inferred values.
 
+The map exposes geography-level definitions, expansion event-type definitions, an accessible market list, an entry/exit timeline, separate announcement/launch/operational-start/scale-up/reduction/exit date slots, and validation guardrails for country naming, historical boundaries, currency, and reporting scope. Products, customer segments, channels, local partners, regulatory approvals/restrictions, revenue, users, locations, and outcomes remain unavailable unless reviewed market-specific evidence supports them.
+
 Geographic Expansion endpoints:
 
 ```bash
@@ -583,6 +585,9 @@ Open `Geographic expansion map` from Company 360 for snapshot controls, status a
 Geographic Expansion smoke check:
 
 ```bash
+sudo docker compose -f infra/docker-compose.yml exec -T ingestion \
+  .venv/bin/python manage.py validate_geographic_expansion --all
+
 BASE_URL=http://localhost:8080/api/app scripts/smoke/phase2_geographic_expansion.sh
 ```
 

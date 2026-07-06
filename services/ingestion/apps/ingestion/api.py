@@ -1048,6 +1048,8 @@ def company_geographic_expansion(request: HttpRequest, slug: str) -> JsonRespons
     if selected_market_type:
         markets = [row for row in markets if row.market_type == selected_market_type]
     gaps = geographic_expansion_source_gaps(company, current, markets)
+    validation_context = geographic_expansion_validation_context(markets)
+    gaps.extend(validation_context["source_gaps"])
     persist_geographic_expansion_gaps(company, gaps)
     evidence = geographic_expansion_evidence(current, markets)
     return JsonResponse({
@@ -1057,6 +1059,10 @@ def company_geographic_expansion(request: HttpRequest, slug: str) -> JsonRespons
         "snapshot_history": [serialize_geographic_expansion_snapshot_history(row, current) for row in snapshots],
         "markets": [serialize_geographic_expansion_market(row) for row in markets],
         "timeline": [serialize_geographic_expansion_timeline(row) for row in markets if row.entry_date or row.exit_date],
+        "definitions": geographic_expansion_definitions(),
+        "validation_context": {
+            key: value for key, value in validation_context.items() if key != "source_gaps"
+        },
         "filters": {
             "statuses": sorted({row.current_status for row in current.markets.all()}),
             "market_types": sorted({row.market_type for row in current.markets.all()}),
@@ -2363,19 +2369,43 @@ def serialize_geographic_expansion_snapshot_history(
 
 
 def serialize_geographic_expansion_market(row: GeographicExpansionMarket) -> dict[str, object]:
+    event_dates = {
+        "announcement_date": row.linked_event.event_date.isoformat() if row.linked_event_id else None,
+        "launch_date": row.entry_date.isoformat() if row.entry_date and row.current_status in {GeographicExpansionStatus.ENTERED, GeographicExpansionStatus.EXPANDING, GeographicExpansionStatus.ACTIVE} else None,
+        "operational_start_date": row.entry_date.isoformat() if row.entry_date else None,
+        "scale_up_date": row.entry_date.isoformat() if row.entry_date and row.current_status == GeographicExpansionStatus.EXPANDING else None,
+        "reduction_date": None,
+        "exit_date": row.exit_date.isoformat() if row.exit_date else None,
+    }
     return {
         "id": row.id,
         "geography": row.geography,
         "market_type": row.market_type,
+        "geography_level": row.market_type,
         "current_status": row.current_status,
         "current_status_label": row.get_current_status_display(),
         "entry_date": row.entry_date.isoformat() if row.entry_date else None,
         "exit_date": row.exit_date.isoformat() if row.exit_date else None,
+        "event_dates": event_dates,
+        "products": [],
+        "customer_segments": [],
+        "channels": [],
         "local_partnerships": row.local_partnerships if isinstance(row.local_partnerships, list) else [],
         "regulatory_barriers": row.regulatory_barriers if isinstance(row.regulatory_barriers, list) else [],
+        "regulatory_approvals": [],
+        "regulatory_restrictions": row.regulatory_barriers if isinstance(row.regulatory_barriers, list) else [],
         "revenue_contribution": decimal_to_float_or_none(row.revenue_contribution),
         "revenue_currency": row.revenue_currency,
         "revenue_period": row.revenue_period,
+        "outcome_metrics": [
+            {
+                "metric": "Revenue contribution",
+                "value": decimal_to_float_or_none(row.revenue_contribution),
+                "unit": row.revenue_currency,
+                "period": row.revenue_period,
+                "status": "available" if row.revenue_contribution is not None else "unavailable",
+            }
+        ],
         "expansion_rationale": row.expansion_rationale,
         "outcome_summary": row.outcome_summary,
         "evidence_text": row.evidence_text,
@@ -2390,10 +2420,61 @@ def serialize_geographic_expansion_timeline(row: GeographicExpansionMarket) -> d
     return {
         "market_id": row.id,
         "geography": row.geography,
+        "event_type": "EXIT" if row.exit_date else "MARKET_ENTRY_OR_EXPANSION",
         "entry_date": row.entry_date.isoformat() if row.entry_date else None,
         "exit_date": row.exit_date.isoformat() if row.exit_date else None,
         "status": row.current_status,
         "summary": row.expansion_rationale or row.outcome_summary,
+    }
+
+
+def geographic_expansion_definitions() -> dict[str, object]:
+    return {
+        "geography_levels": [
+            {"key": "COUNTRY_OR_MARKET", "label": "Country or named market", "description": "A specific country or company-named market where reviewed evidence identifies presence or expansion."},
+            {"key": "REGION", "label": "Region", "description": "A multi-country region when source evidence reports at regional scope."},
+            {"key": "GLOBAL_REGION", "label": "Global or international", "description": "Broad global/international disclosure that is not safe to split into countries."},
+        ],
+        "event_types": [
+            {"key": "ANNOUNCEMENT", "label": "Announcement", "description": "Management or company disclosed an intended market move."},
+            {"key": "LAUNCH", "label": "Launch", "description": "A product, service, or operating presence became available in the market."},
+            {"key": "OPERATIONAL_START", "label": "Operational start", "description": "The company began operating or serving customers in the market."},
+            {"key": "SCALE_UP", "label": "Scale-up", "description": "The company expanded an already active market presence."},
+            {"key": "REDUCTION", "label": "Reduction", "description": "The company reduced market presence or offering scope."},
+            {"key": "EXIT", "label": "Exit", "description": "The company exited the market or discontinued presence."},
+        ],
+        "accessible_views": [
+            "map-summary",
+            "market-list",
+            "entry-exit-timeline",
+            "source-gap-list",
+            "print-brief",
+        ],
+    }
+
+
+def geographic_expansion_validation_context(markets: list[GeographicExpansionMarket]) -> dict[str, object]:
+    source_gaps = []
+    invalid_geographies = [row.geography for row in markets if not row.geography or row.geography.lower() in {"unknown", "n/a", "none"}]
+    revenue_rows = [row for row in markets if row.revenue_contribution is not None]
+    revenue_without_currency = [row.geography for row in revenue_rows if not row.revenue_currency]
+    if not any(row.local_partnerships for row in markets):
+        source_gaps.append({"key": "market_products_segments_channels", "label": "Market product, segment, and channel detail unavailable", "reason": "Reviewed market rows do not yet identify products, customer segments, or channels by market.", "source": "geographic-expansion", "next_action": "Review 10-K, 10-Q, 8-K, investor presentations, and official market-launch sources for product, segment, and channel scope."})
+    if not any(row.regulatory_barriers for row in markets):
+        source_gaps.append({"key": "market_regulatory_approvals", "label": "Market approvals and restrictions unavailable", "reason": "Reviewed market rows do not yet identify regulatory approvals or restrictions separately from broad risk context.", "source": "geographic-expansion", "next_action": "Review regulatory approvals, licenses, country risk disclosures, and authority decisions by market."})
+    if revenue_without_currency:
+        source_gaps.append({"key": "market_revenue_currency", "label": "Market revenue currency unavailable", "reason": f"Revenue contribution exists without currency for: {', '.join(revenue_without_currency[:5])}.", "source": "geographic-expansion", "next_action": "Review segment/geography revenue notes and preserve reporting currency and period scope."})
+    if invalid_geographies:
+        source_gaps.append({"key": "market_geography_validation", "label": "Market geography validation failed", "reason": f"Reviewed market rows have invalid geography labels: {', '.join(invalid_geographies[:5])}.", "source": "geographic-expansion", "next_action": "Normalize market names using reviewed source labels and avoid unknown placeholders."})
+    return {
+        "geography_validation_status": "blocked" if invalid_geographies else "available",
+        "country_naming_policy": "Use reviewed source labels; broad international disclosures remain REGION or GLOBAL_REGION and are not split into countries.",
+        "historical_boundary_policy": "Historical boundaries are preserved at the source-reported scope unless a reviewed source supports a normalized country mapping.",
+        "currency_validation_status": "available" if not revenue_without_currency else "blocked",
+        "reporting_scope_policy": "Revenue, users, locations, and outcomes remain unavailable unless the source identifies market, period, metric, and currency or unit.",
+        "market_type_count": len({row.market_type for row in markets}),
+        "dated_event_count": sum(1 for row in markets if row.entry_date or row.exit_date),
+        "source_gaps": source_gaps,
     }
 
 

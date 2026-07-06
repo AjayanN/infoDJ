@@ -1945,10 +1945,13 @@
                   <div class="panel-header"><div><p class="section-kicker">Markets</p><h2>Countries and regions</h2></div></div>
                   <div class="result-row" *ngFor="let market of geoView.markets">
                     <strong>{{ market.geography }}</strong>
-                    <span>{{ promiseLabel(market.market_type) }} · {{ market.current_status_label }} · confidence {{ market.confidence_score | number:'1.2-2' }}</span>
+                    <span>{{ promiseLabel(market.geography_level) }} · {{ market.current_status_label }} · confidence {{ market.confidence_score | number:'1.2-2' }}</span>
                     <p>{{ market.expansion_rationale }}</p>
                     <p><strong>Outcome:</strong> {{ market.outcome_summary || 'Reviewed outcome unavailable.' }}</p>
-                    <small>{{ market.entry_date || 'Entry date unavailable' }} · revenue <ng-container *ngIf="market.revenue_contribution === null; else reviewedMarketRevenue">unavailable</ng-container><ng-template #reviewedMarketRevenue>{{ market.revenue_contribution | number:'1.0-2' }} {{ market.revenue_currency }}</ng-template></small>
+                    <small>Announcement {{ market.event_dates.announcement_date || 'unavailable' }} · launch {{ market.event_dates.launch_date || 'unavailable' }} · operational start {{ market.event_dates.operational_start_date || 'unavailable' }} · scale-up {{ market.event_dates.scale_up_date || 'unavailable' }} · reduction {{ market.event_dates.reduction_date || 'unavailable' }} · exit {{ market.event_dates.exit_date || 'unavailable' }}</small>
+                    <p><strong>Products:</strong> {{ market.products.length ? market.products.join(', ') : 'unavailable' }} · <strong>Segments:</strong> {{ market.customer_segments.length ? market.customer_segments.join(', ') : 'unavailable' }} · <strong>Channels:</strong> {{ market.channels.length ? market.channels.join(', ') : 'unavailable' }}</p>
+                    <p><strong>Partners:</strong> {{ market.local_partnerships.length ? market.local_partnerships.join(', ') : 'unavailable' }} · <strong>Regulatory:</strong> {{ market.regulatory_approvals.length || market.regulatory_restrictions.length ? (market.regulatory_approvals.concat(market.regulatory_restrictions)).join(', ') : 'unavailable' }}</p>
+                    <small>Revenue <ng-container *ngIf="market.revenue_contribution === null; else reviewedMarketRevenue">unavailable</ng-container><ng-template #reviewedMarketRevenue>{{ market.revenue_contribution | number:'1.0-2' }} {{ market.revenue_currency }} · {{ market.revenue_period || 'period unavailable' }}</ng-template></small>
                   </div>
                   <div class="empty-state unavailable-state" *ngIf="geoView.markets.length === 0">No reviewed geographic markets are available for the selected filters.</div>
                 </article>
@@ -1957,7 +1960,7 @@
                   <div class="panel-header"><div><p class="section-kicker">Timeline</p><h2>Entry and exit evidence</h2></div><span>{{ geoView.timeline.length }} dated rows</span></div>
                   <div class="result-row" *ngFor="let row of geoView.timeline">
                     <strong>{{ row.geography }}</strong>
-                    <span>{{ row.entry_date || 'Entry date unavailable' }} <ng-container *ngIf="row.exit_date">to {{ row.exit_date }}</ng-container></span>
+                    <span>{{ promiseLabel(row.event_type) }} · {{ row.entry_date || 'Entry date unavailable' }} <ng-container *ngIf="row.exit_date">to {{ row.exit_date }}</ng-container></span>
                     <p>{{ row.summary }}</p>
                   </div>
                   <div class="empty-state unavailable-state" *ngIf="geoView.timeline.length === 0">No reviewed dated entry or exit events are available.</div>
@@ -1969,10 +1972,26 @@
                   <div class="panel-header"><div><p class="section-kicker">Methodology</p><h2>Expansion guardrails</h2></div></div>
                   <p>{{ geoView.snapshot?.methodology }}</p>
                   <p>Missing revenue contribution, partnerships, barriers, or outcomes are shown as source gaps and are not inferred from generic geographic presence.</p>
+                  <p><strong>Country naming:</strong> {{ geoView.validation_context.country_naming_policy }}</p>
+                  <p><strong>Historical boundaries:</strong> {{ geoView.validation_context.historical_boundary_policy }}</p>
+                  <p><strong>Reporting scope:</strong> {{ geoView.validation_context.reporting_scope_policy }}</p>
+                  <small>Geography validation {{ geoView.validation_context.geography_validation_status }} · currency validation {{ geoView.validation_context.currency_validation_status }} · {{ geoView.validation_context.dated_event_count }} dated events · {{ geoView.validation_context.market_type_count }} geography levels</small>
                 </article>
                 <article class="panel">
                   <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Expansion evidence</h2></div><span>{{ geoView.evidence.length }} sources</span></div>
                   <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of geoView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                </article>
+              </section>
+
+              <section class="dashboard-two-column">
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Definitions</p><h2>Geography levels</h2></div></div>
+                  <div class="result-row" *ngFor="let level of geoView.definitions.geography_levels"><strong>{{ level.label }}</strong><span>{{ level.key }}</span><p>{{ level.description }}</p></div>
+                </article>
+                <article class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Definitions</p><h2>Expansion event types</h2></div></div>
+                  <div class="result-row" *ngFor="let eventType of geoView.definitions.event_types"><strong>{{ eventType.label }}</strong><span>{{ eventType.key }}</span><p>{{ eventType.description }}</p></div>
+                  <small>Accessible views: {{ geoView.definitions.accessible_views.join(', ') }}</small>
                 </article>
               </section>
 
