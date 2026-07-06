@@ -573,6 +573,10 @@ export type OperatingKpiResponse = {
   }[];
   peer_comparison_warning: string;
   peer_comparison_basis: string;
+  related_surfaces: {
+    key: string; label: string; status: 'available' | 'unavailable'; count: number;
+    dependency_label: string; dependency_description: string;
+  }[];
   export_rows: Record<string, unknown>[];
   coverage: { metric_count: number; observation_count: number; reported_count: number; calculated_count: number; last_period: string | null };
   evidence: CompanyProfileSource[];
@@ -594,7 +598,10 @@ export type ManagementPromise = {
   target_value: number | null; unit: string; scope: string; conditions: string;
   evaluation_rule: string; current_status: string; confidence_score: number; review_status: string;
   evidence_text: string; source: CompanyProfileSource | null;
-  linked_kpi: { slug: string; name: string } | null;
+  linked_kpi: {
+    slug: string; name: string; unit: string; cadence: string; dependency_type: string;
+    dependency_label: string; dependency_description: string;
+  } | null;
   linked_strategic_turn: { id: number; title: string } | null;
   updates: ManagementPromiseUpdate[];
 };
@@ -621,7 +628,10 @@ export type StrategyMilestone = {
   success_condition: string; blocker: string; outcome_review: string; evidence_text: string;
   confidence_score: number; review_status: string; source: CompanyProfileSource;
   linked_promise: { slug: string; title: string } | null;
-  linked_kpi: { slug: string; name: string } | null;
+  linked_kpi: {
+    slug: string; name: string; unit: string; cadence: string; dependency_type: string;
+    dependency_label: string; dependency_description: string;
+  } | null;
   linked_strategic_turn: { id: number; title: string } | null;
   related_entities: { type: string; label: string; id?: string }[];
   dependencies: { slug: string; title: string; relationship: string; description: string }[];
@@ -669,7 +679,10 @@ export type EarningsResponse = {
   selected_period: (EarningsPeriodSummary & {
     previous_period: EarningsPeriodSummary | null;
     measured_results: EarningsMetric[];
-    operating_kpis: { slug: string; name: string; unit: string; period_end: string; value: number; previous_value: number | null; change_pct: number | null; quality_flags: string[] }[];
+    operating_kpis: {
+      slug: string; name: string; unit: string; cadence: string; dependency_label: string; dependency_description: string;
+      period_end: string; value: number; previous_value: number | null; change_pct: number | null; quality_flags: string[];
+    }[];
     management_explanation: string | null;
     infodj_interpretation: string | null;
     unanswered_questions: string[];

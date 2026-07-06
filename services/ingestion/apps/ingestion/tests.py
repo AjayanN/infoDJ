@@ -649,6 +649,7 @@ class IngestionSearchApiTests(TestCase):
         self.assertFalse(payload["selected_promise"]["updates"][0]["is_contradiction_candidate"])
         self.assertIsNone(payload["selected_promise"]["baseline_value"])
         self.assertEqual(payload["selected_promise"]["linked_kpi"]["slug"], "launch-markets")
+        self.assertEqual(payload["selected_promise"]["linked_kpi"]["dependency_label"], "Promise evaluation metric")
         self.assertEqual(payload["coverage"]["source_count"], 1)
 
     def test_management_promises_reports_unavailable_without_reviewed_records(self):
@@ -803,6 +804,16 @@ class IngestionSearchApiTests(TestCase):
                 accession_number="0001065280-26-000001",
                 raw={"start": "2026-01-01", "end": "2026-03-31", "form": "10-Q", "fp": "Q1", "fy": 2026},
             )
+        kpi = KpiDefinition.objects.create(
+            company=self.netflix, slug="paid-memberships", name="Paid memberships",
+            description="Period-end paid memberships.", unit="million", cadence="QUARTERLY",
+            value_type="REPORTED", scope="Global streaming",
+        )
+        KpiObservation.objects.create(
+            kpi=kpi, period_start=date(2026, 1, 1), period_end=date(2026, 3, 31),
+            fiscal_year=2026, fiscal_period="Q1", value="270", source_document=quarterly_source,
+            confidence_score="0.9",
+        )
 
         first = build_earnings_periods(self.netflix)
         second = build_earnings_periods(self.netflix)
@@ -815,6 +826,7 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(payload["status"], "available")
         self.assertEqual(payload["selected_period"]["fiscal_period"], "Q1")
         self.assertEqual(len(payload["selected_period"]["measured_results"]), 2)
+        self.assertEqual(payload["selected_period"]["operating_kpis"][0]["dependency_label"], "Operating KPI movement for this earnings period")
         self.assertIsNone(payload["selected_period"]["management_explanation"])
         self.assertIsNone(payload["selected_period"]["infodj_interpretation"])
         self.assertEqual(len(payload["selected_period"]["unanswered_questions"]), 2)

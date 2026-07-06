@@ -284,8 +284,11 @@ The tracker includes:
 - visible estimate, restatement, non-comparable, definition-change, discontinued-disclosure, and missing-period states
 - movement and target-crossing alerts, related strategic-event overlays, definition history, and export-ready rows
 - peer comparisons only after definition and unit comparability are reviewed
+- dependency labels showing where a selected KPI is used by Earnings Intelligence, Management Promise Tracker, and Strategy Milestone Tracker
 
 Peer normalization is guarded separately from same-sector discovery. Reviewed comparable peer metrics appear only when the selected KPI and peer KPI share reviewed comparability, matching unit, matching cadence, active status, and peer-comparable flags. Same-sector KPI candidates that fail those checks are shown as blocked with the exact reason, such as missing reviewed comparability, unit mismatch, cadence mismatch, or a reviewed non-comparable status.
+
+KPI dependency labels are explicit across related dashboards. Earnings rows label aligned KPI observations as operating context rather than causation, management promises label linked KPIs as evaluation metrics, and strategy milestones label linked KPIs as execution evidence.
 
 The Netflix pilot contains source-backed 2022 paid streaming memberships, regional Q4 observations, and calculated quarter-over-quarter growth. Every company in the current 20-company universe also receives annual and quarterly SEC Company Facts series for every stored concept. Those baseline series are labeled `Company-wide reported financial context`; they are not presented as company-specific operating KPIs such as subscribers, stores, deliveries, occupancy, or production.
 
@@ -403,7 +406,7 @@ Ingestion: GET /companies/{slug}/earnings?period=FY2026-Q1
 Product:   GET /api/app/companies/{slug}/earnings?period=FY2026-Q1
 ```
 
-Open `Earnings intelligence` from Company 360 for the quarterly timeline, measured results, reviewed management drivers, KPI movement, forecast-versus-actual comparisons where available, linked strategy and risks, distinct evidence sources, evidence gaps, and print export.
+Open `Earnings intelligence` from Company 360 for the quarterly timeline, measured results, reviewed management drivers, KPI movement with dependency labels, forecast-versus-actual comparisons where available, linked strategy and risks, distinct evidence sources, evidence gaps, and print export.
 
 Requirement 5 verification on June 14, 2026: ingestion `52/52`, main backend `32/32`, frontend `7/7`, production build passed, all-company validator passed, and the authenticated gateway smoke test passed for all 20 companies.
 

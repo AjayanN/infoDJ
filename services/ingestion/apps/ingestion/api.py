@@ -378,12 +378,7 @@ def company_operating_kpis(request: HttpRequest, slug: str) -> JsonResponse:
         "peer_comparison_warning": peer_context["warning"],
         "peer_comparison_basis": peer_context["basis"],
         "export_rows": [serialize_kpi_export_row(row) for row in observations],
-        "related_surfaces": [
-            {"key": "events", "label": "Strategic events", "status": "available"},
-            {"key": "earnings", "label": "Earnings intelligence", "status": "unavailable", "requirement": 5},
-            {"key": "promises", "label": "Management promises", "status": "unavailable", "requirement": 4},
-            {"key": "milestones", "label": "Strategy milestones", "status": "unavailable", "requirement": 6},
-        ],
+        "related_surfaces": kpi_related_surfaces(company, selected),
         "coverage": {"metric_count": len(definitions), "observation_count": len(observations), "reported_count": sum(1 for row in definitions if row.value_type == "REPORTED"), "calculated_count": sum(1 for row in definitions if row.value_type == "CALCULATED"), "last_period": observations[-1].period_end.isoformat() if observations else None},
         "evidence": sources, "source_gaps": gaps,
     })
@@ -1596,6 +1591,13 @@ def earnings_kpi_rows(company: Company, period: EarningsPeriod, previous: Earnin
             "slug": definition.slug,
             "name": definition.name,
             "unit": definition.unit,
+            "cadence": definition.cadence,
+            "dependency_label": "Operating KPI movement for this earnings period",
+            "dependency_description": (
+                f"{definition.name} is shown because its latest reviewed observation falls inside "
+                f"or immediately aligns with {period.fiscal_period} FY{period.fiscal_year}. "
+                "This is operating context, not a causal explanation unless management evidence says so."
+            ),
             "period_end": current.period_end.isoformat(),
             "value": decimal_to_float(current.value),
             "previous_value": decimal_to_float(prior.value) if prior else None,
@@ -4516,6 +4518,34 @@ def serialize_kpi_definition(kpi: KpiDefinition | None) -> dict[str, object] | N
     }
 
 
+def serialize_linked_kpi(kpi: KpiDefinition | None, dependency_type: str) -> dict[str, object] | None:
+    if kpi is None:
+        return None
+    labels = {
+        "PROMISE_TARGET": (
+            "Promise evaluation metric",
+            f"{kpi.name} is the KPI used to evaluate whether the management statement can be measured.",
+        ),
+        "MILESTONE_EVIDENCE": (
+            "Milestone evidence metric",
+            f"{kpi.name} is operating evidence for milestone progress or completion.",
+        ),
+    }
+    label, description = labels.get(
+        dependency_type,
+        ("Linked operating KPI", f"{kpi.name} is linked as operating context."),
+    )
+    return {
+        "slug": kpi.slug,
+        "name": kpi.name,
+        "unit": kpi.unit,
+        "cadence": kpi.cadence,
+        "dependency_type": dependency_type,
+        "dependency_label": label,
+        "dependency_description": description,
+    }
+
+
 def serialize_management_promise(promise: ManagementPromise | None, *, include_updates: bool) -> dict[str, object] | None:
     if promise is None:
         return None
@@ -4542,7 +4572,7 @@ def serialize_management_promise(promise: ManagementPromise | None, *, include_u
         "review_status": promise.review_status,
         "evidence_text": promise.evidence_text,
         "source": serialize_profile_source(promise.source_document) if promise.source_document else None,
-        "linked_kpi": {"slug": promise.linked_kpi.slug, "name": promise.linked_kpi.name} if promise.linked_kpi else None,
+        "linked_kpi": serialize_linked_kpi(promise.linked_kpi, "PROMISE_TARGET"),
         "linked_strategic_turn": {
             "id": promise.linked_strategic_turn.id,
             "title": promise.linked_strategic_turn.title,
@@ -4591,7 +4621,7 @@ def serialize_strategy_milestone(milestone: StrategyMilestone | None, *, include
         "review_status": milestone.review_status,
         "source": serialize_profile_source(milestone.source_document),
         "linked_promise": {"slug": milestone.linked_promise.slug, "title": milestone.linked_promise.title} if milestone.linked_promise else None,
-        "linked_kpi": {"slug": milestone.linked_kpi.slug, "name": milestone.linked_kpi.name} if milestone.linked_kpi else None,
+        "linked_kpi": serialize_linked_kpi(milestone.linked_kpi, "MILESTONE_EVIDENCE"),
         "linked_strategic_turn": {"id": milestone.linked_strategic_turn.id, "title": milestone.linked_strategic_turn.title} if milestone.linked_strategic_turn else None,
         "related_entities": milestone.related_entities if isinstance(milestone.related_entities, list) else [],
         "dependencies": [
@@ -5044,6 +5074,93 @@ def kpi_alerts(kpi: KpiDefinition | None, observations: list[KpiObservation]) ->
                 "message": f"{kpi.name} crossed the {decimal_to_float(target.target_value)} target due {target.target_date.isoformat()}.",
             })
     return alerts
+
+
+def kpi_related_surfaces(company: Company, kpi: KpiDefinition | None) -> list[dict[str, object]]:
+    if kpi is None:
+        return [
+            {
+                "key": "earnings",
+                "label": "Earnings intelligence",
+                "status": "unavailable",
+                "count": 0,
+                "dependency_label": "Select a KPI to evaluate earnings links",
+                "dependency_description": "Earnings links are evaluated after a reviewed KPI is selected.",
+            },
+            {
+                "key": "promises",
+                "label": "Management promises",
+                "status": "unavailable",
+                "count": 0,
+                "dependency_label": "Select a KPI to evaluate promise links",
+                "dependency_description": "Promise links are evaluated after a reviewed KPI is selected.",
+            },
+            {
+                "key": "milestones",
+                "label": "Strategy milestones",
+                "status": "unavailable",
+                "count": 0,
+                "dependency_label": "Select a KPI to evaluate milestone links",
+                "dependency_description": "Milestone links are evaluated after a reviewed KPI is selected.",
+            },
+        ]
+
+    earnings_count = 0
+    periods = list(
+        EarningsPeriod.objects.filter(company=company, is_published=True, review_status="REVIEWED")
+        .only("period_end")
+        .order_by("-period_end")[:12]
+    )
+    observation_dates = set(
+        kpi.observations.filter(period_end__lte=max((period.period_end for period in periods), default=date.min))
+        .values_list("period_end", flat=True)
+    ) if periods else set()
+    for period in periods:
+        month_start = period.period_end.replace(day=1)
+        if any(month_start <= observed <= period.period_end for observed in observation_dates):
+            earnings_count += 1
+
+    promise_count = ManagementPromise.objects.filter(
+        company=company,
+        linked_kpi=kpi,
+        is_published=True,
+        review_status="REVIEWED",
+    ).count()
+    milestone_count = StrategyMilestone.objects.filter(
+        company=company,
+        linked_kpi=kpi,
+        is_published=True,
+        review_status="REVIEWED",
+    ).count()
+    return [
+        {
+            "key": "earnings",
+            "label": "Earnings intelligence",
+            "status": "available" if earnings_count else "unavailable",
+            "count": earnings_count,
+            "dependency_label": "Earnings period operating movement",
+            "dependency_description": (
+                "Shows earnings periods where this KPI has a reviewed observation aligned to the reporting period. "
+                "The link is operating context, not inferred causation."
+            ),
+        },
+        {
+            "key": "promises",
+            "label": "Management promises",
+            "status": "available" if promise_count else "unavailable",
+            "count": promise_count,
+            "dependency_label": "Promise evaluation metric",
+            "dependency_description": "Shows reviewed management promises that use this KPI as the measurable target or evaluation metric.",
+        },
+        {
+            "key": "milestones",
+            "label": "Strategy milestones",
+            "status": "available" if milestone_count else "unavailable",
+            "count": milestone_count,
+            "dependency_label": "Milestone evidence metric",
+            "dependency_description": "Shows reviewed strategy milestones that use this KPI as execution evidence.",
+        },
+    ]
 
 
 def kpi_peer_context(company: Company, kpi: KpiDefinition | None) -> dict[str, object]:
