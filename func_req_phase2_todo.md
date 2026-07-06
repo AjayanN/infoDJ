@@ -680,13 +680,15 @@ Implemented improvement: Capital Allocation now exposes reported/adjusted/curren
 
 **MVP tasks:**
 
-- [ ] Define geography levels and entry/exit event types.
-- [ ] Build map plus accessible list and timeline views.
-- [ ] Record announcement, launch, operational start, scale-up, reduction, and exit dates separately.
-- [ ] Add products, customer segments, channels, and local partners by market.
-- [ ] Add regulatory approvals, restrictions, and material barriers.
-- [ ] Add revenue, users, locations, or other local outcomes where reported.
-- [ ] Validate country naming, historical boundaries, currencies, and reporting scope.
+- [x] Define geography levels and entry/exit event types.
+- [x] Build map plus accessible list and timeline views.
+- [x] Record announcement, launch, operational start, scale-up, reduction, and exit dates separately.
+- [x] Add products, customer segments, channels, and local partners by market.
+- [x] Add regulatory approvals, restrictions, and material barriers.
+- [x] Add revenue, users, locations, or other local outcomes where reported.
+- [x] Validate country naming, historical boundaries, currencies, and reporting scope.
+
+Implemented improvement: Geographic Expansion now exposes geography-level definitions, expansion event-type definitions, accessible view metadata, separate event-date slots, per-market product/segment/channel/partner/regulatory/outcome fields with explicit unavailable states, validation context for country naming, historical boundaries, currencies, and reporting scope, and `validate_geographic_expansion` to gate reviewed all-company coverage.
 
 **Acceptance criteria:**
 
