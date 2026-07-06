@@ -485,6 +485,14 @@ Implemented improvement: Operating KPI Tracker now exposes reviewed SEC-backed b
 - [x] Link milestones to promises and KPIs where reviewed links exist; product, acquisition, and regulatory links remain explicit related-entity slots until those owner features ship.
 - [x] Add upcoming, overdue, and recently completed views.
 
+**Milestone rule definitions:**
+
+- Category rule: classify the milestone by the thing that must happen, not by the source document. Product launches, market entries, regulatory approvals, capacity targets, integration steps, cost/synergy targets, and restructuring steps stay separate even when they come from the same management statement.
+- Due-date rule: use an exact date only when the source gives one; otherwise use quarter, year, range, or unknown precision. Unknown due dates must not become overdue.
+- Dependency rule: dependencies must name the upstream milestone, promise, KPI, approval, contract, or source-backed condition. Analyst-inferred dependencies require review and must be labelled as inference.
+- Status rule: expected means planned but not started, started means execution evidence exists, completed requires reviewed success evidence, delayed requires missed timing or management revision, changed requires revised scope, cancelled requires discontinued intent, failed requires reviewed failure evidence, and unknown means evidence is insufficient.
+- Evidence rule: every published status must preserve source text, source identity, confidence, and review status. Missing evidence is a source gap, not a negative outcome.
+
 **Acceptance criteria:**
 
 - Users can see how a strategy was expected to unfold and what has actually happened.
@@ -711,6 +719,14 @@ Implemented improvement: Geographic Expansion now exposes geography-level defini
 - [x] Link decisions to strategic turns, promises, capital allocation, acquisitions, and milestones.
 - [x] Show company performance during tenure with explicit non-causation language.
 - [x] Prevent unverified departure reasons or personal allegations from appearing as fact.
+
+**Leadership attribution boundaries:**
+
+- Role boundary: publish only source-backed executive, board, founder, interim, co-leadership, and material operating-leadership roles. Do not infer informal influence from media descriptions alone.
+- Tenure boundary: separate appointment announcement, effective start, role change, departure announcement, effective end, and succession-plan dates when sources distinguish them.
+- Decision boundary: record priorities and decisions only when attributable to the leader, management team, board, or company source. Do not assign a company-level decision to one person unless the source does.
+- Attribution boundary: performance during tenure is context only. The dashboard must not claim that a leader caused revenue, share price, margin, or operational movement unless a reviewed source explicitly supports the causal claim.
+- Departure boundary: do not publish personal allegations, reasons for exit, health, misconduct, or conflict claims unless authoritative reviewed sources state them; otherwise use unavailable or source-gap states.
 
 **Acceptance criteria:**
 
@@ -1290,8 +1306,8 @@ This replaces the older “Immediate Starting Backlog” and reflects the actual
 - [x] Define promise, guidance, aspiration, strategic claim, and milestone distinctions.
 - [x] Define the earnings brief format.
 - [x] Define status and review rules for Management Promise Tracker.
-- [ ] Define milestone category, due-date, dependency, and status rules.
-- [ ] Define leadership decision and attribution boundaries.
+- [x] Define milestone category, due-date, dependency, and status rules.
+- [x] Define leadership decision and attribution boundaries.
 
 ### 17.3 Build Next Skeletons
 
