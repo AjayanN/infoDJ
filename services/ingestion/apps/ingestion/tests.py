@@ -986,6 +986,50 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(str(period.total_deployment), "115.000000")
         self.assertEqual(CapitalAllocationItem.objects.get(category="CAPEX").source_document, filing_source)
         self.assertEqual(capital_allocation_quality_issues(self.netflix), [])
+        payload = self.client.get("/companies/netflix/capital-allocation").json()
+        context = payload["selected_period"]["validation_context"]
+        self.assertEqual(context["reported_figure_status"], "available")
+        self.assertEqual(context["adjusted_figure_status"], "unavailable")
+        self.assertEqual(context["currency_conversion_status"], "not_required")
+        self.assertIn("Reported SEC Company Facts", context["reported_figure_label"])
+        self.assertTrue(any(gap["key"] == "capital_allocation_adjusted_figures" for gap in payload["source_gaps"]))
+        call_command("validate_capital_allocation_context", "--company", "netflix")
+
+    def test_capital_allocation_validator_blocks_mixed_currency_deployment_totals(self):
+        fact_usd = FinancialFact.objects.create(
+            company=self.netflix, taxonomy="us-gaap", concept="PaymentsToAcquirePropertyPlantAndEquipment",
+            label="Purchases of property and equipment", unit="USD", fy=2026, fp="Q1",
+            filed=date(2026, 4, 20), frame="CY2026Q1", value="40",
+            accession_number="0001065280-26-000001",
+            raw={"start": "2026-01-01", "end": "2026-03-31", "form": "10-Q", "fp": "Q1", "fy": 2026},
+        )
+        fact_eur = FinancialFact.objects.create(
+            company=self.netflix, taxonomy="ifrs", concept="ResearchAndDevelopmentExpense",
+            label="Research and development", unit="EUR", fy=2026, fp="Q1",
+            filed=date(2026, 4, 20), frame="CY2026Q1", value="75",
+            accession_number="0001065280-26-000001",
+            raw={"start": "2026-01-01", "end": "2026-03-31", "form": "10-Q", "fp": "Q1", "fy": 2026},
+        )
+        period = CapitalAllocationPeriod.objects.create(
+            company=self.netflix, fiscal_year=2026, fiscal_period="Q1", period_end=date(2026, 3, 31),
+            filed_date=date(2026, 4, 20), accession_number="0001065280-26-000001",
+            cadence="QUARTERLY", headline="Mixed currency period.", review_status="REVIEWED", is_published=True,
+        )
+        CapitalAllocationItem.objects.create(
+            period=period, category="CAPEX", label="Capex", value="40", unit="USD", concept=fact_usd.concept,
+            source_fact=fact_usd, evidence_text="Reported capex.", confidence_score="0.950", review_status="REVIEWED",
+        )
+        CapitalAllocationItem.objects.create(
+            period=period, category="R_AND_D", label="R&D", value="75", unit="EUR", concept=fact_eur.concept,
+            source_fact=fact_eur, evidence_text="Reported R&D.", confidence_score="0.950", review_status="REVIEWED",
+        )
+
+        payload = self.client.get("/companies/netflix/capital-allocation").json()
+
+        self.assertEqual(payload["selected_period"]["validation_context"]["currency_conversion_status"], "blocked")
+        self.assertTrue(any(gap["key"] == "capital_allocation_currency_conversion" for gap in payload["source_gaps"]))
+        with self.assertRaisesMessage(Exception, "mixed deployment units"):
+            call_command("validate_capital_allocation_context", "--company", "netflix")
 
     def test_capital_allocation_api_marks_missing_categories_as_gaps_not_zero(self):
         FinancialFact.objects.create(

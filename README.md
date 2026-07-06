@@ -451,6 +451,8 @@ Phase 2 Requirement 7 adds a source-backed Capital Allocation Dashboard for each
 
 The dashboard uses SEC Company Facts as the structured baseline. `ingest_sec_companyfacts` now collects additional capital allocation concepts and rebuilds reviewed `CapitalAllocationPeriod` and `CapitalAllocationItem` records after each companyfacts run. Missing categories are stored and displayed as source gaps; they are not treated as zero. Free cash flow is calculated only when operating cash flow and capex are both available for the same period.
 
+Reported, adjusted, and currency validation is explicit. Published rows are labelled as reported SEC Company Facts or calculated free cash flow; adjusted/non-GAAP capital allocation figures remain unavailable until a reviewed reconciliation source exists. Mixed or non-USD deployment units create a currency-conversion source gap rather than being summed silently.
+
 Capital Allocation endpoints:
 
 ```bash
@@ -463,6 +465,9 @@ Open `Capital allocation dashboard` from Company 360 for period selection, deplo
 Capital Allocation smoke check:
 
 ```bash
+sudo docker compose -f infra/docker-compose.yml exec -T ingestion \
+  .venv/bin/python manage.py validate_capital_allocation_context --all
+
 BASE_URL=http://localhost:8080/api/app scripts/smoke/phase2_capital_allocation.sh
 ```
 

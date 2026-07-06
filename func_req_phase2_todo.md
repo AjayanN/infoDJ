@@ -520,7 +520,9 @@ Implemented improvement: Operating KPI Tracker now exposes reviewed SEC-backed b
 - [x] Link allocations to nearby reviewed management promises and strategic turns as rationale/context without duplicating their ownership.
 - [x] Add acquisition/investment, buyback, dividend, capex, R&D, debt, restructuring, and content/inventory drilldown categories with unavailable gaps when source data is missing.
 - [x] Compare with operating cash flow and calculated free cash flow when the required SEC facts are present.
-- [ ] Validate adjusted and reported figures and currency conversions beyond USD SEC Company Facts.
+- [x] Validate adjusted and reported figures and currency conversions beyond USD SEC Company Facts.
+
+Implemented improvement: Capital Allocation now exposes reported/adjusted/currency validation context for the selected period. Reported SEC Company Facts are labelled separately from calculated free cash flow, adjusted or non-GAAP allocation figures remain unavailable until reviewed reconciliation evidence exists, and mixed or non-USD deployment units create explicit currency-conversion source gaps. `validate_capital_allocation_context` fails when reviewed periods silently mix deployment currencies, lack reported SEC-backed rows, or misclassify context rows as deployment.
 
 **Implementation notes:**
 
