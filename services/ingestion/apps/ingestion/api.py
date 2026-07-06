@@ -379,7 +379,14 @@ def company_operating_kpis(request: HttpRequest, slug: str) -> JsonResponse:
         "peer_comparison_basis": peer_context["basis"],
         "export_rows": [serialize_kpi_export_row(row) for row in observations],
         "related_surfaces": kpi_related_surfaces(company, selected),
-        "coverage": {"metric_count": len(definitions), "observation_count": len(observations), "reported_count": sum(1 for row in definitions if row.value_type == "REPORTED"), "calculated_count": sum(1 for row in definitions if row.value_type == "CALCULATED"), "last_period": observations[-1].period_end.isoformat() if observations else None},
+        "coverage": {
+            "metric_count": len(definitions),
+            "observation_count": len(observations),
+            "reported_count": sum(1 for row in definitions if row.value_type == "REPORTED"),
+            "calculated_count": sum(1 for row in definitions if row.value_type == "CALCULATED"),
+            "last_period": observations[-1].period_end.isoformat() if observations else None,
+            "baseline": kpi_baseline_coverage(definitions),
+        },
         "evidence": sources, "source_gaps": gaps,
     })
 
@@ -5074,6 +5081,41 @@ def kpi_alerts(kpi: KpiDefinition | None, observations: list[KpiObservation]) ->
                 "message": f"{kpi.name} crossed the {decimal_to_float(target.target_value)} target due {target.target_date.isoformat()}.",
             })
     return alerts
+
+
+def kpi_baseline_coverage(definitions: list[KpiDefinition]) -> dict[str, object]:
+    sec_definitions = [
+        definition for definition in definitions
+        if definition.scope == "Company-wide reported financial context"
+        or any(alias for alias in (definition.aliases if isinstance(definition.aliases, list) else []) if alias in {"Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "NetIncomeLoss", "OperatingIncomeLoss"})
+    ]
+    observations = [
+        observation
+        for definition in sec_definitions
+        for observation in definition.observations.all()
+    ]
+    annual_rows = [row for row in observations if row.kpi.cadence == "ANNUAL"]
+    quarterly_rows = [row for row in observations if row.kpi.cadence == "QUARTERLY"]
+    source_ids = {row.source_document_id for row in observations if row.source_document_id}
+    period_dates = [row.period_end for row in observations]
+    return {
+        "status": "available" if observations else "unavailable",
+        "definition_count": len(sec_definitions),
+        "observation_count": len(observations),
+        "annual_observation_count": len(annual_rows),
+        "quarterly_observation_count": len(quarterly_rows),
+        "source_count": len(source_ids),
+        "first_period": min(period_dates).isoformat() if period_dates else None,
+        "latest_period": max(period_dates).isoformat() if period_dates else None,
+        "coverage_label": (
+            f"{len(sec_definitions)} SEC-backed baseline definitions with {len(observations)} reviewed observations"
+            if observations else "No SEC-backed baseline observations are available"
+        ),
+        "limitation": (
+            "Baseline rows are source-backed company-wide SEC financial context. They deepen trend coverage but remain "
+            "separate from company-specific operating KPIs such as subscribers, stores, deliveries, occupancy, or production volume."
+        ),
+    }
 
 
 def kpi_related_surfaces(company: Company, kpi: KpiDefinition | None) -> list[dict[str, object]]:

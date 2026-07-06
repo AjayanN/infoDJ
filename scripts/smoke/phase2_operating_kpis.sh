@@ -26,6 +26,9 @@ assert data["selected_metric"]["slug"] == "paid-memberships"
 assert data["selected_metric"]["value_type"] == "REPORTED"
 assert len(data["series"]) >= 4
 assert data["coverage"]["calculated_count"] >= 1
+assert data["coverage"]["baseline"]["status"] == "available"
+assert data["coverage"]["baseline"]["definition_count"] >= 1
+assert data["coverage"]["baseline"]["observation_count"] >= 1
 assert data["missing_periods"] == []
 assert len(data["alerts"]) >= 1
 assert len(data["export_rows"]) == len(data["series"])
@@ -48,6 +51,9 @@ with open(f"/tmp/infodj_operating_kpis_{company}.json", encoding="utf-8") as han
 assert data["status"] == "available", company
 assert data["coverage"]["metric_count"] > 0, company
 assert data["coverage"]["observation_count"] > 0, company
+assert data["coverage"]["baseline"]["status"] == "available", company
+assert data["coverage"]["baseline"]["definition_count"] > 0, company
+assert data["coverage"]["baseline"]["observation_count"] > 0, company
 PY
 done
 echo "All-company Operating KPI coverage ok"

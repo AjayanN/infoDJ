@@ -1025,6 +1025,19 @@
                 </div>
               </section>
 
+              <section class="panel">
+                <div class="panel-header"><div><p class="section-kicker">Reviewed baseline depth</p><h2>SEC-backed trend coverage</h2></div><span class="status-pill" [class.available]="kpiView.coverage.baseline.status === 'available'">{{ kpiView.coverage.baseline.status }}</span></div>
+                <div class="account-grid">
+                  <div class="metric"><dt>Definitions</dt><dd>{{ kpiView.coverage.baseline.definition_count }}</dd><small>company-wide baseline</small></div>
+                  <div class="metric"><dt>Observations</dt><dd>{{ kpiView.coverage.baseline.observation_count }}</dd><small>{{ kpiView.coverage.baseline.source_count }} sources</small></div>
+                  <div class="metric"><dt>Annual</dt><dd>{{ kpiView.coverage.baseline.annual_observation_count }}</dd><small>reviewed rows</small></div>
+                  <div class="metric"><dt>Quarterly</dt><dd>{{ kpiView.coverage.baseline.quarterly_observation_count }}</dd><small>reviewed rows</small></div>
+                </div>
+                <p>{{ kpiView.coverage.baseline.coverage_label }}</p>
+                <p class="formula-note">{{ kpiView.coverage.baseline.limitation }}</p>
+                <small>Period range {{ kpiView.coverage.baseline.first_period || 'unavailable' }} to {{ kpiView.coverage.baseline.latest_period || 'unavailable' }}</small>
+              </section>
+
               <section class="panel company-profile-controls kpi-controls" aria-label="Operating KPI controls">
                 <label>Metric
                   <select [(ngModel)]="operatingKpiMetric">

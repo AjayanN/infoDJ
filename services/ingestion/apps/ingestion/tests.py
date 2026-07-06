@@ -1254,6 +1254,18 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(str(observation.value), "105.000000")
         self.assertTrue(observation.is_restatement)
         self.assertTrue(observation.is_non_comparable)
+        payload = self.client.get("/companies/netflix/operating-kpis").json()
+        self.assertEqual(payload["coverage"]["baseline"]["status"], "available")
+        self.assertGreaterEqual(payload["coverage"]["baseline"]["definition_count"], 2)
+        self.assertGreaterEqual(payload["coverage"]["baseline"]["observation_count"], 2)
+        self.assertGreaterEqual(payload["coverage"]["baseline"]["annual_observation_count"], 1)
+        self.assertGreaterEqual(payload["coverage"]["baseline"]["quarterly_observation_count"], 1)
+        self.assertIn("SEC-backed baseline definitions", payload["coverage"]["baseline"]["coverage_label"])
+        call_command("validate_operating_kpi_baselines", "--company", "netflix")
+
+    def test_operating_kpi_baseline_validator_fails_when_company_lacks_baseline(self):
+        with self.assertRaisesMessage(Exception, "only 0 baseline definitions"):
+            call_command("validate_operating_kpi_baselines", "--company", "netflix")
 
     def test_dashboard_data_returns_source_backed_surfaces(self):
         response = self.client.get("/dashboard-data")
