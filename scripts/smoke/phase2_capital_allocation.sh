@@ -33,8 +33,14 @@ for path in paths:
     assert period, slug
     assert period["headline"], slug
     context = period["cash_flow_context"]
+    validation = period["validation_context"]
     assert context["operating_cash_flow"] is not None, slug
     assert context["total_deployment"] is None or context["total_deployment"] >= 0, slug
+    assert validation["reported_figure_status"] == "available", slug
+    assert validation["adjusted_figure_status"] == "unavailable", slug
+    assert validation["currency_conversion_status"] in {"not_required", "blocked"}, slug
+    assert validation["calculation_guardrail"], slug
+    assert any(gap["key"] == "capital_allocation_adjusted_figures" for gap in data["source_gaps"]), slug
     assert isinstance(period["deployment_items"], list), slug
     assert isinstance(period["context_items"], list), slug
     assert data["coverage"]["missing_category_count"] >= 0, slug

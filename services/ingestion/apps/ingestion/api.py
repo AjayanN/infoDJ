@@ -700,6 +700,8 @@ def company_capital_allocation(request: HttpRequest, slug: str) -> JsonResponse:
         and category not in {CapitalAllocationCategory.FREE_CASH_FLOW, CapitalAllocationCategory.INTERNAL_PROGRAM}
     ]
     gaps = capital_allocation_source_gaps(company, missing_categories, selected, deployment_items)
+    validation_context = capital_allocation_validation_context(selected, items, deployment_items)
+    gaps.extend(validation_context["source_gaps"])
     persist_capital_allocation_gaps(company, gaps)
     category_totals = capital_allocation_category_totals(deployment_items, selected)
     related_turns = list(
@@ -736,6 +738,9 @@ def company_capital_allocation(request: HttpRequest, slug: str) -> JsonResponse:
                 "total_deployment": decimal_to_float_or_none(selected.total_deployment),
                 "deployment_to_operating_cash_flow_pct": pct_ratio(selected.total_deployment, selected.operating_cash_flow),
                 "deployment_to_cash_balance_pct": pct_ratio(selected.total_deployment, selected.cash_balance),
+            },
+            "validation_context": {
+                key: value for key, value in validation_context.items() if key != "source_gaps"
             },
             "related_strategy": {
                 "strategic_turns": [serialize_strategic_turn(row, source_count=row.turn_sources.count()) for row in related_turns],
@@ -1744,6 +1749,66 @@ def capital_allocation_evidence(items: list[CapitalAllocationItem]) -> list[dict
             sources.append(serialize_profile_source(item.source_document))
             seen.add(item.source_document_id)
     return sources
+
+
+def capital_allocation_validation_context(
+    period: CapitalAllocationPeriod,
+    items: list[CapitalAllocationItem],
+    deployment_items: list[CapitalAllocationItem],
+) -> dict[str, object]:
+    units = sorted({row.unit for row in items if row.unit})
+    deployment_units = sorted({row.unit for row in deployment_items if row.unit})
+    non_usd_units = [unit for unit in units if unit.upper() != "USD"]
+    mixed_deployment_units = len(deployment_units) > 1
+    reported_items = [row for row in items if row.source_fact_id and not row.is_calculated]
+    calculated_items = [row for row in items if row.is_calculated]
+    source_gaps = [
+        {
+            "key": "capital_allocation_adjusted_figures",
+            "label": "Adjusted capital allocation figures unavailable",
+            "reason": (
+                "The dashboard currently validates reported SEC Company Facts and calculated free cash flow only. "
+                "Adjusted or non-GAAP capital allocation figures require a reviewed reconciliation source before publication."
+            ),
+            "source": "company-reconciliations",
+            "next_action": "Collect and review company earnings releases, presentations, or reconciliations that define adjusted figures and map them to reported SEC facts.",
+        }
+    ]
+    if non_usd_units or mixed_deployment_units:
+        source_gaps.append({
+            "key": "capital_allocation_currency_conversion",
+            "label": "Currency conversion unavailable",
+            "reason": (
+                f"Selected period contains non-USD or mixed units: {', '.join(units)}. "
+                "Cross-currency totals and percentages are blocked until reviewed exchange-rate source, conversion date, and reporting-currency scope are available."
+            ),
+            "source": "currency-conversion",
+            "next_action": "Collect reporting-currency notes and reviewed exchange-rate methodology before comparing or summing cross-currency capital allocation values.",
+        })
+    return {
+        "reported_figure_status": "available" if reported_items else "unavailable",
+        "reported_figure_label": "Reported SEC Company Facts",
+        "reported_figure_description": (
+            "Published values are reported SEC Company Facts unless the row is explicitly marked calculated. "
+            "Reported and calculated rows are not merged with adjusted or non-GAAP figures."
+        ),
+        "adjusted_figure_status": "unavailable",
+        "adjusted_figure_label": "Adjusted/non-GAAP allocation figures require reviewed reconciliation",
+        "currency_conversion_status": "blocked" if non_usd_units or mixed_deployment_units else "not_required",
+        "currency_conversion_label": (
+            "Currency conversion blocked for mixed/non-USD units"
+            if non_usd_units or mixed_deployment_units
+            else "All selected-period capital allocation rows use USD; conversion is not required"
+        ),
+        "units": units,
+        "deployment_units": deployment_units,
+        "calculated_item_count": len(calculated_items),
+        "calculation_guardrail": (
+            "Free cash flow is calculated only from same-period operating cash flow and capex. "
+            "Deployment totals exclude cash, operating cash-flow context, debt issuance, and calculated free cash flow."
+        ),
+        "source_gaps": source_gaps,
+    }
 
 
 def capital_allocation_source_gaps(

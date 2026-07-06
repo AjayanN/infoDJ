@@ -1451,6 +1451,18 @@
                   </div>
                 </section>
 
+                <section class="panel">
+                  <div class="panel-header"><div><p class="section-kicker">Validation context</p><h2>Reported, adjusted, and currency checks</h2></div><span class="status-pill" [class.available]="period.validation_context.currency_conversion_status === 'not_required'">{{ period.validation_context.currency_conversion_status }}</span></div>
+                  <div class="account-grid">
+                    <div class="metric"><dt>Reported figures</dt><dd>{{ period.validation_context.reported_figure_status }}</dd><small>{{ period.validation_context.reported_figure_label }}</small></div>
+                    <div class="metric"><dt>Adjusted figures</dt><dd>{{ period.validation_context.adjusted_figure_status }}</dd><small>{{ period.validation_context.adjusted_figure_label }}</small></div>
+                    <div class="metric"><dt>Currency</dt><dd>{{ period.validation_context.deployment_units.join(', ') || 'Unavailable' }}</dd><small>{{ period.validation_context.currency_conversion_label }}</small></div>
+                    <div class="metric"><dt>Calculated rows</dt><dd>{{ period.validation_context.calculated_item_count }}</dd><small>Free cash flow only when inputs match</small></div>
+                  </div>
+                  <p>{{ period.validation_context.reported_figure_description }}</p>
+                  <p class="formula-note">{{ period.validation_context.calculation_guardrail }}</p>
+                </section>
+
                 <section class="dashboard-two-column">
                   <article class="panel">
                     <div class="panel-header"><div><p class="section-kicker">Allocation mix</p><h2>Deployment by category</h2></div></div>

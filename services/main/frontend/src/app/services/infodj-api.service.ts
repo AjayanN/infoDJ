@@ -773,6 +773,19 @@ export type CapitalAllocationResponse = {
       deployment_to_operating_cash_flow_pct: number | null;
       deployment_to_cash_balance_pct: number | null;
     };
+    validation_context: {
+      reported_figure_status: 'available' | 'unavailable';
+      reported_figure_label: string;
+      reported_figure_description: string;
+      adjusted_figure_status: 'available' | 'unavailable';
+      adjusted_figure_label: string;
+      currency_conversion_status: 'not_required' | 'blocked';
+      currency_conversion_label: string;
+      units: string[];
+      deployment_units: string[];
+      calculated_item_count: number;
+      calculation_guardrail: string;
+    };
     related_strategy: {
       strategic_turns: DashboardTurn[];
       management_promises: ManagementPromise[];
