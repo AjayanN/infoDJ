@@ -1104,6 +1104,18 @@
                 </div>
               </section>
 
+              <section class="panel">
+                <div class="panel-header"><div><p class="section-kicker">Dashboard dependencies</p><h2>Where this KPI is used</h2></div></div>
+                <div class="related-surface-grid">
+                  <article class="related-surface-card" *ngFor="let surface of kpiView.related_surfaces">
+                    <strong>{{ surface.label }}</strong>
+                    <span class="status-pill" [class.available]="surface.status === 'available'">{{ surface.status }} · {{ surface.count }}</span>
+                    <p>{{ surface.dependency_label }}</p>
+                    <small>{{ surface.dependency_description }}</small>
+                  </article>
+                </div>
+              </section>
+
               <section class="panel source-gap-panel" *ngIf="kpiView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable KPI evidence</h2></div>
                 <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of kpiView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
@@ -1180,7 +1192,8 @@
                   </dl>
                   <p *ngIf="promise.conditions"><strong>Conditions:</strong> {{ promise.conditions }}</p>
                   <p><strong>Evaluation rule:</strong> {{ promise.evaluation_rule || 'No measurable evaluation rule is available.' }}</p>
-                  <p *ngIf="promise.linked_kpi"><strong>Linked KPI:</strong> {{ promise.linked_kpi.name }}</p>
+                  <p *ngIf="promise.linked_kpi"><strong>{{ promise.linked_kpi.dependency_label }}:</strong> {{ promise.linked_kpi.name }} · {{ promise.linked_kpi.unit }} · {{ promise.linked_kpi.cadence }}</p>
+                  <p class="formula-note" *ngIf="promise.linked_kpi">{{ promise.linked_kpi.dependency_description }}</p>
                   <p *ngIf="promise.linked_strategic_turn"><strong>Linked strategic turn:</strong> {{ promise.linked_strategic_turn.title }}</p>
                   <a *ngIf="promise.source" [href]="promise.source.url" target="_blank" rel="noopener">Open original source</a>
 
@@ -1257,7 +1270,8 @@
                   <p *ngIf="milestone.blocker"><strong>Current blocker:</strong> {{ milestone.blocker }}</p>
                   <p><strong>Outcome review:</strong> {{ milestone.outcome_review }}</p>
                   <p *ngIf="milestone.linked_promise"><strong>Linked promise:</strong> {{ milestone.linked_promise.title }}</p>
-                  <p *ngIf="milestone.linked_kpi"><strong>Linked KPI:</strong> {{ milestone.linked_kpi.name }}</p>
+                  <p *ngIf="milestone.linked_kpi"><strong>{{ milestone.linked_kpi.dependency_label }}:</strong> {{ milestone.linked_kpi.name }} · {{ milestone.linked_kpi.unit }} · {{ milestone.linked_kpi.cadence }}</p>
+                  <p class="formula-note" *ngIf="milestone.linked_kpi">{{ milestone.linked_kpi.dependency_description }}</p>
                   <p *ngIf="milestone.linked_strategic_turn"><strong>Linked strategic turn:</strong> {{ milestone.linked_strategic_turn.title }}</p>
                   <div *ngFor="let dependency of milestone.dependencies"><strong>Depends on:</strong> {{ dependency.title }} · {{ dependency.relationship }}<p>{{ dependency.description }}</p></div>
                   <a [href]="milestone.source.url" target="_blank" rel="noopener">Open milestone source</a>
@@ -1317,6 +1331,7 @@
                     <div class="empty-state" *ngIf="period.operating_kpis.length === 0">No canonical KPI observations align with this period.</div>
                     <div class="result-row" *ngFor="let kpi of period.operating_kpis">
                       <strong>{{ kpi.name }}</strong><span>{{ kpi.value | number:'1.0-3' }} {{ kpi.unit }} · {{ kpi.period_end }}</span>
+                      <p><strong>{{ kpi.dependency_label }}:</strong> {{ kpi.dependency_description }}</p>
                       <small *ngIf="kpi.previous_value !== null">Previous {{ kpi.previous_value | number:'1.0-3' }} · change {{ kpi.change_pct | number:'1.1-1' }}%</small>
                       <small *ngIf="kpi.quality_flags.length > 0">{{ kpi.quality_flags.join(' · ') }}</small>
                     </div>
