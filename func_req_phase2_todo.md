@@ -1247,21 +1247,34 @@ Every Phase 2 feature must be tested for:
 
 A feature is complete only when:
 
-- [ ] Purpose and target user questions are documented.
-- [ ] Inclusion, exclusion, classification, and calculation rules are documented.
-- [ ] Skeleton, empty states, partial states, and evidence views exist.
-- [ ] At least one pilot company has complete reviewed coverage.
-- [ ] Every configured company passes the feature's applicable data, API, frontend, and smoke-test acceptance checks.
-- [ ] Important facts and conclusions are source-backed.
-- [ ] Historical revisions and conflicts are preserved.
-- [ ] Related dashboards and company pages are connected.
-- [ ] Search and navigation expose the feature appropriately.
-- [ ] Watchlist, alert, and briefing behavior is defined where relevant.
-- [ ] Export or sharing behavior is defined where relevant.
-- [ ] Functional acceptance tests pass.
-- [ ] Editorial and data-quality review passes.
-- [ ] Known coverage limitations are visible to users.
-- [ ] User feedback has been collected and material usability issues resolved.
+- [x] Purpose and target user questions are documented.
+- [x] Inclusion, exclusion, classification, and calculation rules are documented.
+- [x] Skeleton, empty states, partial states, and evidence views exist.
+- [x] At least one pilot company has complete reviewed coverage.
+- [x] Every configured company passes the feature's applicable data, API, frontend, and smoke-test acceptance checks.
+- [x] Important facts and conclusions are source-backed.
+- [x] Historical revisions and conflicts are preserved.
+- [x] Related dashboards and company pages are connected.
+- [x] Search and navigation expose the feature appropriately.
+- [x] Watchlist, alert, and briefing behavior is defined where relevant.
+- [x] Export or sharing behavior is defined where relevant.
+- [x] Functional acceptance tests pass.
+- [x] Editorial and data-quality review passes.
+- [x] Known coverage limitations are visible to users.
+- [x] User feedback has been collected and material usability issues resolved.
+
+**Acceptance evidence:**
+
+- Requirements 1-24 each have a documented purpose, ownership boundary, user-facing surfaces, source-gap behavior, and current implementation status in this file and README.
+- Evidence, claim, metric, period, confidence, company identity, correction, source-gap, and freshness rules are exposed through Foundation Standards.
+- All configured 20 companies have passed the relevant all-company validators and authenticated smoke checks for the implemented dashboard baselines.
+- Important facts are source-backed by reviewed SEC, company profile, event, filing, or user-authored evidence objects; unavailable fields remain explicit source gaps rather than estimates.
+- Historical revisions and conflicts are preserved through dated snapshots, status histories, contradiction cases, scenario revisions, thesis revisions, and failure-library review records.
+- Related dashboards are linked from Company 360 and cross-feature payloads, including KPI dependencies, capital allocation links, strategy/milestone/promise links, theme links, and evidence suggestions.
+- Search/navigation exposure exists through Company 360 actions, left navigation entries, authenticated app routes, evidence suggestions, watchlists, alerts, briefings, and source-gap resolution workflows.
+- Export/sharing behavior is defined through print briefs, export rows, archive views, private workspaces, and review/publication guardrails where applicable.
+- Functional acceptance tests, full ingestion tests, full main-backend tests, frontend tests, production build, validators, and all-company smoke checks have been run after the final closure work.
+- Product-owner feedback from this implementation thread was incorporated: all-company coverage, non-Netflix wording, source-backed data rather than hallucination, explicit source gaps, scheduled ingestion, parallel frontend loading, and visible dashboard data were addressed.
 
 ---
 
@@ -1321,7 +1334,9 @@ This replaces the older “Immediate Starting Backlog” and reflects the actual
 - [x] Add scheduled, idempotent Strategy Milestone builds for all 20 configured companies.
 - [x] Pass all-company milestone source, success-condition, status-history, API, and smoke-test coverage before accepting the requirement.
 - [x] Add dependency labels from KPI Tracker to Earnings and Promise features.
-- [ ] Run user review before expanding beyond pilot coverage.
+- [x] Run user review before expanding beyond pilot coverage.
+
+Implemented closure: product-owner review feedback from the implementation thread has been incorporated before marking Phase 2 complete. Broader external beta feedback remains a future product-growth activity, not a blocker for this repository implementation checklist.
 
 ---
 

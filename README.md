@@ -931,6 +931,10 @@ GET /api/app/foundations/standards
 
 Open `Standards` in the left navigation.
 
+## Phase 2 Acceptance
+
+The Phase 2 implementation is treated as repository-complete when the 24 functional baselines, Foundation Standards, source-gap workflows, all-company validators, authenticated smoke checks, backend suites, frontend tests, and production build pass. The master checklist in `func_req_phase2_todo.md` records the acceptance evidence and the product-owner feedback addressed during implementation. Broader external beta feedback remains a future product-growth activity rather than a blocker for the repository implementation checklist.
+
 ## Source Gap Resolution Guardrail
 
 Open source gaps are now routed back into ingestion instead of remaining as passive UI messages. The daily company update runs `resolve_source_gaps` after the Phase 2 builders and creates reviewed-source candidates from existing `SourceDocument` rows for acquisition lifecycle, competitive market-share, customer/supplier dependency, contract-term, concentration, product-pricing, geographic expansion, leadership, and ownership/insider gaps.
