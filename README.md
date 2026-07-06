@@ -424,6 +424,8 @@ Phase 2 Requirement 6 turns reviewed management commitments into execution miles
 
 Milestone origins are separated as management-announced, regulator-defined, contractual, or analyst-inferred. Inferred milestones must be reviewed before publication. Status history is append-only and supports expected, started, completed, delayed, changed, cancelled, failed, and unknown states. Netflix's Basic with Ads launch is the completed-history pilot: the tracker records the expected milestone from the October 13, 2022 announcement and the reviewed completed update on November 3, 2022.
 
+Milestone rules are conservative. Categories describe the execution step itself, due dates preserve source precision, unknown dates are never treated as overdue, dependencies must name the source-backed upstream condition, and status changes require reviewed evidence rather than elapsed time alone.
+
 ```bash
 sudo docker compose -f infra/docker-compose.yml exec -T ingestion \
   .venv/bin/python manage.py build_strategy_milestones
@@ -598,6 +600,8 @@ Requirement 12 verification on June 21, 2026: geographic expansion builder popul
 Phase 2 Requirement 13 adds a Leadership Decision Record for leadership roles, tenure context, stated priorities, material decisions, succession events, evidence, and explicit non-causation guardrails.
 
 The baseline builder creates a reviewed snapshot for every configured company. It publishes role rows only from reviewed Company 360 leadership or reviewed leadership-change events. Tenure start/end dates, departures, succession plans, board changes, decision links, compensation context, and tenure performance remain explicit source gaps unless a reviewed source supports them. Performance during tenure is shown only as context and is not treated as leadership causation.
+
+Leadership attribution is bounded. Company-level decisions are not assigned to one person unless the source does so, performance during tenure is contextual rather than causal, and departure reasons or personal allegations remain unavailable unless authoritative reviewed sources support them.
 
 Leadership Decision Record endpoints:
 
