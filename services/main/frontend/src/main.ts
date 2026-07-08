@@ -2,7 +2,7 @@ import 'zone.js';
 
 import { CommonModule } from '@angular/common';
 import { provideHttpClient } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, HostListener, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideRouter, Routes } from '@angular/router';
@@ -244,8 +244,6 @@ class AppComponent {
   valueFlowFocus = signal<ValueFlowFocus>(null);
   valueFlowNodeOverrides = signal<Record<string, { x: number; y: number }>>({});
   private valueFlowDrag: ValueFlowDrag = null;
-  private valueFlowMoveListener: ((event: PointerEvent) => void) | null = null;
-  private valueFlowEndListener: (() => void) | null = null;
   operatingKpiMetric = '';
   operatingKpiSegment = '';
   operatingKpiGeography = '';
@@ -1188,7 +1186,6 @@ class AppComponent {
         this.valueFlowFocus.set(null);
         this.valueFlowDrag = null;
         this.valueFlowNodeOverrides.set({});
-        this.removeValueFlowDragListeners();
         this.businessModelLoading.set(false);
       },
       error: (response) => {
@@ -2546,16 +2543,10 @@ class AppComponent {
       return;
     }
     event.preventDefault();
-    this.removeValueFlowDragListeners();
-    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
     this.valueFlowDrag = { nodeKey: node.key, pointerId: event.pointerId, map: map.getBoundingClientRect() };
-    this.valueFlowMoveListener = (moveEvent: PointerEvent) => this.moveValueFlowNode(moveEvent);
-    this.valueFlowEndListener = () => this.stopValueFlowNodeDrag();
-    window.addEventListener('pointermove', this.valueFlowMoveListener);
-    window.addEventListener('pointerup', this.valueFlowEndListener);
-    window.addEventListener('pointercancel', this.valueFlowEndListener);
   }
 
+  @HostListener('document:pointermove', ['$event'])
   moveValueFlowNode(event: PointerEvent): void {
     if (!this.valueFlowDrag) {
       return;
@@ -2573,9 +2564,10 @@ class AppComponent {
     });
   }
 
+  @HostListener('document:pointerup')
+  @HostListener('document:pointercancel')
   stopValueFlowNodeDrag(): void {
     this.valueFlowDrag = null;
-    this.removeValueFlowDragListeners();
   }
 
   profileSectionLabel(key: string): string {
@@ -2821,18 +2813,6 @@ class AppComponent {
 
   private clampValueFlowPosition(value: number): number {
     return Math.round(Math.max(8, Math.min(92, value)) * 10) / 10;
-  }
-
-  private removeValueFlowDragListeners(): void {
-    if (this.valueFlowMoveListener) {
-      window.removeEventListener('pointermove', this.valueFlowMoveListener);
-      this.valueFlowMoveListener = null;
-    }
-    if (this.valueFlowEndListener) {
-      window.removeEventListener('pointerup', this.valueFlowEndListener);
-      window.removeEventListener('pointercancel', this.valueFlowEndListener);
-      this.valueFlowEndListener = null;
-    }
   }
 
   private withRequest(start: () => void): void {
