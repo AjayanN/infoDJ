@@ -940,8 +940,6 @@
                     <strong>{{ component.name }}</strong>
                     <span *ngIf="component.scope">{{ component.scope }}</span>
                     <p *ngIf="component.description">{{ component.description }}</p>
-                    <small>{{ component.is_inferred ? 'InfoDJ inference' : 'Reported evidence' }} · confidence {{ component.confidence_score | number:'1.2-2' }}</small>
-                    <details *ngIf="component.evidence_text"><summary>Evidence</summary><p>{{ component.evidence_text }}</p></details>
                   </div>
                 </article>
               </section>
@@ -949,13 +947,20 @@
               <section class="panel" aria-labelledby="relationship-heading">
                 <div class="panel-header"><div><p class="section-kicker">Value flow</p><h2 id="relationship-heading">How the components connect</h2></div></div>
                 <div class="empty-state" *ngIf="!modelView.snapshot || modelView.snapshot.relationships.length === 0">No reviewed business-model relationships.</div>
-                <div class="relationship-grid">
-                  <article class="relationship-card" *ngFor="let relationship of modelView.snapshot?.relationships || []">
-                    <strong>{{ relationship.from_name }}</strong>
-                    <span>{{ businessModelRelationshipLabel(relationship.relationship_type) }}</span>
-                    <strong>{{ relationship.to_name }}</strong>
-                    <small>{{ relationship.is_inferred ? 'InfoDJ inference' : 'Reported evidence' }} · confidence {{ relationship.confidence_score | number:'1.2-2' }}</small>
-                    <details *ngIf="relationship.evidence_text"><summary>Evidence</summary><p>{{ relationship.evidence_text }}</p></details>
+                <div class="value-flow-venn-grid">
+                  <article class="value-flow-venn" *ngFor="let relationship of modelView.snapshot?.relationships || []">
+                    <div class="venn-circle venn-source">
+                      <span>From</span>
+                      <strong>{{ relationship.from_name }}</strong>
+                    </div>
+                    <div class="venn-circle venn-link">
+                      <span>Flow</span>
+                      <strong>{{ businessModelRelationshipLabel(relationship.relationship_type) }}</strong>
+                    </div>
+                    <div class="venn-circle venn-target">
+                      <span>To</span>
+                      <strong>{{ relationship.to_name }}</strong>
+                    </div>
                   </article>
                 </div>
               </section>

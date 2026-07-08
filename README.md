@@ -229,10 +229,11 @@ The Business Model Map includes:
 
 - typed payer, user, offering, revenue, channel, partner, cost, and asset components
 - explicit relationship edges such as `PAYS_FOR`, `USES`, `MONETIZED_BY`, and `DELIVERED_THROUGH`
-- reported-versus-inferred labels and confidence for every component and relationship
+- user-facing component cards without inline audit labels, with source traceability preserved in the evidence section
+- a Venn-style value-flow view that shows how source components, relationship flows, and target components overlap
 - historical snapshot selection and before/after change analysis
 - evidence links, completeness, freshness, and explicit missing-component gaps
-- an accessible component-column and relationship-list view instead of relying only on a visual graph
+- an accessible component-column view backed by source documents and explicit missing-data states
 
 The Netflix pilot seed creates reviewed 2011 and 2022 maps. A reviewed current map can also be generated from the latest reviewed Company 360 profile:
 
