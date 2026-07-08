@@ -948,12 +948,14 @@
                 <div class="panel-header"><div><p class="section-kicker">Value flow</p><h2 id="relationship-heading">How the components connect</h2></div></div>
                 <div class="empty-state" *ngIf="!modelView.snapshot || modelView.snapshot.relationships.length === 0">No reviewed business-model relationships.</div>
                 <div class="value-flow-map" *ngIf="modelView.snapshot && modelView.snapshot.relationships.length > 0">
-                  <div class="value-flow-network" aria-label="Business-model relationship links">
-                    <article class="value-flow-link" *ngFor="let relationship of modelView.snapshot.relationships">
-                      <span class="value-flow-node">{{ relationship.from_name }}</span>
-                      <span class="value-flow-connector">{{ businessModelRelationshipLabel(relationship.relationship_type) }}</span>
-                      <span class="value-flow-node">{{ relationship.to_name }}</span>
-                    </article>
+                  <svg class="value-flow-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                    <line *ngFor="let edge of businessModelFlowEdges(modelView.snapshot.relationships)" [attr.x1]="edge.from.x" [attr.y1]="edge.from.y" [attr.x2]="edge.to.x" [attr.y2]="edge.to.y"></line>
+                  </svg>
+                  <div class="value-flow-connector" *ngFor="let edge of businessModelFlowEdges(modelView.snapshot.relationships)" [style.left.%]="edge.x" [style.top.%]="edge.y">
+                    {{ edge.label }}
+                  </div>
+                  <div class="value-flow-node" *ngFor="let node of businessModelFlowNodes(modelView.snapshot.relationships)" [style.left.%]="node.x" [style.top.%]="node.y">
+                    {{ node.name }}
                   </div>
                 </div>
               </section>

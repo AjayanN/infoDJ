@@ -11,6 +11,7 @@ import {
   CurrentUser,
   CompanyProfileResponse,
   BusinessModelResponse,
+  BusinessModelRelationship,
   OperatingKpiResponse,
   ManagementPromiseResponse,
   StrategyMilestoneResponse,
@@ -94,6 +95,8 @@ type DashboardView = {
 
 type DashboardAvailability = 'available' | 'unavailable';
 type SearchResultGroup = 'companies' | 'events' | 'strategic_turns';
+type ValueFlowNode = { key: string; name: string; x: number; y: number };
+type ValueFlowEdge = { key: string; from: ValueFlowNode; to: ValueFlowNode; label: string; x: number; y: number };
 type DashboardSectionKey =
   | 'latest_moves'
   | 'strategic_turns'
@@ -2438,6 +2441,54 @@ class AppComponent {
     return businessModelRelationshipLabel(type);
   }
 
+  businessModelFlowNodes(relationships: BusinessModelRelationship[]): ValueFlowNode[] {
+    const names = new Map<string, string>();
+    for (const relationship of relationships) {
+      this.addValueFlowName(names, relationship.from_name);
+      this.addValueFlowName(names, relationship.to_name);
+    }
+    const entries = Array.from(names.entries());
+    const total = entries.length;
+    if (total === 0) {
+      return [];
+    }
+    if (total === 1) {
+      const [key, name] = entries[0];
+      return [{ key, name, x: 50, y: 50 }];
+    }
+    return entries.map(([key, name], index) => {
+      const angle = -Math.PI / 2 + (index * 2 * Math.PI) / total;
+      return {
+        key,
+        name,
+        x: Math.round((50 + Math.cos(angle) * 38) * 10) / 10,
+        y: Math.round((50 + Math.sin(angle) * 34) * 10) / 10
+      };
+    });
+  }
+
+  businessModelFlowEdges(relationships: BusinessModelRelationship[]): ValueFlowEdge[] {
+    const nodes = this.businessModelFlowNodes(relationships);
+    const nodeMap = new Map(nodes.map((node) => [node.key, node]));
+    return relationships
+      .map((relationship, index) => {
+        const from = nodeMap.get(this.valueFlowKey(relationship.from_name));
+        const to = nodeMap.get(this.valueFlowKey(relationship.to_name));
+        if (!from || !to) {
+          return null;
+        }
+        return {
+          key: `${relationship.id}-${index}`,
+          from,
+          to,
+          label: this.businessModelRelationshipLabel(relationship.relationship_type),
+          x: Math.round(((from.x + to.x) / 2) * 10) / 10,
+          y: Math.round(((from.y + to.y) / 2) * 10) / 10
+        };
+      })
+      .filter((edge): edge is ValueFlowEdge => Boolean(edge));
+  }
+
   profileSectionLabel(key: string): string {
     return companyProfileSectionLabel(key);
   }
@@ -2666,6 +2717,17 @@ class AppComponent {
       return 0;
     }
     return Math.max(2, Math.round((value / total) * 100));
+  }
+
+  private addValueFlowName(names: Map<string, string>, name: string): void {
+    const normalized = this.valueFlowKey(name);
+    if (normalized && !names.has(normalized)) {
+      names.set(normalized, name);
+    }
+  }
+
+  private valueFlowKey(name: string): string {
+    return String(name || '').trim().replace(/\s+/g, ' ').toLowerCase();
   }
 
   private withRequest(start: () => void): void {
