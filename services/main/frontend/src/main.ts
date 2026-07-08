@@ -97,7 +97,7 @@ type DashboardAvailability = 'available' | 'unavailable';
 type SearchResultGroup = 'companies' | 'events' | 'strategic_turns';
 type ValueFlowNode = { key: string; name: string; x: number; y: number };
 type ValueFlowEdge = { key: string; from: ValueFlowNode; to: ValueFlowNode; label: string; x: number; y: number };
-type ValueFlowDrag = { nodeKey: string; map: DOMRect } | null;
+type ValueFlowDrag = { nodeKey: string; pointerId: number; map: DOMRect } | null;
 type ValueFlowFocus = { type: 'edge' | 'node'; key: string } | null;
 type DashboardSectionKey =
   | 'latest_moves'
@@ -2544,11 +2544,14 @@ class AppComponent {
     }
     event.preventDefault();
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
-    this.valueFlowDrag = { nodeKey: node.key, map: map.getBoundingClientRect() };
+    this.valueFlowDrag = { nodeKey: node.key, pointerId: event.pointerId, map: map.getBoundingClientRect() };
   }
 
   moveValueFlowNode(event: PointerEvent): void {
     if (!this.valueFlowDrag) {
+      return;
+    }
+    if (event.pointerId !== this.valueFlowDrag.pointerId) {
       return;
     }
     event.preventDefault();
