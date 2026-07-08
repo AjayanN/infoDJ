@@ -907,96 +907,71 @@ button:disabled {
     linear-gradient(135deg, #f7f9fb, #ffffff);
   border: 1px solid var(--line);
   border-radius: 16px;
+  min-height: 520px;
   overflow: hidden;
   padding: 24px;
   position: relative;
 }
 
-.value-flow-network {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px 20px;
-  justify-content: center;
-  position: relative;
+.value-flow-lines {
+  inset: 0;
+  position: absolute;
+  width: 100%;
+  height: 100%;
   z-index: 1;
 }
 
-.value-flow-link {
-  align-items: center;
-  display: flex;
-  isolation: isolate;
-  min-width: min(100%, 390px);
-}
-
-.value-flow-node {
-  align-items: center;
-  aspect-ratio: 1;
-  background: rgba(255, 255, 255, 0.92);
-  border: 2px solid rgba(37, 99, 235, 0.24);
-  border-radius: 999px;
-  box-shadow: 0 12px 30px rgba(24, 33, 47, 0.08);
-  color: var(--ink);
-  display: flex;
-  flex: 1 1 132px;
-  font-size: 12px;
-  font-weight: 900;
-  justify-content: center;
-  line-height: 1.25;
-  max-width: 150px;
-  min-width: 112px;
-  overflow-wrap: anywhere;
-  padding: 16px;
-  text-align: center;
-  z-index: 1;
-}
-
-.value-flow-node:last-child {
-  border-color: rgba(16, 185, 129, 0.30);
+.value-flow-lines line {
+  stroke: rgba(14, 165, 233, 0.36);
+  stroke-linecap: round;
+  stroke-width: 0.55;
 }
 
 .value-flow-connector {
   align-items: center;
-  align-self: center;
-  background: rgba(14, 165, 233, 0.14);
+  background: rgba(255, 255, 255, 0.94);
   border: 1px solid rgba(14, 165, 233, 0.24);
   border-radius: 999px;
+  box-shadow: 0 8px 22px rgba(14, 165, 233, 0.10);
   color: var(--accent);
   display: flex;
-  flex: 0 1 132px;
   font-size: 11px;
   font-weight: 900;
   justify-content: center;
   letter-spacing: 0.04em;
   line-height: 1.2;
-  margin-left: -16px;
-  margin-right: -16px;
-  min-height: 44px;
-  min-width: 96px;
-  padding: 8px 18px;
-  position: relative;
+  max-width: 170px;
+  min-height: 34px;
+  padding: 7px 12px;
+  position: absolute;
   text-align: center;
   text-transform: uppercase;
+  transform: translate(-50%, -50%);
   z-index: 2;
 }
 
-.value-flow-connector::before,
-.value-flow-connector::after {
-  background: rgba(14, 165, 233, 0.30);
-  content: "";
-  height: 2px;
+.value-flow-node {
+  align-items: center;
+  aspect-ratio: 1;
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(37, 99, 235, 0.24);
+  border-radius: 999px;
+  box-shadow: 0 16px 36px rgba(24, 33, 47, 0.10);
+  color: var(--ink);
+  display: flex;
+  font-size: 12px;
+  font-weight: 900;
+  justify-content: center;
+  line-height: 1.25;
+  max-width: 138px;
+  min-width: 106px;
+  overflow-wrap: anywhere;
+  padding: 14px;
   position: absolute;
-  top: 50%;
-  width: 22px;
-  z-index: -1;
-}
-
-.value-flow-connector::before {
-  right: 100%;
-}
-
-.value-flow-connector::after {
-  left: 100%;
+  text-align: center;
+  transform: translate(-50%, -50%);
+  width: 12%;
+  z-index: 3;
 }
 
 .change-grid article {
@@ -1739,29 +1714,22 @@ th {
   }
 
   .value-flow-map {
+    min-height: 420px;
     padding: 12px;
-  }
-
-  .value-flow-network {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .value-flow-link {
-    min-width: 0;
   }
 
   .value-flow-node {
-    min-width: 88px;
-    padding: 12px;
+    font-size: 10px;
+    min-width: 74px;
+    padding: 10px;
+    width: 18%;
   }
 
   .value-flow-connector {
-    flex-basis: 96px;
-    margin-left: -12px;
-    margin-right: -12px;
-    min-width: 78px;
-    padding: 8px 14px;
+    font-size: 9px;
+    max-width: 104px;
+    min-height: 28px;
+    padding: 5px 8px;
   }
 
   .checkout-box dl div {
