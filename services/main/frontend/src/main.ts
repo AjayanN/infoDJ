@@ -98,6 +98,7 @@ type SearchResultGroup = 'companies' | 'events' | 'strategic_turns';
 type ValueFlowNode = { key: string; name: string; x: number; y: number };
 type ValueFlowEdge = { key: string; from: ValueFlowNode; to: ValueFlowNode; label: string; x: number; y: number };
 type ValueFlowDrag = { nodeKey: string; map: DOMRect } | null;
+type ValueFlowFocus = { type: 'edge' | 'node'; key: string } | null;
 type DashboardSectionKey =
   | 'latest_moves'
   | 'strategic_turns'
@@ -240,7 +241,7 @@ class AppComponent {
   businessModelCompareDate = '';
   readonly businessModelComponentOrder = ['PAYER', 'USER', 'OFFERING', 'REVENUE', 'CHANNEL', 'GEOGRAPHY', 'PARTNER', 'COST', 'ASSET'];
   businessModelTypeFilter = '';
-  hoveredValueFlowEdge = signal('');
+  valueFlowFocus = signal<ValueFlowFocus>(null);
   valueFlowNodeOverrides: Record<string, { x: number; y: number }> = {};
   private valueFlowDrag: ValueFlowDrag = null;
   operatingKpiMetric = '';
@@ -1182,7 +1183,7 @@ class AppComponent {
         this.businessModel.set(response);
         this.businessModelDate = response.snapshot?.effective_date || '';
         this.businessModelCompareDate = response.comparison_snapshot?.effective_date || '';
-        this.hoveredValueFlowEdge.set('');
+        this.valueFlowFocus.set(null);
         this.valueFlowDrag = null;
         this.valueFlowNodeOverrides = {};
         this.businessModelLoading.set(false);
@@ -2498,25 +2499,41 @@ class AppComponent {
       .filter((edge): edge is ValueFlowEdge => Boolean(edge));
   }
 
-  hoverValueFlowEdge(edgeKey: string): void {
-    this.hoveredValueFlowEdge.set(edgeKey);
+  focusValueFlowEdge(edgeKey: string): void {
+    this.valueFlowFocus.set({ type: 'edge', key: edgeKey });
   }
 
-  clearValueFlowEdgeHover(): void {
-    this.hoveredValueFlowEdge.set('');
+  focusValueFlowNode(nodeKey: string): void {
+    this.valueFlowFocus.set({ type: 'node', key: nodeKey });
+  }
+
+  clearValueFlowFocus(): void {
+    this.valueFlowFocus.set(null);
   }
 
   isValueFlowEdgeDimmed(edge: ValueFlowEdge): boolean {
-    const hovered = this.hoveredValueFlowEdge();
-    return Boolean(hovered) && hovered !== edge.key;
+    const focus = this.valueFlowFocus();
+    if (!focus) {
+      return false;
+    }
+    if (focus.type === 'edge') {
+      return focus.key !== edge.key;
+    }
+    return edge.from.key !== focus.key && edge.to.key !== focus.key;
   }
 
   isValueFlowNodeDimmed(node: ValueFlowNode, relationships: BusinessModelRelationship[]): boolean {
-    const hovered = this.hoveredValueFlowEdge();
-    if (!hovered) {
+    const focus = this.valueFlowFocus();
+    if (!focus) {
       return false;
     }
-    const activeEdge = this.businessModelFlowEdges(relationships).find((edge) => edge.key === hovered);
+    if (focus.type === 'node') {
+      return focus.key !== node.key && !this.businessModelFlowEdges(relationships).some((edge) => (
+        (edge.from.key === focus.key && edge.to.key === node.key) ||
+        (edge.to.key === focus.key && edge.from.key === node.key)
+      ));
+    }
+    const activeEdge = this.businessModelFlowEdges(relationships).find((edge) => edge.key === focus.key);
     return !activeEdge || (activeEdge.from.key !== node.key && activeEdge.to.key !== node.key);
   }
 
