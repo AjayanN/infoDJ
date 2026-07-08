@@ -230,7 +230,7 @@ The Business Model Map includes:
 - typed payer, user, offering, revenue, channel, partner, cost, and asset components
 - explicit relationship edges such as `PAYS_FOR`, `USES`, `MONETIZED_BY`, and `DELIVERED_THROUGH`
 - user-facing component cards without inline audit labels, with source traceability preserved in the evidence section
-- a shared-node bubble-map value-flow view where repeated component names collapse into one bubble connected by labels such as `DELIVERED_THROUGH` and `MONETIZED_BY`
+- an interactive shared-node bubble-map value-flow view where repeated component names collapse into one draggable bubble, arrowed connectors show relationship direction, and hovering a connector focuses only that relationship and its two components
 - historical snapshot selection and before/after change analysis
 - evidence links, completeness, freshness, and explicit missing-component gaps
 - an accessible component-column view backed by source documents and explicit missing-data states

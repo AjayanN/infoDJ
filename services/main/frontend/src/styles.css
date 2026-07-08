@@ -922,9 +922,25 @@ button:disabled {
 }
 
 .value-flow-lines line {
+  marker-end: url(#value-flow-arrow);
+  pointer-events: stroke;
   stroke: rgba(14, 165, 233, 0.36);
   stroke-linecap: round;
   stroke-width: 0.55;
+  transition: opacity 0.18s ease, stroke 0.18s ease, stroke-width 0.18s ease;
+}
+
+.value-flow-lines marker path {
+  fill: rgba(14, 165, 233, 0.60);
+}
+
+.value-flow-lines line:hover,
+.value-flow-lines line:not(.is-muted) {
+  stroke: rgba(14, 165, 233, 0.58);
+}
+
+.value-flow-lines line:hover {
+  stroke-width: 0.78;
 }
 
 .value-flow-connector {
@@ -947,7 +963,12 @@ button:disabled {
   text-align: center;
   text-transform: uppercase;
   transform: translate(-50%, -50%);
+  transition: opacity 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
   z-index: 2;
+}
+
+.value-flow-connector::after {
+  content: " ->";
 }
 
 .value-flow-node {
@@ -970,8 +991,31 @@ button:disabled {
   position: absolute;
   text-align: center;
   transform: translate(-50%, -50%);
+  transition: opacity 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+  user-select: none;
   width: 12%;
   z-index: 3;
+}
+
+.value-flow-node {
+  cursor: grab;
+  touch-action: none;
+}
+
+.value-flow-node:active {
+  cursor: grabbing;
+}
+
+.value-flow-node:not(.is-muted):hover,
+.value-flow-connector:not(.is-muted):hover {
+  box-shadow: 0 18px 42px rgba(14, 165, 233, 0.18);
+  transform: translate(-50%, -50%) scale(1.04);
+}
+
+.value-flow-lines line.is-muted,
+.value-flow-node.is-muted,
+.value-flow-connector.is-muted {
+  opacity: 0.18;
 }
 
 .change-grid article {
