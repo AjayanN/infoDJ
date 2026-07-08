@@ -97,6 +97,7 @@ type DashboardAvailability = 'available' | 'unavailable';
 type SearchResultGroup = 'companies' | 'events' | 'strategic_turns';
 type ValueFlowNode = { key: string; name: string; x: number; y: number };
 type ValueFlowEdge = { key: string; from: ValueFlowNode; to: ValueFlowNode; label: string; x: number; y: number };
+type ValueFlowDrag = { nodeKey: string; map: DOMRect } | null;
 type DashboardSectionKey =
   | 'latest_moves'
   | 'strategic_turns'
@@ -239,6 +240,9 @@ class AppComponent {
   businessModelCompareDate = '';
   readonly businessModelComponentOrder = ['PAYER', 'USER', 'OFFERING', 'REVENUE', 'CHANNEL', 'GEOGRAPHY', 'PARTNER', 'COST', 'ASSET'];
   businessModelTypeFilter = '';
+  hoveredValueFlowEdge = signal('');
+  valueFlowNodeOverrides: Record<string, { x: number; y: number }> = {};
+  private valueFlowDrag: ValueFlowDrag = null;
   operatingKpiMetric = '';
   operatingKpiSegment = '';
   operatingKpiGeography = '';
@@ -1178,6 +1182,9 @@ class AppComponent {
         this.businessModel.set(response);
         this.businessModelDate = response.snapshot?.effective_date || '';
         this.businessModelCompareDate = response.comparison_snapshot?.effective_date || '';
+        this.hoveredValueFlowEdge.set('');
+        this.valueFlowDrag = null;
+        this.valueFlowNodeOverrides = {};
         this.businessModelLoading.set(false);
       },
       error: (response) => {
@@ -2454,15 +2461,17 @@ class AppComponent {
     }
     if (total === 1) {
       const [key, name] = entries[0];
-      return [{ key, name, x: 50, y: 50 }];
+      const override = this.valueFlowNodeOverrides[key];
+      return [{ key, name, x: override?.x ?? 50, y: override?.y ?? 50 }];
     }
     return entries.map(([key, name], index) => {
       const angle = -Math.PI / 2 + (index * 2 * Math.PI) / total;
+      const override = this.valueFlowNodeOverrides[key];
       return {
         key,
         name,
-        x: Math.round((50 + Math.cos(angle) * 38) * 10) / 10,
-        y: Math.round((50 + Math.sin(angle) * 34) * 10) / 10
+        x: override?.x ?? Math.round((50 + Math.cos(angle) * 38) * 10) / 10,
+        y: override?.y ?? Math.round((50 + Math.sin(angle) * 34) * 10) / 10
       };
     });
   }
@@ -2487,6 +2496,56 @@ class AppComponent {
         };
       })
       .filter((edge): edge is ValueFlowEdge => Boolean(edge));
+  }
+
+  hoverValueFlowEdge(edgeKey: string): void {
+    this.hoveredValueFlowEdge.set(edgeKey);
+  }
+
+  clearValueFlowEdgeHover(): void {
+    this.hoveredValueFlowEdge.set('');
+  }
+
+  isValueFlowEdgeDimmed(edge: ValueFlowEdge): boolean {
+    const hovered = this.hoveredValueFlowEdge();
+    return Boolean(hovered) && hovered !== edge.key;
+  }
+
+  isValueFlowNodeDimmed(node: ValueFlowNode, relationships: BusinessModelRelationship[]): boolean {
+    const hovered = this.hoveredValueFlowEdge();
+    if (!hovered) {
+      return false;
+    }
+    const activeEdge = this.businessModelFlowEdges(relationships).find((edge) => edge.key === hovered);
+    return !activeEdge || (activeEdge.from.key !== node.key && activeEdge.to.key !== node.key);
+  }
+
+  startValueFlowNodeDrag(event: PointerEvent, node: ValueFlowNode): void {
+    const map = (event.currentTarget as HTMLElement).closest('.value-flow-map');
+    if (!map) {
+      return;
+    }
+    event.preventDefault();
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+    this.valueFlowDrag = { nodeKey: node.key, map: map.getBoundingClientRect() };
+  }
+
+  moveValueFlowNode(event: PointerEvent): void {
+    if (!this.valueFlowDrag) {
+      return;
+    }
+    event.preventDefault();
+    const { nodeKey, map } = this.valueFlowDrag;
+    const x = this.clampValueFlowPosition(((event.clientX - map.left) / map.width) * 100);
+    const y = this.clampValueFlowPosition(((event.clientY - map.top) / map.height) * 100);
+    this.valueFlowNodeOverrides = {
+      ...this.valueFlowNodeOverrides,
+      [nodeKey]: { x, y }
+    };
+  }
+
+  stopValueFlowNodeDrag(): void {
+    this.valueFlowDrag = null;
   }
 
   profileSectionLabel(key: string): string {
@@ -2728,6 +2787,10 @@ class AppComponent {
 
   private valueFlowKey(name: string): string {
     return String(name || '').trim().replace(/\s+/g, ' ').toLowerCase();
+  }
+
+  private clampValueFlowPosition(value: number): number {
+    return Math.round(Math.max(8, Math.min(92, value)) * 10) / 10;
   }
 
   private withRequest(start: () => void): void {
