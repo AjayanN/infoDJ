@@ -902,12 +902,13 @@ button:disabled {
 
 .value-flow-map {
   background:
-    radial-gradient(circle at 20% 20%, rgba(37, 99, 235, 0.10), transparent 180px),
-    radial-gradient(circle at 85% 80%, rgba(16, 185, 129, 0.10), transparent 180px),
-    linear-gradient(135deg, #f7f9fb, #ffffff);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  min-height: 520px;
+    radial-gradient(circle at 18% 18%, rgba(59, 130, 246, 0.24), transparent 240px),
+    radial-gradient(circle at 82% 74%, rgba(20, 184, 166, 0.18), transparent 260px),
+    linear-gradient(135deg, #111827, #1f2937 56%, #0f172a);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 18px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 18px 48px rgba(15, 23, 42, 0.18);
+  min-height: clamp(620px, 78vh, 920px);
   overflow: hidden;
   padding: 24px;
   position: relative;
@@ -924,41 +925,41 @@ button:disabled {
 .value-flow-lines line {
   marker-end: url(#value-flow-arrow);
   pointer-events: stroke;
-  stroke: rgba(14, 165, 233, 0.36);
+  stroke: rgba(125, 211, 252, 0.52);
   stroke-linecap: round;
-  stroke-width: 0.55;
+  stroke-width: 0.72;
   transition: opacity 0.18s ease, stroke 0.18s ease, stroke-width 0.18s ease;
 }
 
 .value-flow-lines marker path {
-  fill: rgba(14, 165, 233, 0.60);
+  fill: rgba(125, 211, 252, 0.88);
 }
 
 .value-flow-lines line:hover,
 .value-flow-lines line:not(.is-muted) {
-  stroke: rgba(14, 165, 233, 0.58);
+  stroke: rgba(165, 243, 252, 0.78);
 }
 
 .value-flow-lines line:hover {
-  stroke-width: 0.78;
+  stroke-width: 1.05;
 }
 
 .value-flow-connector {
   align-items: center;
-  background: rgba(255, 255, 255, 0.94);
-  border: 1px solid rgba(14, 165, 233, 0.24);
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(125, 211, 252, 0.48);
   border-radius: 999px;
-  box-shadow: 0 8px 22px rgba(14, 165, 233, 0.10);
-  color: var(--accent);
+  box-shadow: 0 10px 30px rgba(14, 165, 233, 0.22);
+  color: #bae6fd;
   display: flex;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 900;
   justify-content: center;
   letter-spacing: 0.04em;
   line-height: 1.2;
-  max-width: 170px;
+  max-width: 150px;
   min-height: 34px;
-  padding: 7px 12px;
+  padding: 7px 10px;
   position: absolute;
   text-align: center;
   text-transform: uppercase;
@@ -974,41 +975,32 @@ button:disabled {
 .value-flow-node {
   align-items: center;
   aspect-ratio: 1;
-  background: rgba(255, 255, 255, 0.95);
-  border: 2px solid rgba(37, 99, 235, 0.24);
+  background: rgba(248, 250, 252, 0.96);
+  border: 2px solid rgba(186, 230, 253, 0.82);
   border-radius: 999px;
-  box-shadow: 0 16px 36px rgba(24, 33, 47, 0.10);
-  color: var(--ink);
+  box-shadow: 0 18px 42px rgba(14, 165, 233, 0.24);
+  color: #0f172a;
   display: flex;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 900;
   justify-content: center;
   line-height: 1.25;
-  max-width: 138px;
-  min-width: 106px;
+  max-width: 124px;
+  min-width: 88px;
   overflow-wrap: anywhere;
-  padding: 14px;
+  padding: 12px;
   position: absolute;
   text-align: center;
   transform: translate(-50%, -50%);
   transition: opacity 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
   user-select: none;
-  width: 12%;
+  width: clamp(88px, 9.5%, 124px);
   z-index: 3;
-}
-
-.value-flow-node {
-  cursor: grab;
-  touch-action: none;
-}
-
-.value-flow-node:active {
-  cursor: grabbing;
 }
 
 .value-flow-node:not(.is-muted):hover,
 .value-flow-connector:not(.is-muted):hover {
-  box-shadow: 0 18px 42px rgba(14, 165, 233, 0.18);
+  box-shadow: 0 20px 54px rgba(125, 211, 252, 0.36);
   transform: translate(-50%, -50%) scale(1.04);
 }
 
@@ -1758,7 +1750,7 @@ th {
   }
 
   .value-flow-map {
-    min-height: 420px;
+    min-height: 560px;
     padding: 12px;
   }
 
@@ -1766,7 +1758,7 @@ th {
     font-size: 10px;
     min-width: 74px;
     padding: 10px;
-    width: 18%;
+    width: 20%;
   }
 
   .value-flow-connector {

@@ -2,7 +2,7 @@ import 'zone.js';
 
 import { CommonModule } from '@angular/common';
 import { provideHttpClient } from '@angular/common/http';
-import { Component, HostListener, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideRouter, Routes } from '@angular/router';
@@ -97,7 +97,6 @@ type DashboardAvailability = 'available' | 'unavailable';
 type SearchResultGroup = 'companies' | 'events' | 'strategic_turns';
 type ValueFlowNode = { key: string; name: string; x: number; y: number };
 type ValueFlowEdge = { key: string; from: ValueFlowNode; to: ValueFlowNode; label: string; x: number; y: number };
-type ValueFlowDrag = { nodeKey: string; map: DOMRect } | null;
 type ValueFlowFocus = { type: 'edge' | 'node'; key: string } | null;
 type DashboardSectionKey =
   | 'latest_moves'
@@ -242,8 +241,6 @@ class AppComponent {
   readonly businessModelComponentOrder = ['PAYER', 'USER', 'OFFERING', 'REVENUE', 'CHANNEL', 'GEOGRAPHY', 'PARTNER', 'COST', 'ASSET'];
   businessModelTypeFilter = '';
   valueFlowFocus = signal<ValueFlowFocus>(null);
-  valueFlowNodeOverrides = signal<Record<string, { x: number; y: number }>>({});
-  private valueFlowDrag: ValueFlowDrag = null;
   operatingKpiMetric = '';
   operatingKpiSegment = '';
   operatingKpiGeography = '';
@@ -1184,8 +1181,6 @@ class AppComponent {
         this.businessModelDate = response.snapshot?.effective_date || '';
         this.businessModelCompareDate = response.comparison_snapshot?.effective_date || '';
         this.valueFlowFocus.set(null);
-        this.valueFlowDrag = null;
-        this.valueFlowNodeOverrides.set({});
         this.businessModelLoading.set(false);
       },
       error: (response) => {
@@ -2462,17 +2457,15 @@ class AppComponent {
     }
     if (total === 1) {
       const [key, name] = entries[0];
-      const override = this.valueFlowNodeOverrides()[key];
-      return [{ key, name, x: override?.x ?? 50, y: override?.y ?? 50 }];
+      return [{ key, name, x: 50, y: 50 }];
     }
     return entries.map(([key, name], index) => {
-      const angle = -Math.PI / 2 + (index * 2 * Math.PI) / total;
-      const override = this.valueFlowNodeOverrides()[key];
+      const layout = this.valueFlowNodePosition(index, total);
       return {
         key,
         name,
-        x: override?.x ?? Math.round((50 + Math.cos(angle) * 38) * 10) / 10,
-        y: override?.y ?? Math.round((50 + Math.sin(angle) * 34) * 10) / 10
+        x: layout.x,
+        y: layout.y
       };
     });
   }
@@ -2535,36 +2528,6 @@ class AppComponent {
     }
     const activeEdge = this.businessModelFlowEdges(relationships).find((edge) => edge.key === focus.key);
     return !activeEdge || (activeEdge.from.key !== node.key && activeEdge.to.key !== node.key);
-  }
-
-  startValueFlowNodeDrag(event: MouseEvent, node: ValueFlowNode): void {
-    const map = (event.currentTarget as HTMLElement).closest('.value-flow-map');
-    if (!map) {
-      return;
-    }
-    event.preventDefault();
-    this.valueFlowDrag = { nodeKey: node.key, map: map.getBoundingClientRect() };
-    this.moveValueFlowNode(event);
-  }
-
-  @HostListener('document:mousemove', ['$event'])
-  moveValueFlowNode(event: MouseEvent): void {
-    if (!this.valueFlowDrag) {
-      return;
-    }
-    event.preventDefault();
-    const { nodeKey, map } = this.valueFlowDrag;
-    const x = this.clampValueFlowPosition(((event.clientX - map.left) / map.width) * 100);
-    const y = this.clampValueFlowPosition(((event.clientY - map.top) / map.height) * 100);
-    this.valueFlowNodeOverrides.set({
-      ...this.valueFlowNodeOverrides(),
-      [nodeKey]: { x, y }
-    });
-  }
-
-  @HostListener('document:mouseup')
-  stopValueFlowNodeDrag(): void {
-    this.valueFlowDrag = null;
   }
 
   profileSectionLabel(key: string): string {
@@ -2808,8 +2771,23 @@ class AppComponent {
     return String(name || '').trim().replace(/\s+/g, ' ').toLowerCase();
   }
 
-  private clampValueFlowPosition(value: number): number {
-    return Math.round(Math.max(8, Math.min(92, value)) * 10) / 10;
+  private valueFlowNodePosition(index: number, total: number): { x: number; y: number } {
+    if (total <= 8) {
+      return this.valueFlowRingPosition(index, total, 40, 36, 0);
+    }
+    const outerCount = Math.ceil(total * 0.62);
+    if (index < outerCount) {
+      return this.valueFlowRingPosition(index, outerCount, 43, 38, 0);
+    }
+    return this.valueFlowRingPosition(index - outerCount, total - outerCount, 24, 22, Math.PI / Math.max(total - outerCount, 1));
+  }
+
+  private valueFlowRingPosition(index: number, total: number, radiusX: number, radiusY: number, offset: number): { x: number; y: number } {
+    const angle = -Math.PI / 2 + offset + (index * 2 * Math.PI) / Math.max(total, 1);
+    return {
+      x: Math.round((50 + Math.cos(angle) * radiusX) * 10) / 10,
+      y: Math.round((50 + Math.sin(angle) * radiusY) * 10) / 10
+    };
   }
 
   private withRequest(start: () => void): void {
