@@ -900,42 +900,59 @@ button:disabled {
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
-.value-flow-venn-grid {
+.value-flow-map {
+  background:
+    radial-gradient(circle at 50% 120px, rgba(37, 99, 235, 0.16), transparent 170px),
+    linear-gradient(135deg, #f7f9fb, #ffffff);
+  border: 1px solid var(--line);
+  border-radius: 16px;
   display: grid;
   gap: 18px;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-}
-
-.value-flow-venn {
-  align-items: center;
-  background: linear-gradient(135deg, #f7f9fb, #ffffff);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  display: flex;
-  justify-content: center;
-  min-height: 170px;
   overflow: hidden;
-  padding: 18px;
+  padding: 22px;
+  position: relative;
 }
 
-.venn-circle {
+.value-flow-map::before,
+.value-flow-map::after {
+  background: rgba(37, 99, 235, 0.18);
+  content: "";
+  left: 50%;
+  position: absolute;
+  transform: translateX(-50%);
+  width: 2px;
+}
+
+.value-flow-map::before {
+  height: 80px;
+  top: 86px;
+}
+
+.value-flow-map::after {
+  bottom: 124px;
+  height: 62px;
+}
+
+.value-flow-hub {
   align-items: center;
   aspect-ratio: 1;
-  border: 2px solid rgba(37, 99, 235, 0.28);
+  background: rgba(37, 99, 235, 0.12);
+  border: 2px solid rgba(37, 99, 235, 0.34);
   border-radius: 999px;
+  box-shadow: 0 16px 42px rgba(37, 99, 235, 0.12);
   display: flex;
-  flex: 0 0 132px;
   flex-direction: column;
+  justify-self: center;
   justify-content: center;
   padding: 18px;
   text-align: center;
+  width: 138px;
+  z-index: 1;
 }
 
-.venn-circle + .venn-circle {
-  margin-left: -34px;
-}
-
-.venn-circle span {
+.value-flow-hub span,
+.value-flow-group h3,
+.value-flow-ribbon span {
   color: var(--muted);
   font-size: 11px;
   font-weight: 800;
@@ -943,26 +960,86 @@ button:disabled {
   text-transform: uppercase;
 }
 
-.venn-circle strong {
-  font-size: 13px;
-  line-height: 1.25;
+.value-flow-hub strong {
+  font-size: 18px;
   margin-top: 6px;
-  overflow-wrap: anywhere;
 }
 
-.venn-source {
-  background: rgba(37, 99, 235, 0.10);
-}
-
-.venn-link {
-  background: rgba(14, 165, 233, 0.16);
-  border-color: rgba(14, 165, 233, 0.34);
+.value-flow-bubble-groups {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  position: relative;
   z-index: 1;
 }
 
-.venn-target {
-  background: rgba(16, 185, 129, 0.12);
-  border-color: rgba(16, 185, 129, 0.32);
+.value-flow-group {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(220, 227, 234, 0.85);
+  border-radius: 14px;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.value-flow-group h3 {
+  margin: 0;
+}
+
+.value-flow-bubbles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.value-flow-bubble {
+  background: #ffffff;
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  border-radius: 999px;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.25;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  padding: 8px 10px;
+}
+
+.value-flow-ribbons {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  position: relative;
+  z-index: 1;
+}
+
+.value-flow-ribbon {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid rgba(14, 165, 233, 0.22);
+  border-radius: 999px;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr auto 1fr;
+  padding: 10px 14px;
+}
+
+.value-flow-ribbon strong {
+  font-size: 12px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.value-flow-ribbon strong:last-child {
+  text-align: right;
+}
+
+.value-flow-ribbon span {
+  background: rgba(14, 165, 233, 0.12);
+  border-radius: 999px;
+  color: var(--accent);
+  padding: 6px 8px;
+  text-align: center;
 }
 
 .change-grid article {
@@ -1704,22 +1781,32 @@ th {
     flex-direction: column;
   }
 
-  .value-flow-venn-grid {
+  .value-flow-map {
+    padding: 12px;
+  }
+
+  .value-flow-map::before,
+  .value-flow-map::after {
+    display: none;
+  }
+
+  .value-flow-hub {
+    width: 112px;
+  }
+
+  .value-flow-bubble-groups,
+  .value-flow-ribbons {
     grid-template-columns: 1fr;
   }
 
-  .value-flow-venn {
-    min-height: 140px;
-    padding: 12px;
+  .value-flow-ribbon {
+    border-radius: 14px;
+    grid-template-columns: 1fr;
+    text-align: left;
   }
 
-  .venn-circle {
-    flex-basis: 104px;
-    padding: 12px;
-  }
-
-  .venn-circle + .venn-circle {
-    margin-left: -26px;
+  .value-flow-ribbon strong:last-child {
+    text-align: left;
   }
 
   .checkout-box dl div {
