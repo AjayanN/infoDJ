@@ -959,7 +959,7 @@
                   <div class="value-flow-connector" *ngFor="let edge of businessModelFlowEdges(modelView.snapshot.relationships)" [class.is-muted]="isValueFlowEdgeDimmed(edge)" [style.left.%]="edge.x" [style.top.%]="edge.y" (pointerenter)="focusValueFlowEdge(edge.key)">
                     {{ edge.label }}
                   </div>
-                  <div class="value-flow-node" *ngFor="let node of businessModelFlowNodes(modelView.snapshot.relationships)" [class.is-muted]="isValueFlowNodeDimmed(node, modelView.snapshot.relationships)" [style.left.%]="node.x" [style.top.%]="node.y" (pointerenter)="focusValueFlowNode(node.key)" (pointerdown)="startValueFlowNodeDrag($event, node)">
+                  <div class="value-flow-node" *ngFor="let node of businessModelFlowNodes(modelView.snapshot.relationships)" [class.is-muted]="isValueFlowNodeDimmed(node, modelView.snapshot.relationships)" [style.left.%]="node.x" [style.top.%]="node.y" (pointerenter)="focusValueFlowNode(node.key)" (mousedown)="startValueFlowNodeDrag($event, node)">
                     {{ node.name }}
                   </div>
                 </div>

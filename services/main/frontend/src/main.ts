@@ -97,7 +97,7 @@ type DashboardAvailability = 'available' | 'unavailable';
 type SearchResultGroup = 'companies' | 'events' | 'strategic_turns';
 type ValueFlowNode = { key: string; name: string; x: number; y: number };
 type ValueFlowEdge = { key: string; from: ValueFlowNode; to: ValueFlowNode; label: string; x: number; y: number };
-type ValueFlowDrag = { nodeKey: string; pointerId: number; map: DOMRect } | null;
+type ValueFlowDrag = { nodeKey: string; map: DOMRect } | null;
 type ValueFlowFocus = { type: 'edge' | 'node'; key: string } | null;
 type DashboardSectionKey =
   | 'latest_moves'
@@ -2537,21 +2537,19 @@ class AppComponent {
     return !activeEdge || (activeEdge.from.key !== node.key && activeEdge.to.key !== node.key);
   }
 
-  startValueFlowNodeDrag(event: PointerEvent, node: ValueFlowNode): void {
+  startValueFlowNodeDrag(event: MouseEvent, node: ValueFlowNode): void {
     const map = (event.currentTarget as HTMLElement).closest('.value-flow-map');
     if (!map) {
       return;
     }
     event.preventDefault();
-    this.valueFlowDrag = { nodeKey: node.key, pointerId: event.pointerId, map: map.getBoundingClientRect() };
+    this.valueFlowDrag = { nodeKey: node.key, map: map.getBoundingClientRect() };
+    this.moveValueFlowNode(event);
   }
 
-  @HostListener('document:pointermove', ['$event'])
-  moveValueFlowNode(event: PointerEvent): void {
+  @HostListener('document:mousemove', ['$event'])
+  moveValueFlowNode(event: MouseEvent): void {
     if (!this.valueFlowDrag) {
-      return;
-    }
-    if (event.pointerId !== this.valueFlowDrag.pointerId) {
       return;
     }
     event.preventDefault();
@@ -2564,8 +2562,7 @@ class AppComponent {
     });
   }
 
-  @HostListener('document:pointerup')
-  @HostListener('document:pointercancel')
+  @HostListener('document:mouseup')
   stopValueFlowNodeDrag(): void {
     this.valueFlowDrag = null;
   }
