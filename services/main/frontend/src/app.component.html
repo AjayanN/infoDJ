@@ -947,21 +947,26 @@
               <section class="panel" aria-labelledby="relationship-heading">
                 <div class="panel-header"><div><p class="section-kicker">Value flow</p><h2 id="relationship-heading">How the components connect</h2></div></div>
                 <div class="empty-state" *ngIf="!modelView.snapshot || modelView.snapshot.relationships.length === 0">No reviewed business-model relationships.</div>
-                <div class="value-flow-venn-grid">
-                  <article class="value-flow-venn" *ngFor="let relationship of modelView.snapshot?.relationships || []">
-                    <div class="venn-circle venn-source">
-                      <span>From</span>
+                <div class="value-flow-map" *ngIf="modelView.snapshot && modelView.snapshot.relationships.length > 0">
+                  <div class="value-flow-hub">
+                    <span>Business model</span>
+                    <strong>Value flow</strong>
+                  </div>
+                  <div class="value-flow-bubble-groups">
+                    <section class="value-flow-group" *ngFor="let type of businessModelComponentOrder" [hidden]="businessModelTypeFilter && businessModelTypeFilter !== type">
+                      <h3>{{ businessModelComponentLabel(type) }}</h3>
+                      <div class="value-flow-bubbles">
+                        <span class="value-flow-bubble" *ngFor="let component of modelView.snapshot.component_groups[type] || []">{{ component.name }}</span>
+                      </div>
+                    </section>
+                  </div>
+                  <div class="value-flow-ribbons" aria-label="Business-model relationship links">
+                    <article class="value-flow-ribbon" *ngFor="let relationship of modelView.snapshot.relationships">
                       <strong>{{ relationship.from_name }}</strong>
-                    </div>
-                    <div class="venn-circle venn-link">
-                      <span>Flow</span>
-                      <strong>{{ businessModelRelationshipLabel(relationship.relationship_type) }}</strong>
-                    </div>
-                    <div class="venn-circle venn-target">
-                      <span>To</span>
+                      <span>{{ businessModelRelationshipLabel(relationship.relationship_type) }}</span>
                       <strong>{{ relationship.to_name }}</strong>
-                    </div>
-                  </article>
+                    </article>
+                  </div>
                 </div>
               </section>
 
