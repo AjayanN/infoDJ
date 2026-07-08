@@ -242,8 +242,10 @@ class AppComponent {
   readonly businessModelComponentOrder = ['PAYER', 'USER', 'OFFERING', 'REVENUE', 'CHANNEL', 'GEOGRAPHY', 'PARTNER', 'COST', 'ASSET'];
   businessModelTypeFilter = '';
   valueFlowFocus = signal<ValueFlowFocus>(null);
-  valueFlowNodeOverrides: Record<string, { x: number; y: number }> = {};
+  valueFlowNodeOverrides = signal<Record<string, { x: number; y: number }>>({});
   private valueFlowDrag: ValueFlowDrag = null;
+  private valueFlowMoveListener: ((event: PointerEvent) => void) | null = null;
+  private valueFlowEndListener: (() => void) | null = null;
   operatingKpiMetric = '';
   operatingKpiSegment = '';
   operatingKpiGeography = '';
@@ -1185,7 +1187,8 @@ class AppComponent {
         this.businessModelCompareDate = response.comparison_snapshot?.effective_date || '';
         this.valueFlowFocus.set(null);
         this.valueFlowDrag = null;
-        this.valueFlowNodeOverrides = {};
+        this.valueFlowNodeOverrides.set({});
+        this.removeValueFlowDragListeners();
         this.businessModelLoading.set(false);
       },
       error: (response) => {
@@ -2462,12 +2465,12 @@ class AppComponent {
     }
     if (total === 1) {
       const [key, name] = entries[0];
-      const override = this.valueFlowNodeOverrides[key];
+      const override = this.valueFlowNodeOverrides()[key];
       return [{ key, name, x: override?.x ?? 50, y: override?.y ?? 50 }];
     }
     return entries.map(([key, name], index) => {
       const angle = -Math.PI / 2 + (index * 2 * Math.PI) / total;
-      const override = this.valueFlowNodeOverrides[key];
+      const override = this.valueFlowNodeOverrides()[key];
       return {
         key,
         name,
@@ -2543,8 +2546,14 @@ class AppComponent {
       return;
     }
     event.preventDefault();
+    this.removeValueFlowDragListeners();
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
     this.valueFlowDrag = { nodeKey: node.key, pointerId: event.pointerId, map: map.getBoundingClientRect() };
+    this.valueFlowMoveListener = (moveEvent: PointerEvent) => this.moveValueFlowNode(moveEvent);
+    this.valueFlowEndListener = () => this.stopValueFlowNodeDrag();
+    window.addEventListener('pointermove', this.valueFlowMoveListener);
+    window.addEventListener('pointerup', this.valueFlowEndListener);
+    window.addEventListener('pointercancel', this.valueFlowEndListener);
   }
 
   moveValueFlowNode(event: PointerEvent): void {
@@ -2558,14 +2567,15 @@ class AppComponent {
     const { nodeKey, map } = this.valueFlowDrag;
     const x = this.clampValueFlowPosition(((event.clientX - map.left) / map.width) * 100);
     const y = this.clampValueFlowPosition(((event.clientY - map.top) / map.height) * 100);
-    this.valueFlowNodeOverrides = {
-      ...this.valueFlowNodeOverrides,
+    this.valueFlowNodeOverrides.set({
+      ...this.valueFlowNodeOverrides(),
       [nodeKey]: { x, y }
-    };
+    });
   }
 
   stopValueFlowNodeDrag(): void {
     this.valueFlowDrag = null;
+    this.removeValueFlowDragListeners();
   }
 
   profileSectionLabel(key: string): string {
@@ -2811,6 +2821,18 @@ class AppComponent {
 
   private clampValueFlowPosition(value: number): number {
     return Math.round(Math.max(8, Math.min(92, value)) * 10) / 10;
+  }
+
+  private removeValueFlowDragListeners(): void {
+    if (this.valueFlowMoveListener) {
+      window.removeEventListener('pointermove', this.valueFlowMoveListener);
+      this.valueFlowMoveListener = null;
+    }
+    if (this.valueFlowEndListener) {
+      window.removeEventListener('pointerup', this.valueFlowEndListener);
+      window.removeEventListener('pointercancel', this.valueFlowEndListener);
+      this.valueFlowEndListener = null;
+    }
   }
 
   private withRequest(start: () => void): void {
