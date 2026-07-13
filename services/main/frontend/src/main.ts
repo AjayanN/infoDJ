@@ -2,7 +2,7 @@ import 'zone.js';
 
 import { CommonModule } from '@angular/common';
 import { provideHttpClient } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, HostListener, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideRouter, Routes } from '@angular/router';
@@ -97,6 +97,7 @@ type DashboardAvailability = 'available' | 'unavailable';
 type SearchResultGroup = 'companies' | 'events' | 'strategic_turns';
 type ValueFlowNode = { key: string; name: string; x: number; y: number };
 type ValueFlowEdge = { key: string; from: ValueFlowNode; to: ValueFlowNode; label: string; x: number; y: number };
+type ValueFlowDrag = { nodeKey: string; space: DOMRect } | null;
 type ValueFlowFocus = { type: 'edge' | 'node'; key: string } | null;
 type DashboardSectionKey =
   | 'latest_moves'
@@ -241,6 +242,8 @@ class AppComponent {
   readonly businessModelComponentOrder = ['PAYER', 'USER', 'OFFERING', 'REVENUE', 'CHANNEL', 'GEOGRAPHY', 'PARTNER', 'COST', 'ASSET'];
   businessModelTypeFilter = '';
   valueFlowFocus = signal<ValueFlowFocus>(null);
+  valueFlowNodeOverrides = signal<Record<string, { x: number; y: number }>>({});
+  private valueFlowDrag: ValueFlowDrag = null;
   operatingKpiMetric = '';
   operatingKpiSegment = '';
   operatingKpiGeography = '';
@@ -1181,6 +1184,8 @@ class AppComponent {
         this.businessModelDate = response.snapshot?.effective_date || '';
         this.businessModelCompareDate = response.comparison_snapshot?.effective_date || '';
         this.valueFlowFocus.set(null);
+        this.valueFlowDrag = null;
+        this.valueFlowNodeOverrides.set({});
         this.businessModelLoading.set(false);
       },
       error: (response) => {
@@ -2457,15 +2462,17 @@ class AppComponent {
     }
     if (total === 1) {
       const [key, name] = entries[0];
-      return [{ key, name, x: 50, y: 50 }];
+      const override = this.valueFlowNodeOverrides()[key];
+      return [{ key, name, x: override?.x ?? 50, y: override?.y ?? 50 }];
     }
     return entries.map(([key, name], index) => {
       const layout = this.valueFlowNodePosition(index, total);
+      const override = this.valueFlowNodeOverrides()[key];
       return {
         key,
         name,
-        x: layout.x,
-        y: layout.y
+        x: override?.x ?? layout.x,
+        y: override?.y ?? layout.y
       };
     });
   }
@@ -2528,6 +2535,36 @@ class AppComponent {
     }
     const activeEdge = this.businessModelFlowEdges(relationships).find((edge) => edge.key === focus.key);
     return !activeEdge || (activeEdge.from.key !== node.key && activeEdge.to.key !== node.key);
+  }
+
+  startValueFlowNodeDrag(event: MouseEvent, node: ValueFlowNode): void {
+    const space = (event.currentTarget as HTMLElement).closest('.value-flow-space');
+    if (!space) {
+      return;
+    }
+    event.preventDefault();
+    this.valueFlowDrag = { nodeKey: node.key, space: space.getBoundingClientRect() };
+    this.moveValueFlowNode(event);
+  }
+
+  @HostListener('document:mousemove', ['$event'])
+  moveValueFlowNode(event: MouseEvent): void {
+    if (!this.valueFlowDrag) {
+      return;
+    }
+    event.preventDefault();
+    const { nodeKey, space } = this.valueFlowDrag;
+    const x = this.clampValueFlowPosition(((event.clientX - space.left) / space.width) * 100);
+    const y = this.clampValueFlowPosition(((event.clientY - space.top) / space.height) * 100);
+    this.valueFlowNodeOverrides.set({
+      ...this.valueFlowNodeOverrides(),
+      [nodeKey]: { x, y }
+    });
+  }
+
+  @HostListener('document:mouseup')
+  stopValueFlowNodeDrag(): void {
+    this.valueFlowDrag = null;
   }
 
   profileSectionLabel(key: string): string {
@@ -2788,6 +2825,10 @@ class AppComponent {
       x: Math.round((50 + Math.cos(angle) * radiusX) * 10) / 10,
       y: Math.round((50 + Math.sin(angle) * radiusY) * 10) / 10
     };
+  }
+
+  private clampValueFlowPosition(value: number): number {
+    return Math.round(Math.max(4, Math.min(96, value)) * 10) / 10;
   }
 
   private withRequest(start: () => void): void {

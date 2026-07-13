@@ -908,9 +908,15 @@ button:disabled {
   border: 1px solid rgba(148, 163, 184, 0.25);
   border-radius: 18px;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 18px 48px rgba(15, 23, 42, 0.18);
-  min-height: clamp(620px, 78vh, 920px);
-  overflow: hidden;
+  height: clamp(620px, 78vh, 920px);
+  overflow: auto;
   padding: 24px;
+  position: relative;
+}
+
+.value-flow-space {
+  min-height: 1080px;
+  min-width: 1680px;
   position: relative;
 }
 
@@ -987,6 +993,14 @@ button:disabled {
   user-select: none;
   width: clamp(88px, 9.5%, 124px);
   z-index: 3;
+}
+
+.value-flow-node {
+  cursor: grab;
+}
+
+.value-flow-node:active {
+  cursor: grabbing;
 }
 
 .value-flow-node:not(.is-muted):hover,
@@ -1741,8 +1755,13 @@ th {
   }
 
   .value-flow-map {
-    min-height: 560px;
+    height: 620px;
     padding: 12px;
+  }
+
+  .value-flow-space {
+    min-height: 860px;
+    min-width: 1180px;
   }
 
   .value-flow-node {
