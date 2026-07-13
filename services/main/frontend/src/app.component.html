@@ -948,14 +948,16 @@
                 <div class="panel-header"><div><p class="section-kicker">Value flow</p><h2 id="relationship-heading">How the components connect</h2></div></div>
                 <div class="empty-state" *ngIf="!modelView.snapshot || modelView.snapshot.relationships.length === 0">No reviewed business-model relationships.</div>
                 <div class="value-flow-map" *ngIf="modelView.snapshot && modelView.snapshot.relationships.length > 0" (pointerleave)="clearValueFlowFocus()">
-                  <svg class="value-flow-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-                    <line *ngFor="let edge of businessModelFlowEdges(modelView.snapshot.relationships)" [class.is-muted]="isValueFlowEdgeDimmed(edge)" [attr.x1]="edge.from.x" [attr.y1]="edge.from.y" [attr.x2]="edge.to.x" [attr.y2]="edge.to.y" (pointerenter)="focusValueFlowEdge(edge.key)"></line>
-                  </svg>
-                  <div class="value-flow-connector" *ngFor="let edge of businessModelFlowEdges(modelView.snapshot.relationships)" [class.is-muted]="isValueFlowEdgeDimmed(edge)" [style.left.%]="edge.x" [style.top.%]="edge.y" (pointerenter)="focusValueFlowEdge(edge.key)">
-                    {{ edge.label }}
-                  </div>
-                  <div class="value-flow-node" *ngFor="let node of businessModelFlowNodes(modelView.snapshot.relationships)" [class.is-muted]="isValueFlowNodeDimmed(node, modelView.snapshot.relationships)" [style.left.%]="node.x" [style.top.%]="node.y" (pointerenter)="focusValueFlowNode(node.key)">
-                    {{ node.name }}
+                  <div class="value-flow-space">
+                    <svg class="value-flow-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                      <line *ngFor="let edge of businessModelFlowEdges(modelView.snapshot.relationships)" [class.is-muted]="isValueFlowEdgeDimmed(edge)" [attr.x1]="edge.from.x" [attr.y1]="edge.from.y" [attr.x2]="edge.to.x" [attr.y2]="edge.to.y" (pointerenter)="focusValueFlowEdge(edge.key)"></line>
+                    </svg>
+                    <div class="value-flow-connector" *ngFor="let edge of businessModelFlowEdges(modelView.snapshot.relationships)" [class.is-muted]="isValueFlowEdgeDimmed(edge)" [style.left.%]="edge.x" [style.top.%]="edge.y" (pointerenter)="focusValueFlowEdge(edge.key)">
+                      {{ edge.label }}
+                    </div>
+                    <div class="value-flow-node" *ngFor="let node of businessModelFlowNodes(modelView.snapshot.relationships)" [class.is-muted]="isValueFlowNodeDimmed(node, modelView.snapshot.relationships)" [style.left.%]="node.x" [style.top.%]="node.y" (pointerenter)="focusValueFlowNode(node.key)" (mousedown)="startValueFlowNodeDrag($event, node)">
+                      {{ node.name }}
+                    </div>
                   </div>
                 </div>
               </section>
