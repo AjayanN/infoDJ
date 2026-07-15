@@ -964,6 +964,12 @@
 
               <section class="panel" aria-labelledby="model-changes-heading">
                 <div class="panel-header"><div><p class="section-kicker">Historical comparison</p><h2 id="model-changes-heading">What changed</h2></div><span>{{ modelView.changes.from_date || 'No earlier map' }} to {{ modelView.changes.to_date || 'current' }}</span></div>
+                <div class="comparison-note" [class.has-change]="modelView.changes.has_material_change">
+                  <p>{{ modelView.changes.comparison_message }}</p>
+                  <button type="button" class="ghost-button" *ngIf="!modelView.changes.has_material_change && modelView.changes.last_material_change_date && modelView.changes.last_material_change_date !== modelView.changes.from_date" (click)="compareBusinessModelToLastMaterialChange()">
+                    Compare to last material change: {{ modelView.changes.last_material_change_date }}
+                  </button>
+                </div>
                 <div class="change-grid">
                   <article><h3>Components added</h3><p *ngIf="modelView.changes.components_added.length === 0">None identified.</p><ul><li *ngFor="let item of modelView.changes.components_added">{{ item.component_type }} · {{ item.name }}</li></ul></article>
                   <article><h3>Components removed</h3><p *ngIf="modelView.changes.components_removed.length === 0">None identified.</p><ul><li *ngFor="let item of modelView.changes.components_removed">{{ item.component_type }} · {{ item.name }}</li></ul></article>

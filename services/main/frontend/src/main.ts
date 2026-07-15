@@ -1205,6 +1205,16 @@ class AppComponent {
     }
   }
 
+  compareBusinessModelToLastMaterialChange(): void {
+    const model = this.businessModel();
+    const materialDate = model?.changes.last_material_change_date;
+    if (!model || !materialDate) {
+      return;
+    }
+    this.businessModelCompareDate = materialDate;
+    this.openBusinessModel(model.company.slug, this.businessModelDate, materialDate);
+  }
+
   openOperatingKpis(slug: string, metric = ''): void {
     if (!slug || !this.token()) return;
     this.activePage.set('operating-kpis');

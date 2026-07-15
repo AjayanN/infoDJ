@@ -1457,6 +1457,30 @@ select:focus {
   padding: 18px;
 }
 
+.comparison-note {
+  align-items: center;
+  background: #f7f9fb;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+}
+
+.comparison-note.has-change {
+  background: var(--ok-bg);
+  color: var(--ok-text);
+}
+
+.comparison-note p {
+  flex: 1 1 320px;
+  margin: 0;
+}
+
 .account-grid,
 .tier-grid {
   display: grid;

@@ -231,7 +231,8 @@ The Business Model Map includes:
 - explicit relationship edges such as `PAYS_FOR`, `USES`, `MONETIZED_BY`, and `DELIVERED_THROUGH`
 - user-facing component cards without inline audit labels, with source traceability preserved in the evidence section
 - an interactive shared-node bubble-map value-flow view where repeated component names collapse into one high-contrast bubble, relationship connectors link the nodes, the graph sits in a larger scrollable canvas, bubbles can be repositioned inside that canvas, hovering a connector focuses that relationship, hovering a node focuses all relationships connected to it, and leaving the graph clears the focus
-- historical snapshot selection and before/after change analysis
+- historical snapshot selection and before/after change analysis, with ingestion-provided material-change metadata that distinguishes real component or relationship changes from repeated refresh snapshots
+- a `Compare to last material change` action when the selected comparison has identical component and relationship sets but an older materially different reviewed map exists
 - evidence links, completeness, freshness, and explicit missing-component gaps
 - an accessible component-column view backed by source documents and explicit missing-data states
 

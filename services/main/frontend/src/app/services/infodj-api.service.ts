@@ -522,6 +522,10 @@ export type BusinessModelResponse = {
   changes: {
     from_date: string | null;
     to_date: string | null;
+    comparison_status: 'material_change' | 'no_structural_change' | 'same_snapshot' | 'unavailable';
+    comparison_message: string;
+    has_material_change: boolean;
+    last_material_change_date: string | null;
     components_added: { component_type: string; name: string }[];
     components_removed: { component_type: string; name: string }[];
     relationships_added: { from_name: string; relationship_type: string; to_name: string }[];

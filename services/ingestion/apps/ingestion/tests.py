@@ -506,12 +506,60 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(payload["snapshot"]["relationships"][0]["relationship_type"], "PAYS_FOR")
         self.assertIn("Ad-supported plan", [row["name"] for row in payload["changes"]["components_added"]])
         self.assertIn("DVD-by-mail", [row["name"] for row in payload["changes"]["components_removed"]])
+        self.assertTrue(payload["changes"]["has_material_change"])
+        self.assertEqual(payload["changes"]["comparison_status"], "material_change")
+        self.assertEqual(payload["changes"]["last_material_change_date"], "2011-12-31")
         self.assertEqual(payload["peer_models"][0]["company"], "StreamPeer")
         self.assertEqual(payload["peer_models"][0]["shared_components"][0]["name"], "streaming members")
         self.assertEqual(payload["peer_models"][0]["compatibility_status"], "incompatible")
         self.assertIn("same-sector context only", payload["peer_models"][0]["comparison_warning"])
         self.assertEqual(payload["peer_models"][0]["shared_component_type_count"], 1)
         self.assertLess(payload["peer_models"][0]["component_type_overlap_percent"], 50)
+
+    def test_business_model_marks_repeated_refresh_without_fake_changes(self):
+        older = BusinessModelSnapshot.objects.create(
+            company=self.netflix,
+            effective_date=date(2011, 12, 31),
+            source_document=self.source,
+            status="REVIEWED",
+            summary="DVD subscriptions.",
+            confidence_score="0.800",
+        )
+        BusinessModelComponent.objects.create(snapshot=older, component_type="OFFERING", name="DVD-by-mail", confidence_score="0.8")
+
+        first_refresh = BusinessModelSnapshot.objects.create(
+            company=self.netflix,
+            effective_date=date(2026, 6, 15),
+            source_document=self.source,
+            status="REVIEWED",
+            summary="Streaming subscriptions and advertising.",
+            confidence_score="0.900",
+        )
+        second_refresh = BusinessModelSnapshot.objects.create(
+            company=self.netflix,
+            effective_date=date(2026, 6, 22),
+            source_document=self.source,
+            status="REVIEWED",
+            summary="Streaming subscriptions and advertising.",
+            confidence_score="0.900",
+        )
+        for snapshot in (first_refresh, second_refresh):
+            payer = BusinessModelComponent.objects.create(snapshot=snapshot, component_type="PAYER", name="Streaming members", confidence_score="0.9")
+            offering = BusinessModelComponent.objects.create(snapshot=snapshot, component_type="OFFERING", name="Streaming service", confidence_score="0.9")
+            BusinessModelRelationship.objects.create(snapshot=snapshot, from_component=payer, to_component=offering, relationship_type="USES", confidence_score="0.9")
+
+        response = self.client.get("/companies/netflix/business-model?as_of=2026-06-22&compare_to=2026-06-15")
+
+        self.assertEqual(response.status_code, 200)
+        changes = response.json()["changes"]
+        self.assertFalse(changes["has_material_change"])
+        self.assertEqual(changes["comparison_status"], "no_structural_change")
+        self.assertEqual(changes["last_material_change_date"], "2011-12-31")
+        self.assertEqual(changes["components_added"], [])
+        self.assertEqual(changes["components_removed"], [])
+        self.assertEqual(changes["relationships_added"], [])
+        self.assertEqual(changes["relationships_removed"], [])
+        self.assertIn("identical component and relationship sets", changes["comparison_message"])
 
     def test_business_model_reports_unavailable_without_reviewed_snapshot(self):
         response = self.client.get("/companies/netflix/business-model")
