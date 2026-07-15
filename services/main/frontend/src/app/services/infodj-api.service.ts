@@ -518,6 +518,8 @@ export type BusinessModelResponse = {
     label: string;
     status: 'available' | 'unavailable';
     destination: string;
+    action_label: string;
+    unavailable_message: string;
   }[];
   changes: {
     from_date: string | null;

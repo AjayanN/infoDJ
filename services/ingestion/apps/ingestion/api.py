@@ -307,13 +307,7 @@ def company_business_model(request: HttpRequest, slug: str) -> JsonResponse:
             "comparison_snapshot": serialize_business_model_snapshot(comparison),
             "changes": business_model_changes(current, comparison, material_comparison),
             "peer_models": peer_business_model_rows(company, current),
-            "related_surfaces": [
-                {"key": "customer_groups", "label": "Customer groups", "status": "available", "destination": "company_profile"},
-                {"key": "products", "label": "Products and services", "status": "available", "destination": "company_profile"},
-                {"key": "revenue_sources", "label": "Revenue sources", "status": "available", "destination": "company_profile"},
-                {"key": "pricing_history", "label": "Product and pricing history", "status": "unavailable", "destination": "phase2_requirement_9"},
-                {"key": "supplier_dependency", "label": "Supplier dependencies", "status": "unavailable", "destination": "phase2_requirement_11"},
-            ],
+            "related_surfaces": business_model_related_surfaces(company),
             "coverage": {
                 "completeness_percent": completeness,
                 "component_count": current.components.count() if current else 0,
@@ -5591,6 +5585,53 @@ def business_model_changes(
         "relationships_added": [{"from_name": row[0], "relationship_type": row[1], "to_name": row[2]} for row in sorted(relationships_added)],
         "relationships_removed": [{"from_name": row[0], "relationship_type": row[1], "to_name": row[2]} for row in sorted(relationships_removed)],
     }
+
+
+def business_model_related_surfaces(company: Company) -> list[dict[str, str]]:
+    has_product_pricing = ProductCatalogSnapshot.objects.filter(company=company, status__in=["PUBLISHED", "REVIEWED"]).exists()
+    has_dependencies = CustomerSupplierDependencySnapshot.objects.filter(company=company, status__in=["PUBLISHED", "REVIEWED"]).exists()
+    return [
+        {
+            "key": "customer_groups",
+            "label": "Customer groups",
+            "status": "available",
+            "destination": "company_profile",
+            "action_label": "Open Company 360",
+            "unavailable_message": "",
+        },
+        {
+            "key": "products",
+            "label": "Products and services",
+            "status": "available",
+            "destination": "company_profile",
+            "action_label": "Open Company 360",
+            "unavailable_message": "",
+        },
+        {
+            "key": "revenue_sources",
+            "label": "Revenue sources",
+            "status": "available",
+            "destination": "company_profile",
+            "action_label": "Open Company 360",
+            "unavailable_message": "",
+        },
+        {
+            "key": "pricing_history",
+            "label": "Product and pricing history",
+            "status": "available" if has_product_pricing else "unavailable",
+            "destination": "product_pricing",
+            "action_label": "Open product and pricing",
+            "unavailable_message": "No reviewed product and pricing history is available for this company yet.",
+        },
+        {
+            "key": "supplier_dependency",
+            "label": "Customer and supplier dependency",
+            "status": "available" if has_dependencies else "unavailable",
+            "destination": "customer_supplier_dependency",
+            "action_label": "Open dependency map",
+            "unavailable_message": "No reviewed customer or supplier dependency map is available for this company yet.",
+        },
+    ]
 
 
 def persist_business_model_gaps(company: Company, gaps: list[dict[str, str]], present_types: set[str], has_relationships: bool) -> None:
