@@ -575,7 +575,8 @@ class IngestionSearchApiTests(TestCase):
         response = self.client.get("/companies/netflix/business-model?as_of=2026-06-22&compare_to=2026-06-15")
 
         self.assertEqual(response.status_code, 200)
-        changes = response.json()["changes"]
+        payload = response.json()
+        changes = payload["changes"]
         self.assertFalse(changes["has_material_change"])
         self.assertEqual(changes["comparison_status"], "no_structural_change")
         self.assertEqual(changes["last_material_change_date"], "2011-12-31")
@@ -584,6 +585,10 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(changes["relationships_added"], [])
         self.assertEqual(changes["relationships_removed"], [])
         self.assertIn("identical component and relationship sets", changes["comparison_message"])
+        self.assertEqual(len(payload["evidence"]), 1)
+        self.assertEqual(payload["evidence"][0]["id"], self.source.id)
+        self.assertEqual(payload["evidence"][0]["evidence_context"], ["Current map", "Comparison map", "Last material baseline"])
+        self.assertEqual(payload["evidence"][0]["snapshot_dates"], ["2026-06-22", "2026-06-15", "2011-12-31"])
 
     def test_business_model_reports_unavailable_without_reviewed_snapshot(self):
         response = self.client.get("/companies/netflix/business-model")

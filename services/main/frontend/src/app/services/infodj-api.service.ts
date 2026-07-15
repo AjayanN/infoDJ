@@ -388,6 +388,9 @@ export type CompanyProfileSource = {
   snippet: string;
   status: string;
   updated_at: string;
+  evidence_context?: string[];
+  evidence_context_label?: string;
+  snapshot_dates?: string[];
 };
 
 export type CompanyProfileResponse = {
