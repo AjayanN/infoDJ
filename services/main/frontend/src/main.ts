@@ -99,6 +99,7 @@ type ValueFlowNode = { key: string; name: string; x: number; y: number };
 type ValueFlowEdge = { key: string; from: ValueFlowNode; to: ValueFlowNode; label: string; x: number; y: number };
 type ValueFlowDrag = { nodeKey: string; space: DOMRect } | null;
 type ValueFlowFocus = { type: 'edge' | 'node'; key: string } | null;
+type ValueFlowGraph = { nodes: ValueFlowNode[]; edges: ValueFlowEdge[] };
 type DashboardSectionKey =
   | 'latest_moves'
   | 'strategic_turns'
@@ -242,6 +243,7 @@ class AppComponent {
   readonly businessModelComponentOrder = ['PAYER', 'USER', 'OFFERING', 'REVENUE', 'CHANNEL', 'GEOGRAPHY', 'PARTNER', 'COST', 'ASSET'];
   businessModelTypeFilter = '';
   valueFlowFocus = signal<ValueFlowFocus>(null);
+  valueFlowGraph = signal<ValueFlowGraph>({ nodes: [], edges: [] });
   valueFlowNodeOverrides = signal<Record<string, { x: number; y: number }>>({});
   private valueFlowDrag: ValueFlowDrag = null;
   operatingKpiMetric = '';
@@ -1186,6 +1188,7 @@ class AppComponent {
         this.valueFlowFocus.set(null);
         this.valueFlowDrag = null;
         this.valueFlowNodeOverrides.set({});
+        this.valueFlowGraph.set(this.buildValueFlowGraph(response.snapshot?.relationships || []));
         this.businessModelLoading.set(false);
       },
       error: (response) => {
@@ -2449,7 +2452,23 @@ class AppComponent {
     return businessModelRelationshipLabel(type);
   }
 
+  buildValueFlowGraph(relationships: BusinessModelRelationship[]): ValueFlowGraph {
+    const nodes = this.buildValueFlowNodes(relationships);
+    return {
+      nodes,
+      edges: this.buildValueFlowEdges(relationships, nodes)
+    };
+  }
+
   businessModelFlowNodes(relationships: BusinessModelRelationship[]): ValueFlowNode[] {
+    return this.buildValueFlowNodes(relationships);
+  }
+
+  businessModelFlowEdges(relationships: BusinessModelRelationship[]): ValueFlowEdge[] {
+    return this.buildValueFlowEdges(relationships, this.buildValueFlowNodes(relationships));
+  }
+
+  private buildValueFlowNodes(relationships: BusinessModelRelationship[]): ValueFlowNode[] {
     const names = new Map<string, string>();
     for (const relationship of relationships) {
       this.addValueFlowName(names, relationship.from_name);
@@ -2477,8 +2496,7 @@ class AppComponent {
     });
   }
 
-  businessModelFlowEdges(relationships: BusinessModelRelationship[]): ValueFlowEdge[] {
-    const nodes = this.businessModelFlowNodes(relationships);
+  private buildValueFlowEdges(relationships: BusinessModelRelationship[], nodes: ValueFlowNode[]): ValueFlowEdge[] {
     const nodeMap = new Map(nodes.map((node) => [node.key, node]));
     return relationships
       .map((relationship, index) => {
@@ -2522,18 +2540,18 @@ class AppComponent {
     return edge.from.key !== focus.key && edge.to.key !== focus.key;
   }
 
-  isValueFlowNodeDimmed(node: ValueFlowNode, relationships: BusinessModelRelationship[]): boolean {
+  isValueFlowNodeDimmed(node: ValueFlowNode): boolean {
     const focus = this.valueFlowFocus();
     if (!focus) {
       return false;
     }
     if (focus.type === 'node') {
-      return focus.key !== node.key && !this.businessModelFlowEdges(relationships).some((edge) => (
+      return focus.key !== node.key && !this.valueFlowGraph().edges.some((edge) => (
         (edge.from.key === focus.key && edge.to.key === node.key) ||
         (edge.to.key === focus.key && edge.from.key === node.key)
       ));
     }
-    const activeEdge = this.businessModelFlowEdges(relationships).find((edge) => edge.key === focus.key);
+    const activeEdge = this.valueFlowGraph().edges.find((edge) => edge.key === focus.key);
     return !activeEdge || (activeEdge.from.key !== node.key && activeEdge.to.key !== node.key);
   }
 
@@ -2559,6 +2577,22 @@ class AppComponent {
     this.valueFlowNodeOverrides.set({
       ...this.valueFlowNodeOverrides(),
       [nodeKey]: { x, y }
+    });
+    this.valueFlowGraph.update((graph) => {
+      const nodes = graph.nodes.map((node) => node.key === nodeKey ? { ...node, x, y } : node);
+      const nodeMap = new Map(nodes.map((node) => [node.key, node]));
+      const edges = graph.edges.map((edge) => {
+        const from = nodeMap.get(edge.from.key) || edge.from;
+        const to = nodeMap.get(edge.to.key) || edge.to;
+        return {
+          ...edge,
+          from,
+          to,
+          x: Math.round(((from.x + to.x) / 2) * 10) / 10,
+          y: Math.round(((from.y + to.y) / 2) * 10) / 10
+        };
+      });
+      return { nodes, edges };
     });
   }
 
