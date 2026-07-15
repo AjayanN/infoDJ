@@ -1013,8 +1013,8 @@
               </section>
 
               <section class="panel" aria-labelledby="model-evidence-heading">
-                <div class="panel-header"><div><p class="section-kicker">Sources</p><h2 id="model-evidence-heading">Business-model evidence</h2></div></div>
-                <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of modelView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                <div class="panel-header"><div><p class="section-kicker">Sources</p><h2 id="model-evidence-heading">Sources used for this comparison</h2></div></div>
+                <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of modelView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher }} · {{ source.published_date || 'Date unavailable' }}</span><small *ngIf="source.evidence_context_label">{{ source.evidence_context_label }}<ng-container *ngIf="source.snapshot_dates?.length"> · snapshots {{ source.snapshot_dates?.join(', ') }}</ng-container></small><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
               </section>
             </ng-container>
           </section>

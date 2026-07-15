@@ -236,6 +236,7 @@ The Business Model Map includes:
 - evidence links, completeness, freshness, and explicit missing-component gaps
 - an accessible component-column view backed by source documents and explicit missing-data states
 - related intelligence links that open implemented Company 360, Product and Pricing History, and Customer/Supplier Dependency views with plain-language unavailable messages when reviewed data is missing
+- deduplicated source cards for the current map, selected comparison map, and last material baseline, with context labels so repeated refresh sources are not shown multiple times
 
 The Netflix pilot seed creates reviewed 2011 and 2022 maps. A reviewed current map can also be generated from the latest reviewed Company 360 profile:
 

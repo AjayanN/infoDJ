@@ -322,12 +322,15 @@ Each feature below inherits the shared standards above. Feature sections only de
 - [x] Add additional peer comparison safeguards for incompatible business models.
 - [x] Add material-change metadata to historical comparisons so repeated refresh snapshots are labelled honestly and users can compare against the last materially different reviewed map.
 - [x] Replace internal Phase 2 placeholder labels in related intelligence with implemented dashboard links for Product/Pricing History and Customer/Supplier Dependency.
+- [x] Deduplicate Business Model Map source cards and label whether each source supports the current map, selected comparison map, or last material baseline.
 
 Implemented improvement: Business Model Map peer rows now expose compatibility status, warning text, comparison basis, shared component-type count, and component-type overlap percentage. Same-sector peers with weak payer, offering, revenue, and channel overlap are labelled as same-sector context only instead of directly comparable models.
 
 Implemented improvement: Business Model Map historical comparison now keeps the strict ingestion-backed structural diff, reports whether a selected comparison has material component or relationship changes, explains identical refresh snapshots without fake changes, and exposes the last materially different reviewed map date when available.
 
 Implemented improvement: Business Model Map related intelligence now links to implemented Company 360, Product and Pricing History, and Customer/Supplier Dependency views using plain user-facing language. It shows an unavailable message only when a company lacks reviewed data for that linked view.
+
+Implemented improvement: Business Model Map evidence now shows only the unique sources used for the selected comparison context instead of repeating the same source for every historical refresh snapshot.
 
 **Acceptance criteria:**
 

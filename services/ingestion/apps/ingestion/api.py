@@ -316,7 +316,7 @@ def company_business_model(request: HttpRequest, slug: str) -> JsonResponse:
                 "available_component_types": len(present_types),
                 "last_updated": current.updated_at.isoformat() if current else company.updated_at.isoformat(),
             },
-            "evidence": [serialize_profile_source(row.source_document) for row in snapshots if row.source_document_id],
+            "evidence": business_model_evidence_sources(current, comparison, material_comparison),
             "source_gaps": gaps,
         }
     )
@@ -5632,6 +5632,39 @@ def business_model_related_surfaces(company: Company) -> list[dict[str, str]]:
             "unavailable_message": "No reviewed customer or supplier dependency map is available for this company yet.",
         },
     ]
+
+
+def business_model_evidence_sources(
+    current: BusinessModelSnapshot | None,
+    comparison: BusinessModelSnapshot | None,
+    material_comparison: BusinessModelSnapshot | None,
+) -> list[dict[str, object]]:
+    rows: dict[int, dict[str, object]] = {}
+    snapshot_roles = [
+        (current, "Current map"),
+        (comparison, "Comparison map"),
+        (material_comparison, "Last material baseline"),
+    ]
+    for snapshot, role in snapshot_roles:
+        if snapshot is None or snapshot.source_document is None:
+            continue
+        source = snapshot.source_document
+        row = rows.get(source.id)
+        if row is None:
+            row = serialize_profile_source(source)
+            row["evidence_context"] = []
+            row["snapshot_dates"] = []
+            rows[source.id] = row
+        contexts = row["evidence_context"]
+        dates = row["snapshot_dates"]
+        if role not in contexts:
+            contexts.append(role)
+        snapshot_date = snapshot.effective_date.isoformat()
+        if snapshot_date not in dates:
+            dates.append(snapshot_date)
+    for row in rows.values():
+        row["evidence_context_label"] = ", ".join(row["evidence_context"])
+    return list(rows.values())
 
 
 def persist_business_model_gaps(company: Company, gaps: list[dict[str, str]], present_types: set[str], has_relationships: bool) -> None:
