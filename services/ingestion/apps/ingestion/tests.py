@@ -495,6 +495,22 @@ class IngestionSearchApiTests(TestCase):
             name="Streaming members",
             confidence_score="0.8",
         )
+        ProductCatalogSnapshot.objects.create(
+            company=self.netflix,
+            effective_date=date(2022, 12, 31),
+            source_document=self.source,
+            status="REVIEWED",
+            summary="Reviewed product and pricing history.",
+            confidence_score="0.800",
+        )
+        CustomerSupplierDependencySnapshot.objects.create(
+            company=self.netflix,
+            effective_date=date(2022, 12, 31),
+            source_document=self.source,
+            status="REVIEWED",
+            summary="Reviewed customer and supplier dependency map.",
+            confidence_score="0.800",
+        )
 
         response = self.client.get("/companies/netflix/business-model?as_of=2022-12-31&compare_to=2011-12-31")
 
@@ -515,6 +531,14 @@ class IngestionSearchApiTests(TestCase):
         self.assertIn("same-sector context only", payload["peer_models"][0]["comparison_warning"])
         self.assertEqual(payload["peer_models"][0]["shared_component_type_count"], 1)
         self.assertLess(payload["peer_models"][0]["component_type_overlap_percent"], 50)
+        related = {row["key"]: row for row in payload["related_surfaces"]}
+        self.assertEqual(related["pricing_history"]["status"], "available")
+        self.assertEqual(related["pricing_history"]["destination"], "product_pricing")
+        self.assertEqual(related["pricing_history"]["action_label"], "Open product and pricing")
+        self.assertEqual(related["supplier_dependency"]["status"], "available")
+        self.assertEqual(related["supplier_dependency"]["destination"], "customer_supplier_dependency")
+        self.assertEqual(related["supplier_dependency"]["action_label"], "Open dependency map")
+        self.assertFalse(any(str(row["destination"]).startswith("phase2_requirement_") for row in payload["related_surfaces"]))
 
     def test_business_model_marks_repeated_refresh_without_fake_changes(self):
         older = BusinessModelSnapshot.objects.create(

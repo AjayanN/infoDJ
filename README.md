@@ -235,6 +235,7 @@ The Business Model Map includes:
 - a `Compare to last material change` action when the selected comparison has identical component and relationship sets but an older materially different reviewed map exists
 - evidence links, completeness, freshness, and explicit missing-component gaps
 - an accessible component-column view backed by source documents and explicit missing-data states
+- related intelligence links that open implemented Company 360, Product and Pricing History, and Customer/Supplier Dependency views with plain-language unavailable messages when reviewed data is missing
 
 The Netflix pilot seed creates reviewed 2011 and 2022 maps. A reviewed current map can also be generated from the latest reviewed Company 360 profile:
 

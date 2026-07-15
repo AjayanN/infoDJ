@@ -999,8 +999,10 @@
                   <article class="related-surface-card" *ngFor="let surface of modelView.related_surfaces">
                     <strong>{{ surface.label }}</strong>
                     <span class="status-pill" [class.available]="surface.status === 'available'">{{ surface.status }}</span>
-                    <button *ngIf="surface.destination === 'company_profile'" type="button" class="ghost-button" (click)="openCompany(modelView.company.slug)">Open Company 360</button>
-                    <small *ngIf="surface.status === 'unavailable'">Planned in {{ surface.destination.replace('phase2_requirement_', 'Phase 2 Requirement ') }}.</small>
+                    <button *ngIf="surface.destination === 'company_profile'" type="button" class="ghost-button" (click)="openCompany(modelView.company.slug)">{{ surface.action_label || 'Open details' }}</button>
+                    <button *ngIf="surface.destination === 'product_pricing' && surface.status === 'available'" type="button" class="ghost-button" (click)="openProductPricing(modelView.company.slug)">{{ surface.action_label || 'Open product and pricing' }}</button>
+                    <button *ngIf="surface.destination === 'customer_supplier_dependency' && surface.status === 'available'" type="button" class="ghost-button" (click)="openCustomerSupplierDependency(modelView.company.slug)">{{ surface.action_label || 'Open dependency map' }}</button>
+                    <small *ngIf="surface.status === 'unavailable'">{{ surface.unavailable_message || 'No reviewed data is available for this company yet.' }}</small>
                   </article>
                 </div>
               </section>
