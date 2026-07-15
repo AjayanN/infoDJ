@@ -267,6 +267,7 @@ def company_business_model(request: HttpRequest, slug: str) -> JsonResponse:
     comparison = next((snapshot for snapshot in snapshots if compare_date and snapshot.effective_date <= compare_date), None)
     if comparison is None and len(eligible) > 1:
         comparison = eligible[1]
+    material_comparison = previous_material_business_model_snapshot(current, snapshots)
 
     required_types = [choice for choice, _label in BusinessModelComponentType.choices]
     present_types = {component.component_type for component in current.components.all()} if current else set()
@@ -304,7 +305,7 @@ def company_business_model(request: HttpRequest, slug: str) -> JsonResponse:
             "snapshot": serialize_business_model_snapshot(current),
             "snapshot_history": [serialize_business_model_history(row, current) for row in snapshots],
             "comparison_snapshot": serialize_business_model_snapshot(comparison),
-            "changes": business_model_changes(current, comparison),
+            "changes": business_model_changes(current, comparison, material_comparison),
             "peer_models": peer_business_model_rows(company, current),
             "related_surfaces": [
                 {"key": "customer_groups", "label": "Customer groups", "status": "available", "destination": "company_profile"},
@@ -5524,20 +5525,71 @@ def serialize_business_model_history(snapshot: BusinessModelSnapshot, selected: 
     }
 
 
-def business_model_changes(current: BusinessModelSnapshot | None, comparison: BusinessModelSnapshot | None) -> dict[str, object]:
+def business_model_signature(snapshot: BusinessModelSnapshot | None) -> tuple[set[tuple[str, str]], set[tuple[str, str, str]]]:
+    if snapshot is None:
+        return set(), set()
+    components = {(row.component_type, row.name) for row in snapshot.components.all()}
+    relationships = {(row.from_component.name, row.relationship_type, row.to_component.name) for row in snapshot.relationships.all()}
+    return components, relationships
+
+
+def previous_material_business_model_snapshot(
+    current: BusinessModelSnapshot | None,
+    snapshots: list[BusinessModelSnapshot],
+) -> BusinessModelSnapshot | None:
+    if current is None:
+        return None
+    current_signature = business_model_signature(current)
+    for snapshot in snapshots:
+        if snapshot.id == current.id or snapshot.effective_date >= current.effective_date:
+            continue
+        if business_model_signature(snapshot) != current_signature:
+            return snapshot
+    return None
+
+
+def business_model_changes(
+    current: BusinessModelSnapshot | None,
+    comparison: BusinessModelSnapshot | None,
+    material_comparison: BusinessModelSnapshot | None = None,
+) -> dict[str, object]:
     if current is None or comparison is None or current.id == comparison.id:
-        return {"from_date": None, "to_date": current.effective_date.isoformat() if current else None, "components_added": [], "components_removed": [], "relationships_added": [], "relationships_removed": []}
-    current_components = {(row.component_type, row.name) for row in current.components.all()}
-    comparison_components = {(row.component_type, row.name) for row in comparison.components.all()}
-    current_relationships = {(row.from_component.name, row.relationship_type, row.to_component.name) for row in current.relationships.all()}
-    comparison_relationships = {(row.from_component.name, row.relationship_type, row.to_component.name) for row in comparison.relationships.all()}
+        return {
+            "from_date": None,
+            "to_date": current.effective_date.isoformat() if current else None,
+            "comparison_status": "unavailable" if current is None or comparison is None else "same_snapshot",
+            "comparison_message": "No earlier reviewed business-model snapshot is available." if comparison is None else "The selected map and comparison map are the same snapshot.",
+            "has_material_change": False,
+            "last_material_change_date": material_comparison.effective_date.isoformat() if material_comparison else None,
+            "components_added": [],
+            "components_removed": [],
+            "relationships_added": [],
+            "relationships_removed": [],
+        }
+    current_components, current_relationships = business_model_signature(current)
+    comparison_components, comparison_relationships = business_model_signature(comparison)
+    components_added = current_components - comparison_components
+    components_removed = comparison_components - current_components
+    relationships_added = current_relationships - comparison_relationships
+    relationships_removed = comparison_relationships - current_relationships
+    has_material_change = bool(components_added or components_removed or relationships_added or relationships_removed)
+    comparison_status = "material_change" if has_material_change else "no_structural_change"
+    comparison_message = (
+        "Structural business-model changes were detected between the selected snapshots."
+        if has_material_change
+        else "No structural business-model change was detected. The selected snapshots have identical component and relationship sets."
+    )
     return {
         "from_date": comparison.effective_date.isoformat(),
         "to_date": current.effective_date.isoformat(),
-        "components_added": [{"component_type": row[0], "name": row[1]} for row in sorted(current_components - comparison_components)],
-        "components_removed": [{"component_type": row[0], "name": row[1]} for row in sorted(comparison_components - current_components)],
-        "relationships_added": [{"from_name": row[0], "relationship_type": row[1], "to_name": row[2]} for row in sorted(current_relationships - comparison_relationships)],
-        "relationships_removed": [{"from_name": row[0], "relationship_type": row[1], "to_name": row[2]} for row in sorted(comparison_relationships - current_relationships)],
+        "comparison_status": comparison_status,
+        "comparison_message": comparison_message,
+        "has_material_change": has_material_change,
+        "last_material_change_date": material_comparison.effective_date.isoformat() if material_comparison else None,
+        "components_added": [{"component_type": row[0], "name": row[1]} for row in sorted(components_added)],
+        "components_removed": [{"component_type": row[0], "name": row[1]} for row in sorted(components_removed)],
+        "relationships_added": [{"from_name": row[0], "relationship_type": row[1], "to_name": row[2]} for row in sorted(relationships_added)],
+        "relationships_removed": [{"from_name": row[0], "relationship_type": row[1], "to_name": row[2]} for row in sorted(relationships_removed)],
     }
 
 
