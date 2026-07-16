@@ -1063,8 +1063,10 @@
                 <label>Period start<input type="date" [(ngModel)]="operatingKpiStart" /></label>
                 <label>Period end<input type="date" [(ngModel)]="operatingKpiEnd" /></label>
                 <label class="checkbox-row"><input type="checkbox" [(ngModel)]="operatingKpiComparableOnly" /> Comparable periods only</label>
-                <button type="button" class="primary-button" (click)="reloadOperatingKpis()">Apply filters</button>
-                <button type="button" class="ghost-button" (click)="openCompany(kpiView.company.slug)">Back to Company 360</button>
+                <div class="kpi-control-actions">
+                  <button type="button" class="primary-button" (click)="reloadOperatingKpis()">Apply filters</button>
+                  <button type="button" class="ghost-button" (click)="openCompany(kpiView.company.slug)">Back to Company 360</button>
+                </div>
               </section>
 
               <section class="kpi-summary-grid" aria-label="KPI dictionary">

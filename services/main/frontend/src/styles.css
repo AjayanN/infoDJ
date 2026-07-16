@@ -1059,7 +1059,32 @@ button:disabled {
 }
 
 .kpi-controls {
+  align-items: end;
+  display: grid;
+  gap: 14px;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  justify-content: stretch;
+}
+
+.kpi-controls label {
+  min-width: 0;
+}
+
+.kpi-controls select,
+.kpi-controls input[type="date"] {
+  max-width: 100%;
+  min-width: 0;
+  width: 100%;
+}
+
+.kpi-control-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.kpi-control-actions button {
+  flex: 1 1 150px;
 }
 
 .checkbox-row {
