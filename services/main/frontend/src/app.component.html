@@ -1122,7 +1122,6 @@
                   <article class="kpi-event-group" *ngFor="let group of kpiEventGroups(kpiView.event_overlays)">
                     <div class="kpi-event-group-header">
                       <strong>{{ group.label }}</strong>
-                      <span>{{ group.count }} {{ group.count === 1 ? 'event' : 'events' }} · latest {{ group.latestDate }}</span>
                     </div>
                     <div class="kpi-event-timeline">
                       <div class="kpi-event-item" *ngFor="let event of group.events">
