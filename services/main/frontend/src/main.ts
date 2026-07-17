@@ -105,6 +105,9 @@ type ValueFlowFocus = { type: 'edge' | 'node'; key: string } | null;
 type ValueFlowGraph = { nodes: ValueFlowNode[]; edges: ValueFlowEdge[] };
 type KpiEventGroup = { type: string; label: string; count: number; latestDate: string; events: DashboardEvent[]; hiddenCount: number };
 type KpiMetricGroup = { key: string; label: string; variants: KpiDefinition[]; selected: boolean; defaultSlug: string };
+type BlockedKpiPeer = OperatingKpiResponse['blocked_peer_metrics'][number];
+type KpiBlockerReason = { key: string; label: string; count: number };
+type KpiPeerBlockerGroup = { company: string; companySlug: string; total: number; reasons: KpiBlockerReason[]; examples: BlockedKpiPeer[]; hiddenCount: number };
 type DashboardSectionKey =
   | 'latest_moves'
   | 'strategic_turns'
@@ -260,6 +263,8 @@ class AppComponent {
   selectedKpiVariants: Record<string, string> = {};
   operatingKpiMetricGroups = signal<KpiMetricGroup[]>([]);
   operatingKpiEventGroups = signal<KpiEventGroup[]>([]);
+  operatingKpiBlockerReasons = signal<KpiBlockerReason[]>([]);
+  operatingKpiBlockedPeerGroups = signal<KpiPeerBlockerGroup[]>([]);
   private operatingKpiRequestId = 0;
   managementPromiseStatus = '';
   managementPromiseType = '';
@@ -1249,6 +1254,8 @@ class AppComponent {
         this.syncSelectedKpiVariant(response.selected_metric);
         this.operatingKpiMetricGroups.set(this.buildKpiMetricGroups(response.dictionary, response.selected_metric?.slug || ''));
         this.operatingKpiEventGroups.set(this.buildKpiEventGroups(response.event_overlays));
+        this.operatingKpiBlockerReasons.set(this.buildKpiBlockerReasons(response.blocked_peer_metrics));
+        this.operatingKpiBlockedPeerGroups.set(this.buildKpiBlockedPeerGroups(response.blocked_peer_metrics));
       },
       error: (response) => {
         if (requestId !== this.operatingKpiRequestId) return;
@@ -2567,6 +2574,57 @@ class AppComponent {
 
   trackKpiEventGroup(_index: number, group: KpiEventGroup): string {
     return group.type;
+  }
+
+  private buildKpiBlockerReasons(peers: BlockedKpiPeer[]): KpiBlockerReason[] {
+    const counts = new Map<string, number>();
+    for (const peer of peers) {
+      for (const reason of this.kpiPeerReasonParts(peer.reason)) {
+        counts.set(reason, (counts.get(reason) || 0) + 1);
+      }
+    }
+    return Array.from(counts.entries())
+      .map(([label, count]) => ({ key: this.kpiMetricFamilyKey(label), label, count }))
+      .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+  }
+
+  private buildKpiBlockedPeerGroups(peers: BlockedKpiPeer[]): KpiPeerBlockerGroup[] {
+    const grouped = new Map<string, BlockedKpiPeer[]>();
+    for (const peer of peers) {
+      grouped.set(peer.company_slug || peer.company, [...(grouped.get(peer.company_slug || peer.company) || []), peer]);
+    }
+    return Array.from(grouped.values())
+      .map((rows) => {
+        const reasons = this.buildKpiBlockerReasons(rows).slice(0, 4);
+        const examples = rows
+          .slice()
+          .sort((a, b) => a.metric.localeCompare(b.metric))
+          .slice(0, 5);
+        return {
+          company: rows[0]?.company || 'Peer company',
+          companySlug: rows[0]?.company_slug || rows[0]?.company || '',
+          total: rows.length,
+          reasons,
+          examples,
+          hiddenCount: Math.max(0, rows.length - examples.length),
+        };
+      })
+      .sort((a, b) => b.total - a.total || a.company.localeCompare(b.company));
+  }
+
+  kpiPeerReasonParts(reason: string): string[] {
+    return reason
+      .split(';')
+      .map((part) => part.trim())
+      .filter(Boolean);
+  }
+
+  trackKpiBlockerReason(_index: number, reason: KpiBlockerReason): string {
+    return reason.key;
+  }
+
+  trackKpiPeerBlockerGroup(_index: number, group: KpiPeerBlockerGroup): string {
+    return group.companySlug || group.company;
   }
 
   kpiEventSummary(event: DashboardEvent): string {

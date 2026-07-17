@@ -1135,15 +1135,68 @@
                 <div class="empty-state" *ngIf="kpiView.event_overlays.length === 0">No eligible event overlays.</div>
               </section>
 
-              <section class="panel">
-                <div class="panel-header"><div><p class="section-kicker">Peer normalization</p><h2>Comparable peer metrics</h2></div></div>
+              <section class="panel peer-normalization-panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="section-kicker">Peer normalization</p>
+                    <h2>Comparable peer metrics</h2>
+                    <p>Only reviewed, unit-matched, cadence-matched metrics are shown as comparable. Blocked candidates are summarized below so the page stays readable.</p>
+                  </div>
+                  <span class="status-pill" [class.available]="kpiView.peer_comparisons.length > 0">{{ kpiView.peer_comparisons.length > 0 ? 'ready' : 'blocked' }}</span>
+                </div>
+                <div class="peer-normalization-summary">
+                  <div>
+                    <strong>{{ kpiView.peer_comparisons.length }}</strong>
+                    <span>comparable metrics</span>
+                  </div>
+                  <div>
+                    <strong>{{ kpiView.blocked_peer_metrics.length }}</strong>
+                    <span>blocked candidates</span>
+                  </div>
+                  <div>
+                    <strong>{{ operatingKpiBlockedPeerGroups().length }}</strong>
+                    <span>same-sector peers checked</span>
+                  </div>
+                </div>
                 <p class="formula-note">{{ kpiView.peer_comparison_warning }}</p>
                 <small>{{ kpiView.peer_comparison_basis }}</small>
-                <div class="empty-state unavailable-state" *ngIf="kpiView.peer_comparisons.length === 0">Peer comparison is blocked until reviewed definitions and units are sufficiently comparable.</div>
-                <div class="result-row" *ngFor="let peer of kpiView.peer_comparisons"><strong>{{ peer.company }}</strong><span>{{ peer.metric }} · {{ peer.unit }} · {{ peer.cadence }}</span><p>{{ peer.rationale }}</p><small>Reviewed {{ peer.reviewed_at }}</small></div>
-                <div class="empty-state unavailable-state" *ngIf="kpiView.blocked_peer_metrics.length > 0">
-                  <strong>Blocked same-sector KPI candidates</strong>
-                  <div class="result-row" *ngFor="let peer of kpiView.blocked_peer_metrics"><strong>{{ peer.company }}</strong><span>{{ peer.metric }} · {{ peer.unit }} · {{ peer.cadence }}</span><p>{{ peer.reason }}</p></div>
+
+                <div class="peer-card-grid" *ngIf="kpiView.peer_comparisons.length > 0">
+                  <article class="peer-comparable-card" *ngFor="let peer of kpiView.peer_comparisons">
+                    <strong>{{ peer.company }}</strong>
+                    <span>{{ peer.metric }}</span>
+                    <div class="peer-chip-row"><small>{{ peer.unit }}</small><small>{{ peer.cadence }}</small><small>Reviewed {{ peer.reviewed_at }}</small></div>
+                    <p>{{ peer.rationale }}</p>
+                  </article>
+                </div>
+
+                <div class="peer-blocker-panel" *ngIf="kpiView.blocked_peer_metrics.length > 0">
+                  <div class="peer-blocker-heading">
+                    <div>
+                      <strong>Why peer comparison is blocked</strong>
+                      <p>These are same-sector candidates, but they are not safe to compare until the blockers are resolved.</p>
+                    </div>
+                  </div>
+                  <div class="peer-chip-row">
+                    <span class="peer-reason-chip" *ngFor="let reason of operatingKpiBlockerReasons(); trackBy: trackKpiBlockerReason">{{ reason.label }} <strong>{{ reason.count }}</strong></span>
+                  </div>
+                  <div class="peer-blocked-grid">
+                    <article class="peer-blocked-card" *ngFor="let group of operatingKpiBlockedPeerGroups(); trackBy: trackKpiPeerBlockerGroup">
+                      <div class="peer-blocked-top">
+                        <div><strong>{{ group.company }}</strong><span>{{ group.total }} blocked candidates</span></div>
+                      </div>
+                      <div class="peer-chip-row">
+                        <span class="peer-reason-chip compact" *ngFor="let reason of group.reasons; trackBy: trackKpiBlockerReason">{{ reason.label }}</span>
+                      </div>
+                      <div class="peer-example-list">
+                        <div *ngFor="let peer of group.examples">
+                          <span>{{ peer.metric }}</span>
+                          <small>{{ peer.unit }} · {{ peer.cadence }}</small>
+                        </div>
+                      </div>
+                      <small *ngIf="group.hiddenCount > 0">{{ group.hiddenCount }} more candidates hidden for readability.</small>
+                    </article>
+                  </div>
                 </div>
               </section>
 

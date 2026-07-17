@@ -1224,6 +1224,159 @@ button:disabled {
   -webkit-line-clamp: 3;
 }
 
+.peer-normalization-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.peer-normalization-panel .panel-header p {
+  color: var(--muted);
+  line-height: 1.45;
+  margin: 6px 0 0;
+  max-width: 760px;
+}
+
+.peer-normalization-summary {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.peer-normalization-summary div {
+  background: linear-gradient(135deg, #f8fafc, #eef3f8);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+}
+
+.peer-normalization-summary strong {
+  color: var(--accent);
+  font-size: 28px;
+  line-height: 1;
+}
+
+.peer-normalization-summary span,
+.peer-blocker-heading p,
+.peer-blocked-top span,
+.peer-example-list small {
+  color: var(--muted);
+}
+
+.peer-card-grid,
+.peer-blocked-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.peer-comparable-card,
+.peer-blocked-card,
+.peer-blocker-panel {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.peer-comparable-card {
+  background: var(--ok-bg);
+  border-color: rgba(31, 157, 99, 0.28);
+}
+
+.peer-comparable-card span,
+.peer-comparable-card p {
+  color: #344256;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.peer-blocker-panel {
+  background: #fff8ed;
+  border-color: rgba(196, 124, 43, 0.24);
+}
+
+.peer-blocker-heading {
+  align-items: start;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.peer-blocker-heading p {
+  line-height: 1.45;
+  margin: 4px 0 0;
+}
+
+.peer-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.peer-chip-row small,
+.peer-reason-chip {
+  background: #eef3f8;
+  border-radius: 999px;
+  color: #344256;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 6px 9px;
+}
+
+.peer-reason-chip {
+  background: #fff;
+  border: 1px solid rgba(196, 124, 43, 0.28);
+}
+
+.peer-reason-chip strong {
+  color: var(--accent);
+  margin-left: 4px;
+}
+
+.peer-reason-chip.compact {
+  font-size: 10px;
+}
+
+.peer-blocked-card {
+  background: #fff;
+}
+
+.peer-blocked-top {
+  align-items: start;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.peer-blocked-top div,
+.peer-example-list {
+  display: grid;
+  gap: 4px;
+}
+
+.peer-example-list {
+  gap: 8px;
+}
+
+.peer-example-list div {
+  border-left: 3px solid rgba(196, 124, 43, 0.38);
+  display: grid;
+  gap: 2px;
+  padding-left: 10px;
+}
+
+.peer-example-list span {
+  color: var(--ink);
+  display: -webkit-box;
+  font-weight: 800;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
 .formula-note,
 .missing-period-note {
   background: var(--surface-muted);
