@@ -1108,6 +1108,14 @@ button:disabled {
   gap: 0.55rem;
 }
 
+.kpi-summary-card label {
+  margin-top: 0.25rem;
+}
+
+.kpi-summary-card button {
+  align-self: end;
+}
+
 .kpi-summary-card.selected {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent);

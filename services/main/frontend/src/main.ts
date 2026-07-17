@@ -12,6 +12,7 @@ import {
   CompanyProfileResponse,
   BusinessModelResponse,
   BusinessModelRelationship,
+  KpiDefinition,
   OperatingKpiResponse,
   ManagementPromiseResponse,
   StrategyMilestoneResponse,
@@ -102,6 +103,7 @@ type ValueFlowDrag = { nodeKey: string; space: DOMRect } | null;
 type ValueFlowFocus = { type: 'edge' | 'node'; key: string } | null;
 type ValueFlowGraph = { nodes: ValueFlowNode[]; edges: ValueFlowEdge[] };
 type KpiEventGroup = { type: string; label: string; count: number; latestDate: string; events: DashboardEvent[]; hiddenCount: number };
+type KpiMetricGroup = { key: string; label: string; variants: KpiDefinition[]; selected: boolean; defaultSlug: string };
 type DashboardSectionKey =
   | 'latest_moves'
   | 'strategic_turns'
@@ -2454,6 +2456,41 @@ class AppComponent {
   kpiBarWidth(value: number, series: { value: number }[]): number {
     const maximum = Math.max(...series.map((row) => Math.abs(row.value)), 1);
     return Math.max(2, Math.round((Math.abs(value) / maximum) * 100));
+  }
+
+  kpiMetricGroups(metrics: KpiDefinition[], selectedSlug = ''): KpiMetricGroup[] {
+    const grouped = new Map<string, KpiDefinition[]>();
+    for (const metric of metrics) {
+      const label = this.kpiMetricFamilyLabel(metric.name);
+      grouped.set(label, [...(grouped.get(label) || []), metric]);
+    }
+    return Array.from(grouped.entries())
+      .map(([label, variants]) => {
+        const sorted = [...variants].sort((a, b) => this.kpiVariantRank(a) - this.kpiVariantRank(b) || a.name.localeCompare(b.name));
+        const selectedVariant = sorted.find((metric) => metric.slug === selectedSlug);
+        return {
+          key: label.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          label,
+          variants: sorted,
+          selected: Boolean(selectedVariant),
+          defaultSlug: selectedVariant?.slug || sorted[0]?.slug || '',
+        };
+      })
+      .sort((a, b) => Number(b.selected) - Number(a.selected) || a.label.localeCompare(b.label));
+  }
+
+  kpiMetricFamilyLabel(name: string): string {
+    return name.replace(/\s+\((Annual|Quarterly)\)$/i, '').trim();
+  }
+
+  kpiVariantLabel(metric: KpiDefinition): string {
+    return `${this.promiseLabel(metric.cadence)} · ${this.promiseLabel(metric.value_type)} · ${metric.unit}`;
+  }
+
+  private kpiVariantRank(metric: KpiDefinition): number {
+    const cadenceRank: Record<string, number> = { QUARTERLY: 1, ANNUAL: 2 };
+    const typeRank: Record<string, number> = { REPORTED: 1, CALCULATED: 2 };
+    return (cadenceRank[metric.cadence] || 9) * 10 + (typeRank[metric.value_type] || 9);
   }
 
   kpiEventGroups(events: DashboardEvent[]): KpiEventGroup[] {

@@ -1070,10 +1070,15 @@
               </section>
 
               <section class="kpi-summary-grid" aria-label="KPI dictionary">
-                <article class="panel kpi-summary-card" *ngFor="let metric of kpiView.dictionary" [class.selected]="metric.slug === kpiView.selected_metric?.slug">
-                  <span>{{ metric.value_type }} · {{ metric.cadence }}</span><h3>{{ metric.name }}</h3>
-                  <strong>{{ metric.unit }}</strong><p>{{ metric.description }}</p><small>{{ metric.scope }}</small>
-                  <button type="button" class="ghost-button" (click)="openOperatingKpis(kpiView.company.slug, metric.slug)">View series</button>
+                <article class="panel kpi-summary-card" *ngFor="let group of kpiMetricGroups(kpiView.dictionary, kpiView.selected_metric?.slug || '')" [class.selected]="group.selected">
+                  <span>{{ group.variants.length }} {{ group.variants.length === 1 ? 'series' : 'series variants' }}</span><h3>{{ group.label }}</h3>
+                  <p>{{ group.variants[0].description }}</p><small>{{ group.variants[0].scope }}</small>
+                  <label>Choose series
+                    <select #metricVariant>
+                      <option *ngFor="let metric of group.variants" [value]="metric.slug" [selected]="metric.slug === group.defaultSlug">{{ kpiVariantLabel(metric) }}</option>
+                    </select>
+                  </label>
+                  <button type="button" class="ghost-button" (click)="openOperatingKpis(kpiView.company.slug, metricVariant.value)">View series</button>
                 </article>
               </section>
 
