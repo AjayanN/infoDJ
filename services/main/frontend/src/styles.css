@@ -1061,7 +1061,8 @@ button:disabled {
 .kpi-controls {
   align-items: end;
   display: grid;
-  gap: 14px;
+  column-gap: 20px;
+  row-gap: 18px;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   justify-content: stretch;
 }
@@ -1087,11 +1088,22 @@ button:disabled {
   flex: 1 1 150px;
 }
 
+.kpi-date-control {
+  padding-right: 4px;
+}
+
+.kpi-comparable-control {
+  background: #f7f9fb;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  min-height: 40px;
+  padding: 0 12px;
+}
+
 .checkbox-row {
   align-items: center;
   display: flex;
   gap: 0.6rem;
-  padding-top: 1.4rem;
 }
 
 .checkbox-row input {
