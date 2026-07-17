@@ -1020,7 +1020,7 @@
           </section>
 
           <section *ngSwitchCase="'operating-kpis'" class="company-profile-layout" aria-labelledby="operating-kpi-heading">
-            <div class="panel empty-state" *ngIf="operatingKpiLoading()" role="status">Loading reviewed operating KPI series.</div>
+            <div class="panel empty-state" *ngIf="operatingKpiLoading() && !operatingKpis()" role="status">Loading reviewed operating KPI series.</div>
             <ng-container *ngIf="operatingKpis() as kpiView">
               <section class="panel company-profile-hero">
                 <div>
