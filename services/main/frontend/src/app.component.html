@@ -1060,9 +1060,9 @@
                 <label>Geography
                   <select [(ngModel)]="operatingKpiGeography"><option value="">Global and all regions</option><option *ngFor="let item of kpiView.filters.geographies" [value]="item">{{ item }}</option></select>
                 </label>
-                <label class="kpi-date-control">Period start<input type="date" [(ngModel)]="operatingKpiStart" /></label>
-                <label class="kpi-date-control">Period end<input type="date" [(ngModel)]="operatingKpiEnd" /></label>
-                <label class="checkbox-row kpi-comparable-control"><input type="checkbox" [(ngModel)]="operatingKpiComparableOnly" /> Comparable periods only</label>
+                <label>Period start<input type="date" [(ngModel)]="operatingKpiStart" /></label>
+                <label>Period end<input type="date" [(ngModel)]="operatingKpiEnd" /></label>
+                <label class="checkbox-row"><input type="checkbox" [(ngModel)]="operatingKpiComparableOnly" /> Comparable periods only</label>
                 <div class="kpi-control-actions">
                   <button type="button" class="primary-button" (click)="reloadOperatingKpis()">Apply filters</button>
                   <button type="button" class="ghost-button" (click)="openCompany(kpiView.company.slug)">Back to Company 360</button>

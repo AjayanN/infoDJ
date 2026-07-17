@@ -1061,8 +1061,7 @@ button:disabled {
 .kpi-controls {
   align-items: end;
   display: grid;
-  column-gap: 20px;
-  row-gap: 18px;
+  gap: 18px;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   justify-content: stretch;
 }
@@ -1086,18 +1085,6 @@ button:disabled {
 
 .kpi-control-actions button {
   flex: 1 1 150px;
-}
-
-.kpi-date-control {
-  padding-right: 4px;
-}
-
-.kpi-comparable-control {
-  background: #f7f9fb;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  min-height: 40px;
-  padding: 0 12px;
 }
 
 .checkbox-row {
