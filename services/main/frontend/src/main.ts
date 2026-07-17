@@ -6,6 +6,7 @@ import { Component, HostListener, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideRouter, Routes } from '@angular/router';
+import { finalize, timeout } from 'rxjs';
 
 import {
   CurrentUser,
@@ -257,6 +258,7 @@ class AppComponent {
   operatingKpiEnd = '';
   operatingKpiComparableOnly = false;
   selectedKpiVariants: Record<string, string> = {};
+  private operatingKpiRequestId = 0;
   managementPromiseStatus = '';
   managementPromiseType = '';
   managementPromiseDue = '';
@@ -1222,6 +1224,7 @@ class AppComponent {
 
   openOperatingKpis(slug: string, metric = ''): void {
     if (!slug || !this.token()) return;
+    const requestId = ++this.operatingKpiRequestId;
     this.activePage.set('operating-kpis');
     this.menuOpen.set(false);
     this.operatingKpiLoading.set(true);
@@ -1229,14 +1232,28 @@ class AppComponent {
     this.api.operatingKpis(
       this.token(), slug, metric || this.operatingKpiMetric, this.operatingKpiSegment,
       this.operatingKpiGeography, this.operatingKpiStart, this.operatingKpiEnd, this.operatingKpiComparableOnly
+    ).pipe(
+      timeout({ first: 45000 }),
+      finalize(() => {
+        if (requestId === this.operatingKpiRequestId) {
+          this.operatingKpiLoading.set(false);
+        }
+      })
     ).subscribe({
       next: (response) => {
+        if (requestId !== this.operatingKpiRequestId) return;
         this.operatingKpis.set(response);
         this.operatingKpiMetric = response.selected_metric?.slug || '';
         this.syncSelectedKpiVariant(response.selected_metric);
-        this.operatingKpiLoading.set(false);
       },
-      error: (response) => { this.operatingKpiLoading.set(false); this.showError(response); }
+      error: (response) => {
+        if (requestId !== this.operatingKpiRequestId) return;
+        if ((response as { name?: string }).name === 'TimeoutError') {
+          this.error.set('Operating KPI data did not respond within 45 seconds. Please retry after the ingestion service is idle.');
+          return;
+        }
+        this.showError(response);
+      }
     });
   }
 

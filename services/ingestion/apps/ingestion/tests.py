@@ -39,6 +39,7 @@ from apps.companies.models import (
     SectorThemeSnapshot,
     StrategyMilestone,
     ValuationContextSnapshot,
+    ValuationEventSnapshot,
 )
 from apps.curation.models import BusinessEvent, StrategicTurn, StrategicTurnSource
 from apps.ingestion.models import (
@@ -1840,6 +1841,38 @@ class IngestionSearchApiTests(TestCase):
         price_to_sales = snapshot.observations.get(measure="PRICE_TO_SALES")
         self.assertEqual(str(price_to_sales.value), "2.000000")
         self.assertNotIn("market capitalization unavailable", valuation_quality_issues(self.netflix))
+
+    def test_valuation_context_builder_deduplicates_same_labeled_event_snapshot(self):
+        for price_date, price in (
+            (date(2026, 1, 9), "95.000000"),
+            (date(2026, 1, 11), "105.000000"),
+            (date(2026, 1, 31), "100.000000"),
+        ):
+            MarketPrice.objects.create(
+                company=self.netflix,
+                ticker="NFLX",
+                provider="TEST",
+                price_date=price_date,
+                close_price=price,
+            )
+        FinancialFact.objects.create(company=self.netflix, taxonomy="us-gaap", concept="EntityCommonStockSharesOutstanding", label="Shares", unit="shares", fy=2025, fp="FY", filed=date(2026, 1, 30), frame="CY2025", value="1000")
+        FinancialFact.objects.create(company=self.netflix, taxonomy="us-gaap", concept="Revenues", label="Revenue", unit="USD", fy=2025, fp="FY", filed=date(2026, 1, 30), frame="CY2025", value="50000")
+
+        for event_type in ("PRODUCT_EXPANSION", "COMPETITIVE_RESPONSE"):
+            BusinessEvent.objects.create(
+                company=self.netflix,
+                source_document=self.source,
+                event_date=date(2026, 1, 10),
+                event_type=event_type,
+                actual_change="Netflix changed its operating strategy.",
+                source_claim="Netflix changed its operating strategy.",
+                review_status="APPROVED",
+            )
+
+        build_valuation_context(self.netflix)
+
+        snapshot = ValuationContextSnapshot.objects.get(company=self.netflix)
+        self.assertEqual(ValuationEventSnapshot.objects.filter(snapshot=snapshot).count(), 1)
 
     def test_valuation_context_api_exposes_source_gaps_without_recommendations(self):
         build_valuation_context(self.netflix)

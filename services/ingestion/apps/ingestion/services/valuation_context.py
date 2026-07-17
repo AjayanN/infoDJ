@@ -266,11 +266,11 @@ def build_event_snapshots(snapshot: ValuationContextSnapshot, company: Company) 
         after_cap = after.close_price * shares.value if shares else None
         row, was_created = ValuationEventSnapshot.objects.update_or_create(
             snapshot=snapshot,
-            event=event,
             event_date=event.event_date,
             event_label=(event.actual_change or event.source_claim or event.event_type)[:255],
             measure=ValuationMeasureType.MARKET_CAP,
             defaults={
+                "event": event,
                 "before_value": before_cap,
                 "after_value": after_cap,
                 "before_date": before.price_date,

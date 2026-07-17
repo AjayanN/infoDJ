@@ -299,6 +299,8 @@ The Netflix pilot contains source-backed 2022 paid streaming memberships, region
 
 Open any company from search or Company 360 and select `Operating KPI tracker`; after loading, `Operating KPIs` remains in the left navigation.
 
+Operating KPI requests fail visibly instead of leaving a permanent loading state. The frontend clears the loading banner after completion, error, or a 45-second stall, and the ingestion scheduler's valuation-context event snapshot builder deduplicates same-label same-date event rows so a valuation refresh cannot take the ingestion API down with duplicate event snapshots.
+
 Refresh the official SEC data and all-company tracker coverage idempotently. KPI series are rebuilt automatically after each company’s facts are stored:
 
 ```bash
