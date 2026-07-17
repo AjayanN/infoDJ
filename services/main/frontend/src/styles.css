@@ -1106,10 +1106,21 @@ button:disabled {
 .kpi-summary-card {
   display: grid;
   gap: 0.55rem;
+  min-width: 0;
 }
 
 .kpi-summary-card label {
+  min-width: 0;
   margin-top: 0.25rem;
+}
+
+.kpi-summary-card select {
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
 }
 
 .kpi-summary-card button {

@@ -256,6 +256,7 @@ class AppComponent {
   operatingKpiStart = '';
   operatingKpiEnd = '';
   operatingKpiComparableOnly = false;
+  selectedKpiVariants: Record<string, string> = {};
   managementPromiseStatus = '';
   managementPromiseType = '';
   managementPromiseDue = '';
@@ -1232,6 +1233,7 @@ class AppComponent {
       next: (response) => {
         this.operatingKpis.set(response);
         this.operatingKpiMetric = response.selected_metric?.slug || '';
+        this.syncSelectedKpiVariant(response.selected_metric);
         this.operatingKpiLoading.set(false);
       },
       error: (response) => { this.operatingKpiLoading.set(false); this.showError(response); }
@@ -2469,7 +2471,7 @@ class AppComponent {
         const sorted = [...variants].sort((a, b) => this.kpiVariantRank(a) - this.kpiVariantRank(b) || a.name.localeCompare(b.name));
         const selectedVariant = sorted.find((metric) => metric.slug === selectedSlug);
         return {
-          key: label.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          key: this.kpiMetricFamilyKey(label),
           label,
           variants: sorted,
           selected: Boolean(selectedVariant),
@@ -2479,8 +2481,32 @@ class AppComponent {
       .sort((a, b) => Number(b.selected) - Number(a.selected) || a.label.localeCompare(b.label));
   }
 
+  selectedKpiVariant(group: KpiMetricGroup): string {
+    const selected = this.selectedKpiVariants[group.key];
+    if (selected && group.variants.some((metric) => metric.slug === selected)) {
+      return selected;
+    }
+    return group.defaultSlug;
+  }
+
+  setSelectedKpiVariant(groupKey: string, slug: string): void {
+    this.selectedKpiVariants = { ...this.selectedKpiVariants, [groupKey]: slug };
+  }
+
+  private syncSelectedKpiVariant(metric: KpiDefinition | null): void {
+    if (!metric) {
+      return;
+    }
+    const key = this.kpiMetricFamilyKey(this.kpiMetricFamilyLabel(metric.name));
+    this.setSelectedKpiVariant(key, metric.slug);
+  }
+
   kpiMetricFamilyLabel(name: string): string {
     return name.replace(/\s+\((Annual|Quarterly)\)$/i, '').trim();
+  }
+
+  kpiMetricFamilyKey(label: string): string {
+    return label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   }
 
   kpiVariantLabel(metric: KpiDefinition): string {

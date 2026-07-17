@@ -1074,11 +1074,11 @@
                   <span>{{ group.variants.length }} {{ group.variants.length === 1 ? 'series' : 'series variants' }}</span><h3>{{ group.label }}</h3>
                   <p>{{ group.variants[0].description }}</p><small>{{ group.variants[0].scope }}</small>
                   <label>Choose series
-                    <select #metricVariant>
-                      <option *ngFor="let metric of group.variants" [value]="metric.slug" [selected]="metric.slug === group.defaultSlug">{{ kpiVariantLabel(metric) }}</option>
+                    <select [ngModel]="selectedKpiVariant(group)" (ngModelChange)="setSelectedKpiVariant(group.key, $event)">
+                      <option *ngFor="let metric of group.variants" [value]="metric.slug">{{ kpiVariantLabel(metric) }}</option>
                     </select>
                   </label>
-                  <button type="button" class="ghost-button" (click)="openOperatingKpis(kpiView.company.slug, metricVariant.value)">View series</button>
+                  <button type="button" class="ghost-button" (click)="openOperatingKpis(kpiView.company.slug, selectedKpiVariant(group))">View series</button>
                 </article>
               </section>
 
