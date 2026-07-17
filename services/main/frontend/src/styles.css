@@ -1172,12 +1172,15 @@ button:disabled {
 }
 
 .kpi-event-groups {
+  align-items: start;
   display: grid;
   gap: 14px;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
 .kpi-event-group {
+  align-content: start;
+  align-items: start;
   border: 1px solid var(--line);
   border-radius: 8px;
   display: grid;

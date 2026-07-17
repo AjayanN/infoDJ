@@ -2541,7 +2541,24 @@ class AppComponent {
   }
 
   kpiEventSummary(event: DashboardEvent): string {
-    return event.actual_change || event.source_claim || 'Event summary unavailable.';
+    const summary = event.actual_change || event.source_claim || 'Event summary unavailable.';
+    return this.stripCompanyPrefix(summary, event.company);
+  }
+
+  private stripCompanyPrefix(summary: string, company = ''): string {
+    const candidates = [company, company.split(/\s+/).find((part) => part.toLowerCase() !== 'the') || '']
+      .filter((value, index, values) => value && values.indexOf(value) === index)
+      .map((value) => this.escapeRegExp(value));
+    if (candidates.length === 0) {
+      return summary;
+    }
+    const prefix = new RegExp(`^(${candidates.join('|')})(?:'s|’s)?\\s+`, 'i');
+    const cleaned = summary.replace(prefix, '');
+    return cleaned ? cleaned.charAt(0).toUpperCase() + cleaned.slice(1) : summary;
+  }
+
+  private escapeRegExp(value: string): string {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
   private dateSortValue(value: string | null): number {
