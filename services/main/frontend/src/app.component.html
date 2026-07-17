@@ -1070,7 +1070,7 @@
               </section>
 
               <section class="kpi-summary-grid" aria-label="KPI dictionary">
-                <article class="panel kpi-summary-card" *ngFor="let group of kpiMetricGroups(kpiView.dictionary, kpiView.selected_metric?.slug || '')" [class.selected]="group.selected">
+                <article class="panel kpi-summary-card" *ngFor="let group of operatingKpiMetricGroups(); trackBy: trackKpiMetricGroup" [class.selected]="group.selected">
                   <span>{{ group.variants.length }} {{ group.variants.length === 1 ? 'series' : 'series variants' }}</span><h3>{{ group.label }}</h3>
                   <p>{{ group.variants[0].description }}</p><small>{{ group.variants[0].scope }}</small>
                   <label>Choose series
@@ -1119,7 +1119,7 @@
               <section class="panel">
                 <div class="panel-header"><div><p class="section-kicker">Context</p><h2>Related company events</h2><p>These events may help explain KPI movement. They are context, not automatic causation.</p></div></div>
                 <div class="kpi-event-groups" *ngIf="kpiView.event_overlays.length > 0">
-                  <article class="kpi-event-group" *ngFor="let group of kpiEventGroups(kpiView.event_overlays)">
+                  <article class="kpi-event-group" *ngFor="let group of operatingKpiEventGroups(); trackBy: trackKpiEventGroup">
                     <div class="kpi-event-group-header">
                       <strong>{{ group.label }}</strong>
                     </div>

@@ -258,6 +258,8 @@ class AppComponent {
   operatingKpiEnd = '';
   operatingKpiComparableOnly = false;
   selectedKpiVariants: Record<string, string> = {};
+  operatingKpiMetricGroups = signal<KpiMetricGroup[]>([]);
+  operatingKpiEventGroups = signal<KpiEventGroup[]>([]);
   private operatingKpiRequestId = 0;
   managementPromiseStatus = '';
   managementPromiseType = '';
@@ -1245,6 +1247,8 @@ class AppComponent {
         this.operatingKpis.set(response);
         this.operatingKpiMetric = response.selected_metric?.slug || '';
         this.syncSelectedKpiVariant(response.selected_metric);
+        this.operatingKpiMetricGroups.set(this.buildKpiMetricGroups(response.dictionary, response.selected_metric?.slug || ''));
+        this.operatingKpiEventGroups.set(this.buildKpiEventGroups(response.event_overlays));
       },
       error: (response) => {
         if (requestId !== this.operatingKpiRequestId) return;
@@ -2477,7 +2481,7 @@ class AppComponent {
     return Math.max(2, Math.round((Math.abs(value) / maximum) * 100));
   }
 
-  kpiMetricGroups(metrics: KpiDefinition[], selectedSlug = ''): KpiMetricGroup[] {
+  private buildKpiMetricGroups(metrics: KpiDefinition[], selectedSlug = ''): KpiMetricGroup[] {
     const grouped = new Map<string, KpiDefinition[]>();
     for (const metric of metrics) {
       const label = this.kpiMetricFamilyLabel(metric.name);
@@ -2496,6 +2500,10 @@ class AppComponent {
         };
       })
       .sort((a, b) => Number(b.selected) - Number(a.selected) || a.label.localeCompare(b.label));
+  }
+
+  trackKpiMetricGroup(_index: number, group: KpiMetricGroup): string {
+    return group.key;
   }
 
   selectedKpiVariant(group: KpiMetricGroup): string {
@@ -2536,7 +2544,7 @@ class AppComponent {
     return (cadenceRank[metric.cadence] || 9) * 10 + (typeRank[metric.value_type] || 9);
   }
 
-  kpiEventGroups(events: DashboardEvent[]): KpiEventGroup[] {
+  private buildKpiEventGroups(events: DashboardEvent[]): KpiEventGroup[] {
     const grouped = new Map<string, DashboardEvent[]>();
     for (const event of events) {
       const key = event.event_type || 'OTHER';
@@ -2555,6 +2563,10 @@ class AppComponent {
         };
       })
       .sort((a, b) => this.dateSortValue(b.latestDate) - this.dateSortValue(a.latestDate) || a.label.localeCompare(b.label));
+  }
+
+  trackKpiEventGroup(_index: number, group: KpiEventGroup): string {
+    return group.type;
   }
 
   kpiEventSummary(event: DashboardEvent): string {
