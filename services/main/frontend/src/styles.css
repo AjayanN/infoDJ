@@ -1152,6 +1152,57 @@ button:disabled {
   height: 100%;
 }
 
+.kpi-event-groups {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.kpi-event-group {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.kpi-event-group-header {
+  display: grid;
+  gap: 4px;
+}
+
+.kpi-event-group-header strong {
+  color: var(--ink);
+}
+
+.kpi-event-group-header span,
+.kpi-event-group small,
+.kpi-event-date {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.kpi-event-timeline {
+  display: grid;
+  gap: 10px;
+}
+
+.kpi-event-item {
+  border-left: 3px solid var(--accent);
+  display: grid;
+  gap: 3px;
+  padding-left: 10px;
+}
+
+.kpi-event-item p {
+  display: -webkit-box;
+  line-height: 1.45;
+  margin: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
 .formula-note,
 .missing-period-note {
   background: var(--surface-muted);

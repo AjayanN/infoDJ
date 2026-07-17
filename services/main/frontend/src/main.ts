@@ -44,6 +44,7 @@ import {
   FoundationStandardsResponse,
   LeadershipDecisionResponse,
   DashboardSection,
+  DashboardEvent,
   DashboardResponse,
   HistoryRow,
   InfoDjApiService,
@@ -100,6 +101,7 @@ type ValueFlowEdge = { key: string; from: ValueFlowNode; to: ValueFlowNode; labe
 type ValueFlowDrag = { nodeKey: string; space: DOMRect } | null;
 type ValueFlowFocus = { type: 'edge' | 'node'; key: string } | null;
 type ValueFlowGraph = { nodes: ValueFlowNode[]; edges: ValueFlowEdge[] };
+type KpiEventGroup = { type: string; label: string; count: number; latestDate: string; events: DashboardEvent[]; hiddenCount: number };
 type DashboardSectionKey =
   | 'latest_moves'
   | 'strategic_turns'
@@ -2452,6 +2454,39 @@ class AppComponent {
   kpiBarWidth(value: number, series: { value: number }[]): number {
     const maximum = Math.max(...series.map((row) => Math.abs(row.value)), 1);
     return Math.max(2, Math.round((Math.abs(value) / maximum) * 100));
+  }
+
+  kpiEventGroups(events: DashboardEvent[]): KpiEventGroup[] {
+    const grouped = new Map<string, DashboardEvent[]>();
+    for (const event of events) {
+      const key = event.event_type || 'OTHER';
+      grouped.set(key, [...(grouped.get(key) || []), event]);
+    }
+    return Array.from(grouped.entries())
+      .map(([type, rows]) => {
+        const sorted = [...rows].sort((a, b) => this.dateSortValue(b.event_date) - this.dateSortValue(a.event_date));
+        return {
+          type,
+          label: this.promiseLabel(type),
+          count: sorted.length,
+          latestDate: sorted[0]?.event_date || 'Date unavailable',
+          events: sorted.slice(0, 3),
+          hiddenCount: Math.max(0, sorted.length - 3),
+        };
+      })
+      .sort((a, b) => this.dateSortValue(b.latestDate) - this.dateSortValue(a.latestDate) || a.label.localeCompare(b.label));
+  }
+
+  kpiEventSummary(event: DashboardEvent): string {
+    return event.actual_change || event.source_claim || 'Event summary unavailable.';
+  }
+
+  private dateSortValue(value: string | null): number {
+    if (!value || value === 'Date unavailable') {
+      return 0;
+    }
+    const timestamp = Date.parse(value);
+    return Number.isNaN(timestamp) ? 0 : timestamp;
   }
 
   businessModelComponentLabel(type: string): string {

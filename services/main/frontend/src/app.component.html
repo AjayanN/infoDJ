@@ -1112,8 +1112,22 @@
               </section>
 
               <section class="panel">
-                <div class="panel-header"><div><p class="section-kicker">Context</p><h2>Related company events</h2></div></div>
-                <div class="result-row" *ngFor="let event of kpiView.event_overlays"><strong>{{ event.event_type }}</strong><span>{{ event.event_date }}</span><p>{{ event.actual_change || event.source_claim }}</p></div>
+                <div class="panel-header"><div><p class="section-kicker">Context</p><h2>Related company events</h2><p>These events may help explain KPI movement. They are context, not automatic causation.</p></div></div>
+                <div class="kpi-event-groups" *ngIf="kpiView.event_overlays.length > 0">
+                  <article class="kpi-event-group" *ngFor="let group of kpiEventGroups(kpiView.event_overlays)">
+                    <div class="kpi-event-group-header">
+                      <strong>{{ group.label }}</strong>
+                      <span>{{ group.count }} {{ group.count === 1 ? 'event' : 'events' }} · latest {{ group.latestDate }}</span>
+                    </div>
+                    <div class="kpi-event-timeline">
+                      <div class="kpi-event-item" *ngFor="let event of group.events">
+                        <span class="kpi-event-date">{{ event.event_date || 'Date unavailable' }}</span>
+                        <p>{{ kpiEventSummary(event) }}</p>
+                      </div>
+                    </div>
+                    <small *ngIf="group.hiddenCount > 0">Show {{ group.hiddenCount }} more in source events.</small>
+                  </article>
+                </div>
                 <div class="empty-state" *ngIf="kpiView.event_overlays.length === 0">No eligible event overlays.</div>
               </section>
 
