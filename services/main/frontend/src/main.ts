@@ -451,6 +451,22 @@ class AppComponent {
     'competitors',
     'strategic_priorities'
   ];
+  readonly companyDossierBlocks = [
+    { title: 'What it sells', description: 'Reviewed offerings and the business lines used to describe them.', sections: ['products', 'brands', 'segments'] },
+    { title: 'Who it serves', description: 'Reviewed customer groups and audience context.', sections: ['customer_groups'] },
+    { title: 'How it earns', description: 'Reviewed business model and revenue sources.', sections: ['business_model', 'revenue_sources'] },
+    { title: 'Where it operates', description: 'Reviewed geographic presence and corporate structure.', sections: ['geographies', 'subsidiaries'] },
+    { title: 'Who runs it', description: 'Reviewed leadership and stated strategic priorities.', sections: ['leadership', 'strategic_priorities'] },
+    { title: 'Who it competes with', description: 'Reviewed competitors named in the company profile.', sections: ['competitors'] }
+  ];
+  readonly companyAtGlanceGroups = [
+    { label: 'Products', sections: ['products', 'brands'] },
+    { label: 'Customers', sections: ['customer_groups'] },
+    { label: 'Revenue', sections: ['revenue_sources'] },
+    { label: 'Geographies', sections: ['geographies'] },
+    { label: 'Leadership', sections: ['leadership'] },
+    { label: 'Competitors', sections: ['competitors'] }
+  ];
 
   username = '';
   email = '';
@@ -2841,6 +2857,35 @@ class AppComponent {
   @HostListener('document:keydown.escape')
   closeSourceLensOnEscape(): void {
     if (this.sourceLens()) this.closeSourceLens();
+
+  dossierEntries(company: CompanyProfileResponse, sectionKeys: string[]): { key: string; label: string; text: string; items: string[] }[] {
+    return sectionKeys
+      .map((key) => {
+        const section = company.sections[key];
+        return {
+          key,
+          label: this.profileSectionLabel(key),
+          text: section?.text || '',
+          items: (section?.items || []).map((item) => this.profileItemLabel(item))
+        };
+      })
+      .filter((entry) => entry.text || entry.items.length > 0);
+  }
+
+  dossierChips(company: CompanyProfileResponse, sectionKeys: string[]): string[] {
+    return [...new Set(
+      sectionKeys.flatMap((key) => (company.sections[key]?.items || []).map((item) => this.profileItemLabel(item)))
+    )].slice(0, 8);
+  }
+
+  sourceFreshness(company: CompanyProfileResponse): string {
+    const datedSource = company.evidence
+      .filter((source) => source.published_date || source.updated_at)
+      .sort((left, right) => String(right.published_date || right.updated_at).localeCompare(String(left.published_date || left.updated_at)))[0];
+    if (!datedSource) {
+      return 'No dated source available';
+    }
+    return datedSource.published_date ? `Latest source: ${datedSource.published_date}` : `Latest source update: ${datedSource.updated_at}`;
   }
 
   sectorShare(eventCount: number, dash: DashboardResponse): number {
