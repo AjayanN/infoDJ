@@ -48,6 +48,7 @@ import {
   DashboardSection,
   DashboardEvent,
   DashboardResponse,
+  CompanyProfileSource,
   HistoryRow,
   InfoDjApiService,
   PaginationMeta,
@@ -62,7 +63,9 @@ import {
   businessModelRelationshipLabel,
   companyProfileItemLabel,
   companyProfileSectionLabel,
-  managementPromiseLabel
+  deduplicateSourceLensRecords,
+  managementPromiseLabel,
+  sourceLensWhyUsed
 } from './app/company-profile.utils';
 
 declare global {
@@ -108,6 +111,7 @@ type KpiMetricGroup = { key: string; label: string; variants: KpiDefinition[]; s
 type BlockedKpiPeer = OperatingKpiResponse['blocked_peer_metrics'][number];
 type KpiBlockerReason = { key: string; label: string; count: number };
 type KpiPeerBlockerGroup = { company: string; companySlug: string; total: number; reasons: KpiBlockerReason[]; examples: BlockedKpiPeer[]; hiddenCount: number };
+type SourceLensState = { title: string; sources: CompanyProfileSource[] } | null;
 type DashboardSectionKey =
   | 'latest_moves'
   | 'strategic_turns'
@@ -251,6 +255,7 @@ class AppComponent {
   readonly businessModelComponentOrder = ['PAYER', 'USER', 'OFFERING', 'REVENUE', 'CHANNEL', 'GEOGRAPHY', 'PARTNER', 'COST', 'ASSET'];
   businessModelTypeFilter = '';
   valueFlowFocus = signal<ValueFlowFocus>(null);
+  sourceLens = signal<SourceLensState>(null);
   valueFlowGraph = signal<ValueFlowGraph>({ nodes: [], edges: [] });
   valueFlowNodeOverrides = signal<Record<string, { x: number; y: number }>>({});
   private valueFlowDrag: ValueFlowDrag = null;
@@ -2819,6 +2824,23 @@ class AppComponent {
 
   profileItemLabel(item: unknown): string {
     return companyProfileItemLabel(item);
+  }
+
+  openSourceLens(title: string, sources: CompanyProfileSource[]): void {
+    this.sourceLens.set({ title, sources: deduplicateSourceLensRecords(sources) });
+  }
+
+  closeSourceLens(): void {
+    this.sourceLens.set(null);
+  }
+
+  sourceLensWhyUsed(source: CompanyProfileSource): string {
+    return sourceLensWhyUsed(source);
+  }
+
+  @HostListener('document:keydown.escape')
+  closeSourceLensOnEscape(): void {
+    if (this.sourceLens()) this.closeSourceLens();
   }
 
   sectorShare(eventCount: number, dash: DashboardResponse): number {

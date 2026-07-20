@@ -62,3 +62,33 @@ export function kpiObservationFlags(observation: {
   if (observation.definition_changed) flags.push('Definition changed');
   return flags;
 }
+
+export type SourceLensRecord = {
+  id: number;
+  source_api: string;
+  title: string;
+  publisher: string;
+  url: string;
+  published_date: string | null;
+  snippet: string;
+  status: string;
+  updated_at: string;
+  evidence_context?: string[];
+  evidence_context_label?: string;
+  snapshot_dates?: string[];
+};
+
+export function deduplicateSourceLensRecords(sources: SourceLensRecord[]): SourceLensRecord[] {
+  const unique = new Map<string, SourceLensRecord>();
+  for (const source of sources) {
+    const key = source.url.trim().toLowerCase() || `${source.source_api}:${source.title}`.toLowerCase();
+    if (!unique.has(key)) unique.set(key, source);
+  }
+  return Array.from(unique.values());
+}
+
+export function sourceLensWhyUsed(source: SourceLensRecord): string {
+  if (source.evidence_context_label) return source.evidence_context_label;
+  if (source.evidence_context?.length) return source.evidence_context.join(', ');
+  return 'Used in this Company 360 view.';
+}

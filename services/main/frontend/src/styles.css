@@ -690,6 +690,125 @@ button:disabled {
   margin: 0;
 }
 
+.gap-details,
+.source-lens-use,
+.source-lens-details dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.gap-details div,
+.source-lens-use div,
+.source-lens-details dl div {
+  display: grid;
+  gap: 2px;
+}
+
+.gap-details dt,
+.source-lens-use dt,
+.source-lens-details dt {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.gap-details dd,
+.source-lens-use dd,
+.source-lens-details dd {
+  color: #344256;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.source-lens-backdrop {
+  align-items: stretch;
+  background: rgba(24, 33, 47, 0.38);
+  display: flex;
+  inset: 0;
+  justify-content: flex-end;
+  position: fixed;
+  z-index: 1000;
+}
+
+.source-lens-drawer {
+  background: var(--panel);
+  box-shadow: -18px 0 44px rgba(24, 33, 47, 0.2);
+  display: grid;
+  gap: 18px;
+  max-width: 620px;
+  overflow-y: auto;
+  padding: 24px;
+  width: min(100%, 620px);
+}
+
+.source-lens-header {
+  align-items: start;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding-bottom: 16px;
+}
+
+.source-lens-header h2,
+.source-lens-record h3 {
+  margin: 0;
+}
+
+.source-lens-summary {
+  color: var(--muted);
+  margin: -8px 0 0;
+}
+
+.source-lens-list {
+  display: grid;
+  gap: 12px;
+}
+
+.source-lens-record {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+}
+
+.source-lens-record p {
+  color: #344256;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.source-lens-record h3 + p {
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.source-lens-details {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+.source-lens-details summary {
+  color: #344256;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.source-lens-details dl {
+  margin-top: 10px;
+}
+
+@media (max-width: 640px) {
+  .source-lens-drawer {
+    max-width: none;
+    padding: 18px;
+    width: 100%;
+  }
+}
+
 .company-profile-layout {
   display: grid;
   gap: 18px;

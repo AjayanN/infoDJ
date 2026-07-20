@@ -873,19 +873,17 @@
               <section class="panel source-gap-panel" *ngIf="companyView.source_gaps.length > 0" aria-labelledby="company-gap-heading">
                 <div class="panel-header"><div><p class="section-kicker">Coverage gaps</p><h2 id="company-gap-heading">Unavailable company information</h2></div></div>
                 <div class="source-gap-grid">
-                  <article class="source-gap" *ngFor="let gap of companyView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article>
+                  <article class="source-gap" *ngFor="let gap of companyView.source_gaps">
+                    <strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p>
+                    <dl class="gap-details"><div><dt>Why it matters</dt><dd>{{ gap.reason }}</dd></div><div><dt>Likely source</dt><dd>{{ gap.source }}</dd></div><div><dt>Refresh status</dt><dd>{{ gap.next_action }}</dd></div></dl>
+                  </article>
                 </div>
               </section>
 
               <section class="panel" aria-labelledby="company-evidence-heading">
                 <div class="panel-header"><div><p class="section-kicker">Sources</p><h2 id="company-evidence-heading">Company evidence</h2></div><span>{{ companyView.coverage.source_count }} total sources</span></div>
                 <div class="empty-state" *ngIf="companyView.evidence.length === 0">No source documents are available.</div>
-                <div class="evidence-grid">
-                  <article class="evidence-card" *ngFor="let source of companyView.evidence">
-                    <strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span>
-                    <p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a>
-                  </article>
-                </div>
+                <button type="button" class="ghost-button" *ngIf="companyView.evidence.length > 0" (click)="openSourceLens('Company evidence', companyView.evidence)">Review {{ companyView.coverage.source_count }} sources</button>
               </section>
             </ng-container>
           </section>
@@ -1009,12 +1007,13 @@
 
               <section class="panel source-gap-panel" *ngIf="modelView.source_gaps.length > 0" aria-labelledby="model-gap-heading">
                 <div class="panel-header"><div><p class="section-kicker">Coverage gaps</p><h2 id="model-gap-heading">Unavailable business-model evidence</h2></div></div>
-                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of modelView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of modelView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><dl class="gap-details"><div><dt>Why it matters</dt><dd>{{ gap.reason }}</dd></div><div><dt>Likely source</dt><dd>{{ gap.source }}</dd></div><div><dt>Refresh status</dt><dd>{{ gap.next_action }}</dd></div></dl></article></div>
               </section>
 
               <section class="panel" aria-labelledby="model-evidence-heading">
                 <div class="panel-header"><div><p class="section-kicker">Sources</p><h2 id="model-evidence-heading">Sources used for this comparison</h2></div></div>
-                <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of modelView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher }} · {{ source.published_date || 'Date unavailable' }}</span><small *ngIf="source.evidence_context_label">{{ source.evidence_context_label }}<ng-container *ngIf="source.snapshot_dates?.length"> · snapshots {{ source.snapshot_dates?.join(', ') }}</ng-container></small><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                <div class="empty-state" *ngIf="modelView.evidence.length === 0">No source documents are available for this comparison.</div>
+                <button type="button" class="ghost-button" *ngIf="modelView.evidence.length > 0" (click)="openSourceLens('Business model sources', modelView.evidence)">Review sources</button>
               </section>
             </ng-container>
           </section>
@@ -1307,12 +1306,13 @@
 
               <section class="panel source-gap-panel" *ngIf="promiseView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable promise evidence</h2></div>
-                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of promiseView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of promiseView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><dl class="gap-details"><div><dt>Why it matters</dt><dd>{{ gap.reason }}</dd></div><div><dt>Likely source</dt><dd>{{ gap.source }}</dd></div><div><dt>Refresh status</dt><dd>{{ gap.next_action }}</dd></div></dl></article></div>
               </section>
 
               <section class="panel">
                 <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Promise evidence</h2></div><span>{{ promiseView.coverage.source_count }} sources</span></div>
-                <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of promiseView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                <div class="empty-state" *ngIf="promiseView.evidence.length === 0">No source documents are available.</div>
+                <button type="button" class="ghost-button" *ngIf="promiseView.evidence.length > 0" (click)="openSourceLens('Promise evidence', promiseView.evidence)">Review sources</button>
               </section>
             </ng-container>
           </section>
@@ -3702,6 +3702,25 @@
           </ng-container>
         </ng-container>
       </main>
+
+      <div class="source-lens-backdrop" *ngIf="sourceLens() as lens" (click)="closeSourceLens()">
+        <aside class="source-lens-drawer" role="dialog" aria-modal="true" aria-labelledby="source-lens-heading" (click)="$event.stopPropagation()">
+          <header class="source-lens-header">
+            <div><p class="section-kicker">Source lens</p><h2 id="source-lens-heading">{{ lens.title }}</h2></div>
+            <button type="button" class="icon-button" aria-label="Close source lens" (click)="closeSourceLens()">&times;</button>
+          </header>
+          <p class="source-lens-summary">{{ lens.sources.length }} unique source{{ lens.sources.length === 1 ? '' : 's' }} used in this view.</p>
+          <div class="source-lens-list">
+            <article class="source-lens-record" *ngFor="let source of lens.sources">
+              <div><h3>{{ source.title }}</h3><p>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }} · {{ source.source_api }}</p></div>
+              <p *ngIf="source.snippet">{{ source.snippet }}</p>
+              <dl class="source-lens-use"><div><dt>Why it was used</dt><dd>{{ sourceLensWhyUsed(source) }}</dd></div></dl>
+              <a [href]="source.url" target="_blank" rel="noopener">Open source</a>
+              <details class="source-lens-details"><summary>Source details</summary><dl><div><dt>Source type</dt><dd>{{ source.source_api }}</dd></div><div><dt>Record status</dt><dd>{{ source.status }}</dd></div><div><dt>Last updated</dt><dd>{{ source.updated_at | date:'medium' }}</dd></div><div *ngIf="source.snapshot_dates?.length"><dt>Snapshots</dt><dd>{{ source.snapshot_dates?.join(', ') }}</dd></div></dl></details>
+            </article>
+          </div>
+        </aside>
+      </div>
 
       <footer class="footer">
         <span>InfoDJ Sprint 1</span>
