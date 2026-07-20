@@ -100,6 +100,19 @@ type DashboardView = {
 };
 
 type DashboardAvailability = 'available' | 'unavailable';
+type CompanyFeatureId =
+  | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings'
+  | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle'
+  | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider'
+  | 'valuation-context' | 'regulatory-litigation' | 'sector-themes' | 'macro-sensitivity' | 'strategy-theses'
+  | 'follow-alerts' | 'scenarios' | 'contradictions' | 'strategy-failures' | 'compare-peers' | 'latest-moves' | 'risk-signals';
+type CompanyFeature = {
+  id: CompanyFeatureId;
+  category: 'Business model' | 'Performance' | 'Strategy' | 'Market position' | 'Risk' | 'Ownership' | 'User workspace';
+  title: string;
+  purpose: string;
+  keywords: string;
+};
 type SearchResultGroup = 'companies' | 'events' | 'strategic_turns';
 type ValueFlowNode = { key: string; name: string; x: number; y: number };
 type ValueFlowEdge = { key: string; from: ValueFlowNode; to: ValueFlowNode; label: string; x: number; y: number };
@@ -250,6 +263,7 @@ class AppComponent {
   foundationLoading = signal(false);
   leadershipDecisionLoading = signal(false);
   companyProfileDate = '';
+  companyFeatureQuery = '';
   businessModelDate = '';
   businessModelCompareDate = '';
   readonly businessModelComponentOrder = ['PAYER', 'USER', 'OFFERING', 'REVENUE', 'CHANNEL', 'GEOGRAPHY', 'PARTNER', 'COST', 'ASSET'];
@@ -466,6 +480,37 @@ class AppComponent {
     { label: 'Geographies', sections: ['geographies'] },
     { label: 'Leadership', sections: ['leadership'] },
     { label: 'Competitors', sections: ['competitors'] }
+  ];
+
+  readonly companyFeatureCategories: CompanyFeature['category'][] = [
+    'Business model', 'Performance', 'Strategy', 'Market position', 'Risk', 'Ownership', 'User workspace'
+  ];
+  readonly companyFeatures: CompanyFeature[] = [
+    { id: 'business-model', category: 'Business model', title: 'Business model map', purpose: 'Trace who pays, what is delivered, and how value reaches customers.', keywords: 'revenue payer user offering channel business model' },
+    { id: 'operating-kpis', category: 'Performance', title: 'Operating KPI tracker', purpose: 'Review the operating measures that explain execution and change.', keywords: 'metrics kpi operating performance growth retention usage' },
+    { id: 'earnings', category: 'Performance', title: 'Earnings intelligence', purpose: 'Read quarterly results, guidance, risks, and management commentary.', keywords: 'earnings quarter guidance results financial' },
+    { id: 'capital-allocation', category: 'Performance', title: 'Capital allocation', purpose: 'See where cash is directed across investment, debt, and returns.', keywords: 'capital capex buyback dividend debt cash acquisition' },
+    { id: 'valuation-context', category: 'Performance', title: 'Valuation context', purpose: 'Compare disclosed valuation inputs and peer context without investment advice.', keywords: 'valuation market cap pe ps ev price multiple' },
+    { id: 'management-promises', category: 'Strategy', title: 'Management promise tracker', purpose: 'Check stated commitments against updates, deadlines, and outcomes.', keywords: 'promise commitment target guidance management delivery' },
+    { id: 'strategy-milestones', category: 'Strategy', title: 'Strategy milestone tracker', purpose: 'Follow execution steps, dependencies, delays, and completion evidence.', keywords: 'strategy milestone execution initiative timeline' },
+    { id: 'acquisition-lifecycle', category: 'Strategy', title: 'Acquisition lifecycle', purpose: 'Review deal rationale, approvals, integration progress, and outcomes.', keywords: 'acquisition deal merger m&a integration' },
+    { id: 'product-pricing', category: 'Market position', title: 'Product and pricing history', purpose: 'Track offering changes, packaging, launches, and price context.', keywords: 'product pricing plan feature launch packaging catalog' },
+    { id: 'competitive-position', category: 'Market position', title: 'Competitive position', purpose: 'Map competitors, overlap, responses, and moat evidence.', keywords: 'competitor competition moat market peer' },
+    { id: 'customer-supplier-dependency', category: 'Market position', title: 'Customer and supplier dependency', purpose: 'Inspect concentration, platforms, counterparties, and contract dependencies.', keywords: 'customer supplier dependency platform channel concentration' },
+    { id: 'geographic-expansion', category: 'Market position', title: 'Geographic expansion', purpose: 'See market presence, entries, exits, partners, and barriers.', keywords: 'geography country expansion region market international' },
+    { id: 'regulatory-litigation', category: 'Risk', title: 'Regulatory and litigation calendar', purpose: 'Track matters, known dates, disclosed exposure, and sources.', keywords: 'regulatory litigation lawsuit legal investigation compliance' },
+    { id: 'sector-themes', category: 'Risk', title: 'Sector and theme intelligence', purpose: 'Connect external themes to company evidence, events, and signals.', keywords: 'sector theme ai cloud regulation demand exposure' },
+    { id: 'macro-sensitivity', category: 'Risk', title: 'Macro sensitivity profile', purpose: 'Review disclosed exposure to rates, inflation, demand, and supply conditions.', keywords: 'macro inflation rates recession currency commodity supply chain' },
+    { id: 'leadership-decisions', category: 'Ownership', title: 'Leadership decision record', purpose: 'Review leadership changes, tenure, and source-backed decisions.', keywords: 'leadership executive ceo board management decision' },
+    { id: 'ownership-insider', category: 'Ownership', title: 'Ownership and insider activity', purpose: 'Separate economic ownership, voting control, and disclosed transactions.', keywords: 'ownership insider holder voting control shares' },
+    { id: 'strategy-theses', category: 'User workspace', title: 'Strategy thesis workspace', purpose: 'Capture a private research view with evidence, milestones, and revisions.', keywords: 'thesis workspace research notes' },
+    { id: 'scenarios', category: 'User workspace', title: 'Scenario explorer', purpose: 'Organize evidence-backed best, base, and worst-case assumptions.', keywords: 'scenario forecast assumptions base best worst' },
+    { id: 'contradictions', category: 'User workspace', title: 'Contradiction view', purpose: 'Compare reviewed claims that need clarification or reconciliation.', keywords: 'contradiction conflict claim evidence' },
+    { id: 'strategy-failures', category: 'User workspace', title: 'Strategy failure library', purpose: 'Study reviewed execution breakdowns, warning signs, and lessons.', keywords: 'failure execution lessons warning' },
+    { id: 'follow-alerts', category: 'User workspace', title: 'Follow for alerts', purpose: 'Add this company to your alert and briefing workspace.', keywords: 'follow alert notification briefing watchlist' },
+    { id: 'compare-peers', category: 'Market position', title: 'Compare peers', purpose: 'Open comparable company situations for this company.', keywords: 'peer compare benchmark competitors' },
+    { id: 'latest-moves', category: 'Strategy', title: 'Latest moves', purpose: 'Scan the latest source-backed strategic events for this company.', keywords: 'latest moves events news changes' },
+    { id: 'risk-signals', category: 'Risk', title: 'Risk signals', purpose: 'Review source-backed warning signals in company context.', keywords: 'risk warning signal exposure' }
   ];
 
   username = '';
@@ -1171,6 +1216,64 @@ class AppComponent {
     if (company && this.companyProfileDate) {
       this.openCompany(company.slug, this.companyProfileDate);
     }
+  }
+
+  filteredCompanyFeatures(category: CompanyFeature['category']): CompanyFeature[] {
+    const query = this.companyFeatureQuery.trim().toLowerCase();
+    return this.companyFeatures.filter((feature) => feature.category === category && (
+      !query || `${feature.title} ${feature.purpose} ${feature.keywords}`.toLowerCase().includes(query)
+    ));
+  }
+
+  hasCompanyFeatureResults(): boolean {
+    return this.companyFeatureCategories.some((category) => this.filteredCompanyFeatures(category).length > 0);
+  }
+
+  openCompanyFeature(feature: CompanyFeature): void {
+    const company = this.companyProfile()?.company;
+    if (!company) {
+      return;
+    }
+    switch (feature.id) {
+      case 'business-model': this.openBusinessModel(company.slug); break;
+      case 'operating-kpis': this.openOperatingKpis(company.slug); break;
+      case 'management-promises': this.openManagementPromises(company.slug); break;
+      case 'strategy-milestones': this.openStrategyMilestones(company.slug); break;
+      case 'earnings': this.openEarnings(company.slug); break;
+      case 'capital-allocation': this.openCapitalAllocation(company.slug); break;
+      case 'competitive-position': this.openCompetitivePosition(company.slug); break;
+      case 'product-pricing': this.openProductPricing(company.slug); break;
+      case 'acquisition-lifecycle': this.openAcquisitionLifecycle(company.slug); break;
+      case 'customer-supplier-dependency': this.openCustomerSupplierDependency(company.slug); break;
+      case 'geographic-expansion': this.openGeographicExpansion(company.slug); break;
+      case 'leadership-decisions': this.openLeadershipDecisions(company.slug); break;
+      case 'ownership-insider': this.openOwnershipInsider(company.slug); break;
+      case 'valuation-context': this.openValuationContext(company.slug); break;
+      case 'regulatory-litigation': this.openRegulatoryLitigation(company.slug); break;
+      case 'sector-themes': this.openSectorThemes(company.slug); break;
+      case 'macro-sensitivity': this.openMacroSensitivity(company.slug); break;
+      case 'strategy-theses': this.openStrategyTheses(company.slug, company.name); break;
+      case 'follow-alerts': this.followCompanyForAlerts(company.slug, company.name); break;
+      case 'scenarios': this.openScenarios(company.slug, company.name); break;
+      case 'contradictions': this.openContradictions(company.slug, company.name); break;
+      case 'strategy-failures': this.openStrategyFailures(company.slug, company.name, company.sector); break;
+      case 'compare-peers': this.openCompanyDashboard('companies-like-mine'); break;
+      case 'latest-moves': this.openCompanyDashboard('latest-moves'); break;
+      case 'risk-signals': this.openCompanyDashboard('risk-signals'); break;
+    }
+  }
+
+  isCompanyFeaturePage(): boolean {
+    return [
+      'business-model', 'operating-kpis', 'management-promises', 'strategy-milestones', 'earnings', 'capital-allocation',
+      'competitive-position', 'product-pricing', 'acquisition-lifecycle', 'customer-supplier-dependency', 'geographic-expansion',
+      'leadership-decisions', 'ownership-insider', 'valuation-context', 'regulatory-litigation', 'sector-themes', 'macro-sensitivity',
+      'strategy-theses', 'scenarios', 'contradictions', 'strategy-failures'
+    ].includes(this.activePage());
+  }
+
+  changeCompany(): void {
+    this.setActivePage('dashboard');
   }
 
   openCompanyDashboard(view: DashboardViewId): void {

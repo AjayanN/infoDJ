@@ -76,6 +76,7 @@ export type DashboardCompany = {
   id?: number;
   name: string;
   slug: string;
+  ticker?: string;
   sector: string;
   country?: string;
   source_count: number;

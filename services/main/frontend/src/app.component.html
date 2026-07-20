@@ -173,6 +173,21 @@
       </section>
 
       <main id="main-content" class="workspace authenticated-workspace" tabindex="-1" aria-labelledby="page-title" [attr.aria-busy]="loading()">
+        <section class="company-context-strip" *ngIf="isCompanyFeaturePage() && companyProfile() as companyContext" aria-label="Current company context">
+          <div>
+            <p class="section-kicker">Company context</p>
+            <strong>{{ companyContext.company.name }}</strong>
+            <span *ngIf="companyContext.company.ticker">{{ companyContext.company.ticker }}</span>
+            <span>{{ companyContext.company.sector || 'Sector unavailable' }}</span>
+            <span>{{ companyContext.company.country || 'Country unavailable' }}</span>
+            <small>Reviewed {{ (companyContext.profile?.effective_date || companyContext.coverage.last_updated) | date:'mediumDate' }}</small>
+          </div>
+          <div class="company-context-actions">
+            <button type="button" class="ghost-button" (click)="openCompany(companyContext.company.slug)">Back to Company 360</button>
+            <button type="button" class="ghost-button" (click)="changeCompany()">Change company</button>
+            <button type="button" class="primary-button" (click)="openCompanyDashboard('companies-like-mine')">Compare peers</button>
+          </div>
+        </section>
         <ng-container [ngSwitch]="activePage()">
           <section *ngSwitchCase="'dashboard'" class="dashboard-grid" aria-labelledby="dashboard-heading">
             <div class="panel dashboard-header-panel">
@@ -767,33 +782,23 @@
                   </select>
                 </label>
                 <div class="profile-control-actions">
-                  <button type="button" class="ghost-button" (click)="openBusinessModel(companyView.company.slug)">Business model map</button>
-                  <button type="button" class="ghost-button" (click)="openOperatingKpis(companyView.company.slug)">Operating KPI tracker</button>
-                  <button type="button" class="ghost-button" (click)="openManagementPromises(companyView.company.slug)">Management promise tracker</button>
-                  <button type="button" class="ghost-button" (click)="openStrategyMilestones(companyView.company.slug)">Strategy milestone tracker</button>
-                  <button type="button" class="ghost-button" (click)="openEarnings(companyView.company.slug)">Earnings intelligence</button>
-                  <button type="button" class="ghost-button" (click)="openCapitalAllocation(companyView.company.slug)">Capital allocation dashboard</button>
-                  <button type="button" class="ghost-button" (click)="openCompetitivePosition(companyView.company.slug)">Competitive position dashboard</button>
-                  <button type="button" class="ghost-button" (click)="openProductPricing(companyView.company.slug)">Product and pricing history</button>
-                  <button type="button" class="ghost-button" (click)="openAcquisitionLifecycle(companyView.company.slug)">Acquisition lifecycle tracker</button>
-                  <button type="button" class="ghost-button" (click)="openCustomerSupplierDependency(companyView.company.slug)">Customer and supplier dependency</button>
-                  <button type="button" class="ghost-button" (click)="openGeographicExpansion(companyView.company.slug)">Geographic expansion map</button>
-                  <button type="button" class="ghost-button" (click)="openLeadershipDecisions(companyView.company.slug)">Leadership decision record</button>
-                  <button type="button" class="ghost-button" (click)="openOwnershipInsider(companyView.company.slug)">Ownership and insider activity</button>
-                  <button type="button" class="ghost-button" (click)="openValuationContext(companyView.company.slug)">Valuation context</button>
-                  <button type="button" class="ghost-button" (click)="openRegulatoryLitigation(companyView.company.slug)">Regulatory and litigation calendar</button>
-                  <button type="button" class="ghost-button" (click)="openSectorThemes(companyView.company.slug)">Sector and theme intelligence</button>
-                  <button type="button" class="ghost-button" (click)="openMacroSensitivity(companyView.company.slug)">Macro sensitivity profile</button>
-                  <button type="button" class="ghost-button" (click)="openStrategyTheses(companyView.company.slug, companyView.company.name)">Strategy thesis workspace</button>
-                  <button type="button" class="ghost-button" (click)="followCompanyForAlerts(companyView.company.slug, companyView.company.name)">Follow for alerts</button>
-                  <button type="button" class="ghost-button" (click)="openScenarios(companyView.company.slug, companyView.company.name)">Scenario explorer</button>
-                  <button type="button" class="ghost-button" (click)="openContradictions(companyView.company.slug, companyView.company.name)">Contradiction view</button>
-                  <button type="button" class="ghost-button" (click)="openStrategyFailures(companyView.company.slug, companyView.company.name, companyView.company.sector)">Strategy failure library</button>
-                  <button type="button" class="ghost-button" (click)="openCompanyDashboard('companies-like-mine')">Compare peers</button>
-                  <button type="button" class="ghost-button" (click)="openCompanyDashboard('latest-moves')">Latest moves</button>
-                  <button type="button" class="ghost-button" (click)="openCompanyDashboard('risk-signals')">Risk signals</button>
+                  <button type="button" class="ghost-button" (click)="changeCompany()">Change company</button>
                   <button type="button" class="primary-button" (click)="printCompanyProfile()">Print company brief</button>
                 </div>
+              </section>
+
+              <section class="company-feature-catalog" aria-labelledby="company-feature-heading">
+                <div class="company-feature-catalog-header">
+                  <div><p class="section-kicker">Research cockpit</p><h2 id="company-feature-heading">Choose the next research lens</h2><p>Each view keeps {{ companyView.company.name }} in context and opens the relevant source-backed workflow.</p></div>
+                  <label for="company-feature-search">Find a feature<input id="company-feature-search" name="company_feature_search" [(ngModel)]="companyFeatureQuery" placeholder="Try pricing, lawsuit, leadership, or risk" /></label>
+                </div>
+                <div class="company-feature-groups" *ngIf="hasCompanyFeatureResults(); else noCompanyFeatureResults">
+                  <section class="company-feature-group" *ngFor="let category of companyFeatureCategories" [class.empty]="filteredCompanyFeatures(category).length === 0">
+                    <h3 *ngIf="filteredCompanyFeatures(category).length > 0">{{ category }}</h3>
+                    <div class="company-feature-grid" *ngIf="filteredCompanyFeatures(category).length > 0"><button type="button" class="company-feature-card" *ngFor="let feature of filteredCompanyFeatures(category)" (click)="openCompanyFeature(feature)"><strong>{{ feature.title }}</strong><span>{{ feature.purpose }}</span><small>Open research lens</small></button></div>
+                  </section>
+                </div>
+                <ng-template #noCompanyFeatureResults><div class="empty-state unavailable-state">No research lens matches that search.</div></ng-template>
               </section>
 
               <section class="panel at-a-glance" aria-labelledby="at-a-glance-heading">
