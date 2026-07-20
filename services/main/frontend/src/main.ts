@@ -2857,6 +2857,7 @@ class AppComponent {
   @HostListener('document:keydown.escape')
   closeSourceLensOnEscape(): void {
     if (this.sourceLens()) this.closeSourceLens();
+  }
 
   dossierEntries(company: CompanyProfileResponse, sectionKeys: string[]): { key: string; label: string; text: string; items: string[] }[] {
     return sectionKeys
