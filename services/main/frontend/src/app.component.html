@@ -2051,12 +2051,16 @@
 
               <section class="dashboard-two-column leadership-tenure-workspace">
                 <article class="panel leadership-tenure-timeline">
-                  <div class="panel-header"><div><p class="section-kicker">Roles</p><h2>Timeline and tenure context</h2></div></div>
-                  <div class="result-row" *ngFor="let role of leaderView.roles">
-                    <strong>{{ role.leader_name }}</strong>
-                    <span>{{ role.role_title || role.role_type_label }} · {{ role.transition_type_label }}</span>
-                    <p>{{ role.evidence_text }}</p>
-                    <small>{{ role.start_date || 'Start date unavailable' }} <ng-container *ngIf="role.end_date">to {{ role.end_date }}</ng-container> · interim {{ role.interim_status ? 'yes' : 'no' }} · co-leadership {{ role.co_leadership ? 'yes' : 'no' }}</small>
+                  <div class="panel-header"><div><p class="section-kicker">Roles</p><h2>Tenure tracks</h2></div><span>{{ leaderView.coverage.dated_role_count }} dated</span></div>
+                  <div class="leadership-tenure-tracks" *ngIf="leaderView.roles.length > 0">
+                    <article class="leadership-tenure-track" *ngFor="let role of leaderView.roles" [class.undated]="!role.start_date">
+                      <div class="tenure-date tenure-start">{{ role.start_date || 'Date unavailable' }}</div>
+                      <div class="tenure-line" aria-hidden="true"><span></span></div>
+                      <div class="tenure-date tenure-end">{{ role.end_date || 'Current / end unavailable' }}</div>
+                      <div class="tenure-role"><strong>{{ role.leader_name }}</strong><span>{{ role.role_title || role.role_type_label }} · {{ role.transition_type_label }}</span></div>
+                      <p>{{ role.evidence_text }}</p>
+                      <div class="tenure-flags"><span *ngIf="role.interim_status">Interim</span><span *ngIf="role.co_leadership">Co-leadership</span><span *ngFor="let priority of role.stated_priorities">{{ priority }}</span></div>
+                    </article>
                   </div>
                   <div class="empty-state unavailable-state" *ngIf="leaderView.roles.length === 0">No reviewed leadership roles are available for the selected filters.</div>
                 </article>
