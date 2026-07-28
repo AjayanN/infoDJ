@@ -124,6 +124,7 @@ type KpiMetricGroup = { key: string; label: string; variants: KpiDefinition[]; s
 type BlockedKpiPeer = OperatingKpiResponse['blocked_peer_metrics'][number];
 type KpiBlockerReason = { key: string; label: string; count: number };
 type KpiPeerBlockerGroup = { company: string; companySlug: string; total: number; reasons: KpiBlockerReason[]; examples: BlockedKpiPeer[]; hiddenCount: number };
+type PromiseBoardLane = { key: string; label: string; description: string; promises: ManagementPromiseResponse['promises'] };
 type SourceLensState = { title: string; sources: CompanyProfileSource[] } | null;
 type DashboardSectionKey =
   | 'latest_moves'
@@ -2643,6 +2644,16 @@ class AppComponent {
       return selected;
     }
     return group.defaultSlug;
+  }
+
+  managementPromiseStatusBoard(promises: ManagementPromiseResponse['promises']): PromiseBoardLane[] {
+    const lanes = [
+      { key: 'active', label: 'Active', description: 'Announced, underway, revised, or still too early to judge.', statuses: ['ANNOUNCED', 'IN_PROGRESS', 'REVISED', 'TOO_EARLY'] },
+      { key: 'delivered', label: 'Delivered', description: 'Achieved in full or in part against the reviewed rule.', statuses: ['ACHIEVED', 'PARTIALLY_ACHIEVED'] },
+      { key: 'at-risk', label: 'At risk', description: 'Delayed, missed, withdrawn, or no longer disclosed.', statuses: ['DELAYED', 'MISSED', 'WITHDRAWN', 'NO_LONGER_DISCLOSED'] },
+      { key: 'unverifiable', label: 'Unverifiable', description: 'Evidence is insufficient to classify delivery.', statuses: ['UNVERIFIABLE'] }
+    ];
+    return lanes.map((lane) => ({ ...lane, promises: promises.filter((promise) => lane.statuses.includes(promise.current_status)) }));
   }
 
   setSelectedKpiVariant(groupKey: string, slug: string): void {

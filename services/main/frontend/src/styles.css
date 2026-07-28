@@ -3857,6 +3857,80 @@ th {
   border-left-color: #1675b8;
 }
 
+.promise-status-board {
+  display: grid;
+  gap: 16px;
+}
+
+.promise-board-lanes {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.promise-board-lane {
+  background: #f7f9fb;
+  border-top: 3px solid #7290aa;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 13px;
+}
+
+.promise-board-lane.delivered { border-top-color: #4f8d70; }
+.promise-board-lane.at-risk { border-top-color: #bb714e; }
+.promise-board-lane.unverifiable { border-top-color: #a18752; }
+
+.promise-board-lane > header {
+  align-items: start;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.promise-board-lane h3,
+.promise-board-lane p { margin: 0; }
+.promise-board-lane h3 { font-size: 14px; }
+.promise-board-lane > header p { color: var(--muted); font-size: 12px; line-height: 1.4; margin-top: 3px; }
+.promise-board-lane > header > strong { color: #405e78; font-size: 20px; }
+
+.promise-board-card {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  color: inherit;
+  display: grid;
+  gap: 6px;
+  padding: 11px;
+  text-align: left;
+}
+
+.promise-board-card:hover,
+.promise-board-card.selected { border-color: #4f82aa; box-shadow: inset 3px 0 #4f82aa; }
+.promise-board-card span,
+.promise-board-card small { color: var(--muted); font-size: 12px; font-weight: 700; }
+.promise-board-card p { color: #405065; font-size: 13px; line-height: 1.4; margin: 0; }
+
+.promise-original-statement {
+  border-left: 3px solid #587e9f;
+  color: #263b50;
+  margin: 0;
+  padding: 10px 14px;
+}
+
+.promise-original-statement > span,
+.promise-original-statement footer { color: var(--muted); font-size: 12px; font-weight: 800; }
+.promise-original-statement p { font-size: 15px; line-height: 1.5; margin: 7px 0; }
+.promise-original-statement footer { font-style: normal; }
+
+.promise-evaluation {
+  background: #f2f6f9;
+  border-left: 3px solid #7190a9;
+  padding: 11px 13px;
+}
+
+.promise-evaluation p:last-child { color: #33465a; line-height: 1.45; margin: 5px 0 0; }
+
 .promise-detail,
 .milestone-detail {
   background: #f9fbfc;
@@ -4530,6 +4604,7 @@ th {
   }
 
   .promise-register,
+  .promise-status-board,
   .milestone-register,
   .promise-detail,
   .milestone-detail {
@@ -4540,5 +4615,9 @@ th {
   .promise-detail,
   .milestone-detail {
     border-top: 1px solid var(--line);
+  }
+
+  .promise-board-lanes {
+    grid-template-columns: 1fr;
   }
 }
