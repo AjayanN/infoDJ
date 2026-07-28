@@ -432,7 +432,7 @@
 
               <ng-template #unavailableDashboard>
                 <ng-container [ngSwitch]="dashboardView()">
-                  <section *ngSwitchCase="'latest-moves'" class="panel data-dashboard" aria-labelledby="latest-moves-heading">
+                  <section *ngSwitchCase="'latest-moves'" class="panel data-dashboard dashboard-moves-feed" aria-labelledby="latest-moves-heading">
                     <div class="panel-header">
                       <div>
                         <p class="section-kicker">Event scanner</p>
@@ -453,7 +453,7 @@
                     </div>
                   </section>
 
-                  <section *ngSwitchCase="'patterns'" class="panel data-dashboard" aria-labelledby="patterns-heading">
+                  <section *ngSwitchCase="'patterns'" class="panel data-dashboard dashboard-pattern-library" aria-labelledby="patterns-heading">
                     <div class="panel-header">
                       <div>
                         <p class="section-kicker">Patterns</p>
@@ -478,7 +478,7 @@
                     </div>
                   </section>
 
-                  <section *ngSwitchCase="'risk-signals'" class="panel data-dashboard" aria-labelledby="risk-heading">
+                  <section *ngSwitchCase="'risk-signals'" class="panel data-dashboard dashboard-risk-watch" aria-labelledby="risk-heading">
                     <div class="panel-header">
                       <div>
                         <p class="section-kicker">Risk</p>
@@ -500,7 +500,7 @@
                     </div>
                   </section>
 
-                  <section *ngSwitchCase="'source-confidence'" class="panel data-dashboard" aria-labelledby="confidence-heading">
+                  <section *ngSwitchCase="'source-confidence'" class="panel data-dashboard dashboard-confidence-audit" aria-labelledby="confidence-heading">
                     <div class="panel-header">
                       <div>
                         <p class="section-kicker">Confidence</p>
@@ -541,7 +541,7 @@
                     </div>
                   </section>
 
-                  <section *ngSwitchCase="'companies-like-mine'" class="panel data-dashboard" aria-labelledby="like-mine-heading">
+                  <section *ngSwitchCase="'companies-like-mine'" class="panel data-dashboard dashboard-peer-directory" aria-labelledby="like-mine-heading">
                     <div class="panel-header">
                       <div>
                         <p class="section-kicker">Benchmark</p>
@@ -564,7 +564,7 @@
                     </div>
                   </section>
 
-                  <section *ngSwitchCase="'strategy-scorecard'" class="panel data-dashboard" aria-labelledby="scorecard-heading">
+                  <section *ngSwitchCase="'strategy-scorecard'" class="panel data-dashboard dashboard-scorecard-workbench" aria-labelledby="scorecard-heading">
                     <div class="panel-header">
                       <div>
                         <p class="section-kicker">Scorecard</p>
@@ -599,7 +599,7 @@
                     </div>
                   </section>
 
-                  <section *ngSwitchCase="'compare-turns'" class="panel data-dashboard" aria-labelledby="compare-heading">
+                  <section *ngSwitchCase="'compare-turns'" class="panel data-dashboard dashboard-peer-matrix" aria-labelledby="compare-heading">
                     <div class="panel-header">
                       <div>
                         <p class="section-kicker">Compare</p>
@@ -624,7 +624,7 @@
                     </div>
                   </section>
 
-                  <section *ngSwitchCase="'turn-impact'" class="panel data-dashboard" aria-labelledby="impact-heading">
+                  <section *ngSwitchCase="'turn-impact'" class="panel data-dashboard dashboard-impact-lab" aria-labelledby="impact-heading">
                     <div class="panel-header">
                       <div>
                         <p class="section-kicker">Impact</p>
@@ -690,7 +690,7 @@
                     </ng-template>
                   </section>
 
-                  <section *ngSwitchCase="'business-questions'" class="panel data-dashboard" aria-labelledby="questions-heading">
+                  <section *ngSwitchCase="'business-questions'" class="panel data-dashboard dashboard-question-desk" aria-labelledby="questions-heading">
                     <div class="panel-header">
                       <div>
                         <p class="section-kicker">Questions</p>
