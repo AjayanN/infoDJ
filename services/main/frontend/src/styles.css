@@ -4392,11 +4392,31 @@ th {
 .dependency-toolbar { background: #eff5f6; flex-wrap: wrap; padding: 16px; }
 .dependency-toolbar label { flex: 1 1 200px; min-width: 0; }
 .dependency-map-workspace, .dependency-guardrail-workspace { gap: 0; }
+.dependency-map-workspace { grid-template-columns: minmax(0, 1fr); }
 .dependency-map-workspace > article, .dependency-guardrail-workspace > article { border-bottom: 1px solid var(--line); min-width: 0; padding: 22px 24px 22px 0; }
 .dependency-map-workspace > article + article, .dependency-guardrail-workspace > article + article { border-left: 1px solid var(--line); padding-left: 24px; padding-right: 0; }
-.dependency-relationship-map .result-row { border-left: 3px solid #438e92; border-top: 0; }
+.dependency-map-workspace > article { padding-left: 0; padding-right: 0; }
+.dependency-map-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding-left: 0; }
+.dependency-relationship-board { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.dependency-relationship-lane { border: 1px solid var(--line); display: grid; gap: 10px; min-width: 0; padding: 12px; }
+.dependency-relationship-lane > header { align-items: center; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; padding-bottom: 9px; }
+.dependency-relationship-lane > header strong { color: var(--ink); font-size: 0.82rem; }
+.dependency-relationship-lane > header span { background: #dceff0; color: #245f63; font-size: 0.74rem; font-weight: 700; min-width: 24px; padding: 3px 6px; text-align: center; }
+.dependency-relationship-card { border-left: 3px solid #438e92; border-top: 1px solid var(--line); display: grid; gap: 9px; min-width: 0; padding: 12px 0 12px 11px; }
+.dependency-relationship-card:first-of-type { border-top: 0; padding-top: 2px; }
+.dependency-card-heading { align-items: start; display: flex; gap: 8px; justify-content: space-between; }
+.dependency-card-heading strong { color: var(--ink); font-size: 0.93rem; }
+.dependency-card-heading span { color: #2b6367; font-size: 0.75rem; line-height: 1.25; text-align: right; }
+.dependency-relationship-card p { margin: 0; }
+.dependency-card-facts { display: grid; gap: 7px; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; }
+.dependency-card-facts div { min-width: 0; }
+.dependency-card-facts dt { color: var(--muted); font-size: 0.66rem; text-transform: uppercase; }
+.dependency-card-facts dd { color: var(--ink); font-size: 0.75rem; line-height: 1.3; margin: 3px 0 0; overflow-wrap: anywhere; }
+.dependency-risk { border-top: 1px solid var(--line); color: var(--muted); font-size: 0.81rem; padding-top: 9px; }
+.dependency-risk strong { color: var(--ink); display: block; font-size: 0.7rem; margin-bottom: 3px; text-transform: uppercase; }
+.dependency-relationship-card small { color: var(--muted); font-size: 0.72rem; }
 .dependency-contract-risk .result-row { border-left: 3px solid #b47c4c; border-top: 0; }
-@media (max-width: 760px) { .dependency-command { display: grid; gap: 16px; padding: 22px 16px; } .dependency-map-workspace > article, .dependency-map-workspace > article + article, .dependency-guardrail-workspace > article, .dependency-guardrail-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
+@media (max-width: 760px) { .dependency-command { display: grid; gap: 16px; padding: 22px 16px; } .dependency-map-workspace > article, .dependency-map-workspace > article + article, .dependency-guardrail-workspace > article, .dependency-guardrail-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } .dependency-relationship-board { grid-template-columns: 1fr; } .dependency-card-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 /* Geography is a footprint atlas with dated entry and exit evidence. */
 .geo-command { background: #274050; color: #f8fbff; padding: 26px 30px; }

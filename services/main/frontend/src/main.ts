@@ -127,6 +127,7 @@ type KpiPeerBlockerGroup = { company: string; companySlug: string; total: number
 type PromiseBoardLane = { key: string; label: string; description: string; promises: ManagementPromiseResponse['promises'] };
 type CompetitivePeerLane = { label: string; peers: CompetitivePositionResponse['peer_map'] };
 type ProductOfferingFamily = { label: string; offerings: ProductPricingResponse['offerings'] };
+type DependencyRelationshipLane = { key: string; label: string; dependencies: CustomerSupplierDependencyResponse['dependencies'] };
 type SourceLensState = { title: string; sources: CompanyProfileSource[] } | null;
 type DashboardSectionKey =
   | 'latest_moves'
@@ -2674,6 +2675,19 @@ class AppComponent {
       families.set(label, [...(families.get(label) || []), offering]);
     }
     return Array.from(families, ([label, familyOfferings]) => ({ label, offerings: familyOfferings }));
+  }
+
+  dependencyRelationshipLanes(dependencies: CustomerSupplierDependencyResponse['dependencies']): DependencyRelationshipLane[] {
+    const lanes = new Map<string, CustomerSupplierDependencyResponse['dependencies']>();
+    for (const dependency of dependencies) {
+      const key = dependency.dependency_type || 'other';
+      lanes.set(key, [...(lanes.get(key) || []), dependency]);
+    }
+    return Array.from(lanes, ([key, laneDependencies]) => ({
+      key,
+      label: laneDependencies[0]?.dependency_type_label || this.promiseLabel(key),
+      dependencies: laneDependencies,
+    }));
   }
 
   setSelectedKpiVariant(groupKey: string, slug: string): void {

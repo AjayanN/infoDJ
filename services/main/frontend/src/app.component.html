@@ -1839,13 +1839,22 @@
 
               <section class="dashboard-two-column dependency-map-workspace">
                 <article class="dependency-relationship-map">
-                  <div class="panel-header"><div><p class="section-kicker">Dependency map</p><h2>Relationships</h2></div></div>
-                  <div class="result-row" *ngFor="let dependency of dependencyView.dependencies">
-                    <strong>{{ dependency.counterparty_name }}</strong>
-                    <span>{{ dependency.dependency_type_label }} · {{ dependency.materiality_band_label }} · {{ dependency.disclosure_confidence_label }}</span>
-                    <p>{{ dependency.relationship_summary }}</p>
-                    <p><strong>Risk:</strong> {{ dependency.risk_summary || 'Reviewed risk summary unavailable.' }}</p>
-                    <small>{{ dependency.is_named_counterparty ? 'Named counterparty' : 'Category-only disclosure; no named counterparty asserted.' }}</small>
+                  <div class="panel-header"><div><p class="section-kicker">Dependency map</p><h2>Relationship lanes</h2></div><span>{{ dependencyView.dependencies.length }} relationships</span></div>
+                  <div class="dependency-relationship-board" *ngIf="dependencyView.dependencies.length > 0">
+                    <section class="dependency-relationship-lane" *ngFor="let lane of dependencyRelationshipLanes(dependencyView.dependencies)">
+                      <header><strong>{{ lane.label }}</strong><span>{{ lane.dependencies.length }}</span></header>
+                      <article class="dependency-relationship-card" *ngFor="let dependency of lane.dependencies">
+                        <div class="dependency-card-heading"><strong>{{ dependency.counterparty_name }}</strong><span>{{ dependency.materiality_band_label }}</span></div>
+                        <p>{{ dependency.relationship_summary }}</p>
+                        <dl class="dependency-card-facts">
+                          <div><dt>Disclosure</dt><dd>{{ dependency.disclosure_confidence_label }}</dd></div>
+                          <div><dt>Concentration</dt><dd>{{ dependency.concentration_percent === null ? 'Not disclosed' : (dependency.concentration_percent | number:'1.0-2') + '%' }}</dd></div>
+                          <div><dt>Scope</dt><dd>{{ dependency.product_scope || 'Not disclosed' }}</dd></div>
+                        </dl>
+                        <p class="dependency-risk"><strong>Risk</strong>{{ dependency.risk_summary || 'Reviewed risk summary unavailable.' }}</p>
+                        <small>{{ dependency.is_named_counterparty ? 'Named counterparty in reviewed evidence' : 'Category-only disclosure; no named counterparty asserted.' }}</small>
+                      </article>
+                    </section>
                   </div>
                   <div class="empty-state unavailable-state" *ngIf="dependencyView.dependencies.length === 0">No reviewed dependency relationships are available for the selected filters.</div>
                 </article>
