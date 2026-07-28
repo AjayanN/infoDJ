@@ -797,7 +797,7 @@
           <section *ngSwitchCase="'business-model'" class="business-model-layout" aria-labelledby="business-model-heading">
             <div class="panel empty-state" *ngIf="businessModelLoading()" role="status">Loading source-backed business-model map.</div>
             <ng-container *ngIf="businessModel() as modelView">
-              <section class="panel business-model-hero">
+              <section class="business-model-hero model-command">
                 <div>
                   <p class="section-kicker">Business Model Map · {{ modelView.status }}</p>
                   <h2 id="business-model-heading">{{ modelView.company.name }}</h2>
@@ -811,7 +811,7 @@
                 </div>
               </section>
 
-              <section class="panel business-model-controls" aria-label="Business model date controls">
+              <section class="business-model-controls model-toolbar" aria-label="Business model date controls">
                 <label for="business-model-date">Map at date
                   <select id="business-model-date" name="business_model_date" [(ngModel)]="businessModelDate">
                     <option *ngFor="let snapshot of modelView.snapshot_history" [value]="snapshot.effective_date">{{ snapshot.effective_date }} · {{ snapshot.status }}</option>
@@ -833,8 +833,8 @@
                 <button type="button" class="ghost-button" (click)="openCompany(modelView.company.slug)">Back to Company 360</button>
               </section>
 
-              <section class="business-model-map" aria-label="Business model component map">
-                <article class="panel business-model-column" *ngFor="let type of businessModelComponentOrder" [hidden]="businessModelTypeFilter && businessModelTypeFilter !== type">
+              <section class="business-model-map model-canvas-grid" aria-label="Business model component map">
+                <article class="business-model-column" *ngFor="let type of businessModelComponentOrder" [hidden]="businessModelTypeFilter && businessModelTypeFilter !== type">
                   <div class="panel-header">
                     <h3>{{ businessModelComponentLabel(type) }}</h3>
                     <span>{{ modelView.snapshot?.component_groups?.[type]?.length || 0 }}</span>
@@ -848,7 +848,7 @@
                 </article>
               </section>
 
-              <section class="panel" aria-labelledby="relationship-heading">
+              <section class="model-flow-workbench" aria-labelledby="relationship-heading">
                 <div class="panel-header"><div><p class="section-kicker">Value flow</p><h2 id="relationship-heading">How the components connect</h2></div></div>
                 <div class="empty-state" *ngIf="!modelView.snapshot || modelView.snapshot.relationships.length === 0">No reviewed business-model relationships.</div>
                 <div class="value-flow-map" *ngIf="modelView.snapshot && modelView.snapshot.relationships.length > 0" (pointerleave)="clearValueFlowFocus()">

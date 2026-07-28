@@ -3318,3 +3318,144 @@ th {
     flex-direction: column;
   }
 }
+
+/* Business model: keep the flow graph as the primary research instrument. */
+.model-command {
+  background: #182d43;
+  color: #f8fbff;
+  padding: 28px 30px;
+}
+
+.model-command .section-kicker,
+.model-command p,
+.model-command .coverage-summary span,
+.model-command .coverage-summary small {
+  color: #c1d1df;
+}
+
+.model-command .coverage-summary {
+  border-left: 1px solid #4c6378;
+  padding-left: 24px;
+}
+
+.model-command .coverage-summary strong {
+  color: #ffffff;
+}
+
+.model-toolbar {
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(160px, 1fr)) auto auto;
+  padding: 0 0 18px;
+}
+
+.model-canvas-grid {
+  border-bottom: 1px solid var(--line);
+  gap: 0;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.model-canvas-grid .business-model-column {
+  border-left: 1px solid var(--line);
+  padding: 18px;
+}
+
+.model-canvas-grid .business-model-column:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+
+.model-canvas-grid .business-component {
+  background: transparent;
+  border: 0;
+  border-left: 3px solid #4f82aa;
+  border-radius: 0;
+  padding: 8px 10px;
+}
+
+.model-flow-workbench {
+  border-bottom: 1px solid var(--line);
+  padding: 22px 0 28px;
+}
+
+.model-flow-workbench > .panel-header {
+  margin-bottom: 16px;
+}
+
+.model-flow-workbench .value-flow-map {
+  background: #152433;
+  border: 1px solid #39546c;
+  border-radius: 0;
+  box-shadow: none;
+  height: min(680px, 72vh);
+  padding: 20px;
+}
+
+.model-flow-workbench .value-flow-space {
+  min-height: 920px;
+  min-width: 1280px;
+}
+
+.model-flow-workbench .value-flow-node {
+  border-color: #81b4db;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3);
+}
+
+.model-flow-workbench .value-flow-connector {
+  background: #102131;
+  border-color: #5b9bca;
+  box-shadow: none;
+}
+
+@media (max-width: 900px) {
+  .model-toolbar {
+    grid-template-columns: repeat(2, minmax(160px, 1fr));
+  }
+
+  .model-canvas-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .model-canvas-grid .business-model-column:nth-child(odd) {
+    border-left: 0;
+    padding-left: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .model-command {
+    display: grid;
+    gap: 18px;
+    padding: 22px 16px;
+  }
+
+  .model-command .coverage-summary {
+    border-left: 0;
+    border-top: 1px solid #4c6378;
+    padding-left: 0;
+    padding-top: 14px;
+  }
+
+  .model-toolbar,
+  .model-canvas-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .model-toolbar .primary-button,
+  .model-toolbar .ghost-button {
+    width: 100%;
+  }
+
+  .model-canvas-grid .business-model-column,
+  .model-canvas-grid .business-model-column:first-child,
+  .model-canvas-grid .business-model-column:nth-child(odd) {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    padding: 16px 0;
+  }
+
+  .model-flow-workbench .value-flow-map {
+    height: 560px;
+    margin: 0 -16px;
+  }
+}
