@@ -3807,6 +3807,108 @@ th {
   }
 }
 
+/* Capital allocation separates deployment choices from cash context and source facts. */
+.capital-command {
+  background: #293949;
+  color: #f8fbff;
+  padding: 26px 30px;
+}
+
+.capital-command .section-kicker,
+.capital-command p,
+.capital-command .coverage-summary span,
+.capital-command .coverage-summary small {
+  color: #c9d6df;
+}
+
+.capital-command .coverage-summary {
+  border-left: 1px solid #668092;
+  padding-left: 22px;
+}
+
+.capital-toolbar {
+  background: #f0f5f7;
+  flex-wrap: wrap;
+  padding: 16px;
+}
+
+.capital-toolbar label {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.capital-deployment-brief,
+.capital-validation-strip,
+.capital-drilldown-ledger {
+  border-bottom: 1px solid var(--line);
+  padding: 24px 0;
+}
+
+.capital-deployment-brief .account-grid,
+.capital-validation-strip .account-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.capital-deployment-brief .metric {
+  background: #f7fafb;
+  border-radius: 0;
+  border-top: 3px solid #4e89a7;
+}
+
+.capital-flow-workspace {
+  gap: 0;
+}
+
+.capital-flow-workspace > article {
+  border-bottom: 1px solid var(--line);
+  min-width: 0;
+  padding: 22px 24px 22px 0;
+}
+
+.capital-flow-workspace > article + article {
+  border-left: 1px solid var(--line);
+  padding-left: 24px;
+  padding-right: 0;
+}
+
+.capital-allocation-buckets .result-row {
+  border-left: 4px solid #338464;
+  border-top: 0;
+}
+
+.capital-drilldown-ledger .result-row {
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: minmax(220px, 0.6fr) minmax(170px, 0.4fr) minmax(0, 1fr) auto;
+  gap: 12px;
+}
+
+@media (max-width: 760px) {
+  .capital-command {
+    display: grid;
+    gap: 16px;
+    padding: 22px 16px;
+  }
+
+  .capital-command .coverage-summary {
+    border-left: 0;
+    border-top: 1px solid #668092;
+    padding-left: 0;
+    padding-top: 12px;
+  }
+
+  .capital-flow-workspace > article,
+  .capital-flow-workspace > article + article {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    padding: 18px 0;
+  }
+
+  .capital-drilldown-ledger .result-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 760px) {
   .promise-command,
   .milestone-command {
