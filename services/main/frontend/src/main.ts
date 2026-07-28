@@ -126,6 +126,7 @@ type KpiBlockerReason = { key: string; label: string; count: number };
 type KpiPeerBlockerGroup = { company: string; companySlug: string; total: number; reasons: KpiBlockerReason[]; examples: BlockedKpiPeer[]; hiddenCount: number };
 type PromiseBoardLane = { key: string; label: string; description: string; promises: ManagementPromiseResponse['promises'] };
 type CompetitivePeerLane = { label: string; peers: CompetitivePositionResponse['peer_map'] };
+type ProductOfferingFamily = { label: string; offerings: ProductPricingResponse['offerings'] };
 type SourceLensState = { title: string; sources: CompanyProfileSource[] } | null;
 type DashboardSectionKey =
   | 'latest_moves'
@@ -2664,6 +2665,15 @@ class AppComponent {
       lanes.set(label, [...(lanes.get(label) || []), peer]);
     }
     return Array.from(lanes, ([label, lanePeers]) => ({ label, peers: lanePeers }));
+  }
+
+  productOfferingFamilies(offerings: ProductPricingResponse['offerings']): ProductOfferingFamily[] {
+    const families = new Map<string, ProductPricingResponse['offerings']>();
+    for (const offering of offerings) {
+      const label = offering.offering_type_label || 'Other offering';
+      families.set(label, [...(families.get(label) || []), offering]);
+    }
+    return Array.from(families, ([label, familyOfferings]) => ({ label, offerings: familyOfferings }));
   }
 
   setSelectedKpiVariant(groupKey: string, slug: string): void {

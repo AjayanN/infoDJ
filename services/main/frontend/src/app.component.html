@@ -1652,12 +1652,7 @@
 
                 <section class="product-catalogue-board">
                   <div class="panel-header"><div><p class="section-kicker">Catalog</p><h2>Products, plans, features, and families</h2></div></div>
-                  <div class="result-row" *ngFor="let offering of productView.offerings">
-                    <strong>{{ offering.name }} · {{ offering.offering_type_label }}</strong>
-                    <span>{{ offering.availability }} · {{ offering.geography || 'Geography unavailable' }}</span>
-                    <p>{{ offering.description }}</p>
-                    <small>{{ offering.customer_segment || 'Customer segment unavailable' }} · {{ offering.price_count }} reviewed prices</small>
-                  </div>
+                  <div class="product-family-grid" *ngIf="productView.offerings.length > 0"><section *ngFor="let family of productOfferingFamilies(productView.offerings)"><header><h3>{{ family.label }}</h3><span>{{ family.offerings.length }} offerings</span></header><article *ngFor="let offering of family.offerings"><strong>{{ offering.name }}</strong><span>{{ offering.availability }} · {{ offering.geography || 'Geography unavailable' }}</span><p>{{ offering.description }}</p><footer>{{ offering.customer_segment || 'Customer segment unavailable' }} · {{ offering.price_count }} reviewed prices</footer></article></section></div>
                   <div class="empty-state unavailable-state" *ngIf="productView.offerings.length === 0">No reviewed offerings match the selected filters.</div>
                 </section>
 
