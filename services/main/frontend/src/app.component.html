@@ -1403,7 +1403,7 @@
           <section *ngSwitchCase="'capital-allocation'" class="company-profile-layout" aria-labelledby="capital-allocation-heading">
             <div class="panel empty-state" *ngIf="capitalAllocationLoading()" role="status">Loading reviewed capital allocation data.</div>
             <ng-container *ngIf="capitalAllocation() as allocationView">
-              <section class="panel company-profile-hero">
+              <section class="company-profile-hero capital-command">
                 <div>
                   <p class="section-kicker">Capital Allocation Dashboard · {{ allocationView.status }}</p>
                   <h2 id="capital-allocation-heading">{{ allocationView.company.name }}</h2>
@@ -1416,7 +1416,7 @@
                 </div>
               </section>
 
-              <section class="panel company-profile-controls" aria-label="Capital allocation period controls">
+              <section class="company-profile-controls capital-toolbar" aria-label="Capital allocation period controls">
                 <label>Reporting period
                   <select [(ngModel)]="capitalAllocationPeriod">
                     <option *ngFor="let period of allocationView.periods" [value]="period.key">{{ period.fiscal_period }} FY{{ period.fiscal_year }} · ended {{ period.period_end }}</option>
@@ -1428,7 +1428,7 @@
               </section>
 
               <ng-container *ngIf="allocationView.selected_period as period; else noCapitalAllocationPeriod">
-                <section class="panel">
+                <section class="capital-deployment-brief">
                   <div class="panel-header"><div><p class="section-kicker">Resource deployment</p><h2>{{ period.fiscal_period }} FY{{ period.fiscal_year }}</h2></div><span>Ended {{ period.period_end }}</span></div>
                   <p>{{ period.headline }}</p>
                   <p>{{ period.calculation_note }}</p>
@@ -1440,7 +1440,7 @@
                   </div>
                 </section>
 
-                <section class="panel">
+                <section class="capital-validation-strip">
                   <div class="panel-header"><div><p class="section-kicker">Validation context</p><h2>Reported, adjusted, and currency checks</h2></div><span class="status-pill" [class.available]="period.validation_context.currency_conversion_status === 'not_required'">{{ period.validation_context.currency_conversion_status }}</span></div>
                   <div class="account-grid">
                     <div class="metric"><dt>Reported figures</dt><dd>{{ period.validation_context.reported_figure_status }}</dd><small>{{ period.validation_context.reported_figure_label }}</small></div>
@@ -1452,8 +1452,8 @@
                   <p class="formula-note">{{ period.validation_context.calculation_guardrail }}</p>
                 </section>
 
-                <section class="dashboard-two-column">
-                  <article class="panel">
+                <section class="dashboard-two-column capital-flow-workspace">
+                  <article class="capital-allocation-buckets">
                     <div class="panel-header"><div><p class="section-kicker">Allocation mix</p><h2>Deployment by category</h2></div></div>
                     <div class="result-row" *ngFor="let row of period.allocation_mix">
                       <strong>{{ row.category_label }}</strong>
@@ -1461,7 +1461,7 @@
                     </div>
                     <div class="empty-state unavailable-state" *ngIf="period.allocation_mix.length === 0">No reviewed deployment category is available for this period.</div>
                   </article>
-                  <article class="panel">
+                  <article class="capital-context-lines">
                     <div class="panel-header"><div><p class="section-kicker">Context lines</p><h2>Cash-flow and balance context</h2></div></div>
                     <div class="result-row" *ngFor="let item of period.context_items">
                       <strong>{{ item.category_label }}</strong>
@@ -1472,7 +1472,7 @@
                   </article>
                 </section>
 
-                <section class="panel">
+                <section class="capital-drilldown-ledger">
                   <div class="panel-header"><div><p class="section-kicker">Drilldown</p><h2>Source-backed allocation items</h2></div></div>
                   <div class="result-row" *ngFor="let item of period.deployment_items">
                     <strong>{{ item.category_label }} · {{ item.label }}</strong>
