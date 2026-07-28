@@ -78,7 +78,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 - [ ] On node hover, highlight only the selected node and its direct relationships; blur unrelated nodes.
 - [ ] On connector hover, highlight the relationship and both connected nodes.
 - [ ] Remove arrowheads unless the relationship direction is essential and clearly explained.
-- [ ] Replace long relationship cards with a compact "Flow Details" side panel.
+- [x] Replace long relationship cards with a compact "Flow Details" side panel. Selecting a graph node shows its direct connections; selecting a connector shows its endpoints and relationship. Verified with live Netflix data at desktop and mobile widths.
 - [ ] Add a real historical-change timeline that only shows source-backed changes between snapshots.
 - [ ] Replace "Related intelligence" wording with plain links: customer groups, products, revenue sources, pricing changes, supplier dependencies.
 - [ ] Deduplicate evidence sources and move them into the Source Lens Drawer.

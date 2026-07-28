@@ -3527,6 +3527,57 @@ th {
   box-shadow: none;
 }
 
+.value-flow-details {
+  background: rgba(248, 251, 255, 0.98);
+  border-left: 3px solid #64a3d2;
+  box-shadow: 0 12px 28px rgba(4, 17, 29, 0.3);
+  display: grid;
+  gap: 10px;
+  max-width: 280px;
+  margin-left: auto;
+  padding: 14px;
+  position: sticky;
+  right: 18px;
+  top: 18px;
+  z-index: 5;
+}
+
+.value-flow-details-heading {
+  align-items: start;
+  display: flex;
+  justify-content: space-between;
+}
+
+.value-flow-details h3 {
+  color: #182d43;
+  font-size: 15px;
+  margin: 0;
+}
+
+.value-flow-details dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.value-flow-details dl div {
+  display: grid;
+  gap: 2px;
+}
+
+.value-flow-details dt {
+  color: #5d7084;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.value-flow-details dd {
+  color: #263b50;
+  line-height: 1.4;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 900px) {
   .model-toolbar {
     grid-template-columns: repeat(2, minmax(160px, 1fr));
@@ -3577,6 +3628,12 @@ th {
   .model-flow-workbench .value-flow-map {
     height: 560px;
     margin: 0 -16px;
+  }
+
+  .value-flow-details {
+    max-width: 240px;
+    right: 12px;
+    top: 12px;
   }
 }
 
