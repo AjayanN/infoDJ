@@ -1702,7 +1702,7 @@
           <section *ngSwitchCase="'acquisition-lifecycle'" class="company-profile-layout" aria-labelledby="acquisition-lifecycle-heading">
             <div class="loading-panel" *ngIf="acquisitionLifecycleLoading()">Loading acquisition lifecycle...</div>
             <ng-container *ngIf="!acquisitionLifecycleLoading() && acquisitionLifecycle() as acquisitionView">
-              <section class="panel company-hero">
+              <section class="company-hero acquisition-command">
                 <div>
                   <p class="section-kicker">Acquisition Lifecycle Tracker · {{ acquisitionView.status }}</p>
                   <h2 id="acquisition-lifecycle-heading">{{ acquisitionView.company.name }}</h2>
@@ -1716,7 +1716,7 @@
                 </div>
               </section>
 
-              <section class="panel company-profile-controls" aria-label="Acquisition lifecycle controls">
+              <section class="company-profile-controls acquisition-toolbar" aria-label="Acquisition lifecycle controls">
                 <label>Stage
                   <select [(ngModel)]="acquisitionStage">
                     <option value="">All stages</option>
@@ -1742,8 +1742,8 @@
                 </div>
               </section>
 
-              <section class="dashboard-two-column">
-                <article class="panel">
+              <section class="dashboard-two-column acquisition-portfolio-workspace">
+                <article class="acquisition-deal-portfolio">
                   <div class="panel-header"><div><p class="section-kicker">Portfolio</p><h2>Tracked deals</h2></div></div>
                   <div class="result-row" *ngFor="let deal of acquisitionView.deals">
                     <button type="button" class="link-button" (click)="selectAcquisitionDeal(deal.slug)"><strong>{{ deal.target_name }}</strong></button>
@@ -1753,7 +1753,7 @@
                   <div class="empty-state unavailable-state" *ngIf="acquisitionView.deals.length === 0">No reviewed acquisition lifecycle deals are available.</div>
                 </article>
 
-                <article class="panel" *ngIf="acquisitionView.selected_deal as deal">
+                <article class="acquisition-deal-detail" *ngIf="acquisitionView.selected_deal as deal">
                   <div class="panel-header"><div><p class="section-kicker">Selected deal</p><h2>{{ deal.target_name }}</h2></div><span>{{ deal.current_stage_label }}</span></div>
                   <dl class="account-grid">
                     <div class="metric"><dt>Announced</dt><dd>{{ deal.announcement_date || 'Unavailable' }}</dd></div>
@@ -1771,8 +1771,8 @@
                 </article>
               </section>
 
-              <section class="dashboard-two-column" *ngIf="acquisitionView.selected_deal as deal">
-                <article class="panel">
+              <section class="dashboard-two-column acquisition-timeline-workspace" *ngIf="acquisitionView.selected_deal as deal">
+                <article class="acquisition-lifecycle-timeline">
                   <div class="panel-header"><div><p class="section-kicker">Timeline</p><h2>Lifecycle events</h2></div></div>
                   <div class="result-row" *ngFor="let event of deal.stage_events || []">
                     <strong>{{ event.title }}</strong>
