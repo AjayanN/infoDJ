@@ -1119,12 +1119,12 @@
 
               <section class="panel source-gap-panel" *ngIf="kpiView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable KPI evidence</h2></div>
-                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of kpiView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of kpiView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><dl class="gap-details"><div><dt>Why it matters</dt><dd>{{ gap.reason }}</dd></div><div><dt>Likely source</dt><dd>{{ gap.source || 'Source type unavailable' }}</dd></div><div><dt>Refresh status</dt><dd>{{ gap.next_action }}</dd></div></dl></article></div>
               </section>
 
               <section class="panel">
                 <div class="panel-header"><div><p class="section-kicker">Sources and export</p><h2>KPI evidence</h2></div><span>{{ kpiView.export_rows.length }} export-ready rows</span></div>
-                <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of kpiView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                <div class="evidence-lens-action"><p>Inspect the document trail, data provenance, and KPI context without leaving the workbench.</p><button type="button" class="ghost-button" *ngIf="kpiView.evidence.length > 0" (click)="openSourceLens('KPI evidence', kpiView.evidence)">Open source lens</button></div>
               </section>
             </ng-container>
           </section>
@@ -1283,8 +1283,8 @@
                 <ng-template #noSelectedMilestone><article class="panel empty-state unavailable-state">Select a reviewed milestone to inspect its execution history.</article></ng-template>
               </section>
 
-              <section class="panel source-gap-panel" *ngIf="milestoneView.source_gaps.length > 0"><div class="panel-header"><h2>Unavailable milestone evidence</h2></div><div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of milestoneView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div></section>
-              <section class="panel"><div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Milestone evidence</h2></div><span>{{ milestoneView.coverage.source_count }} sources</span></div><div class="evidence-grid"><article class="evidence-card" *ngFor="let source of milestoneView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div></section>
+              <section class="panel source-gap-panel" *ngIf="milestoneView.source_gaps.length > 0"><div class="panel-header"><h2>Unavailable milestone evidence</h2></div><div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of milestoneView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><dl class="gap-details"><div><dt>Why it matters</dt><dd>{{ gap.reason }}</dd></div><div><dt>Likely source</dt><dd>{{ gap.source || 'Source type unavailable' }}</dd></div><div><dt>Refresh status</dt><dd>{{ gap.next_action }}</dd></div></dl></article></div></section>
+              <section class="panel"><div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Milestone evidence</h2></div><span>{{ milestoneView.coverage.source_count }} sources</span></div><div class="evidence-lens-action"><p>Review the filings and source context that support these milestones.</p><button type="button" class="ghost-button" *ngIf="milestoneView.evidence.length > 0" (click)="openSourceLens('Milestone evidence', milestoneView.evidence)">Open source lens</button></div></section>
             </ng-container>
           </section>
 
@@ -1388,14 +1388,14 @@
 
                 <section class="panel">
                   <div class="panel-header"><div><p class="section-kicker">Document set</p><h2>Period evidence</h2></div></div>
-                  <div class="evidence-grid"><article class="evidence-card" *ngFor="let document of period.document_set"><strong>{{ document.document_type }}</strong><span>{{ document.source.title }}</span><a [href]="document.source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                  <div class="evidence-lens-action"><p>Review the filings and document context used in this period brief.</p><button type="button" class="ghost-button" *ngIf="period.document_set.length > 0" (click)="openEarningsSourceLens(period.document_set)">Open source lens</button></div>
                 </section>
               </ng-container>
               <ng-template #noEarningsPeriod><section class="panel empty-state unavailable-state">No reviewed earnings period is available.</section></ng-template>
 
               <section class="panel source-gap-panel" *ngIf="earningsView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable earnings evidence</h2></div>
-                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of earningsView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of earningsView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><dl class="gap-details"><div><dt>Why it matters</dt><dd>{{ gap.reason }}</dd></div><div><dt>Likely source</dt><dd>{{ gap.source || 'Source type unavailable' }}</dd></div><div><dt>Refresh status</dt><dd>{{ gap.next_action }}</dd></div></dl></article></div>
               </section>
             </ng-container>
           </section>
@@ -1498,14 +1498,14 @@
 
                 <section class="panel">
                   <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Capital allocation evidence</h2></div><span>{{ allocationView.evidence.length }} sources</span></div>
-                  <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of allocationView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                  <div class="evidence-lens-action"><p>Review the filings and source context behind these capital decisions.</p><button type="button" class="ghost-button" *ngIf="allocationView.evidence.length > 0" (click)="openSourceLens('Capital allocation evidence', allocationView.evidence)">Open source lens</button></div>
                 </section>
               </ng-container>
               <ng-template #noCapitalAllocationPeriod><section class="panel empty-state unavailable-state">No reviewed capital allocation period is available.</section></ng-template>
 
               <section class="panel source-gap-panel" *ngIf="allocationView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable capital allocation data</h2></div>
-                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of allocationView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of allocationView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><dl class="gap-details"><div><dt>Why it matters</dt><dd>{{ gap.reason }}</dd></div><div><dt>Likely source</dt><dd>{{ gap.source || 'Source type unavailable' }}</dd></div><div><dt>Refresh status</dt><dd>{{ gap.next_action }}</dd></div></dl></article></div>
               </section>
             </ng-container>
           </section>
@@ -1595,14 +1595,14 @@
 
                 <section class="panel">
                   <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Competitive evidence</h2></div><span>{{ competitiveView.evidence.length }} sources</span></div>
-                  <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of competitiveView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                  <div class="evidence-lens-action"><p>Review the source record behind this competitive assessment.</p><button type="button" class="ghost-button" *ngIf="competitiveView.evidence.length > 0" (click)="openSourceLens('Competitive evidence', competitiveView.evidence)">Open source lens</button></div>
                 </section>
               </ng-container>
               <ng-template #noCompetitiveSnapshot><section class="panel empty-state unavailable-state">No reviewed competitive position snapshot is available.</section></ng-template>
 
               <section class="panel source-gap-panel" *ngIf="competitiveView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable competitive data</h2></div>
-                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of competitiveView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of competitiveView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><dl class="gap-details"><div><dt>Why it matters</dt><dd>{{ gap.reason }}</dd></div><div><dt>Likely source</dt><dd>{{ gap.source || 'Source type unavailable' }}</dd></div><div><dt>Refresh status</dt><dd>{{ gap.next_action }}</dd></div></dl></article></div>
               </section>
             </ng-container>
           </section>
@@ -1686,7 +1686,7 @@
                   </article>
                   <article class="panel">
                     <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Product evidence</h2></div><span>{{ productView.evidence.length }} sources</span></div>
-                    <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of productView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                    <div class="evidence-lens-action"><p>Review the documents supporting this product record.</p><button type="button" class="ghost-button" *ngIf="productView.evidence.length > 0" (click)="openSourceLens('Product evidence', productView.evidence)">Open source lens</button></div>
                   </article>
                 </section>
               </ng-container>
@@ -1694,7 +1694,7 @@
 
               <section class="panel source-gap-panel" *ngIf="productView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable product and pricing data</h2></div>
-                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of productView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of productView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><dl class="gap-details"><div><dt>Why it matters</dt><dd>{{ gap.reason }}</dd></div><div><dt>Likely source</dt><dd>{{ gap.source || 'Source type unavailable' }}</dd></div><div><dt>Refresh status</dt><dd>{{ gap.next_action }}</dd></div></dl></article></div>
               </section>
             </ng-container>
           </section>
@@ -1784,13 +1784,13 @@
                 </article>
                 <article class="panel">
                   <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Deal evidence</h2></div><span>{{ acquisitionView.evidence.length }} sources</span></div>
-                  <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of acquisitionView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                  <div class="evidence-lens-action"><p>Review the source record behind the deal history.</p><button type="button" class="ghost-button" *ngIf="acquisitionView.evidence.length > 0" (click)="openSourceLens('Deal evidence', acquisitionView.evidence)">Open source lens</button></div>
                 </article>
               </section>
 
               <section class="panel source-gap-panel" *ngIf="acquisitionView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable acquisition data</h2></div>
-                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of acquisitionView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of acquisitionView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><dl class="gap-details"><div><dt>Why it matters</dt><dd>{{ gap.reason }}</dd></div><div><dt>Likely source</dt><dd>{{ gap.source || 'Source type unavailable' }}</dd></div><div><dt>Refresh status</dt><dd>{{ gap.next_action }}</dd></div></dl></article></div>
               </section>
             </ng-container>
           </section>
@@ -1873,13 +1873,13 @@
                 </article>
                 <article class="panel">
                   <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Dependency evidence</h2></div><span>{{ dependencyView.evidence.length }} sources</span></div>
-                  <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of dependencyView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                  <div class="evidence-lens-action"><p>Review the evidence underlying the dependency assessment.</p><button type="button" class="ghost-button" *ngIf="dependencyView.evidence.length > 0" (click)="openSourceLens('Dependency evidence', dependencyView.evidence)">Open source lens</button></div>
                 </article>
               </section>
 
               <section class="panel source-gap-panel" *ngIf="dependencyView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable dependency data</h2></div>
-                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of dependencyView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of dependencyView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><dl class="gap-details"><div><dt>Why it matters</dt><dd>{{ gap.reason }}</dd></div><div><dt>Likely source</dt><dd>{{ gap.source || 'Source type unavailable' }}</dd></div><div><dt>Refresh status</dt><dd>{{ gap.next_action }}</dd></div></dl></article></div>
               </section>
             </ng-container>
           </section>
@@ -1968,7 +1968,7 @@
                 </article>
                 <article class="panel">
                   <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Expansion evidence</h2></div><span>{{ geoView.evidence.length }} sources</span></div>
-                  <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of geoView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                  <div class="evidence-lens-action"><p>Review the filings and sources behind this geographic expansion view.</p><button type="button" class="ghost-button" *ngIf="geoView.evidence.length > 0" (click)="openSourceLens('Expansion evidence', geoView.evidence)">Open source lens</button></div>
                 </article>
               </section>
 
@@ -1986,7 +1986,7 @@
 
               <section class="panel source-gap-panel" *ngIf="geoView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable expansion data</h2></div>
-                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of geoView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of geoView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><dl class="gap-details"><div><dt>Why it matters</dt><dd>{{ gap.reason }}</dd></div><div><dt>Likely source</dt><dd>{{ gap.source || 'Source type unavailable' }}</dd></div><div><dt>Refresh status</dt><dd>{{ gap.next_action }}</dd></div></dl></article></div>
               </section>
             </ng-container>
           </section>
@@ -2069,13 +2069,13 @@
                 </article>
                 <article class="panel leadership-evidence-register">
                   <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Leadership evidence</h2></div><span>{{ leaderView.evidence.length }} sources</span></div>
-                  <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of leaderView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                  <div class="evidence-lens-action"><p>Review the source record behind the leadership analysis.</p><button type="button" class="ghost-button" *ngIf="leaderView.evidence.length > 0" (click)="openSourceLens('Leadership evidence', leaderView.evidence)">Open source lens</button></div>
                 </article>
               </section>
 
               <section class="panel source-gap-panel" *ngIf="leaderView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable leadership data</h2></div>
-                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of leaderView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of leaderView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><dl class="gap-details"><div><dt>Why it matters</dt><dd>{{ gap.reason }}</dd></div><div><dt>Likely source</dt><dd>{{ gap.source || 'Source type unavailable' }}</dd></div><div><dt>Refresh status</dt><dd>{{ gap.next_action }}</dd></div></dl></article></div>
               </section>
             </ng-container>
           </section>
@@ -2162,13 +2162,13 @@
                 </article>
                 <article class="panel ownership-evidence-desk">
                   <div class="panel-header"><div><p class="section-kicker">Evidence desk</p><h2>Ownership evidence</h2></div><span>{{ ownerView.evidence.length }} sources</span></div>
-                  <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of ownerView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                  <div class="evidence-lens-action"><p>Review filings and context behind the ownership record.</p><button type="button" class="ghost-button" *ngIf="ownerView.evidence.length > 0" (click)="openSourceLens('Ownership evidence', ownerView.evidence)">Open source lens</button></div>
                 </article>
               </section>
 
               <section class="panel source-gap-panel" *ngIf="ownerView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable ownership data</h2></div>
-                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of ownerView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of ownerView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><dl class="gap-details"><div><dt>Why it matters</dt><dd>{{ gap.reason }}</dd></div><div><dt>Likely source</dt><dd>{{ gap.source || 'Source type unavailable' }}</dd></div><div><dt>Refresh status</dt><dd>{{ gap.next_action }}</dd></div></dl></article></div>
               </section>
             </ng-container>
           </section>
@@ -2260,13 +2260,13 @@
                 <article class="panel valuation-evidence-desk">
                   <div class="panel-header"><div><p class="section-kicker">Evidence desk</p><h2>Method and source record</h2></div><span>{{ valuationView.evidence.length }} sources</span></div>
                   <p>{{ valuationView.snapshot?.methodology }}</p>
-                  <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of valuationView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                  <div class="evidence-lens-action"><p>Review the inputs, filings, and source context behind this valuation frame.</p><button type="button" class="ghost-button" *ngIf="valuationView.evidence.length > 0" (click)="openSourceLens('Valuation evidence', valuationView.evidence)">Open source lens</button></div>
                 </article>
               </section>
 
               <section class="panel source-gap-panel" *ngIf="valuationView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable valuation data</h2></div>
-                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of valuationView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of valuationView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><dl class="gap-details"><div><dt>Why it matters</dt><dd>{{ gap.reason }}</dd></div><div><dt>Likely source</dt><dd>{{ gap.source || 'Source type unavailable' }}</dd></div><div><dt>Refresh status</dt><dd>{{ gap.next_action }}</dd></div></dl></article></div>
               </section>
             </ng-container>
           </section>
@@ -2363,13 +2363,13 @@
                 <article class="panel regulatory-evidence-register">
                   <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Regulatory evidence</h2></div><span>{{ regulatoryView.evidence.length }} sources</span></div>
                   <p>{{ regulatoryView.snapshot?.methodology }}</p>
-                  <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of regulatoryView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                  <div class="evidence-lens-action"><p>Review the filings, dates, and source context behind this calendar.</p><button type="button" class="ghost-button" *ngIf="regulatoryView.evidence.length > 0" (click)="openSourceLens('Regulatory evidence', regulatoryView.evidence)">Open source lens</button></div>
                 </article>
               </section>
 
               <section class="panel source-gap-panel" *ngIf="regulatoryView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable regulatory data</h2></div>
-                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of regulatoryView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of regulatoryView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><dl class="gap-details"><div><dt>Why it matters</dt><dd>{{ gap.reason }}</dd></div><div><dt>Likely source</dt><dd>{{ gap.source || 'Source type unavailable' }}</dd></div><div><dt>Refresh status</dt><dd>{{ gap.next_action }}</dd></div></dl></article></div>
               </section>
             </ng-container>
           </section>
@@ -2472,13 +2472,13 @@
                 </article>
                 <article class="panel theme-evidence-desk">
                   <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Theme evidence</h2></div><span>{{ themeView.evidence.length }} sources</span></div>
-                  <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of themeView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                  <div class="evidence-lens-action"><p>Review the record used to support this thematic view.</p><button type="button" class="ghost-button" *ngIf="themeView.evidence.length > 0" (click)="openSourceLens('Theme evidence', themeView.evidence)">Open source lens</button></div>
                 </article>
               </section>
 
               <section class="panel source-gap-panel" *ngIf="themeView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable theme data</h2></div>
-                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of themeView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of themeView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><dl class="gap-details"><div><dt>Why it matters</dt><dd>{{ gap.reason }}</dd></div><div><dt>Likely source</dt><dd>{{ gap.source || 'Source type unavailable' }}</dd></div><div><dt>Refresh status</dt><dd>{{ gap.next_action }}</dd></div></dl></article></div>
               </section>
             </ng-container>
           </section>
@@ -2582,13 +2582,13 @@
                 </article>
                 <article class="panel macro-evidence-desk">
                   <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Macro evidence</h2></div><span>{{ macroView.evidence.length }} sources</span></div>
-                  <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of macroView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
+                  <div class="evidence-lens-action"><p>Review the data and document record behind this macro view.</p><button type="button" class="ghost-button" *ngIf="macroView.evidence.length > 0" (click)="openSourceLens('Macro evidence', macroView.evidence)">Open source lens</button></div>
                 </article>
               </section>
 
               <section class="panel source-gap-panel" *ngIf="macroView.source_gaps.length > 0">
                 <div class="panel-header"><h2>Unavailable macro data</h2></div>
-                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of macroView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><small>{{ gap.next_action }}</small></article></div>
+                <div class="source-gap-grid"><article class="source-gap" *ngFor="let gap of macroView.source_gaps"><strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p><dl class="gap-details"><div><dt>Why it matters</dt><dd>{{ gap.reason }}</dd></div><div><dt>Likely source</dt><dd>{{ gap.source || 'Source type unavailable' }}</dd></div><div><dt>Refresh status</dt><dd>{{ gap.next_action }}</dd></div></dl></article></div>
               </section>
             </ng-container>
           </section>
@@ -3616,7 +3616,7 @@
           <p class="source-lens-summary">{{ lens.sources.length }} unique source{{ lens.sources.length === 1 ? '' : 's' }} used in this view.</p>
           <div class="source-lens-list">
             <article class="source-lens-record" *ngFor="let source of lens.sources">
-              <div><h3>{{ source.title }}</h3><p>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }} · {{ source.source_api }}</p></div>
+              <div><h3>{{ source.title }}</h3><p>{{ source.publisher || 'Publisher unavailable' }} · {{ source.published_date || 'Date unavailable' }}</p></div>
               <p *ngIf="source.snippet">{{ source.snippet }}</p>
               <dl class="source-lens-use"><div><dt>Why it was used</dt><dd>{{ sourceLensWhyUsed(source) }}</dd></div></dl>
               <a [href]="source.url" target="_blank" rel="noopener">Open source</a>
