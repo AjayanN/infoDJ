@@ -1798,7 +1798,7 @@
           <section *ngSwitchCase="'customer-supplier-dependency'" class="company-profile-layout" aria-labelledby="dependency-heading">
             <div class="loading-panel" *ngIf="customerSupplierDependencyLoading()">Loading dependency map...</div>
             <ng-container *ngIf="!customerSupplierDependencyLoading() && customerSupplierDependency() as dependencyView">
-              <section class="panel company-hero">
+              <section class="company-hero dependency-command">
                 <div>
                   <p class="section-kicker">Customer and Supplier Dependency · {{ dependencyView.status }}</p>
                   <h2 id="dependency-heading">{{ dependencyView.company.name }}</h2>
@@ -1812,7 +1812,7 @@
                 </div>
               </section>
 
-              <section class="panel company-profile-controls" aria-label="Customer and supplier dependency controls">
+              <section class="company-profile-controls dependency-toolbar" aria-label="Customer and supplier dependency controls">
                 <label>Snapshot
                   <select [(ngModel)]="dependencyDate">
                     <option value="">Latest reviewed snapshot</option>
@@ -1840,8 +1840,8 @@
                 </div>
               </section>
 
-              <section class="dashboard-two-column">
-                <article class="panel">
+              <section class="dashboard-two-column dependency-map-workspace">
+                <article class="dependency-relationship-map">
                   <div class="panel-header"><div><p class="section-kicker">Dependency map</p><h2>Relationships</h2></div></div>
                   <div class="result-row" *ngFor="let dependency of dependencyView.dependencies">
                     <strong>{{ dependency.counterparty_name }}</strong>
@@ -1853,7 +1853,7 @@
                   <div class="empty-state unavailable-state" *ngIf="dependencyView.dependencies.length === 0">No reviewed dependency relationships are available for the selected filters.</div>
                 </article>
 
-                <article class="panel">
+                <article class="dependency-contract-risk">
                   <div class="panel-header"><div><p class="section-kicker">Contract risk</p><h2>Terms and concentration</h2></div><span>{{ dependencyView.contract_terms.length }} terms</span></div>
                   <div class="result-row" *ngFor="let term of dependencyView.contract_terms">
                     <strong>{{ term.counterparty_name }}</strong>
@@ -1865,8 +1865,8 @@
                 </article>
               </section>
 
-              <section class="dashboard-two-column">
-                <article class="panel">
+              <section class="dashboard-two-column dependency-guardrail-workspace">
+                <article class="dependency-disclosure-guardrail">
                   <div class="panel-header"><div><p class="section-kicker">Methodology</p><h2>Disclosure guardrails</h2></div></div>
                   <p>{{ dependencyView.snapshot?.methodology }}</p>
                   <p>Absence of a disclosure is not treated as absence of dependency. Ambiguous customer or supplier descriptions remain category-only until reviewed sources name the counterparty.</p>

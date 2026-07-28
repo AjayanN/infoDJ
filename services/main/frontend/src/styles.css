@@ -4041,6 +4041,18 @@ th {
 .acquisition-lifecycle-timeline .result-row { border-left: 3px solid #3c8d72; border-top: 0; }
 @media (max-width: 760px) { .acquisition-command { display: grid; gap: 16px; padding: 22px 16px; } .acquisition-portfolio-workspace > article, .acquisition-portfolio-workspace > article + article, .acquisition-timeline-workspace > article, .acquisition-timeline-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
 
+/* Dependencies distinguish relationships, contract terms, and disclosure limits. */
+.dependency-command { background: #294652; color: #f8fbff; padding: 26px 30px; }
+.dependency-command .section-kicker, .dependency-command p, .dependency-command .profile-score-card span, .dependency-command .profile-score-card small { color: #cbe0e0; }
+.dependency-toolbar { background: #eff5f6; flex-wrap: wrap; padding: 16px; }
+.dependency-toolbar label { flex: 1 1 200px; min-width: 0; }
+.dependency-map-workspace, .dependency-guardrail-workspace { gap: 0; }
+.dependency-map-workspace > article, .dependency-guardrail-workspace > article { border-bottom: 1px solid var(--line); min-width: 0; padding: 22px 24px 22px 0; }
+.dependency-map-workspace > article + article, .dependency-guardrail-workspace > article + article { border-left: 1px solid var(--line); padding-left: 24px; padding-right: 0; }
+.dependency-relationship-map .result-row { border-left: 3px solid #438e92; border-top: 0; }
+.dependency-contract-risk .result-row { border-left: 3px solid #b47c4c; border-top: 0; }
+@media (max-width: 760px) { .dependency-command { display: grid; gap: 16px; padding: 22px 16px; } .dependency-map-workspace > article, .dependency-map-workspace > article + article, .dependency-guardrail-workspace > article, .dependency-guardrail-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
+
 @media (max-width: 760px) {
   .promise-command,
   .milestone-command {
