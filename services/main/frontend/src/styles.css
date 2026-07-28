@@ -4170,6 +4170,25 @@ th {
 .failure-link-register .result-row { border-left: 3px solid #6d8495; border-top: 0; }
 @media (max-width: 760px) { .failure-command, .failure-selected-command { display: grid; gap: 16px; padding: 22px 16px; } .failure-command .coverage-summary, .failure-selected-command .coverage-summary { border-left: 0; border-top: 1px solid #957b65; flex-basis: auto; padding: 12px 0 0; } .failure-library-workspace > article, .failure-library-workspace > article + article, .failure-context-workspace > article, .failure-context-workspace > article + article, .failure-evidence-workspace > article, .failure-evidence-workspace > article + article, .failure-review-workspace > article, .failure-review-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
 
+/* Scenarios are parallel assumption boards, never presented as predictions. */
+.scenario-command, .scenario-selected-command { align-items: start; background: #284854; color: #f8fdfe; display: flex; gap: 24px; justify-content: space-between; padding: 26px 30px; }
+.scenario-command .section-kicker, .scenario-command p, .scenario-command .coverage-summary span, .scenario-command .coverage-summary small, .scenario-selected-command .section-kicker, .scenario-selected-command p, .scenario-selected-command .coverage-summary span, .scenario-selected-command .coverage-summary small { color: #d0e5e9; }
+.scenario-command .coverage-summary, .scenario-selected-command .coverage-summary { background: transparent; border: 0; border-left: 1px solid #6d929a; color: #f8fdfe; flex: 0 0 225px; padding: 4px 0 4px 22px; }
+.scenario-command .coverage-summary strong, .scenario-selected-command .coverage-summary strong { color: #ffffff; }
+.scenario-toolbar { background: #eff7f7; display: flex; flex-wrap: wrap; gap: 14px; padding: 16px; }
+.scenario-toolbar label { flex: 1 1 210px; min-width: 0; }
+.scenario-intake-workspace, .scenario-case-workspace, .scenario-monitor-workspace, .scenario-review-workspace { gap: 0; }
+.scenario-intake-workspace > article, .scenario-case-workspace > article, .scenario-monitor-workspace > article, .scenario-review-workspace > article { border-bottom: 1px solid var(--line); min-width: 0; padding: 22px 24px 22px 0; }
+.scenario-intake-workspace > article + article, .scenario-case-workspace > article + article, .scenario-monitor-workspace > article + article, .scenario-review-workspace > article + article { border-left: 1px solid var(--line); padding-left: 24px; padding-right: 0; }
+.scenario-set-intake, .scenario-assumption-intake { background: #f7fbfb; }
+.scenario-set-register .result-row { border-left: 3px solid #4f8992; border-top: 0; cursor: pointer; }
+.scenario-case-board .result-row { border-left: 4px solid #4f8992; border-top: 0; }
+.scenario-difference-board .result-row { border-left: 3px solid #9d7657; border-top: 0; }
+.scenario-indicator-board .result-row { border-left: 3px solid #5b8876; border-top: 0; }
+.scenario-actual-board .result-row { border-left: 3px solid #6c7fa4; border-top: 0; }
+.scenario-revision-trail .result-row { border-left: 3px solid #9d7657; border-top: 0; }
+@media (max-width: 760px) { .scenario-command, .scenario-selected-command { display: grid; gap: 16px; padding: 22px 16px; } .scenario-command .coverage-summary, .scenario-selected-command .coverage-summary { border-left: 0; border-top: 1px solid #6d929a; flex-basis: auto; padding: 12px 0 0; } .scenario-intake-workspace > article, .scenario-intake-workspace > article + article, .scenario-case-workspace > article, .scenario-case-workspace > article + article, .scenario-monitor-workspace > article, .scenario-monitor-workspace > article + article, .scenario-review-workspace > article, .scenario-review-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
+
 /* Ownership is read as a point-in-time ledger with a separate insider activity trail. */
 .ownership-command { background: #323c4d; color: #f8fbff; padding: 26px 30px; }
 .ownership-command .section-kicker, .ownership-command p, .ownership-command .profile-score-card span, .ownership-command .profile-score-card small { color: #d2dbe7; }

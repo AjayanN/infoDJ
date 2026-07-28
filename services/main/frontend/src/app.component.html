@@ -2912,7 +2912,7 @@
           <section *ngSwitchCase="'scenarios'" class="company-profile-layout" aria-labelledby="scenario-heading">
             <div class="loading-panel" *ngIf="scenarioLoading()">Loading scenarios...</div>
             <ng-container *ngIf="!scenarioLoading()">
-              <section class="panel hero-card">
+              <section class="panel hero-card scenario-command">
                 <div>
                   <p class="section-kicker">Scenario Explorer</p>
                   <h2 id="scenario-heading">Best, base, and worst case assumption workspace</h2>
@@ -2925,7 +2925,7 @@
                 </div>
               </section>
 
-              <section class="panel company-profile-controls" aria-label="Scenario filters">
+              <section class="panel company-profile-controls scenario-toolbar" aria-label="Scenario filters">
                 <label>Company <input name="scenario_company_filter" [(ngModel)]="scenarioCompanyFilter" placeholder="company slug" /></label>
                 <label>Status
                   <select name="scenario_status_filter" [(ngModel)]="scenarioStatusFilter">
@@ -2938,8 +2938,8 @@
                 </div>
               </section>
 
-              <section class="dashboard-two-column">
-                <article class="panel">
+              <section class="dashboard-two-column scenario-intake-workspace">
+                <article class="panel scenario-set-intake">
                   <div class="panel-header"><div><p class="section-kicker">Create</p><h2>Scenario set</h2></div></div>
                   <form class="auth-form" (ngSubmit)="createScenario()">
                     <label>Title <input name="scenario_title" [(ngModel)]="scenarioTitle" required /></label>
@@ -2951,7 +2951,7 @@
                     <button type="submit" class="primary-button">Create scenarios</button>
                   </form>
                 </article>
-                <article class="panel">
+                <article class="panel scenario-set-register">
                   <div class="panel-header"><div><p class="section-kicker">Workspace</p><h2>Scenario sets</h2></div><span>{{ scenarios()?.scenario_sets?.length || 0 }} shown</span></div>
                   <div class="result-row" *ngFor="let scenario of scenarios()?.scenario_sets || []" (click)="selectScenario(scenario.id)" role="button" tabindex="0">
                     <strong>{{ scenario.title }}</strong>
@@ -2964,7 +2964,7 @@
               </section>
 
               <ng-container *ngIf="selectedScenario() as scenario">
-                <section class="panel hero-card">
+                <section class="panel hero-card scenario-selected-command">
                   <div>
                     <p class="section-kicker">Selected scenario · {{ scenario.status_label }}</p>
                     <h2>{{ scenario.title }}</h2>
@@ -2978,8 +2978,8 @@
                   </div>
                 </section>
 
-                <section class="dashboard-two-column">
-                  <article class="panel">
+                <section class="dashboard-two-column scenario-case-workspace">
+                  <article class="panel scenario-case-board">
                     <div class="panel-header"><div><p class="section-kicker">Cases</p><h2>Best, base, worst</h2></div></div>
                     <div class="result-row" *ngFor="let caseRow of scenario.cases || []">
                       <strong>{{ caseRow.kind_label }} · {{ caseRow.title }}</strong>
@@ -2988,7 +2988,7 @@
                       <small>{{ caseRow.assumptions.length }} assumptions · {{ caseRow.qualitative_outcome }}</small>
                     </div>
                   </article>
-                  <article class="panel">
+                  <article class="panel scenario-assumption-intake">
                     <div class="panel-header"><div><p class="section-kicker">Add</p><h2>Assumption</h2></div></div>
                     <form class="auth-form" (ngSubmit)="addScenarioAssumption()">
                       <label>Case <select name="scenario_case_kind" [(ngModel)]="scenarioCaseKind"><option value="BEST">Best</option><option value="BASE">Base</option><option value="WORST">Worst</option></select></label>
@@ -3003,8 +3003,8 @@
                   </article>
                 </section>
 
-                <section class="dashboard-two-column">
-                  <article class="panel">
+                <section class="dashboard-two-column scenario-monitor-workspace">
+                  <article class="panel scenario-difference-board">
                     <div class="panel-header"><div><p class="section-kicker">Differences</p><h2>Assumptions that vary</h2></div></div>
                     <div class="result-row" *ngFor="let diff of scenario.differences || []">
                       <strong>{{ diff.driver_label }}</strong>
@@ -3015,7 +3015,7 @@
                     </div>
                     <div class="empty-state unavailable-state" *ngIf="(scenario.differences?.length || 0) === 0">No differing assumptions yet.</div>
                   </article>
-                  <article class="panel">
+                  <article class="panel scenario-indicator-board">
                     <div class="panel-header"><div><p class="section-kicker">Monitoring</p><h2>Indicators</h2></div></div>
                     <form class="auth-form" (ngSubmit)="addScenarioIndicator()">
                       <label>Name <input name="scenario_indicator_name" [(ngModel)]="scenarioIndicatorName" required /></label>
@@ -3028,8 +3028,8 @@
                   </article>
                 </section>
 
-                <section class="dashboard-two-column">
-                  <article class="panel">
+                <section class="dashboard-two-column scenario-review-workspace">
+                  <article class="panel scenario-actual-board">
                     <div class="panel-header"><div><p class="section-kicker">Actuals</p><h2>Compare after horizon</h2></div></div>
                     <form class="auth-form" (ngSubmit)="addScenarioActual()">
                       <label>Date <input name="scenario_actual_date" [(ngModel)]="scenarioActualDate" type="date" required /></label>
@@ -3040,7 +3040,7 @@
                     </form>
                     <div class="result-row" *ngFor="let actual of scenario.actual_results || []"><strong>{{ actual.metric_label }}</strong><span>{{ actual.result_date }} · {{ actual.actual_value }}</span><p>{{ actual.comparison_note }}</p></div>
                   </article>
-                  <article class="panel">
+                  <article class="panel scenario-revision-trail">
                     <div class="panel-header"><div><p class="section-kicker">Status</p><h2>Scenario revision</h2></div></div>
                     <div class="profile-control-actions">
                       <button type="button" class="ghost-button" (click)="updateScenarioStatus('REVIEWING')">Mark reviewing</button>
