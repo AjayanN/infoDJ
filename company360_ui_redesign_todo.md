@@ -64,9 +64,9 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 
 - [ ] Redesign the hero into an executive dossier: summary, business identity, coverage score, latest reviewed date, and key source freshness.
 - [ ] Replace flat section cards with grouped profile blocks: What it sells, Who it serves, How it earns, Where it operates, Who runs it, Who it competes with.
-- [ ] Add a "Business at a glance" visual using chips for products, customer groups, revenue sources, geographies, leadership, and competitors.
+- [x] Add a "Business at a glance" visual using chips for products, customer groups, revenue sources, geographies, leadership, and competitors. Verified with live Netflix data at desktop and mobile widths.
 - [ ] Add a "What changed recently" strip linking to latest moves, earnings, milestones, and risk signals.
-- [ ] Add a "Missing profile evidence" area using the shared Evidence Gap Card System.
+- [x] Add a "Missing profile evidence" area using the shared Evidence Gap Card System. It now sits in the Company Dossier briefing rather than in a separate activity-rail block.
 - [ ] Acceptance: a user should understand the company in under one minute without opening any detail page.
 
 ## 2. Business Model Map
