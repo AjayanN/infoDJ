@@ -810,49 +810,10 @@
                 <aside class="research-activity" aria-label="Recent company evidence">
                   <section><div class="activity-heading"><p class="section-kicker">Recent evidence</p><button type="button" class="ghost-button" (click)="openCompanyDashboard('latest-moves')">View all</button></div><h2>Changes to monitor</h2><div class="activity-empty" *ngIf="companyView.highlights.latest_events.length === 0">No eligible recent events.</div><article *ngFor="let event of companyView.highlights.latest_events"><span>{{ event.event_date || 'Date unavailable' }}</span><h3>{{ event.event_type }}</h3><p>{{ event.actual_change || event.source_claim }}</p></article></section>
                   <section><div class="activity-heading"><p class="section-kicker">Strategic turns</p><button type="button" class="ghost-button" (click)="openStrategyMilestones(companyView.company.slug)">Milestones</button></div><article *ngFor="let turn of companyView.highlights.latest_turns"><span>{{ turn.start_date || 'Date unavailable' }}</span><h3>{{ turn.title }}</h3><p>{{ turn.summary || turn.decision || turn.outcome }}</p></article><div class="activity-empty" *ngIf="companyView.highlights.latest_turns.length === 0">No reviewed strategic turns.</div></section>
+                  <section *ngIf="financialBriefFacts(companyView).length > 0"><p class="section-kicker">Financial context</p><h2>Latest reported facts</h2><article *ngFor="let fact of financialBriefFacts(companyView)"><span>{{ fact.fy || 'Period unavailable' }} {{ fact.fp }} · filed {{ fact.filed || 'date unavailable' }}</span><h3>{{ fact.label || fact.concept }}</h3><p><strong>{{ fact.value | number }} {{ fact.unit }}</strong></p></article></section>
+                  <section *ngIf="companyView.changes.length > 0 || companyView.source_gaps.length > 0"><p class="section-kicker">Coverage notes</p><article *ngFor="let change of companyView.changes.slice(0, 2)"><span>{{ change.previous_effective_date }} to {{ change.current_effective_date }}</span><h3>{{ profileSectionLabel(change.section) }} changed</h3></article><article *ngFor="let gap of companyView.source_gaps.slice(0, 2)"><span>{{ gap.source || 'Source type unavailable' }}</span><h3>{{ gap.label || gap.key }}</h3><p>{{ gap.reason }}</p></article></section>
                   <section class="research-evidence-callout"><p class="section-kicker">Evidence</p><strong>{{ companyView.coverage.source_count }} source records</strong><p>Open the source lens to inspect the documents behind this brief.</p><button type="button" class="ghost-button" *ngIf="companyView.evidence.length > 0" (click)="openSourceLens('Company evidence', companyView.evidence)">Open source lens</button></section>
                 </aside>
-              </section>
-
-              <section class="panel" aria-labelledby="financial-context-heading">
-                <div class="panel-header"><div><p class="section-kicker">Reported facts</p><h2 id="financial-context-heading">Latest financial context</h2></div></div>
-                <div class="metric-grid" *ngIf="companyView.highlights.financial_facts.length > 0; else noFinancialContext">
-                  <dl class="metric" *ngFor="let fact of companyView.highlights.financial_facts">
-                    <dt>{{ fact.label || fact.concept }}</dt><dd>{{ fact.value | number }} {{ fact.unit }}</dd>
-                    <small>{{ fact.fy || 'Period unavailable' }} {{ fact.fp }} · filed {{ fact.filed || 'date unavailable' }}</small>
-                  </dl>
-                </div>
-                <ng-template #noFinancialContext><div class="empty-state unavailable-state">No source-backed financial facts are available.</div></ng-template>
-              </section>
-
-              <section class="panel" *ngIf="companyView.changes.length > 0 || companyView.conflicts.length > 0" aria-labelledby="profile-change-heading">
-                <div class="panel-header"><div><p class="section-kicker">History and review</p><h2 id="profile-change-heading">Profile changes and conflicts</h2></div></div>
-                <div class="result-list">
-                  <article class="result-row" *ngFor="let change of companyView.changes">
-                    <strong>{{ profileSectionLabel(change.section) }} changed</strong>
-                    <span>{{ change.previous_effective_date }} to {{ change.current_effective_date }}</span>
-                  </article>
-                  <article class="result-row conflict-row" *ngFor="let conflict of companyView.conflicts">
-                    <strong>Conflicting profile evidence needs review</strong>
-                    <span>{{ conflict.effective_date }} · {{ conflict.differing_sections.join(', ') }}</span>
-                  </article>
-                </div>
-              </section>
-
-              <section class="panel source-gap-panel dossier-gap-panel" *ngIf="companyView.source_gaps.length > 0" aria-labelledby="company-gap-heading">
-                <div class="panel-header"><div><p class="section-kicker">Coverage gaps</p><h2 id="company-gap-heading">Missing profile evidence</h2></div></div>
-                <div class="source-gap-grid">
-                  <article class="source-gap" *ngFor="let gap of companyView.source_gaps">
-                    <strong>{{ gap.label || gap.key }}</strong><p>{{ gap.reason }}</p>
-                    <dl class="gap-details"><div><dt>Why it matters</dt><dd>{{ gap.reason }}</dd></div><div><dt>Likely source</dt><dd>{{ gap.source }}</dd></div><div><dt>Refresh status</dt><dd>{{ gap.next_action }}</dd></div></dl>
-                  </article>
-                </div>
-              </section>
-
-              <section class="panel" aria-labelledby="company-evidence-heading">
-                <div class="panel-header"><div><p class="section-kicker">Sources</p><h2 id="company-evidence-heading">Company evidence</h2></div><span>{{ companyView.coverage.source_count }} total sources</span></div>
-                <div class="empty-state" *ngIf="companyView.evidence.length === 0">No source documents are available.</div>
-                <button type="button" class="ghost-button" *ngIf="companyView.evidence.length > 0" (click)="openSourceLens('Company evidence', companyView.evidence)">Review {{ companyView.coverage.source_count }} sources</button>
               </section>
             </ng-container>
           </section>

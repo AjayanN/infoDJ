@@ -2992,6 +2992,16 @@ class AppComponent {
     return datedSource.published_date ? `Latest source: ${datedSource.published_date}` : `Latest source update: ${datedSource.updated_at}`;
   }
 
+  financialBriefFacts(company: CompanyProfileResponse): CompanyProfileResponse['highlights']['financial_facts'] {
+    const seen = new Set<string>();
+    return company.highlights.financial_facts.filter((fact) => {
+      const key = `${fact.label || fact.concept}|${fact.fy}|${fact.fp}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).slice(0, 4);
+  }
+
   sectorShare(eventCount: number, dash: DashboardResponse): number {
     return this.percentOf(eventCount, Math.max(...dash.sector_counts.map((sector) => sector.event_count), 1));
   }
