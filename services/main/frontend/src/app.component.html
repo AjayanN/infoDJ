@@ -1182,21 +1182,17 @@
               </section>
 
               <section class="dashboard-two-column promise-ledger-workspace">
-                <article class="promise-register">
-                  <div class="panel-header"><div><p class="section-kicker">Promise register</p><h2>Commitments and targets</h2></div></div>
+                <article class="promise-status-board">
+                  <div class="panel-header"><div><p class="section-kicker">Promise status board</p><h2>Commitments and targets</h2></div><span>{{ promiseView.promises.length }} in view</span></div>
                   <div class="empty-state unavailable-state" *ngIf="promiseView.promises.length === 0">No reviewed management promises match these filters.</div>
-                  <div class="result-row" *ngFor="let promise of promiseView.promises" [class.selected]="promise.slug === promiseView.selected_promise?.slug">
-                    <strong>{{ promise.title }}</strong>
-                    <span>{{ promiseLabel(promise.promise_type) }} · {{ promiseLabel(promise.current_status) }}</span>
-                    <p>{{ promise.metric_name || promise.original_statement }}</p>
-                    <small>Statement {{ promise.statement_date }} · deadline {{ promise.target_end_date || 'not specified' }}</small>
-                    <button type="button" class="ghost-button" (click)="selectManagementPromise(promise.slug)">Open promise</button>
+                  <div class="promise-board-lanes" *ngIf="promiseView.promises.length > 0">
+                    <section class="promise-board-lane" *ngFor="let lane of managementPromiseStatusBoard(promiseView.promises)" [class]="'promise-board-lane ' + lane.key"><header><div><h3>{{ lane.label }}</h3><p>{{ lane.description }}</p></div><strong>{{ lane.promises.length }}</strong></header><div class="empty-state" *ngIf="lane.promises.length === 0">No promises in this state.</div><button type="button" class="promise-board-card" *ngFor="let promise of lane.promises" [class.selected]="promise.slug === promiseView.selected_promise?.slug" [attr.aria-pressed]="promise.slug === promiseView.selected_promise?.slug" (click)="selectManagementPromise(promise.slug)"><strong>{{ promise.title }}</strong><span>{{ promiseLabel(promise.promise_type) }} · {{ promiseLabel(promise.current_status) }}</span><p>{{ promise.metric_name || promise.original_statement }}</p><small>Statement {{ promise.statement_date }} · deadline {{ promise.target_end_date || 'not specified' }}</small></button></section>
                   </div>
                 </article>
 
                 <article class="promise-detail" *ngIf="promiseView.selected_promise as promise; else noSelectedPromise">
                   <div class="panel-header"><div><p class="section-kicker">Reviewed detail</p><h2>{{ promise.title }}</h2></div><span class="status-pill available">{{ promiseLabel(promise.current_status) }}</span></div>
-                  <p><strong>Original statement:</strong> {{ promise.original_statement }}</p>
+                  <blockquote class="promise-original-statement"><span>Original statement</span><p>{{ promise.original_statement }}</p><footer>{{ promise.speaker || 'Speaker not identified' }}<span *ngIf="promise.speaker_role"> · {{ promise.speaker_role }}</span></footer></blockquote>
                   <dl class="account-grid">
                     <div class="metric"><dt>Speaker</dt><dd>{{ promise.speaker || 'Not identified' }}</dd><small>{{ promise.speaker_role }}</small></div>
                     <div class="metric"><dt>Target</dt><dd>{{ promise.target_value ?? 'Qualitative' }} {{ promise.unit }}</dd><small>{{ promise.metric_name }}</small></div>
@@ -1204,7 +1200,7 @@
                     <div class="metric"><dt>Confidence</dt><dd>{{ promise.confidence_score | number:'1.2-2' }}</dd><small>{{ promise.review_status }}</small></div>
                   </dl>
                   <p *ngIf="promise.conditions"><strong>Conditions:</strong> {{ promise.conditions }}</p>
-                  <p><strong>Evaluation rule:</strong> {{ promise.evaluation_rule || 'No measurable evaluation rule is available.' }}</p>
+                  <section class="promise-evaluation"><p class="section-kicker">Evaluation logic</p><p>{{ promise.evaluation_rule || 'No measurable evaluation rule is available.' }}</p></section>
                   <p *ngIf="promise.linked_kpi"><strong>{{ promise.linked_kpi.dependency_label }}:</strong> {{ promise.linked_kpi.name }} · {{ promise.linked_kpi.unit }} · {{ promise.linked_kpi.cadence }}</p>
                   <p class="formula-note" *ngIf="promise.linked_kpi">{{ promise.linked_kpi.dependency_description }}</p>
                   <p *ngIf="promise.linked_strategic_turn"><strong>Linked strategic turn:</strong> {{ promise.linked_strategic_turn.title }}</p>
