@@ -4205,6 +4205,23 @@ th {
 .briefing-item-feed .result-row { border-left: 4px solid #667ea0; border-top: 0; }
 @media (max-width: 760px) { .briefing-command { display: grid; gap: 16px; padding: 22px 16px; } .briefing-command .coverage-summary { border-left: 0; border-top: 1px solid #758194; flex-basis: auto; padding: 12px 0 0; } .briefing-workspace > article, .briefing-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
 
+/* Alerts are handled as an inbox with follow controls and compact feedback actions. */
+.inbox-command { align-items: start; background: #344452; color: #f9fcff; display: flex; gap: 24px; justify-content: space-between; padding: 26px 30px; }
+.inbox-command .section-kicker, .inbox-command p, .inbox-command .coverage-summary span, .inbox-command .coverage-summary small { color: #d4e0ea; }
+.inbox-command .coverage-summary { background: transparent; border: 0; border-left: 1px solid #708597; color: #f9fcff; flex: 0 0 240px; padding: 4px 0 4px 22px; }
+.inbox-command .coverage-summary strong { color: #ffffff; }
+.inbox-watchlist-workspace, .inbox-follow-workspace { gap: 0; }
+.inbox-watchlist-workspace > article, .inbox-follow-workspace > article { border-bottom: 1px solid var(--line); min-width: 0; padding: 22px 24px 22px 0; }
+.inbox-watchlist-workspace > article + article, .inbox-follow-workspace > article + article { border-left: 1px solid var(--line); padding-left: 24px; padding-right: 0; }
+.inbox-watchlist-intake, .inbox-follow-intake { background: #f7fafc; }
+.inbox-watchlist-register .result-row, .inbox-followed-register .result-row { border-left: 3px solid #5c8990; border-top: 0; cursor: pointer; }
+.inbox-toolbar { background: #f0f6f7; display: flex; flex-wrap: wrap; gap: 14px; padding: 16px; }
+.inbox-toolbar label { flex: 1 1 210px; min-width: 0; }
+.inbox-alert-feed { border-top: 3px solid #5c8990; }
+.inbox-alert-feed .result-row { border-left: 4px solid #5c8990; border-top: 0; }
+.inbox-alert-feed .profile-control-actions { flex-wrap: wrap; justify-content: flex-start; }
+@media (max-width: 760px) { .inbox-command { display: grid; gap: 16px; padding: 22px 16px; } .inbox-command .coverage-summary { border-left: 0; border-top: 1px solid #708597; flex-basis: auto; padding: 12px 0 0; } .inbox-watchlist-workspace > article, .inbox-watchlist-workspace > article + article, .inbox-follow-workspace > article, .inbox-follow-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
+
 /* Ownership is read as a point-in-time ledger with a separate insider activity trail. */
 .ownership-command { background: #323c4d; color: #f8fbff; padding: 26px 30px; }
 .ownership-command .section-kicker, .ownership-command p, .ownership-command .profile-score-card span, .ownership-command .profile-score-card small { color: #d2dbe7; }
