@@ -3635,7 +3635,14 @@ th {
 .milestone-toolbar {
   background: #f2f5f7;
   border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
   padding: 16px;
+}
+
+.promise-toolbar label,
+.milestone-toolbar label {
+  flex: 1 1 190px;
+  min-width: 0;
 }
 
 .promise-ledger-workspace,
