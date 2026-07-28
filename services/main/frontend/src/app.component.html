@@ -1994,7 +1994,7 @@
           <section *ngSwitchCase="'leadership-decisions'" class="company-profile-layout" aria-labelledby="leadership-heading">
             <div class="loading-panel" *ngIf="leadershipDecisionLoading()">Loading leadership decision record...</div>
             <ng-container *ngIf="!leadershipDecisionLoading() && leadershipDecisions() as leaderView">
-              <section class="panel company-profile-hero">
+              <section class="panel company-profile-hero leadership-command">
                 <div>
                   <p class="section-kicker">Leadership Decision Record · {{ leaderView.status }}</p>
                   <h2 id="leadership-heading">{{ leaderView.company.name }}</h2>
@@ -2008,7 +2008,7 @@
                 </div>
               </section>
 
-              <section class="profile-controls panel">
+              <section class="profile-controls panel leadership-toolbar">
                 <label>Snapshot at date
                   <select [(ngModel)]="leadershipDecisionDate">
                     <option value="">Latest reviewed snapshot</option>
@@ -2036,8 +2036,8 @@
                 </div>
               </section>
 
-              <section class="dashboard-two-column">
-                <article class="panel">
+              <section class="dashboard-two-column leadership-tenure-workspace">
+                <article class="panel leadership-tenure-timeline">
                   <div class="panel-header"><div><p class="section-kicker">Roles</p><h2>Timeline and tenure context</h2></div></div>
                   <div class="result-row" *ngFor="let role of leaderView.roles">
                     <strong>{{ role.leader_name }}</strong>
@@ -2048,7 +2048,7 @@
                   <div class="empty-state unavailable-state" *ngIf="leaderView.roles.length === 0">No reviewed leadership roles are available for the selected filters.</div>
                 </article>
 
-                <article class="panel">
+                <article class="panel leadership-decision-record">
                   <div class="panel-header"><div><p class="section-kicker">Decisions</p><h2>Priorities and material decisions</h2></div><span>{{ leaderView.decisions.length }} rows</span></div>
                   <div class="result-row" *ngFor="let decision of leaderView.decisions">
                     <strong>{{ decision.title }}</strong>
@@ -2060,14 +2060,14 @@
                 </article>
               </section>
 
-              <section class="dashboard-two-column">
-                <article class="panel">
+              <section class="dashboard-two-column leadership-guardrail-workspace">
+                <article class="panel leadership-attribution-guardrail">
                   <div class="panel-header"><div><p class="section-kicker">Guardrails</p><h2>Performance and attribution</h2></div></div>
                   <p>{{ leaderView.performance_context.non_causation_note }}</p>
                   <p>{{ leaderView.performance_context.reason }}</p>
                   <p>{{ leaderView.snapshot?.methodology }}</p>
                 </article>
-                <article class="panel">
+                <article class="panel leadership-evidence-register">
                   <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Leadership evidence</h2></div><span>{{ leaderView.evidence.length }} sources</span></div>
                   <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of leaderView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
                 </article>
