@@ -19,13 +19,15 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 - [x] Thesis Evidence Board was rebuilt as a private research workspace with separate evidence, checkpoints, indicators, and revisions. Verified at desktop and mobile widths.
 - [x] Claim Reconciliation Desk, Failure Pattern Library, Scenario Planning Lab, Executive Briefing Feed, Signal Inbox, and Foundations Workbench were rebuilt as task-specific user-workspace and standards surfaces. Verified at desktop and mobile widths.
 - [x] Dashboard workflow drill-downs were differentiated into an event feed, pattern library, risk watch, confidence audit, peer directory/matrix, scorecard, impact lab, and question desk. The Latest event feed was browser-checked at desktop and mobile widths.
-- [ ] Shared Source Lens, Evidence Gap system, and final cross-route acceptance audit are still incomplete. Do not infer completion from delivered routes.
+- [x] Shared Source Lens is available from every Company 360 evidence workspace that has a source record; it deduplicates sources and keeps provenance, purpose, and power-user details out of the primary analysis surface. Verified with live Netflix regulatory evidence at desktop and mobile widths.
+- [x] Evidence Gap cards now use a shared complete model: missing information, why it matters, likely source, and refresh status. Verified with live Netflix regulatory gaps.
+- [x] Final cross-route audit: all 17 Company 360 research routes opened through the normal Company 360 navigation with live Netflix data, retained company context and return navigation, and passed desktop overflow checks.
 
 ## Product-Wide UI Principles
 
 - [ ] Keep the company context visible on every feature page with a sticky company identity bar: company name, ticker if available, sector, country, latest reviewed date, and a back-to-Company-360 action.
 - [ ] Show the answer first, then details. Every feature should start with a short human-readable summary and the most important status cards.
-- [ ] Move evidence, confidence, source records, and raw review labels into a secondary drawer or expandable source panel unless the user explicitly opens it.
+- [x] Move evidence, confidence, source records, and raw review labels into a secondary drawer or expandable source panel unless the user explicitly opens it.
 - [ ] Use plain unavailable states. Avoid internal wording such as `planned in Phase 2`, `reviewed payload`, or raw enum names.
 - [ ] Prefer timelines, maps, boards, matrices, and relationship graphs over long stacked text rows.
 - [ ] Make all pages work for all 20 configured companies, including companies with partial evidence. Missing data should be shown as source gaps, not empty broken layouts.
@@ -43,17 +45,17 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 
 ### UI Name: Source Lens Drawer
 
-- [ ] Create a shared evidence drawer pattern for all Company 360 features.
-- [ ] Show source title, publisher, source date, source type, and why it was used.
-- [ ] Deduplicate repeated sources before display.
-- [ ] Hide internal confidence/review metadata by default; expose it under "Source details" for power users.
-- [ ] Add source-gap cards that say what is missing and which source type could fill it.
+- [x] Create a shared evidence drawer pattern for all Company 360 features.
+- [x] Show source title, publisher, source date, source type, and why it was used.
+- [x] Deduplicate repeated sources before display.
+- [x] Hide internal confidence/review metadata by default; expose it under "Source details" for power users.
+- [x] Add source-gap cards that say what is missing and which source type could fill it.
 
 ### UI Name: Evidence Gap Card System
 
-- [ ] Standardize unavailable states across all features.
-- [ ] Each unavailable card should show: missing information, why it matters, likely source, and current refresh status.
-- [ ] Avoid blank panels and avoid treating missing disclosure as zero or false.
+- [x] Standardize unavailable states across all Company 360 research features.
+- [x] Each unavailable card should show: missing information, why it matters, likely source, and current refresh status.
+- [x] Avoid blank panels and avoid treating missing disclosure as zero or false.
 - [ ] Add "Open related feature" actions when another implemented page may contain adjacent context.
 
 ## 1. Company 360 Profile

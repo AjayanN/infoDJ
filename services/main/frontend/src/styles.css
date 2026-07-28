@@ -690,6 +690,53 @@ button:disabled {
   margin: 0;
 }
 
+.source-gap-panel {
+  border-left: 3px solid #c78631;
+}
+
+.source-gap-panel .panel-header {
+  align-items: start;
+}
+
+.source-gap-panel .source-gap {
+  background: #fffaf1;
+  border-left: 3px solid #d39a45;
+}
+
+.source-gap-panel .source-gap strong::before {
+  color: #8c5c18;
+  content: 'Evidence gap';
+  display: block;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.evidence-lens-action {
+  align-items: center;
+  background: #f5f8fb;
+  border: 1px solid #d7e1eb;
+  border-left: 3px solid #527b9d;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  min-height: 72px;
+  padding: 14px 16px;
+}
+
+.evidence-lens-action p {
+  color: #42536a;
+  line-height: 1.45;
+  margin: 0;
+  max-width: 620px;
+}
+
+.evidence-lens-action .ghost-button {
+  flex: 0 0 auto;
+}
+
 .gap-details,
 .source-lens-use,
 .source-lens-details dl {
@@ -786,6 +833,10 @@ button:disabled {
   margin-top: 4px;
 }
 
+.source-lens-record > a {
+  justify-self: start;
+}
+
 .source-lens-details {
   border-top: 1px solid var(--line);
   padding-top: 10px;
@@ -802,6 +853,15 @@ button:disabled {
 }
 
 @media (max-width: 640px) {
+  .evidence-lens-action {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .evidence-lens-action .ghost-button {
+    align-self: start;
+  }
+
   .source-lens-drawer {
     max-width: none;
     padding: 18px;

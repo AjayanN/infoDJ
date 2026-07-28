@@ -2949,6 +2949,10 @@ class AppComponent {
     this.sourceLens.set({ title, sources: deduplicateSourceLensRecords(sources) });
   }
 
+  openEarningsSourceLens(documents: { source: CompanyProfileSource }[]): void {
+    this.openSourceLens('Period evidence', documents.map((document) => document.source));
+  }
+
   closeSourceLens(): void {
     this.sourceLens.set(null);
   }
