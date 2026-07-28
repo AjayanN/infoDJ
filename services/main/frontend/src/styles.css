@@ -3909,6 +3909,110 @@ th {
   }
 }
 
+/* Competitive position is a relationship and pressure map, not a generic list. */
+.competitive-command {
+  background: #243d4c;
+  color: #f8fbff;
+  padding: 26px 30px;
+}
+
+.competitive-command .section-kicker,
+.competitive-command p,
+.competitive-command .coverage-summary span,
+.competitive-command .coverage-summary small {
+  color: #c9d8e2;
+}
+
+.competitive-command .coverage-summary {
+  border-left: 1px solid #627f90;
+  padding-left: 22px;
+}
+
+.competitive-toolbar {
+  background: #eff5f7;
+  flex-wrap: wrap;
+  padding: 16px;
+}
+
+.competitive-toolbar label {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.competitive-method-note,
+.competitive-peer-map {
+  border-bottom: 1px solid var(--line);
+  padding: 22px 0;
+}
+
+.competitive-peer-map .result-row {
+  border-left: 4px solid #3c8a9e;
+  border-top: 0;
+}
+
+.competitive-matrix-workspace,
+.competitive-evidence-balance {
+  gap: 0;
+}
+
+.competitive-matrix-workspace > article,
+.competitive-evidence-balance > article {
+  border-bottom: 1px solid var(--line);
+  min-width: 0;
+  padding: 22px 24px 22px 0;
+}
+
+.competitive-matrix-workspace > article + article,
+.competitive-evidence-balance > article + article {
+  border-left: 1px solid var(--line);
+  padding-left: 24px;
+  padding-right: 0;
+}
+
+.competitive-overlap-matrix h3 {
+  background: #eef4f7;
+  font-size: 12px;
+  margin: 14px 0 0;
+  padding: 8px 10px;
+}
+
+.competitive-actions-feed .result-row {
+  border-left: 3px solid #5f8fb4;
+  border-top: 0;
+}
+
+.competitive-moat-evidence .result-row {
+  border-left: 3px solid #338464;
+}
+
+.competitive-pressure-evidence .result-row {
+  border-left: 3px solid #ba6d55;
+}
+
+@media (max-width: 760px) {
+  .competitive-command {
+    display: grid;
+    gap: 16px;
+    padding: 22px 16px;
+  }
+
+  .competitive-command .coverage-summary {
+    border-left: 0;
+    border-top: 1px solid #627f90;
+    padding-left: 0;
+    padding-top: 12px;
+  }
+
+  .competitive-matrix-workspace > article,
+  .competitive-matrix-workspace > article + article,
+  .competitive-evidence-balance > article,
+  .competitive-evidence-balance > article + article {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    padding: 18px 0;
+  }
+}
+
 @media (max-width: 760px) {
   .promise-command,
   .milestone-command {
