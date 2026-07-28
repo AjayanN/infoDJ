@@ -14,7 +14,10 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 
 - [x] Company 360 profile briefing was consolidated into one research workspace. The old duplicate financial, change, gap, and source panels were removed; financial facts are deduplicated and limited to the active evidence rail. Verified with real Netflix data at desktop and mobile widths.
 - [x] Dashboard was rebuilt as a coverage control room with a command search, coverage totals, workflow switcher, sector comparison, actionable company directory, and refresh ledger. Verified with real data at desktop and mobile widths, including workflow switching and navigation to Netflix Company 360.
-- [ ] Remaining Company 360 features are still individually incomplete. Do not infer completion from these two delivered surfaces.
+- [x] Business Model Canvas, Operating Metrics Workbench, Promise Ledger, Strategy Execution Timeline, Quarterly Intelligence Brief, Capital Deployment Map, Competitive Battlefield Map, Product Timeline Studio, Deal Journey Board, Dependency Risk Map, and Market Footprint Atlas were rebuilt as route-specific workspaces and browser-checked with real Netflix data at desktop and mobile widths.
+- [x] Leadership Tenure Timeline, Ownership and Insider Ledger, Valuation Context Workbench, Regulatory Matter Docket, Theme Exposure Radar, and Macro Exposure Profile were rebuilt as route-specific workspaces and browser-checked with real Netflix data at desktop and mobile widths.
+- [x] Thesis Evidence Board was rebuilt as a private research workspace with separate evidence, checkpoints, indicators, and revisions. Verified at desktop and mobile widths.
+- [ ] Remaining workspace, comparison, dashboard-feed, and final consistency surfaces are still individually incomplete. Do not infer completion from delivered routes.
 
 ## Product-Wide UI Principles
 
