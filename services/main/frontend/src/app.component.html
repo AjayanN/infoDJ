@@ -2596,7 +2596,7 @@
           <section *ngSwitchCase="'contradictions'" class="company-profile-layout" aria-labelledby="contradiction-heading">
             <div class="loading-panel" *ngIf="contradictionLoading()">Loading contradiction queue...</div>
             <ng-container *ngIf="!contradictionLoading()">
-              <section class="panel hero-card">
+              <section class="panel hero-card contradiction-command">
                 <div>
                   <p class="section-kicker">Contradiction View</p>
                   <h2 id="contradiction-heading">Neutral claim comparison and review</h2>
@@ -2609,7 +2609,7 @@
                 </div>
               </section>
 
-              <section class="panel company-profile-controls" aria-label="Contradiction filters">
+              <section class="panel company-profile-controls contradiction-toolbar" aria-label="Contradiction filters">
                 <label>Company <input name="contradiction_company_filter" [(ngModel)]="contradictionCompanyFilter" placeholder="company slug" /></label>
                 <label>Review label
                   <select name="contradiction_review_filter" [(ngModel)]="contradictionReviewFilter">
@@ -2628,8 +2628,8 @@
                 </div>
               </section>
 
-              <section class="dashboard-two-column">
-                <article class="panel">
+              <section class="dashboard-two-column contradiction-intake-workspace">
+                <article class="panel contradiction-intake-form">
                   <div class="panel-header"><div><p class="section-kicker">Create</p><h2>Review case</h2></div></div>
                   <form class="auth-form" (ngSubmit)="createContradiction()">
                     <label>Title <input name="contradiction_title" [(ngModel)]="contradictionTitle" required /></label>
@@ -2648,7 +2648,7 @@
                   </form>
                 </article>
 
-                <article class="panel">
+                <article class="panel contradiction-queue">
                   <div class="panel-header"><div><p class="section-kicker">Queue</p><h2>Review cases</h2></div><span>{{ contradictions()?.cases?.length || 0 }} shown</span></div>
                   <div class="result-row" *ngFor="let row of contradictions()?.cases || []" (click)="selectContradiction(row.id)" role="button" tabindex="0">
                     <strong>{{ row.title }}</strong>
@@ -2661,7 +2661,7 @@
               </section>
 
               <ng-container *ngIf="selectedContradiction() as selected">
-                <section class="panel hero-card">
+                <section class="panel hero-card contradiction-selected-command">
                   <div>
                     <p class="section-kicker">Selected case · {{ selected.review_label_display }}</p>
                     <h2>{{ selected.title }}</h2>
@@ -2675,8 +2675,8 @@
                   </div>
                 </section>
 
-                <section class="dashboard-two-column">
-                  <article class="panel" *ngFor="let claim of selected.claims || []">
+                <section class="dashboard-two-column contradiction-claims-workspace">
+                  <article class="panel contradiction-claim-card" *ngFor="let claim of selected.claims || []">
                     <div class="panel-header"><div><p class="section-kicker">{{ claim.label }}</p><h2>{{ claim.source_label || 'Source unavailable' }}</h2></div></div>
                     <p>{{ claim.claim_text }}</p>
                     <small>{{ claim.claim_date || 'date unavailable' }} · {{ claim.speaker || 'speaker unavailable' }} · {{ claim.scope || 'scope unavailable' }}</small>
@@ -2684,8 +2684,8 @@
                   </article>
                 </section>
 
-                <section class="dashboard-two-column">
-                  <article class="panel">
+                <section class="dashboard-two-column contradiction-review-workspace">
+                  <article class="panel contradiction-review-form">
                     <div class="panel-header"><div><p class="section-kicker">Review</p><h2>Human label</h2></div></div>
                     <form class="auth-form" (ngSubmit)="reviewContradiction()">
                       <label>Review label <select name="contradiction_review_label" [(ngModel)]="contradictionReviewLabel"><option *ngFor="let label of contradictions()?.review_labels || []" [value]="label.value">{{ label.label }}</option></select></label>
@@ -2696,7 +2696,7 @@
                       <button type="submit" class="primary-button">Save review</button>
                     </form>
                   </article>
-                  <article class="panel">
+                  <article class="panel contradiction-resolution-trail">
                     <div class="panel-header"><div><p class="section-kicker">Resolution</p><h2>History</h2></div><span>{{ selected.resolutions?.length || 0 }} updates</span></div>
                     <div class="result-row" *ngFor="let resolution of selected.resolutions || []">
                       <strong>{{ resolution.new_label }}</strong>
