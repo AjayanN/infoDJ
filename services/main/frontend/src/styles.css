@@ -3708,6 +3708,105 @@ th {
   padding: 8px 12px;
 }
 
+/* Earnings is a selected-quarter briefing, with evidence separated by purpose. */
+.earnings-command {
+  background: #27354c;
+  color: #f8fbff;
+  padding: 26px 30px;
+}
+
+.earnings-command .section-kicker,
+.earnings-command p,
+.earnings-command .coverage-summary span,
+.earnings-command .coverage-summary small {
+  color: #c8d4e1;
+}
+
+.earnings-command .coverage-summary {
+  border-left: 1px solid #64758b;
+  padding-left: 22px;
+}
+
+.earnings-toolbar {
+  background: #f1f5f8;
+  flex-wrap: wrap;
+  padding: 16px;
+}
+
+.earnings-toolbar label {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.earnings-results-brief {
+  border-bottom: 1px solid var(--line);
+  padding: 24px 0;
+}
+
+.earnings-results-brief .account-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.earnings-results-brief .metric {
+  background: #f7fafc;
+  border-top: 3px solid #457da7;
+  border-radius: 0;
+}
+
+.earnings-explanation-workspace,
+.earnings-disclosure-workspace {
+  gap: 0;
+}
+
+.earnings-explanation-workspace > article,
+.earnings-disclosure-workspace > article {
+  border-bottom: 1px solid var(--line);
+  min-width: 0;
+  padding: 22px 24px 22px 0;
+}
+
+.earnings-explanation-workspace > article + article,
+.earnings-disclosure-workspace > article + article {
+  border-left: 1px solid var(--line);
+  padding-left: 24px;
+  padding-right: 0;
+}
+
+.earnings-management-brief > p:first-of-type {
+  border-left: 3px solid #b58b4d;
+  line-height: 1.55;
+  padding-left: 14px;
+}
+
+.earnings-open-questions .result-row {
+  border-left: 3px solid #b58b4d;
+  border-top: 0;
+}
+
+@media (max-width: 760px) {
+  .earnings-command {
+    display: grid;
+    gap: 16px;
+    padding: 22px 16px;
+  }
+
+  .earnings-command .coverage-summary {
+    border-left: 0;
+    border-top: 1px solid #64758b;
+    padding-left: 0;
+    padding-top: 12px;
+  }
+
+  .earnings-explanation-workspace > article,
+  .earnings-disclosure-workspace > article,
+  .earnings-explanation-workspace > article + article,
+  .earnings-disclosure-workspace > article + article {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    padding: 18px 0;
+  }
+}
+
 @media (max-width: 760px) {
   .promise-command,
   .milestone-command {
