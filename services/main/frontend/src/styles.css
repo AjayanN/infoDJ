@@ -4382,6 +4382,16 @@ th {
 .acquisition-portfolio-workspace > article, .acquisition-timeline-workspace > article { border-bottom: 1px solid var(--line); min-width: 0; padding: 22px 24px 22px 0; }
 .acquisition-portfolio-workspace > article + article, .acquisition-timeline-workspace > article + article { border-left: 1px solid var(--line); padding-left: 24px; padding-right: 0; }
 .acquisition-deal-portfolio .result-row { border-left: 3px solid #5b8ead; border-top: 0; }
+.acquisition-lifecycle-board { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.acquisition-lifecycle-board > section { background: #f7f9fb; border-top: 3px solid #6486a5; display: grid; gap: 10px; min-width: 0; padding: 13px; }
+.acquisition-lifecycle-board > section > header { align-items: baseline; display: flex; gap: 10px; justify-content: space-between; }
+.acquisition-lifecycle-board h3 { font-size: 14px; margin: 0; }
+.acquisition-lifecycle-board > section > header span { color: var(--muted); font-size: 12px; font-weight: 800; }
+.acquisition-deal-card { background: #fff; border: 1px solid var(--line); border-radius: 0; color: inherit; display: grid; gap: 6px; padding: 11px; text-align: left; }
+.acquisition-deal-card:hover, .acquisition-deal-card.selected { border-color: #4e7fa3; box-shadow: inset 3px 0 #4e7fa3; }
+.acquisition-deal-card span, .acquisition-deal-card small { color: var(--muted); font-size: 12px; font-weight: 700; }
+.acquisition-deal-card p { color: #415164; font-size: 13px; line-height: 1.45; margin: 0; }
+@media (max-width: 760px) { .acquisition-lifecycle-board { grid-template-columns: 1fr; } }
 .acquisition-deal-detail h3 { border-top: 1px solid var(--line); padding-top: 14px; }
 .acquisition-lifecycle-timeline .result-row { border-left: 3px solid #3c8d72; border-top: 0; }
 @media (max-width: 760px) { .acquisition-command { display: grid; gap: 16px; padding: 22px 16px; } .acquisition-portfolio-workspace > article, .acquisition-portfolio-workspace > article + article, .acquisition-timeline-workspace > article, .acquisition-timeline-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
