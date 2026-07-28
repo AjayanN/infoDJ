@@ -178,7 +178,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 
 ### UI Name: Dependency Risk Map
 
-- [ ] Convert dependency rows into a relationship map with customer groups, suppliers, platforms, channels, and partners.
+- [x] Convert dependency rows into a relationship map with customer groups, suppliers, platforms, channels, and partners. It groups only reviewed relationship types returned for the selected company and filters; named counterparties remain explicitly identified as source-backed. Verified with live Netflix data at desktop and mobile widths.
 - [ ] Add filters for customer, supplier, platform, distribution, concentration, and contract-risk categories.
 - [ ] Show named counterparties only when source-backed.
 - [ ] Add contract-risk cards for renewal, exclusivity, minimum commitment, termination, and critical supplier gaps.
