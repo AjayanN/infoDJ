@@ -146,7 +146,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 
 ### UI Name: Competitive Battlefield Map
 
-- [ ] Show competitors as a map of direct competitors, substitutes, platform/channel competitors, suppliers, customers, and benchmark peers.
+- [x] Show competitors as a relationship battlefield that groups source-backed peers by direct, substitute, platform/channel, supplier/customer, and other configured relationship types. Each peer retains its scope, geography, overlap, evidence, and confidence context. Verified with live Netflix data at desktop and mobile widths.
 - [ ] Add filters for relationship type, geography, product overlap, and source confidence.
 - [ ] Add a product/pricing overlap matrix.
 - [ ] Add a competitive response timeline with source-backed actions.
