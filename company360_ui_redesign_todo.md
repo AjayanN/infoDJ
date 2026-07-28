@@ -2,6 +2,14 @@
 
 This todo is a product UI backlog for every feature reachable from Company 360. It focuses on what users should see and understand, not backend implementation details. Each section has a recommended UI name that can become the design/task name when we start implementation.
 
+## Implementation Reset: 2026-07-28
+
+- [ ] The initial Company 360 UI pass was rejected in product review. It layered new panels onto the existing page structure and did not constitute a redesign. Do not use its commits, builds, or HTTP smoke checks as acceptance evidence for this backlog.
+- [ ] Do not mark a feature complete because it has a shared shell, a restyled card, or a working route. Each feature must use the UI model appropriate to the task it fulfills and must be reviewed in a browser with real company data.
+- [ ] The Company 360 profile must not retain separate legacy blocks below the new workspace. Financial context, profile changes, source gaps, and evidence must be integrated into the same research flow and deduplicated where needed.
+- [ ] Dashboard redesign is in scope. It is the entry point to Company 360 and must be redesigned as a coverage control room, company directory, and activity feed before this backlog can be accepted.
+- [ ] All Company 360 feature pages remain incomplete until their individual acceptance criterion is met. The intended interaction model for each page is part of that criterion: graph, map, workbench, board, timeline, matrix, calendar, table, or briefing as appropriate.
+
 ## Product-Wide UI Principles
 
 - [ ] Keep the company context visible on every feature page with a sticky company identity bar: company name, ticker if available, sector, country, latest reviewed date, and a back-to-Company-360 action.
