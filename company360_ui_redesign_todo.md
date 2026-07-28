@@ -188,9 +188,9 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 
 ### UI Name: Market Footprint Atlas
 
-- [ ] Use a map-first layout where countries and regions are grouped by current presence, entered, exited, and unavailable detail.
+- [x] Use a map-first layout where countries and regions are grouped by current presence, entered, exited, and unavailable detail. The footprint atlas uses only reviewed status fields and places non-classified presence in a separate detail-limited lane. Verified with live Netflix data at desktop and mobile widths.
 - [ ] Add an expansion timeline for source-backed market entries and exits.
-- [ ] Add market detail cards: local partner, regulatory barrier, revenue contribution, outcome, and source gaps.
+- [x] Add market detail cards: local partner, regulatory barrier, revenue contribution, outcome, and source gaps. The cards state when these fields are not disclosed rather than treating generic market presence as complete evidence. Verified with live Netflix data at desktop and mobile widths.
 - [ ] Avoid implying a dated market entry from generic geographic presence.
 - [ ] Acceptance: users should understand where the company operates and what expansion evidence is actually known.
 

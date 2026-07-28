@@ -128,6 +128,7 @@ type PromiseBoardLane = { key: string; label: string; description: string; promi
 type CompetitivePeerLane = { label: string; peers: CompetitivePositionResponse['peer_map'] };
 type ProductOfferingFamily = { label: string; offerings: ProductPricingResponse['offerings'] };
 type DependencyRelationshipLane = { key: string; label: string; dependencies: CustomerSupplierDependencyResponse['dependencies'] };
+type GeographicMarketLane = { key: string; label: string; description: string; markets: GeographicExpansionResponse['markets'] };
 type SourceLensState = { title: string; sources: CompanyProfileSource[] } | null;
 type DashboardSectionKey =
   | 'latest_moves'
@@ -2688,6 +2689,25 @@ class AppComponent {
       label: laneDependencies[0]?.dependency_type_label || this.promiseLabel(key),
       dependencies: laneDependencies,
     }));
+  }
+
+  geographicMarketLanes(markets: GeographicExpansionResponse['markets']): GeographicMarketLane[] {
+    const lanes = [
+      { key: 'current', label: 'Current presence', description: 'Markets currently recorded as active or operating.', statuses: ['ACTIVE', 'OPERATING', 'PRESENT', 'CURRENT'] },
+      { key: 'entered', label: 'Entered or expanding', description: 'Markets with a reviewed entry, launch, or scale-up status.', statuses: ['ANNOUNCED', 'ENTERED', 'LAUNCHED', 'EXPANDING', 'SCALE_UP'] },
+      { key: 'exited', label: 'Exited or reduced', description: 'Markets recorded as reduced, exited, or discontinued.', statuses: ['REDUCED', 'EXITED', 'DISCONTINUED'] },
+    ];
+    const classified = new Set<string>();
+    const result: GeographicMarketLane[] = lanes.map((lane) => {
+      const laneMarkets = markets.filter((market) => lane.statuses.includes(market.current_status));
+      laneMarkets.forEach((market) => classified.add(String(market.id)));
+      return { key: lane.key, label: lane.label, description: lane.description, markets: laneMarkets };
+    });
+    const detailLimited = markets.filter((market) => !classified.has(String(market.id)));
+    if (detailLimited.length) {
+      result.push({ key: 'detail-limited', label: 'Detail limited', description: 'Reviewed presence is available, but the current market status is not classified above.', markets: detailLimited });
+    }
+    return result.filter((lane) => lane.markets.length > 0);
   }
 
   setSelectedKpiVariant(groupKey: string, slug: string): void {
