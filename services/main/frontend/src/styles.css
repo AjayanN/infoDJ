@@ -4028,6 +4028,19 @@ th {
 .product-comparison-ledger .result-row { border-left: 3px solid #6a85a0; }
 @media (max-width: 760px) { .product-command { display: grid; gap: 16px; padding: 22px 16px; } .product-command .coverage-summary { border-left: 0; border-top: 1px solid #708397; padding-left: 0; padding-top: 12px; } .product-timeline-workspace > article, .product-timeline-workspace > article + article, .product-before-after-workspace > article, .product-before-after-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
 
+/* Acquisitions are reviewed as deal journeys, not isolated transaction rows. */
+.acquisition-command { background: #374052; color: #f8fbff; padding: 26px 30px; }
+.acquisition-command .section-kicker, .acquisition-command p, .acquisition-command .profile-score-card span, .acquisition-command .profile-score-card small { color: #cbd5e1; }
+.acquisition-toolbar { background: #f1f5f7; flex-wrap: wrap; padding: 16px; }
+.acquisition-toolbar label { flex: 1 1 200px; min-width: 0; }
+.acquisition-portfolio-workspace, .acquisition-timeline-workspace { gap: 0; }
+.acquisition-portfolio-workspace > article, .acquisition-timeline-workspace > article { border-bottom: 1px solid var(--line); min-width: 0; padding: 22px 24px 22px 0; }
+.acquisition-portfolio-workspace > article + article, .acquisition-timeline-workspace > article + article { border-left: 1px solid var(--line); padding-left: 24px; padding-right: 0; }
+.acquisition-deal-portfolio .result-row { border-left: 3px solid #5b8ead; border-top: 0; }
+.acquisition-deal-detail h3 { border-top: 1px solid var(--line); padding-top: 14px; }
+.acquisition-lifecycle-timeline .result-row { border-left: 3px solid #3c8d72; border-top: 0; }
+@media (max-width: 760px) { .acquisition-command { display: grid; gap: 16px; padding: 22px 16px; } .acquisition-portfolio-workspace > article, .acquisition-portfolio-workspace > article + article, .acquisition-timeline-workspace > article, .acquisition-timeline-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
+
 @media (max-width: 760px) {
   .promise-command,
   .milestone-command {
