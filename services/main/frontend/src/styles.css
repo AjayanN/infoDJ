@@ -4222,6 +4222,22 @@ th {
 .inbox-alert-feed .profile-control-actions { flex-wrap: wrap; justify-content: flex-start; }
 @media (max-width: 760px) { .inbox-command { display: grid; gap: 16px; padding: 22px 16px; } .inbox-command .coverage-summary { border-left: 0; border-top: 1px solid #708597; flex-basis: auto; padding: 12px 0 0; } .inbox-watchlist-workspace > article, .inbox-watchlist-workspace > article + article, .inbox-follow-workspace > article, .inbox-follow-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
 
+/* Foundations are a standards workbench: rule board, shared labels, and review playbook. */
+.foundation-command { align-items: start; background: #344044; color: #fbfdfd; display: flex; gap: 24px; justify-content: space-between; padding: 26px 30px; }
+.foundation-command .section-kicker, .foundation-command p, .foundation-command .coverage-summary span, .foundation-command .coverage-summary small { color: #d6e2e0; }
+.foundation-command .coverage-summary { background: transparent; border: 0; border-left: 1px solid #71837f; color: #fbfdfd; flex: 0 0 230px; padding: 4px 0 4px 22px; }
+.foundation-command .coverage-summary strong { color: #ffffff; }
+.foundation-pilot-card { border-top: 3px solid #5a8a7b; }
+.foundation-rule-board, .foundation-reference-workspace { gap: 0; }
+.foundation-rule-board > article, .foundation-reference-workspace > article { border-bottom: 1px solid var(--line); min-width: 0; padding: 22px 24px 22px 0; }
+.foundation-rule-board > article + article, .foundation-reference-workspace > article + article { border-left: 1px solid var(--line); padding-left: 24px; padding-right: 0; }
+.foundation-rule-card { border-top: 3px solid #64819a; }
+.foundation-state-register .result-row { border-left: 3px solid #5a8a7b; border-top: 0; }
+.foundation-freshness-register .result-row { border-left: 3px solid #a17a51; border-top: 0; }
+.foundation-review-playbook { border-top: 3px solid #5a8a7b; }
+.foundation-review-playbook .result-row { border-left: 3px solid #64819a; border-top: 0; }
+@media (max-width: 760px) { .foundation-command { display: grid; gap: 16px; padding: 22px 16px; } .foundation-command .coverage-summary { border-left: 0; border-top: 1px solid #71837f; flex-basis: auto; padding: 12px 0 0; } .foundation-rule-board > article, .foundation-rule-board > article + article, .foundation-reference-workspace > article, .foundation-reference-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
+
 /* Ownership is read as a point-in-time ledger with a separate insider activity trail. */
 .ownership-command { background: #323c4d; color: #f8fbff; padding: 26px 30px; }
 .ownership-command .section-kicker, .ownership-command p, .ownership-command .profile-score-card span, .ownership-command .profile-score-card small { color: #d2dbe7; }
