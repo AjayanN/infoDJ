@@ -3650,6 +3650,16 @@ th {
   padding: 22px 24px 22px 0;
 }
 
+.promise-ledger-workspace > *,
+.milestone-timeline-workspace > * {
+  min-width: 0;
+}
+
+.promise-detail,
+.milestone-detail {
+  overflow-wrap: anywhere;
+}
+
 .promise-register .result-row,
 .milestone-register .result-row {
   border-left: 3px solid #839ab0;
