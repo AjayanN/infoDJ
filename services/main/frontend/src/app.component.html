@@ -2274,7 +2274,7 @@
           <section *ngSwitchCase="'regulatory-litigation'" class="company-profile-layout" aria-labelledby="regulatory-heading">
             <div class="loading-panel" *ngIf="regulatoryLitigationLoading()">Loading regulatory and litigation calendar...</div>
             <ng-container *ngIf="!regulatoryLitigationLoading() && regulatoryLitigation() as regulatoryView">
-              <section class="panel company-profile-hero">
+              <section class="panel company-profile-hero regulatory-command">
                 <div>
                   <p class="section-kicker">Regulatory and Litigation Calendar · {{ regulatoryView.status }}</p>
                   <h2 id="regulatory-heading">{{ regulatoryView.company.name }}</h2>
@@ -2289,7 +2289,7 @@
                 </div>
               </section>
 
-              <section class="profile-controls panel">
+              <section class="profile-controls panel regulatory-toolbar">
                 <label>Snapshot at date
                   <select [(ngModel)]="regulatoryLitigationDate">
                     <option value="">Latest reviewed snapshot</option>
@@ -2317,16 +2317,16 @@
                 </div>
               </section>
 
-              <section class="metric-grid">
+              <section class="metric-grid regulatory-evidence-counters" aria-label="Regulatory review coverage">
                 <article class="metric-card"><strong>{{ regulatoryView.coverage.dated_matter_count }}</strong><span>dated disclosures</span></article>
                 <article class="metric-card"><strong>{{ regulatoryView.coverage.exposure_context_count }}</strong><span>sourced exposure rows</span></article>
                 <article class="metric-card"><strong>{{ regulatoryView.coverage.source_count }}</strong><span>evidence sources</span></article>
               </section>
 
-              <section class="dashboard-two-column">
-                <article class="panel">
+              <section class="dashboard-two-column regulatory-docket-workspace">
+                <article class="panel regulatory-matter-docket">
                   <div class="panel-header"><div><p class="section-kicker">Matter List</p><h2>Cases, reviews, approvals, and obligations</h2></div><span>{{ regulatoryView.matters.length }} rows</span></div>
-                  <div class="result-row" *ngFor="let matter of regulatoryView.matters">
+                  <div class="result-row regulatory-case-entry" *ngFor="let matter of regulatoryView.matters">
                     <strong>{{ matter.title }}</strong>
                     <span>{{ matter.matter_type_label }} · {{ matter.matter_status_label }} · {{ matter.stage_label }}</span>
                     <p *ngIf="matter.allegation_or_issue"><strong>Issue:</strong> {{ matter.allegation_or_issue }}</p>
@@ -2342,9 +2342,9 @@
                   <div class="empty-state unavailable-state" *ngIf="regulatoryView.matters.length === 0">No reviewed regulatory or litigation matters are available for the selected filters.</div>
                 </article>
 
-                <article class="panel">
+                <article class="panel regulatory-calendar-rail">
                   <div class="panel-header"><div><p class="section-kicker">Calendar</p><h2>What happens next</h2></div><span>{{ regulatoryView.calendar.length }} dates</span></div>
-                  <div class="result-row" *ngFor="let item of regulatoryView.calendar">
+                  <div class="result-row regulatory-calendar-entry" *ngFor="let item of regulatoryView.calendar">
                     <strong>{{ item.date }}</strong>
                     <span>{{ promiseLabel(item.date_type) }} · {{ item.status }}</span>
                     <p>{{ item.title }}</p>
@@ -2353,14 +2353,14 @@
                 </article>
               </section>
 
-              <section class="dashboard-two-column">
-                <article class="panel">
+              <section class="dashboard-two-column regulatory-review-workspace">
+                <article class="panel regulatory-exposure-ledger">
                   <div class="panel-header"><div><p class="section-kicker">Summary</p><h2>Status and materiality</h2></div></div>
-                  <div class="result-row" *ngFor="let row of regulatoryView.summary.by_status"><strong>{{ promiseLabel(row.key) }}</strong><span>{{ row.count }} matters</span></div>
-                  <div class="result-row" *ngFor="let row of regulatoryView.summary.by_materiality"><strong>{{ promiseLabel(row.key) }}</strong><span>{{ row.count }} matters</span></div>
+                  <div class="result-row regulatory-summary-row" *ngFor="let row of regulatoryView.summary.by_status"><strong>{{ promiseLabel(row.key) }}</strong><span>{{ row.count }} matters</span></div>
+                  <div class="result-row regulatory-summary-row" *ngFor="let row of regulatoryView.summary.by_materiality"><strong>{{ promiseLabel(row.key) }}</strong><span>{{ row.count }} matters</span></div>
                   <div class="empty-state unavailable-state" *ngIf="regulatoryView.summary.by_status.length === 0">No summary buckets are available.</div>
                 </article>
-                <article class="panel">
+                <article class="panel regulatory-evidence-register">
                   <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Regulatory evidence</h2></div><span>{{ regulatoryView.evidence.length }} sources</span></div>
                   <p>{{ regulatoryView.snapshot?.methodology }}</p>
                   <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of regulatoryView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>

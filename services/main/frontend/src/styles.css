@@ -4125,6 +4125,31 @@ th {
   .valuation-inputs { grid-template-columns: 1fr; }
 }
 
+/* Regulatory review is organized as a case docket with a dated action rail. */
+.regulatory-command { background: #3f3748; color: #faf8fc; padding: 26px 30px; }
+.regulatory-command .section-kicker, .regulatory-command p, .regulatory-command .profile-score-card span, .regulatory-command .profile-score-card small { color: #ddd3e4; }
+.regulatory-command .profile-score-card { border-left: 1px solid #897b96; padding-left: 22px; }
+.regulatory-toolbar { background: #f5f2f6; display: flex; flex-wrap: wrap; gap: 14px; padding: 16px; }
+.regulatory-toolbar label { flex: 1 1 200px; min-width: 0; }
+.regulatory-evidence-counters { border-top: 2px solid #5f4c69; }
+.regulatory-docket-workspace, .regulatory-review-workspace { gap: 0; }
+.regulatory-docket-workspace > article, .regulatory-review-workspace > article { border-bottom: 1px solid var(--line); min-width: 0; padding: 22px 24px 22px 0; }
+.regulatory-docket-workspace > article + article, .regulatory-review-workspace > article + article { border-left: 1px solid var(--line); padding-left: 24px; padding-right: 0; }
+.regulatory-matter-docket .panel-header, .regulatory-calendar-rail .panel-header { border-bottom: 2px solid #4d3f55; margin-bottom: 4px; padding-bottom: 14px; }
+.regulatory-case-entry { border-left: 4px solid #876478; border-top: 0; padding-left: 14px; }
+.regulatory-case-entry > span { color: #684b5d; font-weight: 700; }
+.regulatory-calendar-entry { border-left: 4px solid #4e7892; border-top: 0; padding-left: 14px; }
+.regulatory-calendar-entry > strong { color: #315b75; font-variant-numeric: tabular-nums; }
+.regulatory-exposure-ledger { background: #fbf9fb; }
+.regulatory-summary-row { border-left: 3px solid #a17852; border-top: 0; display: flex; justify-content: space-between; gap: 16px; }
+.regulatory-summary-row span { color: #725238; font-variant-numeric: tabular-nums; font-weight: 700; }
+.regulatory-evidence-register .evidence-card { border-left: 3px solid #63836f; border-radius: 0; }
+@media (max-width: 760px) {
+  .regulatory-command { display: grid; gap: 16px; padding: 22px 16px; }
+  .regulatory-command .profile-score-card { border-left: 0; border-top: 1px solid #897b96; padding-left: 0; padding-top: 12px; }
+  .regulatory-docket-workspace > article, .regulatory-docket-workspace > article + article, .regulatory-review-workspace > article, .regulatory-review-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; }
+}
+
 @media (max-width: 760px) {
   .promise-command,
   .milestone-command {
