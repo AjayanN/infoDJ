@@ -4097,6 +4097,23 @@ th {
 .theme-evidence-desk .evidence-card { border-left: 3px solid #3d8b83; border-radius: 0; }
 @media (max-width: 760px) { .theme-command { display: grid; gap: 16px; padding: 22px 16px; } .theme-coverage-strip .metric-card { border-bottom: 1px solid var(--line); border-right: 0; } .theme-radar-workspace > article, .theme-radar-workspace > article + article, .theme-evidence-workspace > article, .theme-evidence-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
 
+/* Macro evidence is a channel profile with its methodology deliberately visible. */
+.macro-command { background: #3d4b35; color: #fbfdf8; padding: 26px 30px; }
+.macro-command .section-kicker, .macro-command p, .macro-command .profile-score-card span, .macro-command .profile-score-card small { color: #d6e1ce; }
+.macro-toolbar { background: #f2f6ef; display: flex; flex-wrap: wrap; gap: 14px; padding: 16px; }
+.macro-toolbar label { flex: 1 1 190px; min-width: 0; }
+.macro-profile-workspace, .macro-method-workspace, .macro-evidence-workspace { gap: 0; }
+.macro-profile-workspace > article, .macro-method-workspace > article, .macro-evidence-workspace > article { border-bottom: 1px solid var(--line); min-width: 0; padding: 22px 24px 22px 0; }
+.macro-profile-workspace > article + article, .macro-method-workspace > article + article, .macro-evidence-workspace > article + article { border-left: 1px solid var(--line); padding-left: 24px; padding-right: 0; }
+.macro-factor-profile .result-row { border-left: 4px solid #668c52; border-top: 0; }
+.macro-factor-registry .result-row { border-left: 3px solid #6a8297; border-top: 0; }
+.macro-relationship-guardrail { background: #f7f8f3; }
+.macro-relationship-guardrail .result-row { border-left: 3px solid #a5794e; border-top: 0; }
+.macro-stress-archive .result-row { border-left: 3px solid #9b6e69; border-top: 0; }
+.macro-direction-register .result-row { border-left: 3px solid #668c52; border-top: 0; }
+.macro-evidence-desk .evidence-card { border-left: 3px solid #668c52; border-radius: 0; }
+@media (max-width: 760px) { .macro-command { display: grid; gap: 16px; padding: 22px 16px; } .macro-profile-workspace > article, .macro-profile-workspace > article + article, .macro-method-workspace > article, .macro-method-workspace > article + article, .macro-evidence-workspace > article, .macro-evidence-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
+
 /* Ownership is read as a point-in-time ledger with a separate insider activity trail. */
 .ownership-command { background: #323c4d; color: #f8fbff; padding: 26px 30px; }
 .ownership-command .section-kicker, .ownership-command p, .ownership-command .profile-score-card span, .ownership-command .profile-score-card small { color: #d2dbe7; }
