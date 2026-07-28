@@ -3132,7 +3132,7 @@
           <section *ngSwitchCase="'watchlists'" class="company-profile-layout" aria-labelledby="watchlist-heading">
             <div class="loading-panel" *ngIf="watchlistLoading()">Loading watchlists and alerts...</div>
             <ng-container *ngIf="!watchlistLoading()">
-              <section class="panel hero-card">
+              <section class="panel hero-card inbox-command">
                 <div>
                   <p class="section-kicker">Watchlists and Alerts</p>
                   <h2 id="watchlist-heading">Meaningful source-backed change notifications</h2>
@@ -3146,8 +3146,8 @@
                 </div>
               </section>
 
-              <section class="dashboard-two-column">
-                <article class="panel">
+              <section class="dashboard-two-column inbox-watchlist-workspace">
+                <article class="panel inbox-watchlist-intake">
                   <div class="panel-header"><div><p class="section-kicker">Create</p><h2>Watchlist</h2></div></div>
                   <form class="auth-form" (ngSubmit)="createWatchlist()">
                     <label>Name <input name="watchlist_name" [(ngModel)]="watchlistName" required /></label>
@@ -3155,7 +3155,7 @@
                     <button type="submit" class="primary-button">Create watchlist</button>
                   </form>
                 </article>
-                <article class="panel">
+                <article class="panel inbox-watchlist-register">
                   <div class="panel-header"><div><p class="section-kicker">Followed</p><h2>My watchlists</h2></div><span>{{ watchlists()?.summary?.followed_items || 0 }} items</span></div>
                   <div class="result-row" *ngFor="let row of watchlists()?.watchlists || []" (click)="selectWatchlist(row.id)" role="button" tabindex="0">
                     <strong>{{ row.name }}</strong>
@@ -3166,8 +3166,8 @@
                 </article>
               </section>
 
-              <section class="dashboard-two-column" *ngIf="selectedWatchlist() as watchlist">
-                <article class="panel">
+              <section class="dashboard-two-column inbox-follow-workspace" *ngIf="selectedWatchlist() as watchlist">
+                <article class="panel inbox-follow-intake">
                   <div class="panel-header"><div><p class="section-kicker">Selected</p><h2>{{ watchlist.name }}</h2></div></div>
                   <form class="auth-form" (ngSubmit)="addWatchItem()">
                     <label>Entity type
@@ -3181,7 +3181,7 @@
                     <button type="submit" class="primary-button">Follow entity</button>
                   </form>
                 </article>
-                <article class="panel">
+                <article class="panel inbox-followed-register">
                   <div class="panel-header"><div><p class="section-kicker">Items</p><h2>Followed entities</h2></div><span>{{ watchlist.items?.length || 0 }} items</span></div>
                   <div class="result-row" *ngFor="let item of watchlist.items || []">
                     <strong>{{ item.label }}</strong>
@@ -3191,7 +3191,7 @@
                 </article>
               </section>
 
-              <section class="panel company-profile-controls" aria-label="Notification controls">
+              <section class="panel company-profile-controls inbox-toolbar" aria-label="Notification controls">
                 <label>Status
                   <select name="notification_status" [(ngModel)]="notificationStatusFilter">
                     <option value="">All statuses</option>
@@ -3210,7 +3210,7 @@
                 </div>
               </section>
 
-              <section class="panel" *ngIf="notifications() as noteView">
+              <section class="panel inbox-alert-feed" *ngIf="notifications() as noteView">
                 <div class="panel-header"><div><p class="section-kicker">Notification Center</p><h2>Grouped alerts</h2></div><span>{{ noteView.notifications.length }} visible</span></div>
                 <div class="result-row" *ngFor="let alert of noteView.notifications">
                   <strong>{{ alert.title }}</strong>
