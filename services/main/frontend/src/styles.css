@@ -4053,6 +4053,18 @@ th {
 .dependency-contract-risk .result-row { border-left: 3px solid #b47c4c; border-top: 0; }
 @media (max-width: 760px) { .dependency-command { display: grid; gap: 16px; padding: 22px 16px; } .dependency-map-workspace > article, .dependency-map-workspace > article + article, .dependency-guardrail-workspace > article, .dependency-guardrail-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
 
+/* Geography is a footprint atlas with dated entry and exit evidence. */
+.geo-command { background: #274050; color: #f8fbff; padding: 26px 30px; }
+.geo-command .section-kicker, .geo-command p, .geo-command .profile-score-card span, .geo-command .profile-score-card small { color: #c9d9e5; }
+.geo-toolbar { background: #f1f5f7; display: flex; flex-wrap: wrap; gap: 14px; padding: 16px; }
+.geo-toolbar label { flex: 1 1 200px; min-width: 0; }
+.geo-footprint-workspace, .geo-guardrail-workspace { gap: 0; }
+.geo-footprint-workspace > article, .geo-guardrail-workspace > article { border-bottom: 1px solid var(--line); min-width: 0; padding: 22px 24px 22px 0; }
+.geo-footprint-workspace > article + article, .geo-guardrail-workspace > article + article { border-left: 1px solid var(--line); padding-left: 24px; padding-right: 0; }
+.geo-market-atlas .result-row { border-left: 3px solid #3e8a94; border-top: 0; }
+.geo-expansion-timeline .result-row { border-left: 3px solid #4b84b1; border-top: 0; }
+@media (max-width: 760px) { .geo-command { display: grid; gap: 16px; padding: 22px 16px; } .geo-footprint-workspace > article, .geo-footprint-workspace > article + article, .geo-guardrail-workspace > article, .geo-guardrail-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
+
 @media (max-width: 760px) {
   .promise-command,
   .milestone-command {

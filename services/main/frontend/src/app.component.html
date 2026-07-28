@@ -1887,7 +1887,7 @@
           <section *ngSwitchCase="'geographic-expansion'" class="company-profile-layout" aria-labelledby="geo-expansion-heading">
             <div class="loading-panel" *ngIf="geographicExpansionLoading()">Loading geographic expansion map...</div>
             <ng-container *ngIf="!geographicExpansionLoading() && geographicExpansion() as geoView">
-              <section class="panel company-profile-hero">
+              <section class="company-profile-hero geo-command">
                 <div>
                   <p class="section-kicker">Geographic Expansion Map · {{ geoView.status }}</p>
                   <h2 id="geo-expansion-heading">{{ geoView.company.name }}</h2>
@@ -1901,7 +1901,7 @@
                 </div>
               </section>
 
-              <section class="profile-controls panel">
+              <section class="profile-controls geo-toolbar">
                 <label>Map at date
                   <select [(ngModel)]="geographicExpansionDate">
                     <option value="">Latest reviewed snapshot</option>
@@ -1929,8 +1929,8 @@
                 </div>
               </section>
 
-              <section class="dashboard-two-column">
-                <article class="panel">
+              <section class="dashboard-two-column geo-footprint-workspace">
+                <article class="geo-market-atlas">
                   <div class="panel-header"><div><p class="section-kicker">Markets</p><h2>Countries and regions</h2></div></div>
                   <div class="result-row" *ngFor="let market of geoView.markets">
                     <strong>{{ market.geography }}</strong>
@@ -1945,7 +1945,7 @@
                   <div class="empty-state unavailable-state" *ngIf="geoView.markets.length === 0">No reviewed geographic markets are available for the selected filters.</div>
                 </article>
 
-                <article class="panel">
+                <article class="geo-expansion-timeline">
                   <div class="panel-header"><div><p class="section-kicker">Timeline</p><h2>Entry and exit evidence</h2></div><span>{{ geoView.timeline.length }} dated rows</span></div>
                   <div class="result-row" *ngFor="let row of geoView.timeline">
                     <strong>{{ row.geography }}</strong>
@@ -1956,8 +1956,8 @@
                 </article>
               </section>
 
-              <section class="dashboard-two-column">
-                <article class="panel">
+              <section class="dashboard-two-column geo-guardrail-workspace">
+                <article class="geo-methodology">
                   <div class="panel-header"><div><p class="section-kicker">Methodology</p><h2>Expansion guardrails</h2></div></div>
                   <p>{{ geoView.snapshot?.methodology }}</p>
                   <p>Missing revenue contribution, partnerships, barriers, or outcomes are shown as source gaps and are not inferred from generic geographic presence.</p>
