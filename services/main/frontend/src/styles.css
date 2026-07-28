@@ -3459,3 +3459,145 @@ th {
     margin: 0 -16px;
   }
 }
+
+/* Operating KPIs are selected and compared inside one analysis workbench. */
+.kpi-command {
+  background: #173047;
+  color: #f8fbff;
+  padding: 26px 30px;
+}
+
+.kpi-command .section-kicker,
+.kpi-command p,
+.kpi-command .formula-note,
+.kpi-command .coverage-summary span,
+.kpi-command .coverage-summary small {
+  color: #c4d4e3;
+}
+
+.kpi-command .coverage-summary {
+  border-left: 1px solid #50708b;
+  padding-left: 22px;
+}
+
+.kpi-baseline-strip {
+  border-bottom: 1px solid var(--line);
+  padding: 18px 0;
+}
+
+.kpi-baseline-strip .account-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.kpi-baseline-strip .metric {
+  background: transparent;
+  border-left: 1px solid var(--line);
+  border-radius: 0;
+  padding: 6px 16px;
+}
+
+.kpi-baseline-strip .metric:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+
+.kpi-workbench-controls {
+  background: #edf3f7;
+  border: 1px solid #d3dfe8;
+  border-radius: 0;
+  padding: 16px;
+}
+
+.kpi-catalogue {
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  gap: 0;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.kpi-catalogue .kpi-summary-card {
+  background: transparent;
+  border: 0;
+  border-left: 1px solid var(--line);
+  border-radius: 0;
+  min-width: 0;
+  padding: 18px;
+}
+
+.kpi-catalogue .kpi-summary-card:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+
+.kpi-catalogue .kpi-summary-card.selected {
+  background: #edf5fa;
+  box-shadow: inset 0 -3px 0 #2376ae;
+}
+
+.kpi-summary-card select {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kpi-trend-workbench {
+  border-bottom: 1px solid var(--line);
+  padding: 24px 0;
+}
+
+.kpi-trend-workbench .kpi-trend {
+  border-top: 1px solid var(--line);
+}
+
+.kpi-trend-workbench .kpi-trend-row {
+  border-bottom: 1px solid var(--line);
+  padding: 13px 4px;
+}
+
+.kpi-event-context,
+.kpi-peer-readiness {
+  border-bottom: 1px solid var(--line);
+  padding: 24px 0;
+}
+
+.kpi-peer-readiness {
+  background: #f5f8fa;
+  padding-left: 18px;
+  padding-right: 18px;
+}
+
+@media (max-width: 760px) {
+  .kpi-command {
+    display: grid;
+    gap: 16px;
+    padding: 22px 16px;
+  }
+
+  .kpi-command .coverage-summary {
+    border-left: 0;
+    border-top: 1px solid #50708b;
+    padding-left: 0;
+    padding-top: 12px;
+  }
+
+  .kpi-baseline-strip .account-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .kpi-baseline-strip .metric:nth-child(odd) {
+    border-left: 0;
+    padding-left: 0;
+  }
+
+  .kpi-catalogue {
+    grid-template-columns: 1fr;
+  }
+
+  .kpi-catalogue .kpi-summary-card,
+  .kpi-catalogue .kpi-summary-card:first-child {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    padding: 16px 0;
+  }
+}
