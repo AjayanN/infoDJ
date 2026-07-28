@@ -1561,13 +1561,7 @@
 
                 <section class="competitive-peer-map">
                   <div class="panel-header"><div><p class="section-kicker">Competitor map</p><h2>Peers and relationship types</h2></div><span>{{ competitiveView.coverage.in_universe_peer_count }} configured peers</span></div>
-                  <div class="result-row" *ngFor="let peer of competitiveView.peer_map">
-                    <strong>{{ peer.peer_name }} · {{ peer.relationship_label }}</strong>
-                    <span>{{ peer.scope }} · {{ peer.geography || 'Geography unavailable' }} · confidence {{ peer.confidence_score | number:'1.2-2' }}</span>
-                    <p>{{ peer.evidence_text }}</p>
-                    <small *ngIf="peer.product_overlap.length > 0">Product overlap: {{ peer.product_overlap.join(' · ') }}</small>
-                    <small *ngIf="peer.customer_overlap.length > 0">Customer overlap: {{ peer.customer_overlap.join(' · ') }}</small>
-                  </div>
+                  <div class="competitive-battlefield" *ngIf="competitiveView.peer_map.length > 0"><section *ngFor="let lane of competitivePeerLanes(competitiveView.peer_map)"><header><h3>{{ lane.label }}</h3><span>{{ lane.peers.length }} peers</span></header><article *ngFor="let peer of lane.peers"><strong>{{ peer.peer_name }}</strong><span>{{ peer.scope }} · {{ peer.geography || 'Geography unavailable' }}</span><p>{{ peer.evidence_text }}</p><div class="competitive-overlap-tags" *ngIf="peer.product_overlap.length > 0 || peer.customer_overlap.length > 0"><small *ngFor="let item of peer.product_overlap">Product · {{ item }}</small><small *ngFor="let item of peer.customer_overlap">Customer · {{ item }}</small></div><footer>Confidence {{ peer.confidence_score | number:'1.2-2' }}</footer></article></section></div>
                   <div class="empty-state unavailable-state" *ngIf="competitiveView.peer_map.length === 0">No reviewed competitive peers match the selected filters.</div>
                 </section>
 

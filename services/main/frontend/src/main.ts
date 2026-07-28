@@ -125,6 +125,7 @@ type BlockedKpiPeer = OperatingKpiResponse['blocked_peer_metrics'][number];
 type KpiBlockerReason = { key: string; label: string; count: number };
 type KpiPeerBlockerGroup = { company: string; companySlug: string; total: number; reasons: KpiBlockerReason[]; examples: BlockedKpiPeer[]; hiddenCount: number };
 type PromiseBoardLane = { key: string; label: string; description: string; promises: ManagementPromiseResponse['promises'] };
+type CompetitivePeerLane = { label: string; peers: CompetitivePositionResponse['peer_map'] };
 type SourceLensState = { title: string; sources: CompanyProfileSource[] } | null;
 type DashboardSectionKey =
   | 'latest_moves'
@@ -2654,6 +2655,15 @@ class AppComponent {
       { key: 'unverifiable', label: 'Unverifiable', description: 'Evidence is insufficient to classify delivery.', statuses: ['UNVERIFIABLE'] }
     ];
     return lanes.map((lane) => ({ ...lane, promises: promises.filter((promise) => lane.statuses.includes(promise.current_status)) }));
+  }
+
+  competitivePeerLanes(peers: CompetitivePositionResponse['peer_map']): CompetitivePeerLane[] {
+    const lanes = new Map<string, CompetitivePositionResponse['peer_map']>();
+    for (const peer of peers) {
+      const label = peer.relationship_label || 'Other relationship';
+      lanes.set(label, [...(lanes.get(label) || []), peer]);
+    }
+    return Array.from(lanes, ([label, lanePeers]) => ({ label, peers: lanePeers }));
   }
 
   setSelectedKpiVariant(groupKey: string, slug: string): void {

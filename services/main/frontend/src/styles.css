@@ -4247,6 +4247,46 @@ th {
   border-top: 0;
 }
 
+.competitive-battlefield {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
+}
+
+.competitive-battlefield > section {
+  background: #f7f9fb;
+  border-top: 3px solid #4f8398;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 13px;
+}
+
+.competitive-battlefield > section > header {
+  align-items: baseline;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.competitive-battlefield h3 { font-size: 14px; margin: 0; }
+.competitive-battlefield > section > header span { color: var(--muted); font-size: 12px; font-weight: 800; }
+
+.competitive-battlefield article {
+  background: #fff;
+  border: 1px solid var(--line);
+  display: grid;
+  gap: 6px;
+  padding: 11px;
+}
+
+.competitive-battlefield article > span,
+.competitive-battlefield footer { color: var(--muted); font-size: 12px; font-weight: 700; }
+.competitive-battlefield article p { color: #3d4e61; font-size: 13px; line-height: 1.45; margin: 0; }
+
+.competitive-overlap-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.competitive-overlap-tags small { background: #eaf2f3; border: 1px solid #c5dadd; color: #2d626a; font-size: 11px; font-weight: 700; padding: 3px 5px; }
+
 .competitive-matrix-workspace,
 .competitive-evidence-balance {
   gap: 0;
