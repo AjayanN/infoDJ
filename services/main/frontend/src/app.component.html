@@ -1513,7 +1513,7 @@
           <section *ngSwitchCase="'competitive-position'" class="company-profile-layout" aria-labelledby="competitive-position-heading">
             <div class="panel empty-state" *ngIf="competitivePositionLoading()" role="status">Loading reviewed competitive position.</div>
             <ng-container *ngIf="competitivePosition() as competitiveView">
-              <section class="panel company-profile-hero">
+              <section class="company-profile-hero competitive-command">
                 <div>
                   <p class="section-kicker">Competitive Position Dashboard · {{ competitiveView.status }}</p>
                   <h2 id="competitive-position-heading">{{ competitiveView.company.name }}</h2>
@@ -1527,7 +1527,7 @@
                 </div>
               </section>
 
-              <section class="panel company-profile-controls" aria-label="Competitive position controls">
+              <section class="company-profile-controls competitive-toolbar" aria-label="Competitive position controls">
                 <label>Snapshot
                   <select [(ngModel)]="competitivePositionDate">
                     <option *ngFor="let snapshot of competitiveView.snapshot_history" [value]="snapshot.effective_date">{{ snapshot.effective_date }} · {{ snapshot.peer_count }} peers</option>
@@ -1545,13 +1545,13 @@
               </section>
 
               <ng-container *ngIf="competitiveView.snapshot as snapshot; else noCompetitiveSnapshot">
-                <section class="panel">
+                <section class="competitive-method-note">
                   <div class="panel-header"><div><p class="section-kicker">Methodology</p><h2>What this comparison owns</h2></div><span>Confidence {{ snapshot.confidence_score | number:'1.2-2' }}</span></div>
                   <p>{{ snapshot.methodology }}</p>
                   <a *ngIf="snapshot.source" [href]="snapshot.source.url" target="_blank" rel="noopener">Open source</a>
                 </section>
 
-                <section class="panel">
+                <section class="competitive-peer-map">
                   <div class="panel-header"><div><p class="section-kicker">Competitor map</p><h2>Peers and relationship types</h2></div><span>{{ competitiveView.coverage.in_universe_peer_count }} configured peers</span></div>
                   <div class="result-row" *ngFor="let peer of competitiveView.peer_map">
                     <strong>{{ peer.peer_name }} · {{ peer.relationship_label }}</strong>
@@ -1563,8 +1563,8 @@
                   <div class="empty-state unavailable-state" *ngIf="competitiveView.peer_map.length === 0">No reviewed competitive peers match the selected filters.</div>
                 </section>
 
-                <section class="dashboard-two-column">
-                  <article class="panel">
+                <section class="dashboard-two-column competitive-matrix-workspace">
+                  <article class="competitive-overlap-matrix">
                     <div class="panel-header"><div><p class="section-kicker">Comparison</p><h2>Product, customer, geography, and scale</h2></div></div>
                     <ng-container *ngFor="let group of ['PRODUCT_OVERLAP','CUSTOMER_OVERLAP','GEOGRAPHIC_OVERLAP','SCALE_COMPARISON','PRICING_POSITION']">
                       <h3>{{ promiseLabel(group) }}</h3>
@@ -1572,7 +1572,7 @@
                       <div class="empty-state" *ngIf="!(competitiveView.comparison[group] || []).length">No reviewed {{ promiseLabel(group) | lowercase }} dimension is available.</div>
                     </ng-container>
                   </article>
-                  <article class="panel">
+                  <article class="competitive-actions-feed">
                     <div class="panel-header"><div><p class="section-kicker">Market share</p><h2>Series and methodology</h2></div></div>
                     <div class="empty-state unavailable-state" *ngIf="competitiveView.market_share.status === 'unavailable'">{{ competitiveView.market_share.reason }}</div>
                     <div class="result-row" *ngFor="let action of competitiveView.competitive_actions"><strong>{{ action.event_type }}</strong><span>{{ action.event_date }}</span><p>{{ action.actual_change }}</p></div>
@@ -1580,13 +1580,13 @@
                   </article>
                 </section>
 
-                <section class="dashboard-two-column">
-                  <article class="panel">
+                <section class="dashboard-two-column competitive-evidence-balance">
+                  <article class="competitive-moat-evidence">
                     <div class="panel-header"><div><p class="section-kicker">Moat evidence</p><h2>Supporting evidence</h2></div></div>
                     <div class="result-row" *ngFor="let item of competitiveView.moat_evidence"><strong>{{ item.peer_name || item.label }}</strong><p>{{ item.description }}</p></div>
                     <div class="empty-state" *ngIf="competitiveView.moat_evidence.length === 0">No reviewed moat evidence is available.</div>
                   </article>
-                  <article class="panel">
+                  <article class="competitive-pressure-evidence">
                     <div class="panel-header"><div><p class="section-kicker">Opposing evidence</p><h2>Pressure and uncertainty</h2></div></div>
                     <div class="result-row conflict-row" *ngFor="let item of competitiveView.opposing_evidence"><strong>{{ item.peer_name || item.label }}</strong><p>{{ item.description }}</p></div>
                     <div class="empty-state" *ngIf="competitiveView.opposing_evidence.length === 0">No reviewed opposing evidence is available.</div>
