@@ -2176,7 +2176,7 @@
           <section *ngSwitchCase="'valuation-context'" class="company-profile-layout" aria-labelledby="valuation-heading">
             <div class="loading-panel" *ngIf="valuationContextLoading()">Loading valuation context...</div>
             <ng-container *ngIf="!valuationContextLoading() && valuationContext() as valuationView">
-              <section class="panel company-profile-hero">
+              <section class="panel company-profile-hero valuation-command">
                 <div>
                   <p class="section-kicker">Valuation Context · {{ valuationView.status }}</p>
                   <h2 id="valuation-heading">{{ valuationView.company.name }}</h2>
@@ -2191,7 +2191,7 @@
                 </div>
               </section>
 
-              <section class="profile-controls panel">
+              <section class="profile-controls panel valuation-toolbar">
                 <label>Snapshot at date
                   <select [(ngModel)]="valuationContextDate">
                     <option value="">Latest reviewed snapshot</option>
@@ -2213,33 +2213,31 @@
                 </div>
               </section>
 
-              <section class="dashboard-two-column">
-                <article class="panel">
-                  <div class="panel-header"><div><p class="section-kicker">Measures</p><h2>Reproducible valuation observations</h2></div></div>
-                  <div class="result-row" *ngFor="let row of valuationView.observations">
-                    <strong>{{ row.measure_label }}</strong>
-                    <span>{{ row.applicability_label }} · confidence {{ row.confidence_score | number:'1.2-2' }}</span>
-                    <p>{{ row.formula }}</p>
-                    <small>
-                      value <ng-container *ngIf="row.value === null; else valuationValue">unavailable</ng-container>
-                      <ng-template #valuationValue>{{ row.value | number:'1.2-2' }} {{ row.unit }}</ng-template>
-                      · {{ row.numerator_label || 'numerator' }} {{ row.numerator === null ? 'unavailable' : (row.numerator | number:'1.2-2') }}
-                      · {{ row.denominator_label || 'denominator' }} {{ row.denominator === null ? 'unavailable' : (row.denominator | number:'1.2-2') }}
-                    </small>
-                    <p *ngIf="row.unavailable_reason">{{ row.unavailable_reason }}</p>
+              <section class="dashboard-two-column valuation-workbench">
+                <article class="panel valuation-calculation-ledger">
+                  <div class="panel-header"><div><p class="section-kicker">Calculation ledger</p><h2>Measures and inputs</h2></div><span>{{ valuationView.observations.length }} reviewed</span></div>
+                  <div class="result-row valuation-measure" *ngFor="let row of valuationView.observations">
+                    <div class="valuation-measure-heading"><strong>{{ row.measure_label }}</strong><span>{{ row.applicability_label }} · confidence {{ row.confidence_score | number:'1.2-2' }}</span></div>
+                    <p class="valuation-formula">{{ row.formula }}</p>
+                    <dl class="valuation-inputs">
+                      <div><dt>Context value</dt><dd><ng-container *ngIf="row.value === null; else valuationValue">Unavailable</ng-container><ng-template #valuationValue>{{ row.value | number:'1.2-2' }} {{ row.unit }}</ng-template></dd></div>
+                      <div><dt>{{ row.numerator_label || 'Numerator' }}</dt><dd>{{ row.numerator === null ? 'Unavailable' : (row.numerator | number:'1.2-2') }}</dd></div>
+                      <div><dt>{{ row.denominator_label || 'Denominator' }}</dt><dd>{{ row.denominator === null ? 'Unavailable' : (row.denominator | number:'1.2-2') }}</dd></div>
+                    </dl>
+                    <p class="unavailable-reason" *ngIf="row.unavailable_reason">{{ row.unavailable_reason }}</p>
                   </div>
                   <div class="empty-state unavailable-state" *ngIf="valuationView.observations.length === 0">No valuation observations are available for the selected filters.</div>
                 </article>
 
-                <article class="panel">
-                  <div class="panel-header"><div><p class="section-kicker">Peers</p><h2>Comparable context</h2></div><span>{{ valuationView.peer_comparisons.length }} rows</span></div>
-                  <div class="result-row" *ngFor="let range of valuationView.historical_ranges">
+                <article class="panel valuation-comparable-context">
+                  <div class="panel-header"><div><p class="section-kicker">Comparable context</p><h2>Peer and range reference</h2></div><span>{{ valuationView.peer_comparisons.length }} peer rows</span></div>
+                  <div class="result-row valuation-range" *ngFor="let range of valuationView.historical_ranges">
                     <strong>{{ range.measure_label }} historical range</strong>
                     <span>{{ range.observation_count }} reviewed observations</span>
                     <p>{{ range.range_note }}</p>
                     <small>min {{ range.min_value === null ? 'unavailable' : (range.min_value | number:'1.2-2') }} · max {{ range.max_value === null ? 'unavailable' : (range.max_value | number:'1.2-2') }}</small>
                   </div>
-                  <div class="result-row" *ngFor="let peer of valuationView.peer_comparisons">
+                  <div class="result-row valuation-peer" *ngFor="let peer of valuationView.peer_comparisons">
                     <strong>{{ peer.peer_name }} · {{ peer.measure_label }}</strong>
                     <span>company {{ peer.company_value === null ? 'unavailable' : (peer.company_value | number:'1.2-2') }} · peer {{ peer.peer_value === null ? 'unavailable' : (peer.peer_value | number:'1.2-2') }}</span>
                     <p>{{ peer.comparison_note }}</p>
@@ -2248,10 +2246,10 @@
                 </article>
               </section>
 
-              <section class="dashboard-two-column">
-                <article class="panel">
-                  <div class="panel-header"><div><p class="section-kicker">Events</p><h2>Event-aligned snapshots</h2></div><span>{{ valuationView.event_snapshots.length }} rows</span></div>
-                  <div class="result-row" *ngFor="let event of valuationView.event_snapshots">
+              <section class="dashboard-two-column valuation-research-desk">
+                <article class="panel valuation-event-context">
+                  <div class="panel-header"><div><p class="section-kicker">Event context</p><h2>Observed around material events</h2></div><span>{{ valuationView.event_snapshots.length }} rows</span></div>
+                  <div class="result-row valuation-event" *ngFor="let event of valuationView.event_snapshots">
                     <strong>{{ event.event_label }}</strong>
                     <span>{{ event.event_date }} · {{ event.measure_label }}</span>
                     <p>{{ event.context_note }}</p>
@@ -2259,8 +2257,8 @@
                   </div>
                   <div class="empty-state unavailable-state" *ngIf="valuationView.event_snapshots.length === 0">No event-aligned valuation context is available. Missing rows do not imply no market movement.</div>
                 </article>
-                <article class="panel">
-                  <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Valuation evidence</h2></div><span>{{ valuationView.evidence.length }} sources</span></div>
+                <article class="panel valuation-evidence-desk">
+                  <div class="panel-header"><div><p class="section-kicker">Evidence desk</p><h2>Method and source record</h2></div><span>{{ valuationView.evidence.length }} sources</span></div>
                   <p>{{ valuationView.snapshot?.methodology }}</p>
                   <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of valuationView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
                 </article>
