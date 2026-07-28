@@ -4013,6 +4013,21 @@ th {
   }
 }
 
+/* Product and pricing is an offering catalogue with a dated change studio. */
+.product-command { background: #304154; color: #f8fbff; padding: 26px 30px; }
+.product-command .section-kicker, .product-command p, .product-command .coverage-summary span, .product-command .coverage-summary small { color: #cad8e4; }
+.product-command .coverage-summary { border-left: 1px solid #708397; padding-left: 22px; }
+.product-toolbar { background: #f1f5f7; flex-wrap: wrap; padding: 16px; }
+.product-toolbar label { flex: 1 1 250px; min-width: 0; }
+.product-chronology-note, .product-catalogue-board { border-bottom: 1px solid var(--line); padding: 22px 0; }
+.product-catalogue-board .result-row { border-left: 3px solid #5582aa; border-top: 0; }
+.product-timeline-workspace, .product-before-after-workspace { gap: 0; }
+.product-timeline-workspace > article, .product-before-after-workspace > article { border-bottom: 1px solid var(--line); min-width: 0; padding: 22px 24px 22px 0; }
+.product-timeline-workspace > article + article, .product-before-after-workspace > article + article { border-left: 1px solid var(--line); padding-left: 24px; padding-right: 0; }
+.product-change-timeline .result-row { border-left: 3px solid #32856e; border-top: 0; }
+.product-comparison-ledger .result-row { border-left: 3px solid #6a85a0; }
+@media (max-width: 760px) { .product-command { display: grid; gap: 16px; padding: 22px 16px; } .product-command .coverage-summary { border-left: 0; border-top: 1px solid #708397; padding-left: 0; padding-top: 12px; } .product-timeline-workspace > article, .product-timeline-workspace > article + article, .product-before-after-workspace > article, .product-before-after-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
+
 @media (max-width: 760px) {
   .promise-command,
   .milestone-command {
