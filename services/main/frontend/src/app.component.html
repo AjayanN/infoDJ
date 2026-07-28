@@ -927,7 +927,7 @@
           <section *ngSwitchCase="'operating-kpis'" class="company-profile-layout" aria-labelledby="operating-kpi-heading">
             <div class="panel empty-state" *ngIf="operatingKpiLoading() && !operatingKpis()" role="status">Loading reviewed operating KPI series.</div>
             <ng-container *ngIf="operatingKpis() as kpiView">
-              <section class="panel company-profile-hero">
+              <section class="company-profile-hero kpi-command">
                 <div>
                   <p class="section-kicker">Operating KPI Tracker · {{ kpiView.status }}</p>
                   <h2 id="operating-kpi-heading">{{ kpiView.company.name }} operating drivers</h2>
@@ -940,7 +940,7 @@
                 </div>
               </section>
 
-              <section class="panel">
+              <section class="kpi-baseline-strip">
                 <div class="panel-header"><div><p class="section-kicker">Reviewed baseline depth</p><h2>SEC-backed trend coverage</h2></div><span class="status-pill" [class.available]="kpiView.coverage.baseline.status === 'available'">{{ kpiView.coverage.baseline.status }}</span></div>
                 <div class="account-grid">
                   <div class="metric"><dt>Definitions</dt><dd>{{ kpiView.coverage.baseline.definition_count }}</dd><small>company-wide baseline</small></div>
@@ -953,7 +953,7 @@
                 <small>Period range {{ kpiView.coverage.baseline.first_period || 'unavailable' }} to {{ kpiView.coverage.baseline.latest_period || 'unavailable' }}</small>
               </section>
 
-              <section class="panel company-profile-controls kpi-controls" aria-label="Operating KPI controls">
+              <section class="company-profile-controls kpi-controls kpi-workbench-controls" aria-label="Operating KPI controls">
                 <label>Metric
                   <select [(ngModel)]="operatingKpiMetric">
                     <option *ngFor="let metric of kpiView.dictionary" [value]="metric.slug">{{ metric.name }} · {{ metric.value_type }}</option>
@@ -974,8 +974,8 @@
                 </div>
               </section>
 
-              <section class="kpi-summary-grid" aria-label="KPI dictionary">
-                <article class="panel kpi-summary-card" *ngFor="let group of operatingKpiMetricGroups(); trackBy: trackKpiMetricGroup" [class.selected]="group.selected">
+              <section class="kpi-summary-grid kpi-catalogue" aria-label="KPI dictionary">
+                <article class="kpi-summary-card" *ngFor="let group of operatingKpiMetricGroups(); trackBy: trackKpiMetricGroup" [class.selected]="group.selected">
                   <span>{{ group.variants.length }} {{ group.variants.length === 1 ? 'series' : 'series variants' }}</span><h3>{{ group.label }}</h3>
                   <p>{{ group.variants[0].description }}</p><small>{{ group.variants[0].scope }}</small>
                   <label>Choose series
@@ -987,7 +987,7 @@
                 </article>
               </section>
 
-              <section class="panel" aria-labelledby="kpi-trend-heading">
+              <section class="kpi-trend-workbench" aria-labelledby="kpi-trend-heading">
                 <div class="panel-header"><div><p class="section-kicker">Trend and table</p><h2 id="kpi-trend-heading">{{ kpiView.selected_metric?.name || 'KPI series' }}</h2></div><span>{{ kpiView.selected_metric?.unit }}</span></div>
                 <div class="empty-state unavailable-state" *ngIf="kpiView.series.length === 0">No observations match these controls. Missing data is not treated as zero.</div>
                 <div class="kpi-trend" *ngIf="kpiView.series.length > 0">
@@ -1021,7 +1021,7 @@
                 </article>
               </section>
 
-              <section class="panel">
+              <section class="kpi-event-context">
                 <div class="panel-header"><div><p class="section-kicker">Context</p><h2>Related company events</h2><p>These events may help explain KPI movement. They are context, not automatic causation.</p></div></div>
                 <div class="kpi-event-groups" *ngIf="kpiView.event_overlays.length > 0">
                   <article class="kpi-event-group" *ngFor="let group of operatingKpiEventGroups(); trackBy: trackKpiEventGroup">
@@ -1040,7 +1040,7 @@
                 <div class="empty-state" *ngIf="kpiView.event_overlays.length === 0">No eligible event overlays.</div>
               </section>
 
-              <section class="panel peer-normalization-panel">
+              <section class="peer-normalization-panel kpi-peer-readiness">
                 <div class="panel-header">
                   <div>
                     <p class="section-kicker">Peer normalization</p>
