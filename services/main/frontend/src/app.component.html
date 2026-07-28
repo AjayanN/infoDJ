@@ -753,105 +753,65 @@
           <section *ngSwitchCase="'company'" class="company-profile-layout" aria-labelledby="company-profile-heading">
             <div class="panel empty-state" *ngIf="companyLoading()" role="status">Loading source-backed company profile.</div>
             <ng-container *ngIf="companyProfile() as companyView">
-              <section class="panel company-profile-hero dossier-hero">
-                <div class="dossier-identity">
-                  <p class="section-kicker">Company dossier · {{ companyView.status }}</p>
-                  <h2 id="company-profile-heading">{{ companyView.company.name }}</h2>
-                  <p class="dossier-summary">{{ companyView.sections['summary'].text || companyView.company.description || 'A reviewed company summary is not available yet.' }}</p>
-                  <div class="profile-meta-row" aria-label="Business identity">
-                    <span>{{ companyView.company.sector || 'Sector unavailable' }}</span>
-                    <span>{{ companyView.company.country || 'Country unavailable' }}</span>
-                    <span>Founded {{ companyView.company.founded_date || 'date unavailable' }}</span>
+              <section class="research-command" aria-labelledby="company-profile-heading">
+                <div class="research-command-bar">
+                  <p>Company 360</p>
+                  <span>{{ companyView.company.sector || 'Sector unavailable' }}</span>
+                  <span>{{ companyView.company.country || 'Country unavailable' }}</span>
+                  <a *ngIf="companyView.company.website" [href]="companyView.company.website" target="_blank" rel="noopener">Official site</a>
+                </div>
+                <div class="research-command-main">
+                  <div>
+                    <h2 id="company-profile-heading">{{ companyView.company.name }}</h2>
+                    <p>{{ companyView.sections['summary'].text || companyView.company.description || 'A reviewed company summary is not available yet.' }}</p>
+                  </div>
+                  <div class="research-command-actions">
+                    <label for="company-profile-date">Review date<select id="company-profile-date" name="company_profile_date" [(ngModel)]="companyProfileDate" (change)="selectCompanyProfileDate()"><option *ngFor="let snapshot of companyView.snapshot_history" [value]="snapshot.effective_date">{{ snapshot.effective_date }}</option></select></label>
+                    <button type="button" class="ghost-button" (click)="changeCompany()">Change company</button>
+                    <button type="button" class="primary-button" (click)="printCompanyProfile()">Print brief</button>
                   </div>
                 </div>
-                <dl class="dossier-facts" aria-label="Dossier coverage and freshness">
-                  <div><dt>Coverage</dt><dd>{{ companyView.coverage.completeness_percent }}%</dd><small>{{ companyView.coverage.available_sections }} of {{ companyView.coverage.total_sections }} profile areas</small></div>
-                  <div><dt>Latest review</dt><dd>{{ companyView.coverage.last_updated ? (companyView.coverage.last_updated | date:'mediumDate') : 'Unavailable' }}</dd><small>{{ companyView.coverage.snapshot_count }} reviewed snapshots</small></div>
-                  <div><dt>Source freshness</dt><dd>{{ companyView.coverage.source_count }} sources</dd><small>{{ sourceFreshness(companyView) }}</small></div>
+                <dl class="research-fact-strip" aria-label="Research coverage">
+                  <div><dt>Coverage</dt><dd>{{ companyView.coverage.completeness_percent }}%</dd><small>{{ companyView.coverage.available_sections }} of {{ companyView.coverage.total_sections }} areas</small></div>
+                  <div><dt>Last review</dt><dd>{{ companyView.coverage.last_updated ? (companyView.coverage.last_updated | date:'mediumDate') : 'Unavailable' }}</dd><small>{{ companyView.coverage.snapshot_count }} reviewed snapshots</small></div>
+                  <div><dt>Evidence</dt><dd>{{ companyView.coverage.source_count }} sources</dd><small>{{ sourceFreshness(companyView) }}</small></div>
                 </dl>
-                <a class="dossier-site-link" *ngIf="companyView.company.website" [href]="companyView.company.website" target="_blank" rel="noopener">Official website</a>
               </section>
 
-              <section class="panel company-profile-controls" aria-label="Company profile controls">
-                <label for="company-profile-date">
-                  Historical profile snapshot
-                  <select id="company-profile-date" name="company_profile_date" [(ngModel)]="companyProfileDate" (change)="selectCompanyProfileDate()">
-                    <option *ngFor="let snapshot of companyView.snapshot_history" [value]="snapshot.effective_date">
-                      {{ snapshot.effective_date }} · {{ snapshot.status }} · confidence {{ snapshot.confidence_score | number:'1.2-2' }}
-                    </option>
-                  </select>
-                </label>
-                <div class="profile-control-actions">
-                  <button type="button" class="ghost-button" (click)="changeCompany()">Change company</button>
-                  <button type="button" class="primary-button" (click)="printCompanyProfile()">Print company brief</button>
-                </div>
-              </section>
-
-              <section class="company-feature-catalog" aria-labelledby="company-feature-heading">
-                <div class="company-feature-catalog-header">
-                  <div><p class="section-kicker">Research cockpit</p><h2 id="company-feature-heading">Choose the next research lens</h2><p>Each view keeps {{ companyView.company.name }} in context and opens the relevant source-backed workflow.</p></div>
-                  <label for="company-feature-search">Find a feature<input id="company-feature-search" name="company_feature_search" [(ngModel)]="companyFeatureQuery" placeholder="Try pricing, lawsuit, leadership, or risk" /></label>
-                </div>
-                <div class="company-feature-groups" *ngIf="hasCompanyFeatureResults(); else noCompanyFeatureResults">
-                  <section class="company-feature-group" *ngFor="let category of companyFeatureCategories" [class.empty]="filteredCompanyFeatures(category).length === 0">
-                    <h3 *ngIf="filteredCompanyFeatures(category).length > 0">{{ category }}</h3>
-                    <div class="company-feature-grid" *ngIf="filteredCompanyFeatures(category).length > 0"><button type="button" class="company-feature-card" *ngFor="let feature of filteredCompanyFeatures(category)" (click)="openCompanyFeature(feature)"><strong>{{ feature.title }}</strong><span>{{ feature.purpose }}</span><small>Open research lens</small></button></div>
-                  </section>
-                </div>
-                <ng-template #noCompanyFeatureResults><div class="empty-state unavailable-state">No research lens matches that search.</div></ng-template>
-              </section>
-
-              <section class="panel at-a-glance" aria-labelledby="at-a-glance-heading">
-                <div class="panel-header"><div><p class="section-kicker">Business at a glance</p><h2 id="at-a-glance-heading">The operating picture</h2></div></div>
-                <div class="at-a-glance-grid">
-                  <section *ngFor="let group of companyAtGlanceGroups">
-                    <h3>{{ group.label }}</h3>
-                    <div class="dossier-chip-row" *ngIf="dossierChips(companyView, group.sections).length > 0; else noGlanceItems">
-                      <span *ngFor="let chip of dossierChips(companyView, group.sections)">{{ chip }}</span>
-                    </div>
-                    <ng-template #noGlanceItems><p class="unavailable-copy">No reviewed profile evidence.</p></ng-template>
-                  </section>
-                </div>
-              </section>
-
-              <section class="dossier-block-grid" aria-label="Company profile blocks">
-                <article class="panel dossier-block" *ngFor="let block of companyDossierBlocks">
-                  <div class="panel-header"><div><p class="section-kicker">Company profile</p><h2>{{ block.title }}</h2></div></div>
-                  <p class="dossier-block-description">{{ block.description }}</p>
-                  <ng-container *ngIf="dossierEntries(companyView, block.sections).length > 0; else dossierBlockGap">
-                    <section class="dossier-entry" *ngFor="let entry of dossierEntries(companyView, block.sections)">
-                      <h3>{{ entry.label }}</h3>
-                      <p *ngIf="entry.text">{{ entry.text }}</p>
-                      <ul *ngIf="entry.items.length > 0"><li *ngFor="let item of entry.items">{{ item }}</li></ul>
+              <section class="research-workbench" aria-label="Company research workspace">
+                <aside class="research-index" aria-labelledby="company-feature-heading">
+                  <div><p class="section-kicker">Research index</p><h2 id="company-feature-heading">Explore the company</h2></div>
+                  <label for="company-feature-search" class="visually-hidden">Find a research view</label>
+                  <input id="company-feature-search" name="company_feature_search" [(ngModel)]="companyFeatureQuery" placeholder="Find pricing, lawsuits, leadership..." />
+                  <div class="research-index-groups" *ngIf="hasCompanyFeatureResults(); else noCompanyFeatureResults">
+                    <section *ngFor="let category of companyFeatureCategories">
+                      <h3 *ngIf="filteredCompanyFeatures(category).length > 0">{{ category }}</h3>
+                      <button type="button" *ngFor="let feature of filteredCompanyFeatures(category)" (click)="openCompanyFeature(feature)"><span>{{ feature.title }}</span><small>{{ feature.purpose }}</small></button>
                     </section>
-                  </ng-container>
-                  <ng-template #dossierBlockGap><div class="empty-state unavailable-state">No reviewed, source-backed profile evidence is available.</div></ng-template>
-                </article>
-              </section>
+                  </div>
+                  <ng-template #noCompanyFeatureResults><div class="empty-state unavailable-state">No research view matches that search.</div></ng-template>
+                </aside>
 
-              <section class="panel recent-changes" aria-labelledby="company-highlights-heading">
-                <div class="panel-header">
-                  <div><p class="section-kicker">Recent evidence</p><h2 id="company-highlights-heading">What changed recently</h2></div>
-                  <div class="recent-change-actions"><button type="button" class="ghost-button" (click)="openCompanyDashboard('latest-moves')">Latest moves</button><button type="button" class="ghost-button" (click)="openEarnings(companyView.company.slug)">Earnings</button><button type="button" class="ghost-button" (click)="openStrategyMilestones(companyView.company.slug)">Milestones</button><button type="button" class="ghost-button" (click)="openCompanyDashboard('risk-signals')">Risk signals</button></div>
-                </div>
-                <div class="dashboard-two-column">
-                  <div>
-                    <h3>Business events</h3>
-                    <div class="empty-state" *ngIf="companyView.highlights.latest_events.length === 0">No eligible recent events.</div>
-                    <article class="result-row" *ngFor="let event of companyView.highlights.latest_events">
-                      <strong>{{ event.event_type }}</strong><span>{{ event.event_date || 'Date unavailable' }}</span>
-                      <p>{{ event.actual_change || event.source_claim }}</p>
-                    </article>
+                <section class="research-briefing" aria-labelledby="briefing-heading">
+                  <header><p class="section-kicker">Executive brief</p><h2 id="briefing-heading">What to know now</h2><span>Source-backed company context. Not investment advice.</span></header>
+                  <div class="briefing-summary">
+                    <div><h3>Business model</h3><p>{{ companyView.sections['business_model'].text || 'No reviewed business-model summary is available.' }}</p></div>
+                    <div><h3>How it earns</h3><div class="briefing-chips" *ngIf="dossierChips(companyView, ['revenue_sources']).length > 0; else noRevenueChips"><span *ngFor="let chip of dossierChips(companyView, ['revenue_sources'])">{{ chip }}</span></div><ng-template #noRevenueChips><p class="briefing-gap">Revenue-source evidence is unavailable.</p></ng-template></div>
                   </div>
-                  <div>
-                    <h3>Strategic turns</h3>
-                    <div class="empty-state" *ngIf="companyView.highlights.latest_turns.length === 0">No reviewed strategic turns.</div>
-                    <article class="result-row" *ngFor="let turn of companyView.highlights.latest_turns">
-                      <strong>{{ turn.title }}</strong><span>{{ turn.start_date || 'Date unavailable' }} · {{ turn.source_count }} sources</span>
-                      <p>{{ turn.summary || turn.decision || turn.outcome }}</p>
-                    </article>
-                  </div>
-                </div>
+                  <section class="briefing-block" *ngFor="let block of companyDossierBlocks">
+                    <header><h3>{{ block.title }}</h3><span>{{ block.description }}</span></header>
+                    <ng-container *ngIf="dossierEntries(companyView, block.sections).length > 0; else briefingBlockGap">
+                      <article *ngFor="let entry of dossierEntries(companyView, block.sections)"><h4>{{ entry.label }}</h4><p *ngIf="entry.text">{{ entry.text }}</p><ul *ngIf="entry.items.length > 0"><li *ngFor="let item of entry.items">{{ item }}</li></ul></article>
+                    </ng-container>
+                    <ng-template #briefingBlockGap><p class="briefing-gap">No reviewed profile evidence is available for this area.</p></ng-template>
+                  </section>
+                </section>
+
+                <aside class="research-activity" aria-label="Recent company evidence">
+                  <section><div class="activity-heading"><p class="section-kicker">Recent evidence</p><button type="button" class="ghost-button" (click)="openCompanyDashboard('latest-moves')">View all</button></div><h2>Changes to monitor</h2><div class="activity-empty" *ngIf="companyView.highlights.latest_events.length === 0">No eligible recent events.</div><article *ngFor="let event of companyView.highlights.latest_events"><span>{{ event.event_date || 'Date unavailable' }}</span><h3>{{ event.event_type }}</h3><p>{{ event.actual_change || event.source_claim }}</p></article></section>
+                  <section><div class="activity-heading"><p class="section-kicker">Strategic turns</p><button type="button" class="ghost-button" (click)="openStrategyMilestones(companyView.company.slug)">Milestones</button></div><article *ngFor="let turn of companyView.highlights.latest_turns"><span>{{ turn.start_date || 'Date unavailable' }}</span><h3>{{ turn.title }}</h3><p>{{ turn.summary || turn.decision || turn.outcome }}</p></article><div class="activity-empty" *ngIf="companyView.highlights.latest_turns.length === 0">No reviewed strategic turns.</div></section>
+                  <section class="research-evidence-callout"><p class="section-kicker">Evidence</p><strong>{{ companyView.coverage.source_count }} source records</strong><p>Open the source lens to inspect the documents behind this brief.</p><button type="button" class="ghost-button" *ngIf="companyView.evidence.length > 0" (click)="openSourceLens('Company evidence', companyView.evidence)">Open source lens</button></section>
+                </aside>
               </section>
 
               <section class="panel" aria-labelledby="financial-context-heading">
