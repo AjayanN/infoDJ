@@ -1291,7 +1291,7 @@
           <section *ngSwitchCase="'earnings'" class="company-profile-layout" aria-labelledby="earnings-heading">
             <div class="panel empty-state" *ngIf="earningsLoading()" role="status">Loading quarterly earnings intelligence.</div>
             <ng-container *ngIf="earnings() as earningsView">
-              <section class="panel company-profile-hero">
+              <section class="company-profile-hero earnings-command">
                 <div>
                   <p class="section-kicker">Earnings Intelligence · {{ earningsView.status }}</p>
                   <h2 id="earnings-heading">{{ earningsView.company.name }}</h2>
@@ -1303,7 +1303,7 @@
                 </div>
               </section>
 
-              <section class="panel company-profile-controls" aria-label="Earnings period controls">
+              <section class="company-profile-controls earnings-toolbar" aria-label="Earnings period controls">
                 <label>Reporting period
                   <select [(ngModel)]="earningsPeriod">
                     <option *ngFor="let period of earningsView.periods" [value]="period.key">{{ period.fiscal_period }} FY{{ period.fiscal_year }} · ended {{ period.period_end }}</option>
@@ -1315,7 +1315,7 @@
               </section>
 
               <ng-container *ngIf="earningsView.selected_period as period; else noEarningsPeriod">
-                <section class="panel">
+                <section class="earnings-results-brief">
                   <div class="panel-header"><div><p class="section-kicker">Measured outcome</p><h2>{{ period.fiscal_period }} FY{{ period.fiscal_year }}</h2></div><span>Ended {{ period.period_end }}</span></div>
                   <p>{{ period.headline }}</p>
                   <div class="account-grid">
@@ -1327,8 +1327,8 @@
                   </div>
                 </section>
 
-                <section class="dashboard-two-column">
-                  <article class="panel">
+                <section class="dashboard-two-column earnings-explanation-workspace">
+                  <article class="earnings-kpi-context">
                     <div class="panel-header"><div><p class="section-kicker">Operating movement</p><h2>Canonical KPI changes</h2></div></div>
                     <div class="empty-state" *ngIf="period.operating_kpis.length === 0">No canonical KPI observations align with this period.</div>
                     <div class="result-row" *ngFor="let kpi of period.operating_kpis">
@@ -1338,7 +1338,7 @@
                       <small *ngIf="kpi.quality_flags.length > 0">{{ kpi.quality_flags.join(' · ') }}</small>
                     </div>
                   </article>
-                  <article class="panel">
+                  <article class="earnings-management-brief">
                     <div class="panel-header"><div><p class="section-kicker">Management explanation</p><h2>What management said drove the period</h2></div></div>
                     <p *ngIf="period.management_explanation; else managementGap">{{ period.management_explanation }}</p>
                     <ng-template #managementGap><div class="empty-state unavailable-state">No reviewed earnings release, presentation, shareholder letter, or call explanation is linked yet.</div></ng-template>
@@ -1348,8 +1348,8 @@
                   </article>
                 </section>
 
-                <section class="dashboard-two-column">
-                  <article class="panel">
+                <section class="dashboard-two-column earnings-disclosure-workspace">
+                  <article class="earnings-disclosure-delta">
                     <div class="panel-header"><div><p class="section-kicker">Disclosure changes</p><h2>New and removed reported concepts</h2></div></div>
                     <h3>Added since prior period</h3>
                     <div class="result-row" *ngFor="let item of period.disclosure_changes.added"><strong>{{ item.label }}</strong><span>{{ item.unit }}</span></div>
@@ -1358,7 +1358,7 @@
                     <div class="result-row" *ngFor="let item of period.disclosure_changes.removed"><strong>{{ item.label }}</strong><span>{{ item.unit }}</span></div>
                     <div class="empty-state" *ngIf="period.disclosure_changes.removed.length === 0">No removed SEC concepts identified.</div>
                   </article>
-                  <article class="panel">
+                  <article class="earnings-open-questions">
                     <div class="panel-header"><div><p class="section-kicker">Open questions</p><h2>What remains unanswered</h2></div></div>
                     <div class="result-row" *ngFor="let question of period.unanswered_questions"><p>{{ question }}</p></div>
                     <div class="empty-state" *ngIf="period.unanswered_questions.length === 0">No reviewed unanswered questions are recorded.</div>
