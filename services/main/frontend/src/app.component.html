@@ -1937,16 +1937,23 @@
 
               <section class="dashboard-two-column geo-footprint-workspace">
                 <article class="geo-market-atlas">
-                  <div class="panel-header"><div><p class="section-kicker">Markets</p><h2>Countries and regions</h2></div></div>
-                  <div class="result-row" *ngFor="let market of geoView.markets">
-                    <strong>{{ market.geography }}</strong>
-                    <span>{{ promiseLabel(market.geography_level) }} · {{ market.current_status_label }} · confidence {{ market.confidence_score | number:'1.2-2' }}</span>
-                    <p>{{ market.expansion_rationale }}</p>
-                    <p><strong>Outcome:</strong> {{ market.outcome_summary || 'Reviewed outcome unavailable.' }}</p>
-                    <small>Announcement {{ market.event_dates.announcement_date || 'unavailable' }} · launch {{ market.event_dates.launch_date || 'unavailable' }} · operational start {{ market.event_dates.operational_start_date || 'unavailable' }} · scale-up {{ market.event_dates.scale_up_date || 'unavailable' }} · reduction {{ market.event_dates.reduction_date || 'unavailable' }} · exit {{ market.event_dates.exit_date || 'unavailable' }}</small>
-                    <p><strong>Products:</strong> {{ market.products.length ? market.products.join(', ') : 'unavailable' }} · <strong>Segments:</strong> {{ market.customer_segments.length ? market.customer_segments.join(', ') : 'unavailable' }} · <strong>Channels:</strong> {{ market.channels.length ? market.channels.join(', ') : 'unavailable' }}</p>
-                    <p><strong>Partners:</strong> {{ market.local_partnerships.length ? market.local_partnerships.join(', ') : 'unavailable' }} · <strong>Regulatory:</strong> {{ market.regulatory_approvals.length || market.regulatory_restrictions.length ? (market.regulatory_approvals.concat(market.regulatory_restrictions)).join(', ') : 'unavailable' }}</p>
-                    <small>Revenue <ng-container *ngIf="market.revenue_contribution === null; else reviewedMarketRevenue">unavailable</ng-container><ng-template #reviewedMarketRevenue>{{ market.revenue_contribution | number:'1.0-2' }} {{ market.revenue_currency }} · {{ market.revenue_period || 'period unavailable' }}</ng-template></small>
+                  <div class="panel-header"><div><p class="section-kicker">Markets</p><h2>Footprint atlas</h2></div><span>{{ geoView.markets.length }} reviewed markets</span></div>
+                  <div class="geo-footprint-atlas" *ngIf="geoView.markets.length > 0">
+                    <section class="geo-footprint-lane" *ngFor="let lane of geographicMarketLanes(geoView.markets)">
+                      <header><div><strong>{{ lane.label }}</strong><p>{{ lane.description }}</p></div><span>{{ lane.markets.length }}</span></header>
+                      <article class="geo-market-card" *ngFor="let market of lane.markets">
+                        <div class="geo-market-heading"><strong>{{ market.geography }}</strong><span>{{ market.current_status_label }}</span></div>
+                        <small>{{ promiseLabel(market.geography_level) }} · confidence {{ market.confidence_score | number:'1.2-2' }}</small>
+                        <p>{{ market.expansion_rationale }}</p>
+                        <dl class="geo-market-facts">
+                          <div><dt>Entry evidence</dt><dd>{{ market.event_dates.announcement_date || market.event_dates.launch_date || market.event_dates.operational_start_date || 'Not dated' }}</dd></div>
+                          <div><dt>Revenue</dt><dd><ng-container *ngIf="market.revenue_contribution === null; else reviewedMarketRevenue">Not disclosed</ng-container><ng-template #reviewedMarketRevenue>{{ market.revenue_contribution | number:'1.0-2' }} {{ market.revenue_currency }} · {{ market.revenue_period || 'period unavailable' }}</ng-template></dd></div>
+                          <div><dt>Partners</dt><dd>{{ market.local_partnerships.length ? market.local_partnerships.join(', ') : 'Not disclosed' }}</dd></div>
+                          <div><dt>Regulatory</dt><dd>{{ market.regulatory_approvals.length || market.regulatory_restrictions.length ? (market.regulatory_approvals.concat(market.regulatory_restrictions)).join(', ') : 'Not disclosed' }}</dd></div>
+                        </dl>
+                        <p class="geo-market-outcome"><strong>Outcome</strong>{{ market.outcome_summary || 'Reviewed outcome unavailable.' }}</p>
+                      </article>
+                    </section>
                   </div>
                   <div class="empty-state unavailable-state" *ngIf="geoView.markets.length === 0">No reviewed geographic markets are available for the selected filters.</div>
                 </article>
