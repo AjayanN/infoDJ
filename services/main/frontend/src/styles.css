@@ -4136,6 +4136,43 @@ th {
   border-top: 0;
 }
 
+.capital-flow-bars {
+  display: grid;
+  gap: 13px;
+}
+
+.capital-flow-bars article {
+  display: grid;
+  gap: 7px;
+}
+
+.capital-flow-bar-heading {
+  align-items: baseline;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.capital-flow-bar-heading span {
+  color: #4c6172;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.capital-flow-track {
+  background: #e3eaee;
+  height: 12px;
+  overflow: hidden;
+}
+
+.capital-flow-track span {
+  background: #3f8394;
+  display: block;
+  height: 100%;
+  min-width: 2px;
+}
+
 .capital-drilldown-ledger .result-row {
   border-bottom: 1px solid var(--line);
   display: grid;

@@ -1464,9 +1464,8 @@
                 <section class="dashboard-two-column capital-flow-workspace">
                   <article class="capital-allocation-buckets">
                     <div class="panel-header"><div><p class="section-kicker">Allocation mix</p><h2>Deployment by category</h2></div></div>
-                    <div class="result-row" *ngFor="let row of period.allocation_mix">
-                      <strong>{{ row.category_label }}</strong>
-                      <span>{{ row.value | number:'1.0-0' }} · {{ row.share_of_total_deployment ?? 'n/a' }}% of deployment</span>
+                    <div class="capital-flow-bars" *ngIf="period.allocation_mix.length > 0">
+                      <article *ngFor="let row of period.allocation_mix"><div class="capital-flow-bar-heading"><strong>{{ row.category_label }}</strong><span>{{ row.value | number:'1.0-0' }} · {{ row.share_of_total_deployment ?? 'n/a' }}% of deployment</span></div><div class="capital-flow-track" [attr.aria-label]="row.category_label + ' ' + (row.share_of_total_deployment ?? 0) + '% of deployment'"><span [style.width.%]="row.share_of_total_deployment ?? 0"></span></div></article>
                     </div>
                     <div class="empty-state unavailable-state" *ngIf="period.allocation_mix.length === 0">No reviewed deployment category is available for this period.</div>
                   </article>
