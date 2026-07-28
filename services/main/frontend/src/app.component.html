@@ -2083,7 +2083,7 @@
           <section *ngSwitchCase="'ownership-insider'" class="company-profile-layout" aria-labelledby="ownership-heading">
             <div class="loading-panel" *ngIf="ownershipInsiderLoading()">Loading ownership and insider activity...</div>
             <ng-container *ngIf="!ownershipInsiderLoading() && ownershipInsider() as ownerView">
-              <section class="panel company-profile-hero">
+              <section class="panel company-profile-hero ownership-command">
                 <div>
                   <p class="section-kicker">Ownership and Insider Activity · {{ ownerView.status }}</p>
                   <h2 id="ownership-heading">{{ ownerView.company.name }}</h2>
@@ -2097,7 +2097,7 @@
                 </div>
               </section>
 
-              <section class="profile-controls panel">
+              <section class="profile-controls panel ownership-toolbar">
                 <label>Snapshot at date
                   <select [(ngModel)]="ownershipInsiderDate">
                     <option value="">Latest reviewed snapshot</option>
@@ -2125,9 +2125,9 @@
                 </div>
               </section>
 
-              <section class="dashboard-two-column">
-                <article class="panel">
-                  <div class="panel-header"><div><p class="section-kicker">Positions</p><h2>Ownership and insider context</h2></div></div>
+              <section class="dashboard-two-column ownership-ledger-workspace">
+                <article class="panel ownership-position-ledger">
+                  <div class="panel-header"><div><p class="section-kicker">Position register</p><h2>Ownership and insider context</h2></div><span>{{ ownerView.positions.length }} reviewed holders</span></div>
                   <div class="result-row" *ngFor="let position of ownerView.positions">
                     <strong>{{ position.holder_name }}</strong>
                     <span>{{ position.holder_type_label }} · {{ position.position_type_label }} · confidence {{ position.confidence_score | number:'1.2-2' }}</span>
@@ -2142,8 +2142,8 @@
                   <div class="empty-state unavailable-state" *ngIf="ownerView.positions.length === 0">No reviewed ownership positions are available for the selected filters.</div>
                 </article>
 
-                <article class="panel">
-                  <div class="panel-header"><div><p class="section-kicker">Transactions</p><h2>Insider activity</h2></div><span>{{ ownerView.insider_transactions.length }} reviewed rows</span></div>
+                <article class="panel ownership-activity-feed">
+                  <div class="panel-header"><div><p class="section-kicker">Activity feed</p><h2>Insider activity</h2></div><span>{{ ownerView.insider_transactions.length }} reviewed rows</span></div>
                   <div class="result-row" *ngFor="let transaction of ownerView.insider_transactions">
                     <strong>{{ transaction.insider_name }}</strong>
                     <span>{{ transaction.transaction_type_label }} · {{ transaction.transaction_date || 'date unavailable' }}</span>
@@ -2154,14 +2154,14 @@
                 </article>
               </section>
 
-              <section class="dashboard-two-column">
-                <article class="panel">
-                  <div class="panel-header"><div><p class="section-kicker">Control</p><h2>Economic versus voting ownership</h2></div></div>
+              <section class="dashboard-two-column ownership-audit-workspace">
+                <article class="panel ownership-control-audit">
+                  <div class="panel-header"><div><p class="section-kicker">Control audit</p><h2>Economic versus voting ownership</h2></div></div>
                   <p>{{ ownerView.control_context.reason || 'Reviewed economic and voting-control fields are available.' }}</p>
                   <p>{{ ownerView.snapshot?.methodology }}</p>
                 </article>
-                <article class="panel">
-                  <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Ownership evidence</h2></div><span>{{ ownerView.evidence.length }} sources</span></div>
+                <article class="panel ownership-evidence-desk">
+                  <div class="panel-header"><div><p class="section-kicker">Evidence desk</p><h2>Ownership evidence</h2></div><span>{{ ownerView.evidence.length }} sources</span></div>
                   <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of ownerView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
                 </article>
               </section>
