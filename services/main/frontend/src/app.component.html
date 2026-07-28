@@ -3234,7 +3234,7 @@
           <section *ngSwitchCase="'strategy-theses'" class="company-profile-layout" aria-labelledby="thesis-heading">
             <div class="loading-panel" *ngIf="thesisWorkspaceLoading()">Loading strategy theses...</div>
             <ng-container *ngIf="!thesisWorkspaceLoading()">
-              <section class="panel hero-card">
+              <section class="panel hero-card thesis-command">
                 <div>
                   <p class="section-kicker">Strategy Thesis Workspace</p>
                   <h2 id="thesis-heading">Private, evidence-linked thesis tracking</h2>
@@ -3248,7 +3248,7 @@
                 </div>
               </section>
 
-              <section class="panel company-profile-controls" aria-label="Thesis filters">
+              <section class="panel company-profile-controls thesis-toolbar" aria-label="Thesis filters">
                 <label for="thesis-company-filter">
                   Company
                   <input id="thesis-company-filter" name="thesis_company_filter" [(ngModel)]="thesisFilterCompany" placeholder="company slug" />
@@ -3270,8 +3270,8 @@
                 </div>
               </section>
 
-              <section class="dashboard-two-column">
-                <article class="panel">
+              <section class="dashboard-two-column thesis-intake-workspace">
+                <article class="panel thesis-intake-form">
                   <div class="panel-header"><div><p class="section-kicker">Create</p><h2>New thesis</h2></div></div>
                   <form class="auth-form" (ngSubmit)="createStrategyThesis()">
                     <label>Title <input name="thesis_title" [(ngModel)]="thesisTitle" required /></label>
@@ -3286,7 +3286,7 @@
                   </form>
                 </article>
 
-                <article class="panel">
+                <article class="panel thesis-register">
                   <div class="panel-header"><div><p class="section-kicker">Workspace</p><h2>My theses</h2></div><span>{{ thesisWorkspace()?.theses?.length || 0 }} shown</span></div>
                   <div class="result-row" *ngFor="let thesis of thesisWorkspace()?.theses || []" (click)="selectThesis(thesis.id)" role="button" tabindex="0">
                     <strong>{{ thesis.title }}</strong>
@@ -3298,7 +3298,7 @@
                 </article>
               </section>
 
-              <section class="panel" *ngIf="thesisSuggestions() as suggestions">
+              <section class="panel thesis-suggestion-desk" *ngIf="thesisSuggestions() as suggestions">
                 <div class="panel-header"><div><p class="section-kicker">Evidence Search</p><h2>Attachable InfoDJ evidence</h2></div><span>{{ suggestions.suggestions.length }} suggestions</span></div>
                 <div class="result-row" *ngFor="let suggestion of suggestions.suggestions">
                   <strong>{{ suggestion.title }}</strong>
@@ -3310,7 +3310,7 @@
               </section>
 
               <ng-container *ngIf="selectedThesis() as thesis">
-                <section class="panel hero-card">
+                <section class="panel hero-card thesis-selected-command">
                   <div>
                     <p class="section-kicker">Selected thesis · {{ thesis.state_label }}</p>
                     <h2>{{ thesis.title }}</h2>
@@ -3325,8 +3325,8 @@
                   </div>
                 </section>
 
-                <section class="dashboard-two-column">
-                  <article class="panel">
+                <section class="dashboard-two-column thesis-evidence-workspace">
+                  <article class="panel thesis-evidence-intake">
                     <div class="panel-header"><div><p class="section-kicker">Attach</p><h2>Evidence</h2></div></div>
                     <form class="auth-form" (ngSubmit)="addThesisEvidence()">
                       <label>Side <select name="thesis_evidence_side" [(ngModel)]="thesisEvidenceSide"><option value="SUPPORTING">Supporting</option><option value="OPPOSING">Opposing</option><option value="NEUTRAL">Neutral</option></select></label>
@@ -3339,7 +3339,7 @@
                       <button type="submit" class="primary-button">Attach evidence</button>
                     </form>
                   </article>
-                  <article class="panel">
+                  <article class="panel thesis-evidence-balance">
                     <div class="panel-header"><div><p class="section-kicker">Evidence Balance</p><h2>Supporting and opposing evidence</h2></div><span>{{ thesis.evidence?.length || 0 }} rows</span></div>
                     <div class="result-row" *ngFor="let evidence of thesis.evidence || []">
                       <strong>{{ evidence.title }}</strong>
@@ -3352,8 +3352,8 @@
                   </article>
                 </section>
 
-                <section class="dashboard-two-column">
-                  <article class="panel">
+                <section class="dashboard-two-column thesis-monitor-workspace">
+                  <article class="panel thesis-falsification-board">
                     <div class="panel-header"><div><p class="section-kicker">Milestones</p><h2>Falsification checkpoints</h2></div></div>
                     <form class="auth-form" (ngSubmit)="addThesisMilestone()">
                       <label>Title <input name="thesis_milestone_title" [(ngModel)]="thesisMilestoneTitle" required /></label>
@@ -3363,7 +3363,7 @@
                     </form>
                     <div class="result-row" *ngFor="let milestone of thesis.milestones || []"><strong>{{ milestone.title }}</strong><span>{{ milestone.status_label }} · due {{ milestone.due_date || 'date unavailable' }}</span><p>{{ milestone.success_criteria }}</p></div>
                   </article>
-                  <article class="panel">
+                  <article class="panel thesis-indicator-board">
                     <div class="panel-header"><div><p class="section-kicker">Indicators</p><h2>What to monitor</h2></div></div>
                     <form class="auth-form" (ngSubmit)="addThesisIndicator()">
                       <label>Name <input name="thesis_indicator_name" [(ngModel)]="thesisIndicatorName" required /></label>
@@ -3377,8 +3377,8 @@
                   </article>
                 </section>
 
-                <section class="dashboard-two-column">
-                  <article class="panel">
+                <section class="dashboard-two-column thesis-revision-workspace">
+                  <article class="panel thesis-confidence-update">
                     <div class="panel-header"><div><p class="section-kicker">Confidence</p><h2>Update thesis state</h2></div></div>
                     <form class="auth-form" (ngSubmit)="updateThesisConfidence()">
                       <label>State <select name="thesis_revision_state" [(ngModel)]="thesisRevisionState"><option value="DRAFT">Draft</option><option value="ACTIVE">Active</option><option value="STRENGTHENING">Strengthening</option><option value="WEAKENING">Weakening</option><option value="INVALIDATED">Invalidated</option><option value="COMPLETED">Completed</option><option value="ARCHIVED">Archived</option></select></label>
@@ -3387,7 +3387,7 @@
                       <button type="submit" class="primary-button">Record confidence update</button>
                     </form>
                   </article>
-                  <article class="panel">
+                  <article class="panel thesis-revision-trail">
                     <div class="panel-header"><div><p class="section-kicker">History</p><h2>Revision trail</h2></div><span>{{ thesis.revisions?.length || 0 }} updates</span></div>
                     <div class="result-row" *ngFor="let revision of thesis.revisions || []"><strong>{{ revision.new_state }}</strong><span>{{ revision.previous_confidence_score === null ? 'new' : revision.previous_confidence_score }} to {{ revision.new_confidence_score }} · {{ revision.created_at | date:'medium' }}</span><p>{{ revision.reason }}</p><small>{{ revision.changed_by }}</small></div>
                   </article>

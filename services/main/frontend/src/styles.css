@@ -4114,6 +4114,26 @@ th {
 .macro-evidence-desk .evidence-card { border-left: 3px solid #668c52; border-radius: 0; }
 @media (max-width: 760px) { .macro-command { display: grid; gap: 16px; padding: 22px 16px; } .macro-profile-workspace > article, .macro-profile-workspace > article + article, .macro-method-workspace > article, .macro-method-workspace > article + article, .macro-evidence-workspace > article, .macro-evidence-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
 
+/* Thesis work is a private research board with evidence and revisions kept legible. */
+.thesis-command, .thesis-selected-command { align-items: start; background: #354255; color: #f9fbff; display: flex; gap: 24px; justify-content: space-between; padding: 26px 30px; }
+.thesis-command .section-kicker, .thesis-command p, .thesis-command .coverage-summary span, .thesis-command .coverage-summary small, .thesis-selected-command .section-kicker, .thesis-selected-command p, .thesis-selected-command .coverage-summary span, .thesis-selected-command .coverage-summary small { color: #d4dfec; }
+.thesis-command .coverage-summary, .thesis-selected-command .coverage-summary { background: transparent; border: 0; border-left: 1px solid #70829a; color: #f9fbff; flex: 0 0 220px; padding: 4px 0 4px 22px; }
+.thesis-command .coverage-summary strong, .thesis-selected-command .coverage-summary strong { color: #ffffff; }
+.thesis-toolbar { background: #f1f4f8; display: flex; flex-wrap: wrap; gap: 14px; padding: 16px; }
+.thesis-toolbar label { flex: 1 1 190px; min-width: 0; }
+.thesis-intake-workspace, .thesis-evidence-workspace, .thesis-monitor-workspace, .thesis-revision-workspace { gap: 0; }
+.thesis-intake-workspace > article, .thesis-evidence-workspace > article, .thesis-monitor-workspace > article, .thesis-revision-workspace > article { border-bottom: 1px solid var(--line); min-width: 0; padding: 22px 24px 22px 0; }
+.thesis-intake-workspace > article + article, .thesis-evidence-workspace > article + article, .thesis-monitor-workspace > article + article, .thesis-revision-workspace > article + article { border-left: 1px solid var(--line); padding-left: 24px; padding-right: 0; }
+.thesis-intake-form { background: #f7f9fb; }
+.thesis-register .result-row { border-left: 3px solid #5e7fa1; border-top: 0; cursor: pointer; }
+.thesis-suggestion-desk { border-top: 3px solid #5d8c80; }
+.thesis-suggestion-desk .result-row { border-left: 3px solid #5d8c80; border-top: 0; }
+.thesis-evidence-balance .result-row { border-left: 4px solid #8c6d9e; border-top: 0; }
+.thesis-falsification-board .result-row { border-left: 3px solid #bd7d4f; border-top: 0; }
+.thesis-indicator-board .result-row { border-left: 3px solid #5d8c80; border-top: 0; }
+.thesis-revision-trail .result-row { border-left: 3px solid #5e7fa1; border-top: 0; }
+@media (max-width: 760px) { .thesis-command, .thesis-selected-command { display: grid; gap: 16px; padding: 22px 16px; } .thesis-command .coverage-summary, .thesis-selected-command .coverage-summary { border-left: 0; border-top: 1px solid #70829a; flex-basis: auto; padding: 12px 0 0; } .thesis-intake-workspace > article, .thesis-intake-workspace > article + article, .thesis-evidence-workspace > article, .thesis-evidence-workspace > article + article, .thesis-monitor-workspace > article, .thesis-monitor-workspace > article + article, .thesis-revision-workspace > article, .thesis-revision-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
+
 /* Ownership is read as a point-in-time ledger with a separate insider activity trail. */
 .ownership-command { background: #323c4d; color: #f8fbff; padding: 26px 30px; }
 .ownership-command .section-kicker, .ownership-command p, .ownership-command .profile-score-card span, .ownership-command .profile-score-card small { color: #d2dbe7; }
