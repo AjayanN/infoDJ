@@ -2843,6 +2843,54 @@ th {
   margin: 8px 0 0;
 }
 
+.briefing-at-glance,
+.briefing-gap-register {
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+
+.briefing-at-glance > header,
+.briefing-gap-register > header {
+  align-items: end;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.briefing-at-glance h3,
+.briefing-gap-register h3 {
+  margin: 0;
+}
+
+.briefing-at-glance > header span,
+.briefing-gap-register > header span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.briefing-at-glance-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.briefing-at-glance-grid article {
+  background: #f7f9fb;
+  border-top: 2px solid #aac1d3;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px 12px;
+}
+
+.briefing-at-glance-grid h4 {
+  font-size: 12px;
+  margin: 0;
+}
+
 .briefing-chips {
   display: flex;
   flex-wrap: wrap;
@@ -2990,9 +3038,21 @@ th {
 @media (max-width: 760px) {
   .research-command-main,
   .research-workbench,
-  .briefing-summary {
+  .briefing-summary,
+  .briefing-at-glance-grid {
     display: grid;
     grid-template-columns: 1fr;
+  }
+
+  .briefing-at-glance > header,
+  .briefing-gap-register > header {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .briefing-at-glance > header span,
+  .briefing-gap-register > header span {
+    text-align: left;
   }
 
   .research-command-main,
