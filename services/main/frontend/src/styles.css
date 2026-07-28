@@ -4065,6 +4065,23 @@ th {
 .geo-expansion-timeline .result-row { border-left: 3px solid #4b84b1; border-top: 0; }
 @media (max-width: 760px) { .geo-command { display: grid; gap: 16px; padding: 22px 16px; } .geo-footprint-workspace > article, .geo-footprint-workspace > article + article, .geo-guardrail-workspace > article, .geo-guardrail-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
 
+/* Ownership is read as a point-in-time ledger with a separate insider activity trail. */
+.ownership-command { background: #323c4d; color: #f8fbff; padding: 26px 30px; }
+.ownership-command .section-kicker, .ownership-command p, .ownership-command .profile-score-card span, .ownership-command .profile-score-card small { color: #d2dbe7; }
+.ownership-toolbar { background: #f0f4f7; display: flex; flex-wrap: wrap; gap: 14px; padding: 16px; }
+.ownership-toolbar label { flex: 1 1 190px; min-width: 0; }
+.ownership-ledger-workspace, .ownership-audit-workspace { gap: 0; }
+.ownership-ledger-workspace > article, .ownership-audit-workspace > article { border-bottom: 1px solid var(--line); min-width: 0; padding: 22px 24px 22px 0; }
+.ownership-ledger-workspace > article + article, .ownership-audit-workspace > article + article { border-left: 1px solid var(--line); padding-left: 24px; padding-right: 0; }
+.ownership-position-ledger .result-row { border-left: 3px solid #477f9f; border-top: 0; }
+.ownership-position-ledger .result-row small { color: #355064; display: block; font-weight: 700; line-height: 1.55; }
+.ownership-activity-feed .result-row { border-left: 3px solid #9a6b55; border-top: 0; }
+.ownership-activity-feed .result-row small { color: #6b4b3d; display: block; font-weight: 700; line-height: 1.55; }
+.ownership-control-audit { background: #f6f8fa; }
+.ownership-control-audit p { border-left: 3px solid #596f8d; color: #33465b; line-height: 1.6; margin: 14px 0 0; padding-left: 12px; }
+.ownership-evidence-desk .evidence-card { border-left: 3px solid #5a877d; border-radius: 0; }
+@media (max-width: 760px) { .ownership-command { display: grid; gap: 16px; padding: 22px 16px; } .ownership-ledger-workspace > article, .ownership-ledger-workspace > article + article, .ownership-audit-workspace > article, .ownership-audit-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
+
 @media (max-width: 760px) {
   .promise-command,
   .milestone-command {
