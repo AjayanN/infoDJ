@@ -1344,6 +1344,7 @@
                       <p><strong>{{ kpi.dependency_label }}:</strong> {{ kpi.dependency_description }}</p>
                       <small *ngIf="kpi.previous_value !== null">Previous {{ kpi.previous_value | number:'1.0-3' }} · change {{ kpi.change_pct | number:'1.1-1' }}%</small>
                       <small *ngIf="kpi.quality_flags.length > 0">{{ kpi.quality_flags.join(' · ') }}</small>
+                      <button type="button" class="ghost-button" (click)="openOperatingKpis(earningsView.company.slug, kpi.slug)">View KPI series</button>
                     </div>
                   </article>
                   <article class="earnings-management-brief">
@@ -1375,7 +1376,7 @@
 
                 <section class="dashboard-two-column">
                   <article class="panel">
-                    <div class="panel-header"><div><p class="section-kicker">Guidance and promises</p><h2>Introduced or updated this period</h2></div></div>
+                  <div class="panel-header"><div><p class="section-kicker">Guidance and promises</p><h2>Introduced or updated this period</h2></div><span class="status-pill" [class.available]="period.guidance_comparison.status === 'available'">{{ period.guidance_comparison.status === 'available' ? period.guidance_comparison.items.length + ' reviewed comparisons' : 'Unavailable' }}</span></div>
                     <div class="empty-state unavailable-state" *ngIf="period.guidance_comparison.status === 'unavailable'">{{ period.guidance_comparison.reason }}</div>
                     <div class="result-row" *ngFor="let comparison of period.guidance_comparison.items">
                       <strong>{{ comparison.metric_name }} · {{ comparison.comparison_status }}</strong>
