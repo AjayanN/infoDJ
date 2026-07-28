@@ -3399,7 +3399,7 @@
           <section *ngSwitchCase="'foundations'" class="company-profile-layout" aria-labelledby="foundation-heading">
             <div class="loading-panel" *ngIf="foundationLoading()">Loading foundation standards...</div>
             <ng-container *ngIf="!foundationLoading()">
-              <section class="panel hero-card">
+              <section class="panel hero-card foundation-command">
                 <div>
                   <p class="section-kicker">Foundation Standards</p>
                   <h2 id="foundation-heading">Shared Phase 2 operating rules</h2>
@@ -3413,14 +3413,14 @@
               </section>
 
               <ng-container *ngIf="foundationStandards() as standards">
-                <section class="panel">
+                <section class="panel foundation-pilot-card">
                   <div class="panel-header"><div><p class="section-kicker">Pilot</p><h2>Selected company and review period</h2></div></div>
                   <p><strong>{{ standards.pilot.company_name }}</strong> uses slug <code>{{ standards.pilot.company_slug }}</code>.</p>
                   <p>{{ standards.pilot.reason }}</p>
                 </section>
 
-                <section class="dashboard-two-column">
-                  <article class="panel" *ngFor="let rule of standards.rules">
+                <section class="dashboard-two-column foundation-rule-board">
+                  <article class="panel foundation-rule-card" *ngFor="let rule of standards.rules">
                     <div class="panel-header"><div><p class="section-kicker">{{ rule.key }}</p><h2>{{ rule.label }}</h2></div></div>
                     <p>{{ rule.summary }}</p>
                     <div class="source-gap-grid">
@@ -3432,8 +3432,8 @@
                   </article>
                 </section>
 
-                <section class="dashboard-two-column">
-                  <article class="panel">
+                <section class="dashboard-two-column foundation-reference-workspace">
+                  <article class="panel foundation-state-register">
                     <div class="panel-header"><div><p class="section-kicker">States</p><h2>Common availability labels</h2></div></div>
                     <div class="result-row" *ngFor="let state of standards.states">
                       <strong>{{ state.label }}</strong>
@@ -3442,7 +3442,7 @@
                     </div>
                   </article>
 
-                  <article class="panel">
+                  <article class="panel foundation-freshness-register">
                     <div class="panel-header"><div><p class="section-kicker">Freshness</p><h2>Update expectations</h2></div></div>
                     <div class="result-row" *ngFor="let item of standards.freshness">
                       <strong>{{ item.information_type }}</strong>
@@ -3451,7 +3451,7 @@
                   </article>
                 </section>
 
-                <section class="panel">
+                <section class="panel foundation-review-playbook">
                   <div class="panel-header"><div><p class="section-kicker">Review</p><h2>Correction and review workflows</h2></div></div>
                   <div class="dashboard-two-column">
                     <article class="result-row" *ngFor="let workflow of standards.review_workflows">
