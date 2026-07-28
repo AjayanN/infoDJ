@@ -4151,6 +4151,25 @@ th {
 .contradiction-resolution-trail .result-row { border-left: 3px solid #618777; border-top: 0; }
 @media (max-width: 760px) { .contradiction-command, .contradiction-selected-command { display: grid; gap: 16px; padding: 22px 16px; } .contradiction-command .coverage-summary, .contradiction-selected-command .coverage-summary { border-left: 0; border-top: 1px solid #927586; flex-basis: auto; padding: 12px 0 0; } .contradiction-intake-workspace > article, .contradiction-intake-workspace > article + article, .contradiction-claims-workspace > article, .contradiction-claims-workspace > article + article, .contradiction-review-workspace > article, .contradiction-review-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
 
+/* Failure cases are a reviewed library: context, evidence, warning signs, and publication gates. */
+.failure-command, .failure-selected-command { align-items: start; background: #4d4138; color: #fffcf8; display: flex; gap: 24px; justify-content: space-between; padding: 26px 30px; }
+.failure-command .section-kicker, .failure-command p, .failure-command .coverage-summary span, .failure-command .coverage-summary small, .failure-selected-command .section-kicker, .failure-selected-command p, .failure-selected-command .coverage-summary span, .failure-selected-command .coverage-summary small { color: #eadbc9; }
+.failure-command .coverage-summary, .failure-selected-command .coverage-summary { background: transparent; border: 0; border-left: 1px solid #957b65; color: #fffcf8; flex: 0 0 225px; padding: 4px 0 4px 22px; }
+.failure-command .coverage-summary strong, .failure-selected-command .coverage-summary strong { color: #ffffff; }
+.failure-toolbar { background: #f7f4f0; display: flex; flex-wrap: wrap; gap: 14px; padding: 16px; }
+.failure-toolbar label { flex: 1 1 180px; min-width: 0; }
+.failure-library-workspace, .failure-context-workspace, .failure-evidence-workspace, .failure-review-workspace { gap: 0; }
+.failure-library-workspace > article, .failure-context-workspace > article, .failure-evidence-workspace > article, .failure-review-workspace > article { border-bottom: 1px solid var(--line); min-width: 0; padding: 22px 24px 22px 0; }
+.failure-library-workspace > article + article, .failure-context-workspace > article + article, .failure-evidence-workspace > article + article, .failure-review-workspace > article + article { border-left: 1px solid var(--line); padding-left: 24px; padding-right: 0; }
+.failure-case-intake, .failure-editorial-gate { background: #fbf9f5; }
+.failure-case-library .result-row { border-left: 3px solid #a17252; border-top: 0; cursor: pointer; }
+.failure-context-board { border-top: 3px solid #a17252; }
+.failure-quality-gate .result-row { border-left: 3px solid #6d8495; border-top: 0; }
+.failure-evidence-log .result-row { border-left: 3px solid #5c8b79; border-top: 0; }
+.failure-warning-log .result-row { border-left: 3px solid #ac735a; border-top: 0; }
+.failure-link-register .result-row { border-left: 3px solid #6d8495; border-top: 0; }
+@media (max-width: 760px) { .failure-command, .failure-selected-command { display: grid; gap: 16px; padding: 22px 16px; } .failure-command .coverage-summary, .failure-selected-command .coverage-summary { border-left: 0; border-top: 1px solid #957b65; flex-basis: auto; padding: 12px 0 0; } .failure-library-workspace > article, .failure-library-workspace > article + article, .failure-context-workspace > article, .failure-context-workspace > article + article, .failure-evidence-workspace > article, .failure-evidence-workspace > article + article, .failure-review-workspace > article, .failure-review-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
+
 /* Ownership is read as a point-in-time ledger with a separate insider activity trail. */
 .ownership-command { background: #323c4d; color: #f8fbff; padding: 26px 30px; }
 .ownership-command .section-kicker, .ownership-command p, .ownership-command .profile-score-card span, .ownership-command .profile-score-card small { color: #d2dbe7; }
