@@ -17,7 +17,8 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 - [x] Business Model Canvas, Operating Metrics Workbench, Promise Ledger, Strategy Execution Timeline, Quarterly Intelligence Brief, Capital Deployment Map, Competitive Battlefield Map, Product Timeline Studio, Deal Journey Board, Dependency Risk Map, and Market Footprint Atlas were rebuilt as route-specific workspaces and browser-checked with real Netflix data at desktop and mobile widths.
 - [x] Leadership Tenure Timeline, Ownership and Insider Ledger, Valuation Context Workbench, Regulatory Matter Docket, Theme Exposure Radar, and Macro Exposure Profile were rebuilt as route-specific workspaces and browser-checked with real Netflix data at desktop and mobile widths.
 - [x] Thesis Evidence Board was rebuilt as a private research workspace with separate evidence, checkpoints, indicators, and revisions. Verified at desktop and mobile widths.
-- [ ] Remaining workspace, comparison, dashboard-feed, and final consistency surfaces are still individually incomplete. Do not infer completion from delivered routes.
+- [x] Claim Reconciliation Desk, Failure Pattern Library, Scenario Planning Lab, Executive Briefing Feed, Signal Inbox, and Foundations Workbench were rebuilt as task-specific user-workspace and standards surfaces. Verified at desktop and mobile widths.
+- [ ] Remaining comparison, dashboard-feed, and final consistency surfaces are still individually incomplete. Do not infer completion from delivered routes.
 
 ## Product-Wide UI Principles
 
