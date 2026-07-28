@@ -4096,6 +4096,35 @@ th {
 .ownership-evidence-desk .evidence-card { border-left: 3px solid #5a877d; border-radius: 0; }
 @media (max-width: 760px) { .ownership-command { display: grid; gap: 16px; padding: 22px 16px; } .ownership-ledger-workspace > article, .ownership-ledger-workspace > article + article, .ownership-audit-workspace > article, .ownership-audit-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
 
+/* Valuation is a calculation workbench: inputs, comparables, and dated context stay distinct. */
+.valuation-command { background: #293c4b; color: #f8fbff; padding: 26px 30px; }
+.valuation-command .section-kicker, .valuation-command p, .valuation-command .profile-score-card span, .valuation-command .profile-score-card small { color: #cad8e3; }
+.valuation-command .profile-score-card { border-left: 1px solid #688091; padding-left: 22px; }
+.valuation-toolbar { background: #f0f4f6; display: flex; flex-wrap: wrap; gap: 14px; padding: 16px; }
+.valuation-toolbar label { flex: 1 1 220px; min-width: 0; }
+.valuation-workbench, .valuation-research-desk { gap: 0; }
+.valuation-workbench > article, .valuation-research-desk > article { border-bottom: 1px solid var(--line); min-width: 0; padding: 22px 24px 22px 0; }
+.valuation-workbench > article + article, .valuation-research-desk > article + article { border-left: 1px solid var(--line); padding-left: 24px; padding-right: 0; }
+.valuation-calculation-ledger .valuation-measure { border-left: 4px solid #3e859a; border-top: 0; padding: 16px 16px 16px 18px; }
+.valuation-measure-heading { align-items: baseline; display: flex; flex-wrap: wrap; gap: 8px 14px; justify-content: space-between; }
+.valuation-measure-heading span { color: var(--muted); font-size: 12px; }
+.valuation-formula { color: #29475e; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+.valuation-inputs { display: grid; gap: 1px; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 14px 0 0; }
+.valuation-inputs div { background: #eef4f5; min-width: 0; padding: 10px; }
+.valuation-inputs dt { color: var(--muted); font-size: 11px; }
+.valuation-inputs dd { margin: 4px 0 0; overflow-wrap: anywhere; }
+.unavailable-reason { border-left: 2px solid #b78350; color: #754f2d; margin: 14px 0 0; padding-left: 10px; }
+.valuation-comparable-context .valuation-range { border-left: 3px solid #607a9b; border-top: 0; }
+.valuation-comparable-context .valuation-peer { border-left: 3px solid #3e8b70; border-top: 0; }
+.valuation-event-context .valuation-event { border-left: 3px solid #b2784b; border-top: 0; }
+.valuation-evidence-desk > p { border-left: 3px solid #668293; padding-left: 12px; }
+@media (max-width: 760px) {
+  .valuation-command { display: grid; gap: 16px; padding: 22px 16px; }
+  .valuation-command .profile-score-card { border-left: 0; border-top: 1px solid #688091; padding-left: 0; padding-top: 12px; }
+  .valuation-workbench > article, .valuation-workbench > article + article, .valuation-research-desk > article, .valuation-research-desk > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; }
+  .valuation-inputs { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 760px) {
   .promise-command,
   .milestone-command {
