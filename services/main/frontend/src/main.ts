@@ -2865,6 +2865,28 @@ class AppComponent {
     this.valueFlowFocus.set(null);
   }
 
+  focusedValueFlowEdge(): ValueFlowEdge | null {
+    const focus = this.valueFlowFocus();
+    return focus?.type === 'edge' ? this.valueFlowGraph().edges.find((edge) => edge.key === focus.key) || null : null;
+  }
+
+  focusedValueFlowNode(): { name: string; connections: string[] } | null {
+    const focus = this.valueFlowFocus();
+    if (focus?.type !== 'node') {
+      return null;
+    }
+    const node = this.valueFlowGraph().nodes.find((item) => item.key === focus.key);
+    if (!node) {
+      return null;
+    }
+    const connections = [...new Set(this.valueFlowGraph().edges.flatMap((edge) => {
+      if (edge.from.key === node.key) return [edge.to.name];
+      if (edge.to.key === node.key) return [edge.from.name];
+      return [];
+    }))];
+    return { name: node.name, connections };
+  }
+
   isValueFlowEdgeDimmed(edge: ValueFlowEdge): boolean {
     const focus = this.valueFlowFocus();
     if (!focus) {

@@ -864,14 +864,16 @@
                 <div class="value-flow-map" *ngIf="modelView.snapshot && modelView.snapshot.relationships.length > 0" (pointerleave)="clearValueFlowFocus()">
                   <div class="value-flow-space">
                     <svg class="value-flow-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-                      <line *ngFor="let edge of valueFlowGraph().edges" [class.is-muted]="isValueFlowEdgeDimmed(edge)" [attr.x1]="edge.from.x" [attr.y1]="edge.from.y" [attr.x2]="edge.to.x" [attr.y2]="edge.to.y" (pointerenter)="focusValueFlowEdge(edge.key)"></line>
+                      <line *ngFor="let edge of valueFlowGraph().edges" [class.is-muted]="isValueFlowEdgeDimmed(edge)" [attr.x1]="edge.from.x" [attr.y1]="edge.from.y" [attr.x2]="edge.to.x" [attr.y2]="edge.to.y" (pointerenter)="focusValueFlowEdge(edge.key)" (click)="focusValueFlowEdge(edge.key)"></line>
                     </svg>
-                    <div class="value-flow-connector" *ngFor="let edge of valueFlowGraph().edges" [class.is-muted]="isValueFlowEdgeDimmed(edge)" [style.left.%]="edge.x" [style.top.%]="edge.y" (pointerenter)="focusValueFlowEdge(edge.key)">
+                    <div class="value-flow-connector" *ngFor="let edge of valueFlowGraph().edges" [class.is-muted]="isValueFlowEdgeDimmed(edge)" [style.left.%]="edge.x" [style.top.%]="edge.y" (pointerenter)="focusValueFlowEdge(edge.key)" (click)="focusValueFlowEdge(edge.key)">
                       {{ edge.label }}
                     </div>
-                    <div class="value-flow-node" *ngFor="let node of valueFlowGraph().nodes" [class.is-muted]="isValueFlowNodeDimmed(node)" [style.left.%]="node.x" [style.top.%]="node.y" (pointerenter)="focusValueFlowNode(node.key)" (mousedown)="startValueFlowNodeDrag($event, node)">
+                    <div class="value-flow-node" *ngFor="let node of valueFlowGraph().nodes" [class.is-muted]="isValueFlowNodeDimmed(node)" [style.left.%]="node.x" [style.top.%]="node.y" (pointerenter)="focusValueFlowNode(node.key)" (click)="focusValueFlowNode(node.key)" (mousedown)="startValueFlowNodeDrag($event, node)">
                       {{ node.name }}
                     </div>
+                    <aside class="value-flow-details" *ngIf="focusedValueFlowEdge() as edge; else focusedFlowNode" aria-live="polite"><div class="value-flow-details-heading"><p class="section-kicker">Flow details</p><button type="button" class="icon-button" aria-label="Close flow details" (click)="clearValueFlowFocus()">&times;</button></div><h3>{{ edge.from.name }} to {{ edge.to.name }}</h3><dl><div><dt>Relationship</dt><dd>{{ edge.label }}</dd></div><div><dt>From</dt><dd>{{ edge.from.name }}</dd></div><div><dt>To</dt><dd>{{ edge.to.name }}</dd></div></dl></aside>
+                    <ng-template #focusedFlowNode><aside class="value-flow-details" *ngIf="focusedValueFlowNode() as node" aria-live="polite"><div class="value-flow-details-heading"><p class="section-kicker">Flow details</p><button type="button" class="icon-button" aria-label="Close flow details" (click)="clearValueFlowFocus()">&times;</button></div><h3>{{ node.name }}</h3><dl><div><dt>Direct connections</dt><dd>{{ node.connections.length }}</dd></div><div *ngIf="node.connections.length"><dt>Connected to</dt><dd>{{ node.connections.join(', ') }}</dd></div></dl></aside></ng-template>
                   </div>
                 </div>
               </section>
