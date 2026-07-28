@@ -2377,7 +2377,7 @@
           <section *ngSwitchCase="'sector-themes'" class="company-profile-layout" aria-labelledby="themes-heading">
             <div class="loading-panel" *ngIf="sectorThemesLoading()">Loading sector and theme intelligence...</div>
             <ng-container *ngIf="!sectorThemesLoading() && sectorThemes() as themeView">
-              <section class="panel company-profile-hero">
+              <section class="panel company-profile-hero theme-command">
                 <div>
                   <p class="section-kicker">Sector and Theme Intelligence · {{ themeView.status }}</p>
                   <h2 id="themes-heading">{{ themeView.company.name }}</h2>
@@ -2392,7 +2392,7 @@
                 </div>
               </section>
 
-              <section class="profile-controls panel">
+              <section class="profile-controls panel theme-toolbar">
                 <label>Snapshot at date
                   <select [(ngModel)]="sectorThemesDate">
                     <option value="">Latest reviewed snapshot</option>
@@ -2420,14 +2420,14 @@
                 </div>
               </section>
 
-              <section class="metric-grid">
+              <section class="metric-grid theme-coverage-strip">
                 <article class="metric-card"><strong>{{ themeView.coverage.exposure_count }}</strong><span>total exposure rows</span></article>
                 <article class="metric-card"><strong>{{ themeView.coverage.capital_link_count }}</strong><span>capital links</span></article>
                 <article class="metric-card"><strong>{{ themeView.coverage.source_count }}</strong><span>evidence sources</span></article>
               </section>
 
-              <section class="dashboard-two-column">
-                <article class="panel">
+              <section class="dashboard-two-column theme-radar-workspace">
+                <article class="panel theme-exposure-radar">
                   <div class="panel-header"><div><p class="section-kicker">Theme Pages</p><h2>Reviewed exposure map</h2></div><span>{{ themeView.theme_pages.length }} themes</span></div>
                   <div class="result-row" *ngFor="let page of themeView.theme_pages">
                     <strong>{{ page.theme.name }}</strong>
@@ -2438,7 +2438,7 @@
                   <div class="empty-state unavailable-state" *ngIf="themeView.theme_pages.length === 0">No reviewed theme pages are available.</div>
                 </article>
 
-                <article class="panel">
+                <article class="panel theme-taxonomy-register">
                   <div class="panel-header"><div><p class="section-kicker">Taxonomy</p><h2>Sectors, themes, and subthemes</h2></div><span>{{ themeView.taxonomy.length }} labels</span></div>
                   <div class="result-row" *ngFor="let item of themeView.taxonomy">
                     <strong>{{ item.name }}</strong>
@@ -2448,7 +2448,7 @@
                 </article>
               </section>
 
-              <section class="panel">
+              <section class="panel theme-exposure-board">
                 <div class="panel-header"><div><p class="section-kicker">Exposure Cards</p><h2>Evidence-based company exposure</h2></div><span>{{ themeView.exposures.length }} rows</span></div>
                 <div class="result-row" *ngFor="let exposure of themeView.exposures">
                   <strong>{{ exposure.theme.name }} · {{ exposure.exposure_type_label }}</strong>
@@ -2462,15 +2462,15 @@
                 <div class="empty-state unavailable-state" *ngIf="themeView.exposures.length === 0">No reviewed exposure rows are available for the selected filters.</div>
               </section>
 
-              <section class="dashboard-two-column">
-                <article class="panel">
+              <section class="dashboard-two-column theme-evidence-workspace">
+                <article class="panel theme-linked-signals">
                   <div class="panel-header"><div><p class="section-kicker">Related Evidence</p><h2>Moves, KPIs, risks, and capital</h2></div></div>
                   <div class="result-row" *ngFor="let event of themeView.related.events"><strong>{{ event.event_type }}</strong><span>{{ event.event_date || 'No date' }} · {{ event.decision_theme || 'No theme' }}</span><p>{{ event.actual_change }}</p></div>
                   <div class="result-row" *ngFor="let kpi of themeView.related.kpis"><strong>{{ kpi.name }}</strong><span>{{ kpi.unit }} · {{ kpi.cadence }}</span><p>{{ kpi.description }}</p></div>
                   <div class="result-row" *ngFor="let item of themeView.related.capital_allocation"><strong>{{ item.category_label }}</strong><span>{{ item.value === null ? 'value unavailable' : (item.value | number:'1.0-0') }} {{ item.unit }}</span><p>{{ item.label }}</p></div>
                   <div class="empty-state unavailable-state" *ngIf="themeView.related.events.length === 0 && themeView.related.kpis.length === 0 && themeView.related.capital_allocation.length === 0">No related event, KPI, or capital-allocation rows are linked to the selected themes.</div>
                 </article>
-                <article class="panel">
+                <article class="panel theme-evidence-desk">
                   <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Theme evidence</h2></div><span>{{ themeView.evidence.length }} sources</span></div>
                   <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of themeView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
                 </article>
