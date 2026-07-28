@@ -4134,6 +4134,23 @@ th {
 .thesis-revision-trail .result-row { border-left: 3px solid #5e7fa1; border-top: 0; }
 @media (max-width: 760px) { .thesis-command, .thesis-selected-command { display: grid; gap: 16px; padding: 22px 16px; } .thesis-command .coverage-summary, .thesis-selected-command .coverage-summary { border-left: 0; border-top: 1px solid #70829a; flex-basis: auto; padding: 12px 0 0; } .thesis-intake-workspace > article, .thesis-intake-workspace > article + article, .thesis-evidence-workspace > article, .thesis-evidence-workspace > article + article, .thesis-monitor-workspace > article, .thesis-monitor-workspace > article + article, .thesis-revision-workspace > article, .thesis-revision-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
 
+/* Contradictions are neutral claim pairs with an explicit human-review path. */
+.contradiction-command, .contradiction-selected-command { align-items: start; background: #4a3b48; color: #fffafd; display: flex; gap: 24px; justify-content: space-between; padding: 26px 30px; }
+.contradiction-command .section-kicker, .contradiction-command p, .contradiction-command .coverage-summary span, .contradiction-command .coverage-summary small, .contradiction-selected-command .section-kicker, .contradiction-selected-command p, .contradiction-selected-command .coverage-summary span, .contradiction-selected-command .coverage-summary small { color: #ead8e4; }
+.contradiction-command .coverage-summary, .contradiction-selected-command .coverage-summary { background: transparent; border: 0; border-left: 1px solid #927586; color: #fffafd; flex: 0 0 210px; padding: 4px 0 4px 22px; }
+.contradiction-command .coverage-summary strong, .contradiction-selected-command .coverage-summary strong { color: #ffffff; }
+.contradiction-toolbar { background: #f7f2f6; display: flex; flex-wrap: wrap; gap: 14px; padding: 16px; }
+.contradiction-toolbar label { flex: 1 1 190px; min-width: 0; }
+.contradiction-intake-workspace, .contradiction-claims-workspace, .contradiction-review-workspace { gap: 0; }
+.contradiction-intake-workspace > article, .contradiction-claims-workspace > article, .contradiction-review-workspace > article { border-bottom: 1px solid var(--line); min-width: 0; padding: 22px 24px 22px 0; }
+.contradiction-intake-workspace > article + article, .contradiction-claims-workspace > article + article, .contradiction-review-workspace > article + article { border-left: 1px solid var(--line); padding-left: 24px; padding-right: 0; }
+.contradiction-intake-form { background: #fbf8fa; }
+.contradiction-queue .result-row { border-left: 3px solid #916a82; border-top: 0; cursor: pointer; }
+.contradiction-claim-card { border-top: 3px solid #6e8ba0; }
+.contradiction-review-form { background: #fbf8fa; }
+.contradiction-resolution-trail .result-row { border-left: 3px solid #618777; border-top: 0; }
+@media (max-width: 760px) { .contradiction-command, .contradiction-selected-command { display: grid; gap: 16px; padding: 22px 16px; } .contradiction-command .coverage-summary, .contradiction-selected-command .coverage-summary { border-left: 0; border-top: 1px solid #927586; flex-basis: auto; padding: 12px 0 0; } .contradiction-intake-workspace > article, .contradiction-intake-workspace > article + article, .contradiction-claims-workspace > article, .contradiction-claims-workspace > article + article, .contradiction-review-workspace > article, .contradiction-review-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
+
 /* Ownership is read as a point-in-time ledger with a separate insider activity trail. */
 .ownership-command { background: #323c4d; color: #f8fbff; padding: 26px 30px; }
 .ownership-command .section-kicker, .ownership-command p, .ownership-command .profile-score-card span, .ownership-command .profile-score-card small { color: #d2dbe7; }
