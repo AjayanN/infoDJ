@@ -10,6 +10,12 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 - [ ] Dashboard redesign is in scope. It is the entry point to Company 360 and must be redesigned as a coverage control room, company directory, and activity feed before this backlog can be accepted.
 - [ ] All Company 360 feature pages remain incomplete until their individual acceptance criterion is met. The intended interaction model for each page is part of that criterion: graph, map, workbench, board, timeline, matrix, calendar, table, or briefing as appropriate.
 
+## Delivered And Browser-Checked: 2026-07-28
+
+- [x] Company 360 profile briefing was consolidated into one research workspace. The old duplicate financial, change, gap, and source panels were removed; financial facts are deduplicated and limited to the active evidence rail. Verified with real Netflix data at desktop and mobile widths.
+- [x] Dashboard was rebuilt as a coverage control room with a command search, coverage totals, workflow switcher, sector comparison, actionable company directory, and refresh ledger. Verified with real data at desktop and mobile widths, including workflow switching and navigation to Netflix Company 360.
+- [ ] Remaining Company 360 features are still individually incomplete. Do not infer completion from these two delivered surfaces.
+
 ## Product-Wide UI Principles
 
 - [ ] Keep the company context visible on every feature page with a sticky company identity bar: company name, ticker if available, sector, country, latest reviewed date, and a back-to-Company-360 action.
