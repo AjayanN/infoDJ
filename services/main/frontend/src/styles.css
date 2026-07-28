@@ -4238,6 +4238,28 @@ th {
 .foundation-review-playbook .result-row { border-left: 3px solid #64819a; border-top: 0; }
 @media (max-width: 760px) { .foundation-command { display: grid; gap: 16px; padding: 22px 16px; } .foundation-command .coverage-summary { border-left: 0; border-top: 1px solid #71837f; flex-basis: auto; padding: 12px 0 0; } .foundation-rule-board > article, .foundation-rule-board > article + article, .foundation-reference-workspace > article, .foundation-reference-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
 
+/* Dashboard drill-downs use the component model implied by the underlying analysis. */
+.dashboard-moves-feed { border-top: 3px solid #4b8493; }
+.dashboard-moves-feed .evidence-row { border-left: 4px solid #4b8493; border-top: 0; }
+.dashboard-pattern-library { border-top: 3px solid #7b689b; }
+.dashboard-pattern-library .pattern-card { border-left: 4px solid #7b689b; border-radius: 0; }
+.dashboard-risk-watch { border-top: 3px solid #b57355; }
+.dashboard-risk-watch .evidence-row { border-left: 4px solid #b57355; border-top: 0; }
+.dashboard-confidence-audit { border-top: 3px solid #5f7f91; }
+.dashboard-confidence-audit .confidence-grid { border-bottom: 1px solid var(--line); gap: 0; }
+.dashboard-confidence-audit .metric { border-right: 1px solid var(--line); border-radius: 0; }
+.dashboard-peer-directory { border-top: 3px solid #5c8b79; }
+.dashboard-peer-directory .source-gap { border-left: 4px solid #5c8b79; border-radius: 0; }
+.dashboard-scorecard-workbench { border-top: 3px solid #5f7f91; }
+.dashboard-scorecard-workbench .evidence-row { border-left: 4px solid #5f7f91; border-top: 0; }
+.dashboard-peer-matrix { border-top: 3px solid #5c8b79; }
+.dashboard-peer-matrix .pattern-card { border-left: 4px solid #5c8b79; border-radius: 0; }
+.dashboard-impact-lab { border-top: 3px solid #aa7650; }
+.dashboard-impact-lab .impact-row { border-left: 4px solid #aa7650; border-top: 0; }
+.dashboard-question-desk { border-top: 3px solid #6b7fa3; }
+.dashboard-question-desk .evidence-row { border-left: 4px solid #6b7fa3; border-top: 0; }
+@media (max-width: 760px) { .dashboard-confidence-audit .metric { border-bottom: 1px solid var(--line); border-right: 0; } }
+
 /* Ownership is read as a point-in-time ledger with a separate insider activity trail. */
 .ownership-command { background: #323c4d; color: #f8fbff; padding: 26px 30px; }
 .ownership-command .section-kicker, .ownership-command p, .ownership-command .profile-score-card span, .ownership-command .profile-score-card small { color: #d2dbe7; }
