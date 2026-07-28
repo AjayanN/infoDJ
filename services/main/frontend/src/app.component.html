@@ -2486,7 +2486,7 @@
           <section *ngSwitchCase="'macro-sensitivity'" class="company-profile-layout" aria-labelledby="macro-heading">
             <div class="loading-panel" *ngIf="macroSensitivityLoading()">Loading macro sensitivity profile...</div>
             <ng-container *ngIf="!macroSensitivityLoading() && macroSensitivity() as macroView">
-              <section class="panel company-profile-hero">
+              <section class="panel company-profile-hero macro-command">
                 <div>
                   <p class="section-kicker">Macro Sensitivity Profile · {{ macroView.status }}</p>
                   <h2 id="macro-heading">{{ macroView.company.name }}</h2>
@@ -2501,7 +2501,7 @@
                 </div>
               </section>
 
-              <section class="profile-controls panel">
+              <section class="profile-controls panel macro-toolbar">
                 <label>Snapshot at date
                   <select [(ngModel)]="macroSensitivityDate">
                     <option value="">Latest reviewed snapshot</option>
@@ -2529,8 +2529,8 @@
                 </div>
               </section>
 
-              <section class="dashboard-two-column">
-                <article class="panel">
+              <section class="dashboard-two-column macro-profile-workspace">
+                <article class="panel macro-factor-profile">
                   <div class="panel-header"><div><p class="section-kicker">Sensitivities</p><h2>Factors and exposure channels</h2></div><span>{{ macroView.sensitivities.length }} rows</span></div>
                   <div class="result-row" *ngFor="let row of macroView.sensitivities">
                     <strong>{{ row.factor.name }} · {{ row.channel_label }}</strong>
@@ -2541,7 +2541,7 @@
                   </div>
                   <div class="empty-state unavailable-state" *ngIf="macroView.sensitivities.length === 0">No reviewed macro sensitivities are available for the selected filters.</div>
                 </article>
-                <article class="panel">
+                <article class="panel macro-factor-registry">
                   <div class="panel-header"><div><p class="section-kicker">Factor Registry</p><h2>Macro factors and series</h2></div><span>{{ macroView.factors.length }} factors</span></div>
                   <div class="result-row" *ngFor="let factor of macroView.factors">
                     <strong>{{ factor.name }}</strong>
@@ -2552,8 +2552,8 @@
                 </article>
               </section>
 
-              <section class="dashboard-two-column">
-                <article class="panel">
+              <section class="dashboard-two-column macro-method-workspace">
+                <article class="panel macro-relationship-guardrail">
                   <div class="panel-header"><div><p class="section-kicker">Calculated Relationships</p><h2>Methods and limitations</h2></div><span>{{ macroView.calculated_relationships.length }} rows</span></div>
                   <div class="result-row" *ngFor="let row of macroView.calculated_relationships">
                     <strong>{{ row.factor.name }}</strong>
@@ -2562,7 +2562,7 @@
                     <p>{{ row.limitation_note }}</p>
                   </div>
                 </article>
-                <article class="panel">
+                <article class="panel macro-stress-archive">
                   <div class="panel-header"><div><p class="section-kicker">Stress Periods</p><h2>Examples and caveats</h2></div><span>{{ macroView.stress_examples.length }} rows</span></div>
                   <div class="result-row" *ngFor="let example of macroView.stress_examples">
                     <strong>{{ example.label }}</strong>
@@ -2574,13 +2574,13 @@
                 </article>
               </section>
 
-              <section class="dashboard-two-column">
-                <article class="panel">
+              <section class="dashboard-two-column macro-evidence-workspace">
+                <article class="panel macro-direction-register">
                   <div class="panel-header"><div><p class="section-kicker">Summary</p><h2>Direction and evidence type</h2></div></div>
                   <div class="result-row" *ngFor="let row of macroView.summary.by_direction"><strong>{{ promiseLabel(row.key) }}</strong><span>{{ row.count }} rows</span></div>
                   <div class="result-row" *ngFor="let row of macroView.summary.by_evidence_type"><strong>{{ promiseLabel(row.key) }}</strong><span>{{ row.count }} rows</span></div>
                 </article>
-                <article class="panel">
+                <article class="panel macro-evidence-desk">
                   <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Macro evidence</h2></div><span>{{ macroView.evidence.length }} sources</span></div>
                   <div class="evidence-grid"><article class="evidence-card" *ngFor="let source of macroView.evidence"><strong>{{ source.title }}</strong><span>{{ source.publisher || source.source_api }} · {{ source.published_date || 'Date unavailable' }}</span><p>{{ source.snippet }}</p><a [href]="source.url" target="_blank" rel="noopener">Open source</a></article></div>
                 </article>
