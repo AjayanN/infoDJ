@@ -190,26 +190,15 @@
         </section>
         <ng-container [ngSwitch]="activePage()">
           <section *ngSwitchCase="'dashboard'" class="dashboard-grid" aria-labelledby="dashboard-heading">
-            <div class="panel dashboard-header-panel">
-              <div>
-                <p class="section-kicker">Dashboards</p>
-                <h2 id="dashboard-heading">Strategic intelligence dashboards</h2>
-                <p>{{ activeDashboardView().purpose }}</p>
-              </div>
-              <button type="button" class="ghost-button" (click)="loadDashboard()" [disabled]="dashboardLoading()" [attr.aria-disabled]="dashboardLoading()">Reload dashboard</button>
-            </div>
-
             <ng-container *ngIf="dashboard() as dash; else dashboardEmpty">
-              <section class="panel search-panel workspace-search-panel" aria-labelledby="search-heading">
-                <div class="panel-header">
-                  <div>
-                    <p class="section-kicker">Company search</p>
-                    <h2 id="search-heading">Company and strategy search</h2>
-                  </div>
+              <section class="coverage-command" aria-labelledby="dashboard-heading">
+                <div class="coverage-command-copy">
+                  <p class="section-kicker">Research coverage</p>
+                  <h2 id="dashboard-heading">Strategic intelligence control room</h2>
+                  <p>Search the evidence base, open a company brief, or move into a focused research workflow.</p>
                 </div>
-                <form class="search-form" (ngSubmit)="runSearch()">
+                <form class="dashboard-search" (ngSubmit)="runSearch()">
                   <label for="global-search">
-                    Search companies, events, and strategic turns
                     <input
                       id="global-search"
                       name="global_search"
@@ -221,6 +210,15 @@
                   </label>
                   <button type="submit" class="primary-button" [disabled]="searchLoading()" [attr.aria-disabled]="searchLoading()">Search</button>
                 </form>
+                <button type="button" class="refresh-control" (click)="loadDashboard()" [disabled]="dashboardLoading()" [attr.aria-disabled]="dashboardLoading()">Refresh coverage</button>
+
+                <dl class="coverage-metrics" aria-label="Coverage totals">
+                  <div><dt>Companies</dt><dd>{{ dash.summary.company_count }}</dd></div>
+                  <div><dt>Sources</dt><dd>{{ dash.summary.source_count }}</dd></div>
+                  <div><dt>Events</dt><dd>{{ dash.summary.event_count }}</dd></div>
+                  <div><dt>Strategic turns</dt><dd>{{ dash.summary.strategic_turn_count }}</dd></div>
+                  <div><dt>Sectors</dt><dd>{{ dash.summary.sector_count }}</dd></div>
+                </dl>
 
                 <div class="suggestion-row" *ngIf="suggestions().length > 0" aria-label="Search suggestions">
                   <button type="button" class="suggestion-button" *ngFor="let suggestion of suggestions()" (click)="useSuggestion(suggestion)">
@@ -284,7 +282,8 @@
                 </div>
               </section>
 
-              <section class="dashboard-switcher panel" aria-label="Dashboard selector">
+              <section class="dashboard-switcher" aria-label="Research workflow selector">
+                <p class="section-kicker">Research workflows</p>
                 <button
                   type="button"
                   *ngFor="let view of dashboardViews"
@@ -297,7 +296,7 @@
                 </button>
               </section>
 
-              <section class="dashboard-surface-heading panel" aria-live="polite">
+              <section class="dashboard-surface-heading" aria-live="polite">
                 <div>
                   <p class="section-kicker">Active dashboard</p>
                   <h2>{{ activeDashboardView().name }}</h2>
@@ -314,35 +313,12 @@
               </section>
 
               <ng-container *ngIf="dashboardView() === 'company-intelligence'; else unavailableDashboard">
-              <div class="metric-grid" aria-label="Company strategic intelligence metrics">
-                <div class="metric">
-                  <dt>Companies</dt>
-                  <dd>{{ dash.summary.company_count }}</dd>
-                </div>
-                <div class="metric">
-                  <dt>Sources</dt>
-                  <dd>{{ dash.summary.source_count }}</dd>
-                </div>
-                <div class="metric">
-                  <dt>Events</dt>
-                  <dd>{{ dash.summary.event_count }}</dd>
-                </div>
-                <div class="metric">
-                  <dt>Strategic turns</dt>
-                  <dd>{{ dash.summary.strategic_turn_count }}</dd>
-                </div>
-                <div class="metric">
-                  <dt>Sectors</dt>
-                  <dd>{{ dash.summary.sector_count }}</dd>
-                </div>
-              </div>
-
               <div class="dashboard-chart-grid">
                 <section class="panel chart-panel" aria-labelledby="sector-chart-heading">
                   <div class="panel-header">
                     <div>
-                      <p class="section-kicker">Coverage graph</p>
-                      <h2 id="sector-chart-heading">Events by sector</h2>
+                      <p class="section-kicker">Coverage landscape</p>
+                      <h2 id="sector-chart-heading">Sector event distribution</h2>
                     </div>
                   </div>
                   <div class="empty-state unavailable-state" *ngIf="dash.sector_counts.length === 0">
@@ -386,8 +362,8 @@
                 <section class="panel chart-panel" aria-labelledby="company-chart-heading">
                   <div class="panel-header">
                     <div>
-                      <p class="section-kicker">Company graph</p>
-                      <h2 id="company-chart-heading">Top event coverage</h2>
+                      <p class="section-kicker">Company directory</p>
+                      <h2 id="company-chart-heading">Open a company brief</h2>
                     </div>
                   </div>
                   <div class="empty-state unavailable-state" *ngIf="dash.top_companies.length === 0">
@@ -430,7 +406,7 @@
               <section class="panel" aria-labelledby="jobs-heading">
                 <div class="panel-header">
                   <div>
-                    <p class="section-kicker">Ingestion</p>
+                    <p class="section-kicker">Refresh ledger</p>
                     <h2 id="jobs-heading">Latest source refreshes</h2>
                   </div>
                 </div>

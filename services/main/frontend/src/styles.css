@@ -2985,3 +2985,336 @@ th {
     flex-direction: column;
   }
 }
+
+/* Dashboard is an operational coverage surface, not a collection of feature cards. */
+.dashboard-grid {
+  gap: 28px;
+}
+
+.coverage-command {
+  background: #132238;
+  color: #f7fbff;
+  display: grid;
+  gap: 22px;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.82fr) auto;
+  padding: 30px 32px 0;
+}
+
+.coverage-command-copy .section-kicker,
+.coverage-command-copy p:last-child {
+  color: #b5c6da;
+}
+
+.coverage-command-copy h2 {
+  font-size: 28px;
+  line-height: 1.15;
+  margin: 4px 0 8px;
+}
+
+.coverage-command-copy p:last-child {
+  line-height: 1.5;
+  margin: 0;
+  max-width: 620px;
+}
+
+.dashboard-search {
+  align-self: center;
+  display: flex;
+  gap: 8px;
+}
+
+.dashboard-search label {
+  flex: 1;
+}
+
+.dashboard-search input {
+  background: #ffffff;
+  border: 0;
+  min-height: 42px;
+  width: 100%;
+}
+
+.dashboard-search .primary-button {
+  align-self: end;
+  min-height: 42px;
+}
+
+.refresh-control {
+  align-self: center;
+  background: transparent;
+  border: 1px solid #60728a;
+  border-radius: 4px;
+  color: #dce7f3;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  min-height: 42px;
+  padding: 0 12px;
+}
+
+.refresh-control:hover:not(:disabled),
+.refresh-control:focus-visible {
+  background: #22364f;
+  outline: 2px solid #c0d7ed;
+  outline-offset: 2px;
+}
+
+.coverage-metrics {
+  border-top: 1px solid #40536c;
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 0;
+}
+
+.coverage-metrics div {
+  border-left: 1px solid #40536c;
+  padding: 16px 18px 18px;
+}
+
+.coverage-metrics div:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+
+.coverage-metrics dt {
+  color: #b5c6da;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.coverage-metrics dd {
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 800;
+  margin: 4px 0 0;
+}
+
+.coverage-command .suggestion-row,
+.coverage-command .search-results {
+  grid-column: 1 / -1;
+}
+
+.coverage-command .search-results {
+  background: #ffffff;
+  color: var(--ink);
+  margin: 0 -32px;
+  padding: 24px 32px;
+}
+
+.dashboard-switcher {
+  border-bottom: 1px solid var(--line);
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  padding: 0;
+}
+
+.dashboard-switcher > .section-kicker {
+  align-self: center;
+  color: var(--muted);
+  flex: 0 0 144px;
+  margin: 0;
+}
+
+.dashboard-switcher button {
+  background: transparent;
+  border: 0;
+  border-left: 1px solid var(--line);
+  border-radius: 0;
+  flex: 0 0 118px;
+  min-height: 72px;
+  padding: 12px;
+}
+
+.dashboard-switcher button.active {
+  background: #eaf2f9;
+  box-shadow: inset 0 -3px 0 #1769aa;
+  border-color: var(--line);
+}
+
+.dashboard-surface-heading {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 18px;
+}
+
+.dashboard-chart-grid {
+  gap: 0;
+  grid-template-columns: minmax(0, 1.18fr) minmax(280px, 0.82fr);
+}
+
+.dashboard-chart-grid .chart-panel,
+.dashboard-grid > .panel {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 22px 0;
+}
+
+.dashboard-chart-grid .chart-panel:first-child {
+  border-right: 1px solid var(--line);
+  padding-right: 26px;
+}
+
+.dashboard-chart-grid .chart-panel:nth-child(2),
+.dashboard-chart-grid .chart-panel:nth-child(3) {
+  padding-left: 26px;
+}
+
+.dashboard-chart-grid .chart-panel:nth-child(3) {
+  border-top: 1px solid var(--line);
+}
+
+.company-bars {
+  gap: 0;
+}
+
+.company-bar-button {
+  border-bottom: 1px solid var(--line);
+  padding: 12px 4px;
+}
+
+.company-bar-button:first-child {
+  border-top: 1px solid var(--line);
+}
+
+.company-bar-button:hover,
+.company-bar-button:focus-visible {
+  background: #edf4f9;
+  border-radius: 0;
+}
+
+.company-bar-top strong::after {
+  color: #5e7288;
+  content: 'Open brief';
+  font-size: 11px;
+  font-weight: 800;
+  margin-left: 10px;
+  text-transform: uppercase;
+}
+
+.company-bar .bar-track {
+  height: 6px;
+}
+
+.dashboard-grid > section[aria-labelledby='jobs-heading'] {
+  border-top: 1px solid var(--line);
+}
+
+.dashboard-grid .job-card-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.dashboard-grid .job-card {
+  background: transparent;
+  border: 0;
+  border-left: 3px solid #8aaac7;
+  border-radius: 0;
+  padding: 8px 12px;
+}
+
+@media (max-width: 900px) {
+  .coverage-command {
+    grid-template-columns: 1fr auto;
+  }
+
+  .dashboard-search {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .coverage-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .coverage-metrics div:nth-child(4) {
+    border-left: 0;
+  }
+
+  .dashboard-chart-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-chart-grid .chart-panel:first-child,
+  .dashboard-chart-grid .chart-panel:nth-child(2),
+  .dashboard-chart-grid .chart-panel:nth-child(3) {
+    border-right: 0;
+    border-top: 1px solid var(--line);
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .dashboard-chart-grid .chart-panel:first-child {
+    border-top: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .coverage-command {
+    gap: 16px;
+    grid-template-columns: 1fr;
+    padding: 22px 16px 0;
+  }
+
+  .coverage-command-copy h2 {
+    font-size: 24px;
+  }
+
+  .dashboard-search {
+    align-items: stretch;
+    flex-direction: column;
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .dashboard-search .primary-button {
+    width: 100%;
+  }
+
+  .refresh-control {
+    justify-self: start;
+  }
+
+  .coverage-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .coverage-metrics div,
+  .coverage-metrics div:first-child,
+  .coverage-metrics div:nth-child(4) {
+    border-left: 0;
+    border-top: 1px solid #40536c;
+    padding: 12px 0;
+  }
+
+  .coverage-metrics div:first-child,
+  .coverage-metrics div:nth-child(2) {
+    border-top: 0;
+  }
+
+  .coverage-metrics div:nth-child(odd) {
+    border-right: 1px solid #40536c;
+    padding-right: 12px;
+  }
+
+  .coverage-metrics div:nth-child(even) {
+    padding-left: 12px;
+  }
+
+  .coverage-command .search-results {
+    margin: 0 -16px;
+    padding: 20px 16px;
+  }
+
+  .dashboard-switcher > .section-kicker {
+    display: none;
+  }
+
+  .dashboard-surface-heading {
+    align-items: start;
+    flex-direction: column;
+  }
+}
