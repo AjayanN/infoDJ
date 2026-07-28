@@ -3057,7 +3057,7 @@
           <section *ngSwitchCase="'briefings'" class="company-profile-layout" aria-labelledby="briefing-heading">
             <div class="loading-panel" *ngIf="briefingLoading()">Loading briefings...</div>
             <ng-container *ngIf="!briefingLoading()">
-              <section class="panel hero-card">
+              <section class="panel hero-card briefing-command">
                 <div>
                   <p class="section-kicker">Daily and Weekly Briefings</p>
                   <h2 id="briefing-heading">Personalized source-backed summaries</h2>
@@ -3070,7 +3070,7 @@
                 </div>
               </section>
 
-              <section class="panel company-profile-controls" aria-label="Briefing controls">
+              <section class="panel company-profile-controls briefing-toolbar" aria-label="Briefing controls">
                 <label>Cadence
                   <select name="briefing_cadence" [(ngModel)]="briefingCadence">
                     <option value="DAILY">Daily</option>
@@ -3089,8 +3089,8 @@
                 </div>
               </section>
 
-              <section class="dashboard-two-column">
-                <article class="panel">
+              <section class="dashboard-two-column briefing-workspace">
+                <article class="panel briefing-archive">
                   <div class="panel-header"><div><p class="section-kicker">Archive</p><h2>Briefing history</h2></div><span>{{ briefings()?.briefings?.length || 0 }} shown</span></div>
                   <div class="result-row" *ngFor="let briefing of briefings()?.briefings || []" (click)="selectBriefing(briefing.id)" role="button" tabindex="0">
                     <strong>{{ briefing.title }}</strong>
@@ -3100,7 +3100,7 @@
                   </div>
                   <div class="empty-state unavailable-state" *ngIf="(briefings()?.briefings?.length || 0) === 0">No briefings match the selected filters.</div>
                 </article>
-                <article class="panel" *ngIf="selectedBriefing() as briefing">
+                <article class="panel briefing-reader" *ngIf="selectedBriefing() as briefing">
                   <div class="panel-header"><div><p class="section-kicker">Selected</p><h2>{{ briefing.title }}</h2></div></div>
                   <p>{{ briefing.summary }}</p>
                   <p><strong>Scope:</strong> {{ briefing.scope_summary }}</p>
@@ -3114,7 +3114,7 @@
                 </article>
               </section>
 
-              <section class="panel" *ngIf="selectedBriefing() as briefing">
+              <section class="panel briefing-item-feed" *ngIf="selectedBriefing() as briefing">
                 <div class="panel-header"><div><p class="section-kicker">Briefing Items</p><h2>What changed, why it matters, what next</h2></div><span>{{ briefing.items?.length || 0 }} items</span></div>
                 <div class="result-row" *ngFor="let item of briefing.items || []">
                   <strong>{{ item.section_label }} · {{ item.title }}</strong>
