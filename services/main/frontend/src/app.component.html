@@ -1132,7 +1132,7 @@
           <section *ngSwitchCase="'management-promises'" class="company-profile-layout" aria-labelledby="management-promises-heading">
             <div class="panel empty-state" *ngIf="managementPromiseLoading()" role="status">Loading reviewed management promises.</div>
             <ng-container *ngIf="managementPromises() as promiseView">
-              <section class="panel company-profile-hero">
+              <section class="company-profile-hero promise-command">
                 <div>
                   <p class="section-kicker">Management Promise Tracker · {{ promiseView.status }}</p>
                   <h2 id="management-promises-heading">{{ promiseView.company.name }}</h2>
@@ -1146,7 +1146,7 @@
                 </div>
               </section>
 
-              <section class="panel company-profile-controls" aria-label="Management promise filters">
+              <section class="company-profile-controls promise-toolbar" aria-label="Management promise filters">
                 <label>Status
                   <select [(ngModel)]="managementPromiseStatus">
                     <option value="">All statuses</option>
@@ -1169,8 +1169,8 @@
                 <button type="button" class="ghost-button" (click)="openCompany(promiseView.company.slug)">Back to Company 360</button>
               </section>
 
-              <section class="dashboard-two-column">
-                <article class="panel">
+              <section class="dashboard-two-column promise-ledger-workspace">
+                <article class="promise-register">
                   <div class="panel-header"><div><p class="section-kicker">Promise register</p><h2>Commitments and targets</h2></div></div>
                   <div class="empty-state unavailable-state" *ngIf="promiseView.promises.length === 0">No reviewed management promises match these filters.</div>
                   <div class="result-row" *ngFor="let promise of promiseView.promises" [class.selected]="promise.slug === promiseView.selected_promise?.slug">
@@ -1182,7 +1182,7 @@
                   </div>
                 </article>
 
-                <article class="panel" *ngIf="promiseView.selected_promise as promise; else noSelectedPromise">
+                <article class="promise-detail" *ngIf="promiseView.selected_promise as promise; else noSelectedPromise">
                   <div class="panel-header"><div><p class="section-kicker">Reviewed detail</p><h2>{{ promise.title }}</h2></div><span class="status-pill available">{{ promiseLabel(promise.current_status) }}</span></div>
                   <p><strong>Original statement:</strong> {{ promise.original_statement }}</p>
                   <dl class="account-grid">
@@ -1226,7 +1226,7 @@
           <section *ngSwitchCase="'strategy-milestones'" class="company-profile-layout" aria-labelledby="strategy-milestones-heading">
             <div class="panel empty-state" *ngIf="strategyMilestoneLoading()" role="status">Loading reviewed strategy milestones.</div>
             <ng-container *ngIf="strategyMilestones() as milestoneView">
-              <section class="panel company-profile-hero">
+              <section class="company-profile-hero milestone-command">
                 <div>
                   <p class="section-kicker">Strategy Milestone Tracker · {{ milestoneView.status }}</p>
                   <h2 id="strategy-milestones-heading">{{ milestoneView.company.name }}</h2>
@@ -1239,7 +1239,7 @@
                 </div>
               </section>
 
-              <section class="panel company-profile-controls" aria-label="Strategy milestone filters">
+              <section class="company-profile-controls milestone-toolbar" aria-label="Strategy milestone filters">
                 <label>View<select [(ngModel)]="strategyMilestoneView"><option value="all">All milestones</option><option value="upcoming">Upcoming 180 days</option><option value="overdue">Overdue</option><option value="completed">Recently completed</option></select></label>
                 <label>Status<select [(ngModel)]="strategyMilestoneStatus"><option value="">All statuses</option><option *ngFor="let status of ['EXPECTED','STARTED','COMPLETED','DELAYED','CHANGED','CANCELLED','FAILED','UNKNOWN']" [value]="status">{{ promiseLabel(status) }}</option></select></label>
                 <label>Type<select [(ngModel)]="strategyMilestoneType"><option value="">All types</option><option *ngFor="let type of milestoneView.filters.types" [value]="type">{{ promiseLabel(type) }}</option></select></label>
@@ -1248,8 +1248,8 @@
                 <button type="button" class="ghost-button" (click)="openCompany(milestoneView.company.slug)">Back to Company 360</button>
               </section>
 
-              <section class="dashboard-two-column">
-                <article class="panel">
+              <section class="dashboard-two-column milestone-timeline-workspace">
+                <article class="milestone-register">
                   <div class="panel-header"><div><p class="section-kicker">Execution timeline</p><h2>Milestone register</h2></div></div>
                   <div class="empty-state unavailable-state" *ngIf="milestoneView.milestones.length === 0">No reviewed milestones match these filters.</div>
                   <div class="result-row" *ngFor="let milestone of milestoneView.milestones" [class.selected]="milestone.slug === milestoneView.selected_milestone?.slug">
@@ -1260,7 +1260,7 @@
                   </div>
                 </article>
 
-                <article class="panel" *ngIf="milestoneView.selected_milestone as milestone; else noSelectedMilestone">
+                <article class="milestone-detail" *ngIf="milestoneView.selected_milestone as milestone; else noSelectedMilestone">
                   <div class="panel-header"><div><p class="section-kicker">Reviewed execution detail</p><h2>{{ milestone.title }}</h2></div><span class="status-pill available">{{ promiseLabel(milestone.current_status) }}</span></div>
                   <p><strong>Success condition:</strong> {{ milestone.success_condition }}</p>
                   <dl class="account-grid">

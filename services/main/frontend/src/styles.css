@@ -3601,3 +3601,127 @@ th {
     padding: 16px 0;
   }
 }
+
+/* Promises and milestones are records with a selected execution history. */
+.promise-command,
+.milestone-command {
+  background: #2c3549;
+  color: #f8fbff;
+  padding: 26px 30px;
+}
+
+.milestone-command {
+  background: #263d4a;
+}
+
+.promise-command .section-kicker,
+.promise-command p,
+.promise-command .coverage-summary span,
+.promise-command .coverage-summary small,
+.milestone-command .section-kicker,
+.milestone-command p,
+.milestone-command .coverage-summary span,
+.milestone-command .coverage-summary small {
+  color: #c8d2df;
+}
+
+.promise-command .coverage-summary,
+.milestone-command .coverage-summary {
+  border-left: 1px solid #617086;
+  padding-left: 22px;
+}
+
+.promise-toolbar,
+.milestone-toolbar {
+  background: #f2f5f7;
+  border-bottom: 1px solid var(--line);
+  padding: 16px;
+}
+
+.promise-ledger-workspace,
+.milestone-timeline-workspace {
+  gap: 0;
+  grid-template-columns: minmax(300px, 0.8fr) minmax(0, 1.2fr);
+}
+
+.promise-register,
+.milestone-register {
+  border-right: 1px solid var(--line);
+  padding: 22px 24px 22px 0;
+}
+
+.promise-register .result-row,
+.milestone-register .result-row {
+  border-left: 3px solid #839ab0;
+  border-top: 1px solid var(--line);
+  padding: 12px 14px;
+}
+
+.promise-register .result-row.selected,
+.milestone-register .result-row.selected {
+  background: #edf4f8;
+  border-left-color: #1675b8;
+}
+
+.promise-detail,
+.milestone-detail {
+  background: #f9fbfc;
+  padding: 22px 0 22px 28px;
+}
+
+.promise-detail > p:first-of-type {
+  border-left: 3px solid #b27842;
+  font-family: Georgia, serif;
+  font-size: 17px;
+  line-height: 1.55;
+  padding-left: 15px;
+}
+
+.promise-detail h3,
+.milestone-detail h3 {
+  border-top: 1px solid var(--line);
+  margin-top: 22px;
+  padding-top: 18px;
+}
+
+.promise-detail .result-row,
+.milestone-detail .result-row {
+  border-left: 2px solid #86a6c0;
+  border-top: 0;
+  padding: 8px 12px;
+}
+
+@media (max-width: 760px) {
+  .promise-command,
+  .milestone-command {
+    display: grid;
+    gap: 16px;
+    padding: 22px 16px;
+  }
+
+  .promise-command .coverage-summary,
+  .milestone-command .coverage-summary {
+    border-left: 0;
+    border-top: 1px solid #617086;
+    padding-left: 0;
+    padding-top: 12px;
+  }
+
+  .promise-ledger-workspace,
+  .milestone-timeline-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .promise-register,
+  .milestone-register,
+  .promise-detail,
+  .milestone-detail {
+    border-right: 0;
+    padding: 18px 0;
+  }
+
+  .promise-detail,
+  .milestone-detail {
+    border-top: 1px solid var(--line);
+  }
+}
