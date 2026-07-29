@@ -168,7 +168,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 
 ### UI Name: Deal Journey Board
 
-- [ ] Show each deal as a lifecycle card: announced, pending approval, closed, integrating, reviewed outcome, unavailable outcome.
+- [x] Show each deal as a lifecycle card: announced, pending approval, closed, integrating, reviewed outcome, unavailable outcome. Verified with live Ford Motor Company data at desktop and mobile widths, including selected-deal interaction.
 - [ ] Add a selected-deal detail panel with target, price, rationale, synergies, integration progress, and outcome.
 - [ ] Use a deal timeline for announcement, close, integration updates, impairment/divestiture, or outcome review.
 - [ ] Add clear unavailable cards for missing price, payment form, approval, synergies, and integration results.

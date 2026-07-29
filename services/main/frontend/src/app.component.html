@@ -1741,12 +1741,8 @@
 
               <section class="dashboard-two-column acquisition-portfolio-workspace">
                 <article class="acquisition-deal-portfolio">
-                  <div class="panel-header"><div><p class="section-kicker">Portfolio</p><h2>Tracked deals</h2></div></div>
-                  <div class="result-row" *ngFor="let deal of acquisitionView.deals">
-                    <button type="button" class="link-button" (click)="selectAcquisitionDeal(deal.slug)"><strong>{{ deal.target_name }}</strong></button>
-                    <span>{{ deal.transaction_type_label }} · {{ deal.current_stage_label }} · {{ deal.outcome_category_label }}</span>
-                    <p>{{ deal.management_rationale || deal.integration_summary || 'Reviewed rationale unavailable.' }}</p>
-                  </div>
+                  <div class="panel-header"><div><p class="section-kicker">Lifecycle board</p><h2>Tracked deals</h2></div><span>{{ acquisitionView.deals.length }} in view</span></div>
+                  <div class="acquisition-lifecycle-board" *ngIf="acquisitionView.deals.length > 0"><section *ngFor="let lane of acquisitionLifecycleLanes(acquisitionView.deals)"><header><h3>{{ lane.label }}</h3><span>{{ lane.deals.length }} deals</span></header><button type="button" class="acquisition-deal-card" *ngFor="let deal of lane.deals" [class.selected]="deal.slug === acquisitionView.selected_deal?.slug" [attr.aria-pressed]="deal.slug === acquisitionView.selected_deal?.slug" (click)="selectAcquisitionDeal(deal.slug)"><strong>{{ deal.target_name }}</strong><span>{{ deal.transaction_type_label }} · {{ deal.outcome_category_label }}</span><p>{{ deal.management_rationale || deal.integration_summary || 'Reviewed rationale unavailable.' }}</p><small>Announced {{ deal.announcement_date || 'date unavailable' }} · {{ deal.stage_event_count }} lifecycle events</small></button></section></div>
                   <div class="empty-state unavailable-state" *ngIf="acquisitionView.deals.length === 0">No reviewed acquisition lifecycle deals are available.</div>
                 </article>
 

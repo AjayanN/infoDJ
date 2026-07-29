@@ -129,6 +129,7 @@ type CompetitivePeerLane = { label: string; peers: CompetitivePositionResponse['
 type ProductOfferingFamily = { label: string; offerings: ProductPricingResponse['offerings'] };
 type DependencyRelationshipLane = { key: string; label: string; dependencies: CustomerSupplierDependencyResponse['dependencies'] };
 type GeographicMarketLane = { key: string; label: string; description: string; markets: GeographicExpansionResponse['markets'] };
+type AcquisitionLifecycleLane = { label: string; deals: AcquisitionLifecycleResponse['deals'] };
 type SourceLensState = { title: string; sources: CompanyProfileSource[] } | null;
 type DashboardSectionKey =
   | 'latest_moves'
@@ -2708,6 +2709,15 @@ class AppComponent {
       result.push({ key: 'detail-limited', label: 'Detail limited', description: 'Reviewed presence is available, but the current market status is not classified above.', markets: detailLimited });
     }
     return result.filter((lane) => lane.markets.length > 0);
+  }
+
+  acquisitionLifecycleLanes(deals: AcquisitionLifecycleResponse['deals']): AcquisitionLifecycleLane[] {
+    const lanes = new Map<string, AcquisitionLifecycleResponse['deals']>();
+    for (const deal of deals) {
+      const label = deal.current_stage_label || 'Stage unavailable';
+      lanes.set(label, [...(lanes.get(label) || []), deal]);
+    }
+    return Array.from(lanes, ([label, laneDeals]) => ({ label, deals: laneDeals }));
   }
 
   setSelectedKpiVariant(groupKey: string, slug: string): void {
