@@ -4051,6 +4051,10 @@ th {
   justify-self: start;
 }
 
+.earnings-quarter-rail { border-bottom: 1px solid var(--line); display: flex; gap: 0; overflow-x: auto; }
+.earnings-quarter-rail button { background: transparent; border: 0; border-left: 1px solid var(--line); color: var(--muted); display: grid; flex: 1 0 150px; gap: 4px; padding: 12px 14px; text-align: left; }
+.earnings-quarter-rail button:first-child { border-left: 0; }.earnings-quarter-rail button:hover, .earnings-quarter-rail button.selected { background: #e8f2f7; color: #154d6a; }.earnings-quarter-rail strong { font-size: .82rem; }.earnings-quarter-rail span { font-size: .72rem; }
+
 @media (max-width: 760px) {
   .earnings-command {
     display: grid;
