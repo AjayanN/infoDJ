@@ -1311,6 +1311,12 @@
                 </div>
               </section>
 
+              <nav class="earnings-quarter-rail" aria-label="Reviewed earnings periods">
+                <button type="button" *ngFor="let period of earningsView.periods" [class.selected]="period.key === earningsPeriod" (click)="earningsPeriod = period.key; reloadEarnings()">
+                  <strong>{{ period.fiscal_period }} FY{{ period.fiscal_year }}</strong><span>Ended {{ period.period_end }}</span>
+                </button>
+              </nav>
+
               <section class="company-profile-controls earnings-toolbar" aria-label="Earnings period controls">
                 <label>Reporting period
                   <select [(ngModel)]="earningsPeriod">
