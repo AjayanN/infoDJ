@@ -4457,8 +4457,11 @@ th {
 .leadership-toolbar { background: #f5f2f7; display: flex; flex-wrap: wrap; gap: 14px; padding: 16px; }
 .leadership-toolbar label { flex: 1 1 190px; min-width: 0; }
 .leadership-tenure-workspace, .leadership-guardrail-workspace { gap: 0; }
+.leadership-tenure-workspace { grid-template-columns: minmax(0, 1fr); }
 .leadership-tenure-workspace > article, .leadership-guardrail-workspace > article { border-bottom: 1px solid var(--line); min-width: 0; padding: 22px 24px 22px 0; }
 .leadership-tenure-workspace > article + article, .leadership-guardrail-workspace > article + article { border-left: 1px solid var(--line); padding-left: 24px; padding-right: 0; }
+.leadership-tenure-workspace > article { padding-left: 0; padding-right: 0; }
+.leadership-tenure-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding-left: 0; }
 .leadership-tenure-tracks { display: grid; gap: 0; }
 .leadership-tenure-track { border-top: 1px solid var(--line); column-gap: 10px; display: grid; grid-template-columns: 108px minmax(70px, 1fr) 128px; padding: 15px 0; }
 .leadership-tenure-track:first-child { border-top: 0; padding-top: 2px; }
