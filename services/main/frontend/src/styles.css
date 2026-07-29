@@ -3844,18 +3844,26 @@ th {
   overflow-wrap: anywhere;
 }
 
-.promise-register .result-row,
-.milestone-register .result-row {
+.promise-register .result-row {
   border-left: 3px solid #839ab0;
   border-top: 1px solid var(--line);
   padding: 12px 14px;
 }
 
-.promise-register .result-row.selected,
-.milestone-register .result-row.selected {
+.promise-register .result-row.selected {
   background: #edf4f8;
   border-left-color: #1675b8;
 }
+
+.milestone-track { background: transparent; border: 0; border-left: 3px solid #839ab0; border-top: 1px solid var(--line); color: inherit; display: grid; gap: 8px; padding: 13px 14px; text-align: left; width: 100%; }
+.milestone-track:hover, .milestone-track.selected { background: #edf4f8; border-left-color: #1675b8; }
+.milestone-track-dates { align-items: center; color: var(--muted); display: grid; font-size: .72rem; gap: 8px; grid-template-columns: minmax(0, 1fr) minmax(42px, 1fr) minmax(0, 1fr); }
+.milestone-track-dates i { background: #7193ad; height: 3px; position: relative; }
+.milestone-track-dates i::before, .milestone-track-dates i::after { background: #1675b8; content: ''; height: 8px; position: absolute; top: -2px; width: 8px; }
+.milestone-track-dates i::before { left: 0; }.milestone-track-dates i::after { right: 0; }
+.milestone-track.undated .milestone-track-dates i { background: transparent; border-top: 2px dashed #9cb2c4; height: 1px; }
+.milestone-track-dates span:last-child { text-align: right; }
+.milestone-track-title { display: grid; gap: 2px; }.milestone-track-title strong { color: var(--ink); }.milestone-track-title span, .milestone-track small { color: var(--muted); font-size: .75rem; }.milestone-track p { margin: 0; }
 
 .promise-status-board {
   display: grid;
