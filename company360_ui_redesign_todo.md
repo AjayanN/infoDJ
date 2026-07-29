@@ -198,7 +198,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 
 ### UI Name: Leadership Tenure Timeline
 
-- [ ] Show executive roles and tenure as timeline bars.
+- [x] Show executive roles and tenure as timeline bars. Dated roles render as bounded tracks; roles without reviewed dates render as dashed, explicitly undated tracks. Verified with live Ford Motor Company data at desktop and mobile widths.
 - [ ] Add a leadership-change timeline for appointments, departures, succession, and board changes.
 - [ ] Link major decisions and priorities to each leader only when source-backed.
 - [ ] Show performance during tenure as context, with non-causation language.

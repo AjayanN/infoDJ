@@ -4457,13 +4457,34 @@ th {
 .leadership-toolbar { background: #f5f2f7; display: flex; flex-wrap: wrap; gap: 14px; padding: 16px; }
 .leadership-toolbar label { flex: 1 1 190px; min-width: 0; }
 .leadership-tenure-workspace, .leadership-guardrail-workspace { gap: 0; }
+.leadership-tenure-workspace { grid-template-columns: minmax(0, 1fr); }
 .leadership-tenure-workspace > article, .leadership-guardrail-workspace > article { border-bottom: 1px solid var(--line); min-width: 0; padding: 22px 24px 22px 0; }
 .leadership-tenure-workspace > article + article, .leadership-guardrail-workspace > article + article { border-left: 1px solid var(--line); padding-left: 24px; padding-right: 0; }
-.leadership-tenure-timeline .result-row { border-left: 3px solid #8666a8; border-top: 0; }
+.leadership-tenure-workspace > article { padding-left: 0; padding-right: 0; }
+.leadership-tenure-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding-left: 0; }
+.leadership-tenure-tracks { display: grid; gap: 0; }
+.leadership-tenure-track { border-top: 1px solid var(--line); column-gap: 10px; display: grid; grid-template-columns: 108px minmax(70px, 1fr) 128px; padding: 15px 0; }
+.leadership-tenure-track:first-child { border-top: 0; padding-top: 2px; }
+.tenure-date { color: var(--muted); font-size: .72rem; line-height: 1.35; }
+.tenure-end { text-align: right; }
+.tenure-line { align-self: center; background: #d9cbe8; height: 3px; position: relative; }
+.tenure-line::before, .tenure-line::after { background: #76529b; content: ''; height: 9px; position: absolute; top: -3px; width: 9px; }
+.tenure-line::before { left: 0; }
+.tenure-line::after { right: 0; }
+.tenure-line span { background: #76529b; display: block; height: 100%; width: 72%; }
+.leadership-tenure-track.undated .tenure-line { background: transparent; border-top: 2px dashed #d9cbe8; height: 1px; }
+.leadership-tenure-track.undated .tenure-line span { display: none; }
+.leadership-tenure-track.undated .tenure-line::before, .leadership-tenure-track.undated .tenure-line::after { background: #aa95be; }
+.tenure-role { display: grid; gap: 2px; grid-column: 1 / -1; margin-top: 11px; }
+.tenure-role strong { color: var(--ink); font-size: .94rem; }
+.tenure-role span { color: var(--muted); font-size: .79rem; }
+.leadership-tenure-track > p { grid-column: 1 / -1; margin: 7px 0 0; }
+.tenure-flags { display: flex; flex-wrap: wrap; gap: 6px; grid-column: 1 / -1; margin-top: 9px; }
+.tenure-flags span { background: #f0eaf6; color: #5c4675; font-size: .7rem; padding: 3px 6px; }
 .leadership-decision-record .result-row { border-left: 3px solid #b7785f; border-top: 0; }
 .leadership-attribution-guardrail { background: #faf7fc; }
 .leadership-evidence-register .evidence-card { border-top: 2px solid #8666a8; }
-@media (max-width: 760px) { .leadership-command { display: grid; gap: 16px; padding: 22px 16px; } .leadership-tenure-workspace > article, .leadership-tenure-workspace > article + article, .leadership-guardrail-workspace > article, .leadership-guardrail-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
+@media (max-width: 760px) { .leadership-command { display: grid; gap: 16px; padding: 22px 16px; } .leadership-tenure-workspace > article, .leadership-tenure-workspace > article + article, .leadership-guardrail-workspace > article, .leadership-guardrail-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } .leadership-tenure-track { grid-template-columns: 1fr; row-gap: 7px; } .tenure-line { grid-row: 2; } .tenure-end { text-align: left; } .tenure-role { margin-top: 4px; } }
 
 /* Themes are an exposure radar with an evidence board, not a taxonomy dump. */
 .theme-command { background: #334552; color: #f8fbff; padding: 26px 30px; }
