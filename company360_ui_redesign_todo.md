@@ -124,7 +124,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 
 ### UI Name: Strategy Execution Timeline
 
-- [ ] Show milestones on a horizontal or vertical execution timeline.
+- [x] Show milestones on a horizontal or vertical execution timeline. Tracks render reviewed start/end dates when known and a dashed track when dates are absent; selected tracks open the execution detail. Verified with live Netflix data at desktop and mobile widths.
 - [ ] Group milestones by strategic initiative.
 - [ ] Use clear status states: expected, in progress, completed, delayed, missed, cancelled, unverifiable.
 - [ ] Show expected versus actual dates where available.
