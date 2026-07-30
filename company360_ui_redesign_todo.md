@@ -115,7 +115,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 
 - [x] Use a quarter selector timeline at the top. The period rail exposes reviewed quarters as selectable visual segments and retains the existing period control as an accessible fallback. Verified with live Netflix data at desktop and mobile widths.
 - [x] Redesign each quarter as a briefing: what happened, why management says it happened, what changed in guidance, what risks emerged, and what strategic moves were announced.
-- [ ] Add a "Guidance changed?" badge with up, down, reaffirmed, withdrawn, or unavailable.
+- [ ] Add a "Guidance changed?" badge with up, down, reaffirmed, withdrawn, or unavailable. The current earnings contract only exposes forecast-versus-actual comparisons; it does not expose a source-backed raised/cut/reaffirmed/withdrawn direction, so the requested badge cannot be derived safely.
 - [x] Add KPI movement chips linked back to the Operating Metrics Workbench. The earnings browser flow opens the selected KPI series in company scope.
 - [x] Add "questions to monitor next quarter" when evidence suggests open items.
 - [ ] Acceptance: the page should read like an analyst briefing, not a filing excerpt dump.
@@ -232,7 +232,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 ### UI Name: Regulatory Matter Calendar
 
 - [x] Use a calendar plus matter list layout. Verified with live Netflix regulatory matter and calendar data at desktop and mobile widths.
-- [ ] Add filters for matter type, status, authority, materiality, and geography.
+- [ ] Add filters for matter type, status, authority, materiality, and geography. The current regulatory endpoint only accepts and returns matter-type and status filters; authority, materiality, and geography filtering requires an API extension.
 - [x] Show matter cards with current status, next known date, potential business exposure when disclosed, and source. Missing dates and exposure are explicitly labelled; verified with live Netflix data.
 - [x] Add legal guardrail text once in the page header instead of repeating it in every row.
 - [x] Add source gaps for missing deadline, authority, jurisdiction, or exposure detail.
