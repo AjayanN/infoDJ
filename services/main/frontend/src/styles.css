@@ -5073,6 +5073,8 @@ th {
 .latest-move-card h3 { font-size: 1rem; }
 .latest-move-card footer { border-left: 0; color: #557083; font-size: .72rem; }
 .latest-move-card footer span { color: var(--muted); font-size: .67rem; font-weight: 800; text-transform: uppercase; }
+.latest-move-card footer .link-button { font-size: .72rem; margin-left: auto; min-height: 26px; }
+.latest-move-context { color: #557083; font-size: .76rem; line-height: 1.4; }
 .regulatory-calendar-entry { border-left: 4px solid #4e7892; border-top: 0; padding-left: 14px; }
 .regulatory-calendar-entry > strong { color: #315b75; font-variant-numeric: tabular-nums; }
 .regulatory-exposure-ledger { background: #fbf9fb; }

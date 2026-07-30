@@ -458,7 +458,8 @@
                           <header><span>{{ event.event_date || 'Date unavailable' }}</span><small>{{ event.source_count }} sources</small><small>confidence {{ event.confidence_score | number:'1.2-2' }}</small></header>
                           <h3>{{ event.company }}</h3>
                           <p>{{ event.actual_change || event.source_claim }}</p>
-                          <footer *ngIf="event.decision_theme"><span>Decision theme</span>{{ promiseLabel(event.decision_theme) }}</footer>
+                          <footer><span>Decision theme</span>{{ event.decision_theme ? promiseLabel(event.decision_theme) : 'Not classified' }}<button type="button" class="link-button" (click)="openLatestMoveContext(event)">{{ latestMoveContext(event).label }}</button></footer>
+                          <p class="latest-move-context">{{ latestMoveContext(event).note }}</p>
                         </article>
                       </section>
                     </div>

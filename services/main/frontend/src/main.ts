@@ -122,6 +122,7 @@ type ValueFlowGraph = { nodes: ValueFlowNode[]; edges: ValueFlowEdge[] };
 type KpiEventGroup = { type: string; label: string; count: number; latestDate: string; events: DashboardEvent[]; hiddenCount: number };
 type LatestMoveFilter = 'all' | 'product' | 'pricing' | 'acquisition' | 'geography' | 'leadership' | 'regulation' | 'capital' | 'competition';
 type LatestMoveGroup = { type: string; label: string; events: DashboardEvent[] };
+type LatestMoveContext = { feature: CompanyFeatureId; label: string; note: string };
 type RiskSignalGroup = { key: string; label: string; events: DashboardEvent[] };
 type KpiMetricGroup = { key: string; label: string; variants: KpiDefinition[]; selected: boolean; defaultSlug: string };
 type BlockedKpiPeer = OperatingKpiResponse['blocked_peer_metrics'][number];
@@ -818,6 +819,36 @@ class AppComponent {
     if (/capital|dividend|buyback|repurchase|investment|capex/.test(terms)) return 'capital';
     if (/compet|rival|moat|market share/.test(terms)) return 'competition';
     return 'all';
+  }
+
+  latestMoveContext(event: DashboardEvent): LatestMoveContext {
+    const category = this.latestMoveCategory(event);
+    const contexts: Record<LatestMoveFilter, LatestMoveContext> = {
+      all: { feature: 'strategy-milestones', label: 'Open execution context', note: 'Review this move beside the company execution record.' },
+      product: { feature: 'product-pricing', label: 'Open product context', note: 'Review the related offering and pricing history.' },
+      pricing: { feature: 'product-pricing', label: 'Open pricing context', note: 'Review the related offering and pricing history.' },
+      acquisition: { feature: 'acquisition-lifecycle', label: 'Open deal context', note: 'Review the related deal lifecycle and outcomes.' },
+      geography: { feature: 'geographic-expansion', label: 'Open market context', note: 'Review the related market footprint and expansion evidence.' },
+      leadership: { feature: 'leadership-decisions', label: 'Open leadership context', note: 'Review the related leadership record and source-backed decisions.' },
+      regulation: { feature: 'regulatory-litigation', label: 'Open regulatory context', note: 'Review known matters, dates, and source records.' },
+      capital: { feature: 'capital-allocation', label: 'Open capital context', note: 'Review the company capital-allocation record.' },
+      competition: { feature: 'competitive-position', label: 'Open competitive context', note: 'Review competitive actions and moat evidence.' }
+    };
+    return contexts[category];
+  }
+
+  openLatestMoveContext(event: DashboardEvent): void {
+    const context = this.latestMoveContext(event);
+    switch (context.feature) {
+      case 'product-pricing': this.openProductPricing(event.company_slug); break;
+      case 'acquisition-lifecycle': this.openAcquisitionLifecycle(event.company_slug); break;
+      case 'geographic-expansion': this.openGeographicExpansion(event.company_slug); break;
+      case 'leadership-decisions': this.openLeadershipDecisions(event.company_slug); break;
+      case 'regulatory-litigation': this.openRegulatoryLitigation(event.company_slug); break;
+      case 'capital-allocation': this.openCapitalAllocation(event.company_slug); break;
+      case 'competitive-position': this.openCompetitivePosition(event.company_slug); break;
+      default: this.openStrategyMilestones(event.company_slug); break;
+    }
   }
 
   riskSignalGroups(events: DashboardEvent[]): RiskSignalGroup[] {
