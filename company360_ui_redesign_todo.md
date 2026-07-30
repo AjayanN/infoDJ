@@ -213,8 +213,8 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 - [x] Separate economic ownership from voting control. The coverage board and holder table keep the two disclosure types distinct.
 - [ ] Add insider activity timeline for source-backed purchases, sales, plans, and holdings changes. Verified 2026-07-30: all 20 configured companies have zero reviewed `InsiderTransaction` records, so no insider timeline can be rendered without source-backed transaction ingestion.
 - [x] Add holder table with filters by holder type and transaction type. The responsive holder table follows the existing reviewed holder and transaction filters.
-- [ ] Add source gaps for missing ownership percentages, plan details, and holder identity.
-- [ ] Acceptance: users should understand who controls or materially owns the company without overreading incomplete disclosure.
+- [x] Add source gaps for missing ownership percentages, plan details, and holder identity.
+- [x] Acceptance: users can distinguish the reviewed holder register from undisclosed economic or voting fields, and partial companies receive a source-gap state instead of invented control claims. Verified with live Ford Motor Company and Netflix data at desktop and mobile widths.
 
 ## 15. Valuation Context
 
