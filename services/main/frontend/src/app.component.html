@@ -568,14 +568,23 @@
                         <p class="section-kicker">Benchmark</p>
                         <h2 id="like-mine-heading">Companies with comparable dimensions</h2>
                       </div>
+                      <span class="panel-meta" *ngIf="dashboardCompanySlug()">{{ dash.dashboards.scope?.company || 'Selected company' }} scope</span>
                     </div>
-                    <div class="source-gap-grid" *ngIf="(dashboardSection('companies-like-mine')?.items || []).length > 0; else dashboardGap">
-                      <article class="source-gap" *ngFor="let company of dashboardSection('companies-like-mine')?.items || []">
-                        <div>
-                          <strong>{{ company.name }}</strong>
-                          <span>{{ company.match_dimensions.join(' · ') || 'dimension gap' }}</span>
+                    <div class="peer-situation-board" *ngIf="(dashboardSection('companies-like-mine')?.items || []).length > 0; else dashboardGap">
+                      <article class="peer-situation-card" *ngFor="let company of dashboardSection('companies-like-mine')?.items || []">
+                        <header>
+                          <div><strong>{{ company.name }}</strong><span>{{ company.sector || 'Sector unavailable' }}<ng-container *ngIf="company.country"> · {{ company.country }}</ng-container></span></div>
+                          <button type="button" class="ghost-button" (click)="openCompany(company.slug)">Open brief</button>
+                        </header>
+                        <div class="peer-match-chips" *ngIf="company.match_dimensions.length > 0; else peerDimensionGap">
+                          <span *ngFor="let dimension of company.match_dimensions">{{ promiseLabel(dimension) }}</span>
                         </div>
-                        <p>{{ company.event_count }} events · {{ company.strategic_turn_count }} turns · {{ company.source_count }} sources</p>
+                        <ng-template #peerDimensionGap><p class="peer-dimension-gap">No reviewed matching dimensions were returned.</p></ng-template>
+                        <dl class="peer-activity-strip">
+                          <div><dt>Events</dt><dd>{{ company.event_count }}</dd></div>
+                          <div><dt>Turns</dt><dd>{{ company.strategic_turn_count }}</dd></div>
+                          <div><dt>Sources</dt><dd>{{ company.source_count }}</dd></div>
+                        </dl>
                       </article>
                     </div>
                     <div class="pagination-row" *ngIf="(dashboardSection('companies-like-mine')?.total_pages || 1) > 1">
