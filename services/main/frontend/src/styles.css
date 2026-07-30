@@ -4749,12 +4749,25 @@ th {
 .scenario-intake-workspace > article + article, .scenario-case-workspace > article + article, .scenario-monitor-workspace > article + article, .scenario-review-workspace > article + article { border-left: 1px solid var(--line); padding-left: 24px; padding-right: 0; }
 .scenario-set-intake, .scenario-assumption-intake { background: #f7fbfb; }
 .scenario-set-register .result-row { border-left: 3px solid #4f8992; border-top: 0; cursor: pointer; }
-.scenario-case-board .result-row { border-left: 4px solid #4f8992; border-top: 0; }
-.scenario-difference-board .result-row { border-left: 3px solid #9d7657; border-top: 0; }
+.scenario-case-grid { display: grid; gap: 10px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.scenario-case-card { background: #f8fbfb; border-top: 4px solid #6f8790; display: grid; gap: 9px; min-width: 0; padding: 14px; }
+.scenario-case-card.best-case { border-color: #4d896f; }
+.scenario-case-card.base-case { border-color: #4f8992; }
+.scenario-case-card.worst-case { border-color: #af6b55; }
+.scenario-case-card header, .scenario-case-card footer { align-items: center; color: var(--muted); display: flex; font-size: .75rem; justify-content: space-between; }
+.scenario-case-card h3, .scenario-case-card p { margin: 0; }
+.scenario-case-range { align-items: baseline; color: var(--ink); display: flex; flex-wrap: wrap; font-size: 1.1rem; gap: 6px; line-height: 1.3; }
+.scenario-case-range small { color: var(--muted); font-size: .74rem; font-weight: 600; }
+.scenario-difference-card { border-left: 3px solid #9d7657; border-top: 0; display: grid; gap: 6px; padding: 11px 12px; }
+.scenario-difference-card > span { color: var(--muted); font-size: .75rem; }
+.scenario-difference-card dl { display: grid; gap: 6px; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 2px 0 0; }
+.scenario-difference-card dl div { border-top: 1px solid var(--line); min-width: 0; padding-top: 5px; }
+.scenario-difference-card dt { color: var(--muted); font-size: .68rem; }
+.scenario-difference-card dd { margin: 2px 0 0; overflow-wrap: anywhere; }
 .scenario-indicator-board .result-row { border-left: 3px solid #5b8876; border-top: 0; }
 .scenario-actual-board .result-row { border-left: 3px solid #6c7fa4; border-top: 0; }
 .scenario-revision-trail .result-row { border-left: 3px solid #9d7657; border-top: 0; }
-@media (max-width: 760px) { .scenario-command, .scenario-selected-command { display: grid; gap: 16px; padding: 22px 16px; } .scenario-command .coverage-summary, .scenario-selected-command .coverage-summary { border-left: 0; border-top: 1px solid #6d929a; flex-basis: auto; padding: 12px 0 0; } .scenario-intake-workspace > article, .scenario-intake-workspace > article + article, .scenario-case-workspace > article, .scenario-case-workspace > article + article, .scenario-monitor-workspace > article, .scenario-monitor-workspace > article + article, .scenario-review-workspace > article, .scenario-review-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
+@media (max-width: 760px) { .scenario-command, .scenario-selected-command { display: grid; gap: 16px; padding: 22px 16px; } .scenario-command .coverage-summary, .scenario-selected-command .coverage-summary { border-left: 0; border-top: 1px solid #6d929a; flex-basis: auto; padding: 12px 0 0; } .scenario-intake-workspace > article, .scenario-intake-workspace > article + article, .scenario-case-workspace > article, .scenario-case-workspace > article + article, .scenario-monitor-workspace > article, .scenario-monitor-workspace > article + article, .scenario-review-workspace > article, .scenario-review-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } .scenario-case-grid, .scenario-difference-card dl { grid-template-columns: 1fr; } }
 
 /* Briefings are an ordered decision feed with a reader, not a notification list. */
 .briefing-command { align-items: start; background: #3d4555; color: #f9fbff; display: flex; gap: 24px; justify-content: space-between; padding: 26px 30px; }

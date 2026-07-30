@@ -3049,11 +3049,17 @@
                 <section class="dashboard-two-column scenario-case-workspace">
                   <article class="panel scenario-case-board">
                     <div class="panel-header"><div><p class="section-kicker">Cases</p><h2>Best, base, worst</h2></div></div>
-                    <div class="result-row" *ngFor="let caseRow of scenario.cases || []">
-                      <strong>{{ caseRow.kind_label }} · {{ caseRow.title }}</strong>
-                      <span>{{ caseRow.low_value === null ? 'low unavailable' : caseRow.low_value }} to {{ caseRow.high_value === null ? 'high unavailable' : caseRow.high_value }} {{ caseRow.unit }}</span>
-                      <p>{{ caseRow.narrative }}</p>
-                      <small>{{ caseRow.assumptions.length }} assumptions · {{ caseRow.qualitative_outcome }}</small>
+                    <div class="scenario-case-grid">
+                      <article class="scenario-case-card" *ngFor="let caseRow of scenario.cases || []" [class.best-case]="caseRow.kind === 'BEST'" [class.base-case]="caseRow.kind === 'BASE'" [class.worst-case]="caseRow.kind === 'WORST'">
+                        <header>
+                          <span>{{ caseRow.kind_label }}</span>
+                          <small>{{ caseRow.assumptions.length }} assumptions</small>
+                        </header>
+                        <h3>{{ caseRow.title }}</h3>
+                        <strong class="scenario-case-range">{{ caseRow.low_value === null ? 'Range unavailable' : caseRow.low_value + ' to ' + caseRow.high_value }}<small *ngIf="caseRow.unit">{{ caseRow.unit }}</small></strong>
+                        <p>{{ caseRow.narrative || 'No narrative entered yet.' }}</p>
+                        <footer>{{ caseRow.qualitative_outcome || 'Outcome not defined' }}</footer>
+                      </article>
                     </div>
                   </article>
                   <article class="panel scenario-assumption-intake">
@@ -3074,12 +3080,14 @@
                 <section class="dashboard-two-column scenario-monitor-workspace">
                   <article class="panel scenario-difference-board">
                     <div class="panel-header"><div><p class="section-kicker">Differences</p><h2>Assumptions that vary</h2></div></div>
-                    <div class="result-row" *ngFor="let diff of scenario.differences || []">
+                    <div class="scenario-difference-card" *ngFor="let diff of scenario.differences || []">
                       <strong>{{ diff.driver_label }}</strong>
-                      <span>{{ diff.driver_type }}</span>
-                      <p>Best: {{ diff.cases['BEST'] || 'not set' }}</p>
-                      <p>Base: {{ diff.cases['BASE'] || 'not set' }}</p>
-                      <p>Worst: {{ diff.cases['WORST'] || 'not set' }}</p>
+                      <span>{{ promiseLabel(diff.driver_type) }}</span>
+                      <dl>
+                        <div><dt>Best</dt><dd>{{ diff.cases['BEST'] || 'Not set' }}</dd></div>
+                        <div><dt>Base</dt><dd>{{ diff.cases['BASE'] || 'Not set' }}</dd></div>
+                        <div><dt>Worst</dt><dd>{{ diff.cases['WORST'] || 'Not set' }}</dd></div>
+                      </dl>
                     </div>
                     <div class="empty-state unavailable-state" *ngIf="(scenario.differences?.length || 0) === 0">No differing assumptions yet.</div>
                   </article>
