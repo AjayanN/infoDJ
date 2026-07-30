@@ -221,10 +221,10 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 ### UI Name: Valuation Context Lens
 
 - [ ] Use measure tabs: market cap, P/S, P/E, EV, EV/revenue, and unavailable inputs.
-- [ ] Show formulas and numerator/denominator inputs in a compact calculation drawer.
-- [ ] Add peer context cards and event-aligned context around major strategic moves.
-- [ ] Label everything as context, not investment advice.
-- [ ] Add unavailable input cards when market price, share count, debt, cash, or earnings inputs are missing.
+- [x] Show formulas and numerator/denominator inputs in a compact calculation drawer. The calculation ledger groups every reviewed measure with its formula and reported inputs.
+- [x] Add peer context cards and event-aligned context around major strategic moves. Peer/range and dated-event context are separate research panels.
+- [x] Label everything as context, not investment advice. The route header and research guardrail make this explicit once, without turning the page into advice.
+- [x] Add unavailable input cards when market price, share count, debt, cash, or earnings inputs are missing. Missing inputs are named at measure level with their source-backed reason.
 - [ ] Acceptance: users should understand the valuation context and data limitations without receiving buy/sell guidance.
 
 ## 16. Regulatory and Litigation Calendar
