@@ -348,7 +348,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 - [x] Group risks by business model, KPI deterioration, competition, regulatory, litigation, macro, dependency, leadership, and valuation context.
 - [ ] Add severity and freshness indicators.
 - [ ] Link every risk signal to source-backed evidence and related feature pages.
-- [ ] Separate observed risk disclosure from inferred impact.
+- [x] Separate observed risk disclosure from inferred impact.
 - [ ] Acceptance: users should understand what requires attention and what is only a disclosed uncertainty.
 
 ## Suggested Implementation Waves
