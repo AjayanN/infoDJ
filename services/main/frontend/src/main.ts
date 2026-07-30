@@ -876,6 +876,33 @@ class AppComponent {
     return 'BUSINESS_MODEL';
   }
 
+  riskSignalContextLabel(event: DashboardEvent): string {
+    const labels: Record<string, string> = {
+      REGULATORY_AND_LITIGATION: 'Open regulatory context',
+      COMPETITION: 'Open competitive context',
+      MACRO: 'Open macro context',
+      DEPENDENCY: 'Open dependency context',
+      LEADERSHIP: 'Open leadership context',
+      VALUATION_CONTEXT: 'Open valuation context',
+      KPI_DETERIORATION: 'Open KPI context',
+      BUSINESS_MODEL: 'Open business model'
+    };
+    return labels[this.riskSignalCategory(event)];
+  }
+
+  openRiskSignalContext(event: DashboardEvent): void {
+    switch (this.riskSignalCategory(event)) {
+      case 'REGULATORY_AND_LITIGATION': this.openRegulatoryLitigation(event.company_slug); break;
+      case 'COMPETITION': this.openCompetitivePosition(event.company_slug); break;
+      case 'MACRO': this.openMacroSensitivity(event.company_slug); break;
+      case 'DEPENDENCY': this.openCustomerSupplierDependency(event.company_slug); break;
+      case 'LEADERSHIP': this.openLeadershipDecisions(event.company_slug); break;
+      case 'VALUATION_CONTEXT': this.openValuationContext(event.company_slug); break;
+      case 'KPI_DETERIORATION': this.openOperatingKpis(event.company_slug); break;
+      default: this.openBusinessModel(event.company_slug); break;
+    }
+  }
+
   searchRange(meta: PaginationMeta): string {
     if (!meta || meta.total === 0) {
       return '0 of 0';

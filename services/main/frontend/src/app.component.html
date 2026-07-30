@@ -515,7 +515,7 @@
                           <header><span>{{ signal.company }}</span><strong>{{ promiseLabel(signal.signal || signal.event_type) }}</strong><small>{{ signal.event_date || 'Date unavailable' }}</small></header>
                           <p><span>Observed disclosure</span>{{ signal.actual_change || signal.source_claim }}</p>
                           <p class="risk-inferred-impact"><span>Inferred impact</span>No reviewed impact assessment is available for this signal.</p>
-                          <footer><span>Confidence {{ signal.confidence_score | number:'1.2-2' }}</span><span>{{ signal.source_count }} source records</span><small>{{ signal.calculation_method }}</small></footer>
+                          <footer><span>Confidence {{ signal.confidence_score | number:'1.2-2' }}</span><span>{{ signal.source_count }} source records</span><button type="button" class="link-button" (click)="openRiskSignalContext(signal)">{{ riskSignalContextLabel(signal) }}</button><small>{{ signal.calculation_method }}</small></footer>
                         </article>
                       </section>
                     </div>
