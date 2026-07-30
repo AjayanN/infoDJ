@@ -4949,9 +4949,11 @@ th {
 .dashboard-peer-directory .source-gap { border-left: 4px solid #5c8b79; border-radius: 0; }
 .peer-situation-board { display: grid; gap: 0; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
 .peer-situation-card { border-bottom: 1px solid var(--line); border-left: 4px solid #5c8b79; display: grid; gap: 15px; min-width: 0; padding: 16px; }
+.peer-situation-card.selected-peer { background: #f0f7f4; border-left-color: #315b4a; }
 .peer-situation-card header { align-items: start; display: flex; gap: 12px; justify-content: space-between; }
 .peer-situation-card header div { display: grid; gap: 3px; min-width: 0; }
 .peer-situation-card header span, .peer-dimension-gap { color: var(--muted); font-size: .76rem; margin: 0; }
+.peer-situation-card .peer-anchor { color: #315b4a; font-size: .65rem; font-weight: 800; text-transform: uppercase; }
 .peer-situation-card .ghost-button { flex: 0 0 auto; min-height: 32px; padding: 0 10px; }
 .peer-match-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .peer-match-chips span { background: #edf5f0; color: #35604f; font-size: .7rem; font-weight: 700; padding: 5px 7px; }

@@ -325,7 +325,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 
 ### UI Name: Peer Comparison Board
 
-- [ ] Keep Company 360 scope when opened from a company page.
+- [x] Keep Company 360 scope when opened from a company page.
 - [ ] Show the selected company against same-sector configured peers and reviewed external peers.
 - [ ] Use a comparison matrix for business model, KPIs, capital allocation, valuation context, risk signals, and competitive overlap.
 - [ ] Show blocked comparisons as reason chips, not raw technical rules.

@@ -575,9 +575,9 @@
                       <span class="panel-meta" *ngIf="dashboardCompanySlug()">{{ dash.dashboards.scope?.company || 'Selected company' }} scope</span>
                     </div>
                     <div class="peer-situation-board" *ngIf="(dashboardSection('companies-like-mine')?.items || []).length > 0; else dashboardGap">
-                      <article class="peer-situation-card" *ngFor="let company of dashboardSection('companies-like-mine')?.items || []">
+                      <article class="peer-situation-card" [class.selected-peer]="company.slug === dashboardCompanySlug()" *ngFor="let company of dashboardSection('companies-like-mine')?.items || []">
                         <header>
-                          <div><strong>{{ company.name }}</strong><span>{{ company.sector || 'Sector unavailable' }}<ng-container *ngIf="company.country"> · {{ company.country }}</ng-container></span></div>
+                          <div><span class="peer-anchor" *ngIf="company.slug === dashboardCompanySlug()">Selected company</span><strong>{{ company.name }}</strong><span>{{ company.sector || 'Sector unavailable' }}<ng-container *ngIf="company.country"> · {{ company.country }}</ng-container></span></div>
                           <button type="button" class="ghost-button" (click)="openCompany(company.slug)">Open brief</button>
                         </header>
                         <div class="peer-match-chips" *ngIf="company.match_dimensions.length > 0; else peerDimensionGap">
