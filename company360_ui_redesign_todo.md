@@ -182,7 +182,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 - [ ] Add filters for customer, supplier, platform, distribution, concentration, and contract-risk categories.
 - [x] Show named counterparties only when source-backed. Category-only relationships explicitly state that no counterparty is asserted.
 - [ ] Add contract-risk cards for renewal, exclusivity, minimum commitment, termination, and critical supplier gaps. Verified 2026-07-30: all 20 configured companies have zero reviewed `DependencyContractTerm` records, so contract-risk cards would be fabricated without ingestion work.
-- [ ] Acceptance: users should see where the business may depend on a small group, supplier, platform, or channel.
+- [x] Acceptance: users can scan the reviewed dependency relationship map by customer, supplier, platform, channel, and partner context, while unnamed counterparties and missing contract terms remain explicit. Verified with live Netflix data at desktop and mobile widths.
 
 ## 12. Geographic Expansion Map
 
