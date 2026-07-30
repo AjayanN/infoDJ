@@ -3661,6 +3661,11 @@ th {
   padding-left: 22px;
 }
 
+.kpi-command .coverage-summary span,
+.kpi-command .coverage-summary small {
+  color: #4b6276;
+}
+
 .kpi-baseline-strip {
   border-bottom: 1px solid var(--line);
   padding: 18px 0;

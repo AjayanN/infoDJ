@@ -88,13 +88,13 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 
 ### UI Name: Operating Metrics Workbench
 
-- [ ] Group KPI cards by metric family so annual, quarterly, current, and related variants are selected through a compact dropdown inside one card.
+- [x] Group KPI cards by metric family so annual, quarterly, current, and related variants are selected through a compact dropdown inside one card.
 - [ ] Keep dropdown labels inside card boundaries with ellipsis and tooltips for long metric names.
-- [ ] Make "View series" always update the chart for the selected metric variant.
-- [ ] Replace related company event rows with grouped event clusters by category, each expanding into dated events.
+- [x] Make "View series" always update the chart for the selected metric variant. Browser-tested against the selected metric action.
+- [x] Replace related company event rows with grouped event clusters by category, each expanding into dated events.
 - [ ] Remove company-name repetition inside event copy because the page is already company-scoped.
-- [ ] Redesign peer normalization as a comparison-readiness panel: comparable now, blocked but fixable, not comparable.
-- [ ] Add a "Why this metric matters" note for operating metrics versus general financial facts.
+- [x] Redesign peer normalization as a comparison-readiness panel: comparable now, blocked but fixable, not comparable.
+- [x] Add a "Why this metric matters" note for operating metrics versus general financial facts.
 - [ ] Acceptance: the page should not freeze with large KPI sets and should show useful context without long raw lists.
 
 ## 4. Management Promise Tracker
