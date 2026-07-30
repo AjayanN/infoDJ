@@ -2601,6 +2601,12 @@
                   <div class="result-row" *ngFor="let kpi of themeView.related.kpis"><strong>{{ kpi.name }}</strong><span>{{ kpi.unit }} · {{ kpi.cadence }}</span><p>{{ kpi.description }}</p></div>
                   <div class="result-row" *ngFor="let item of themeView.related.capital_allocation"><strong>{{ item.category_label }}</strong><span>{{ item.value === null ? 'value unavailable' : (item.value | number:'1.0-0') }} {{ item.unit }}</span><p>{{ item.label }}</p></div>
                   <div class="empty-state unavailable-state" *ngIf="themeView.related.events.length === 0 && themeView.related.kpis.length === 0 && themeView.related.capital_allocation.length === 0">No related event, KPI, or capital-allocation rows are linked to the selected themes.</div>
+                  <nav class="theme-related-actions" aria-label="Related company research">
+                    <button type="button" class="ghost-button" (click)="openCapitalAllocation(themeView.company.slug)">Capital allocation</button>
+                    <button type="button" class="ghost-button" (click)="openEarnings(themeView.company.slug)">Earnings context</button>
+                    <button type="button" class="ghost-button" (click)="openMacroSensitivity(themeView.company.slug)">Macro sensitivity</button>
+                    <button type="button" class="ghost-button" (click)="openCompanyDashboard('risk-signals')">Risk signals</button>
+                  </nav>
                 </article>
                 <article class="panel theme-evidence-desk">
                   <div class="panel-header"><div><p class="section-kicker">Sources</p><h2>Theme evidence</h2></div><span>{{ themeView.evidence.length }} sources</span></div>

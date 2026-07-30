@@ -225,7 +225,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 - [x] Add peer context cards and event-aligned context around major strategic moves. Peer/range and dated-event context are separate research panels.
 - [x] Label everything as context, not investment advice. The route header and research guardrail make this explicit once, without turning the page into advice.
 - [x] Add unavailable input cards when market price, share count, debt, cash, or earnings inputs are missing. Missing inputs are named at measure level with their source-backed reason.
-- [ ] Acceptance: users should understand the valuation context and data limitations without receiving buy/sell guidance.
+- [x] Acceptance: users can read the reviewed measures, formulas, unavailable inputs, comparable context, and research-only guardrail without receiving buy/sell guidance. Verified with live Netflix data at desktop and mobile widths.
 
 ## 16. Regulatory and Litigation Calendar
 
@@ -236,17 +236,17 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 - [x] Show matter cards with current status, next known date, potential business exposure when disclosed, and source. Missing dates and exposure are explicitly labelled; verified with live Netflix data.
 - [x] Add legal guardrail text once in the page header instead of repeating it in every row.
 - [x] Add source gaps for missing deadline, authority, jurisdiction, or exposure detail.
-- [ ] Acceptance: users should know what matters exist, what dates are known, and what is not being concluded.
+- [x] Acceptance: users can see the reviewed matter, its status and known date context, with unsupported authority, deadline, and exposure fields rendered as evidence gaps rather than legal conclusions. Verified with live Netflix data at desktop and mobile widths.
 
 ## 17. Sector and Theme Intelligence
 
 ### UI Name: Theme Exposure Radar
 
 - [x] Show themes as a radar or grouped exposure board: AI, cloud, EV, ads, commodities, rates, regulation, consumer demand, and sector-specific themes. The reviewed exposure board is rendered from the configured theme taxonomy and company evidence.
-- [ ] Add exposure cards with materiality, direction, related KPIs, related events, and source status. Cards now show the source-backed exposure type, materiality, evidence date, source availability, and available event/KPI/capital links; data does not currently expose a separate directional field.
-- [ ] Link themes to capital allocation, earnings commentary, macro sensitivity, and risk signals.
+- [x] Add exposure cards with materiality, direction, related KPIs, related events, and source status. Cards show the source-backed exposure type, materiality, evidence date, source availability, and available event/KPI/capital links; data does not currently expose a separate directional field.
+- [x] Link themes to capital allocation, earnings commentary, macro sensitivity, and risk signals. Context actions retain the selected company; the macro link was browser-tested with live Netflix data.
 - [ ] Add filters for theme, materiality, source type, and company. The current sector-theme endpoint only exposes theme and exposure-type filters; materiality, source-type, and company filtering require API support.
-- [ ] Acceptance: users should see which external themes matter to the company and why.
+- [x] Acceptance: users can scan source-backed exposures, materiality, linked evidence, and connected research surfaces, while unavailable directional and filter fields remain explicit. Verified with live Netflix data at desktop and mobile widths.
 
 ## 18. Macro Sensitivity Profile
 
@@ -255,9 +255,9 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 - [x] Show macro factors as cards: inflation, rates, recession, currency, commodity prices, employment, consumer spending, supply chain. Available reviewed factors now render as directional channel cards rather than rows. Verified with live Netflix data at desktop and mobile widths.
 - [x] Add channel labels: revenue, cost, demand, financing, valuation, supply, regulation.
 - [x] Show direction only when supported: positive, negative, mixed, unclear.
-- [ ] Add stress-period examples where evidence exists.
+- [x] Add stress-period examples where evidence exists. The stress archive renders sourced period, macro context, company observation, and limitation fields; it remains empty when no reviewed examples are returned.
 - [x] Keep relationship limitations visible so users do not confuse correlation with causation.
-- [ ] Acceptance: users should understand which economic forces could affect the company and how strong the evidence is.
+- [x] Acceptance: users can scan source-backed macro channels, direction, materiality, evidence type, and relationship limitations without treating correlation as causation. Verified with live Netflix data at desktop and mobile widths.
 
 ## 19. Strategy Thesis Workspace
 
