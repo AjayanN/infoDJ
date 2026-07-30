@@ -242,8 +242,8 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 
 ### UI Name: Theme Exposure Radar
 
-- [ ] Show themes as a radar or grouped exposure board: AI, cloud, EV, ads, commodities, rates, regulation, consumer demand, and sector-specific themes.
-- [ ] Add exposure cards with materiality, direction, related KPIs, related events, and source status.
+- [x] Show themes as a radar or grouped exposure board: AI, cloud, EV, ads, commodities, rates, regulation, consumer demand, and sector-specific themes. The reviewed exposure board is rendered from the configured theme taxonomy and company evidence.
+- [ ] Add exposure cards with materiality, direction, related KPIs, related events, and source status. Cards now show the source-backed exposure type, materiality, evidence date, source availability, and available event/KPI/capital links; data does not currently expose a separate directional field.
 - [ ] Link themes to capital allocation, earnings commentary, macro sensitivity, and risk signals.
 - [ ] Add filters for theme, materiality, source type, and company.
 - [ ] Acceptance: users should see which external themes matter to the company and why.

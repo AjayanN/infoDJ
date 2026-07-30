@@ -2471,14 +2471,22 @@
 
               <section class="panel theme-exposure-board">
                 <div class="panel-header"><div><p class="section-kicker">Exposure Cards</p><h2>Evidence-based company exposure</h2></div><span>{{ themeView.exposures.length }} rows</span></div>
-                <div class="result-row" *ngFor="let exposure of themeView.exposures">
-                  <strong>{{ exposure.theme.name }} · {{ exposure.exposure_type_label }}</strong>
-                  <span>{{ exposure.materiality_label }} · {{ exposure.evidence_date || 'date unavailable' }} · confidence {{ exposure.confidence_score | number:'1.2-2' }}</span>
-                  <p>{{ exposure.evidence_summary }}</p>
-                  <p>{{ exposure.exposure_rationale }}</p>
-                  <small *ngIf="exposure.linked_event">Event: {{ exposure.linked_event.event_type }} · {{ exposure.linked_event.event_date || 'date unavailable' }}</small>
-                  <small *ngIf="exposure.linked_kpi">KPI: {{ exposure.linked_kpi.name }}</small>
-                  <small *ngIf="exposure.linked_capital_allocation_item">Capital: {{ exposure.linked_capital_allocation_item.label }} · {{ exposure.linked_capital_allocation_item.value === null ? 'value unavailable' : (exposure.linked_capital_allocation_item.value | number:'1.0-0') }} {{ exposure.linked_capital_allocation_item.unit }}</small>
+                <div class="theme-exposure-card-grid" *ngIf="themeView.exposures.length > 0">
+                  <article *ngFor="let exposure of themeView.exposures">
+                    <header>
+                      <strong>{{ exposure.theme.name }}</strong>
+                      <span>{{ exposure.materiality_label }}</span>
+                    </header>
+                    <div class="theme-exposure-type">{{ exposure.exposure_type_label }}</div>
+                    <p>{{ exposure.evidence_summary }}</p>
+                    <footer>
+                      <span>{{ exposure.evidence_date || 'Date unavailable' }}</span>
+                      <span>{{ exposure.source ? 'Source linked' : 'Source unavailable' }}</span>
+                      <span *ngIf="exposure.linked_event">Event linked</span>
+                      <span *ngIf="exposure.linked_kpi">KPI linked</span>
+                      <span *ngIf="exposure.linked_capital_allocation_item">Capital linked</span>
+                    </footer>
+                  </article>
                 </div>
                 <div class="empty-state unavailable-state" *ngIf="themeView.exposures.length === 0">No reviewed exposure rows are available for the selected filters.</div>
               </section>
