@@ -3192,14 +3192,17 @@
 
               <section class="panel briefing-item-feed" *ngIf="selectedBriefing() as briefing">
                 <div class="panel-header"><div><p class="section-kicker">Briefing Items</p><h2>What changed, why it matters, what next</h2></div><span>{{ briefing.items?.length || 0 }} items</span></div>
-                <div class="result-row" *ngFor="let item of briefing.items || []">
-                  <strong>{{ item.section_label }} · {{ item.title }}</strong>
-                  <span>{{ item.source_date || 'date unavailable' }} · {{ item.evidence_label || 'evidence label unavailable' }}</span>
-                  <p><strong>What changed:</strong> {{ item.what_changed }}</p>
-                  <p><strong>Why it matters:</strong> {{ item.why_it_matters }}</p>
-                  <p><strong>What next:</strong> {{ item.what_next }}</p>
+                <article class="briefing-item-card" *ngFor="let item of briefing.items || []">
+                  <header><span>{{ item.section_label }}</span><small>{{ item.source_date || 'Date unavailable' }}</small></header>
+                  <h3>{{ item.title }}</h3>
+                  <small>{{ item.evidence_label || 'Evidence label unavailable' }}</small>
+                  <div class="briefing-decision-grid">
+                    <section><span>Changed</span><p>{{ item.what_changed }}</p></section>
+                    <section><span>Matters because</span><p>{{ item.why_it_matters }}</p></section>
+                    <section><span>Watch next</span><p>{{ item.what_next }}</p></section>
+                  </div>
                   <a *ngIf="item.evidence_url" [href]="item.evidence_url" target="_blank" rel="noopener">Open evidence</a>
-                </div>
+                </article>
                 <div class="empty-state unavailable-state" *ngIf="(briefing.items?.length || 0) === 0">No briefing items are available.</div>
               </section>
             </ng-container>
@@ -3288,12 +3291,11 @@
 
               <section class="panel inbox-alert-feed" *ngIf="notifications() as noteView">
                 <div class="panel-header"><div><p class="section-kicker">Notification Center</p><h2>Grouped alerts</h2></div><span>{{ noteView.notifications.length }} visible</span></div>
-                <div class="result-row" *ngFor="let alert of noteView.notifications">
-                  <strong>{{ alert.title }}</strong>
-                  <span>{{ alert.category_label }} · {{ alert.severity_label }} · {{ alert.status }} · {{ alert.source_date || 'date unavailable' }}</span>
-                  <p><strong>What changed:</strong> {{ alert.what_changed }}</p>
-                  <p><strong>Why it matters:</strong> {{ alert.why_it_matters }}</p>
-                  <small>{{ alert.watchlist_name }} · {{ alert.watch_item_label }} · grouped sources {{ alert.duplicate_count }} · {{ alert.source_label }}</small>
+                <article class="inbox-alert-card" *ngFor="let alert of noteView.notifications" [class.high-severity]="alert.severity === 'HIGH' || alert.severity === 'CRITICAL'">
+                  <header><span>{{ alert.category_label }}</span><strong>{{ alert.severity_label }}</strong><small>{{ alert.source_date || 'Date unavailable' }}</small></header>
+                  <h3>{{ alert.title }}</h3>
+                  <div class="inbox-alert-summary"><p><span>Changed</span>{{ alert.what_changed }}</p><p><span>Why it matters</span>{{ alert.why_it_matters }}</p></div>
+                  <footer>{{ alert.watchlist_name }} · {{ alert.watch_item_label }} · {{ alert.duplicate_count }} grouped sources · {{ alert.source_label }}</footer>
                   <div class="profile-control-actions">
                     <button type="button" class="ghost-button" (click)="markNotification(alert.id, 'READ')">Mark read</button>
                     <button type="button" class="ghost-button" (click)="markNotification(alert.id, 'ARCHIVED')">Archive</button>
@@ -3301,7 +3303,7 @@
                     <button type="button" class="ghost-button" (click)="rateNotification(alert.id, 'noisy')">Noisy</button>
                     <a *ngIf="alert.source_url" [href]="alert.source_url" target="_blank" rel="noopener">Open source</a>
                   </div>
-                </div>
+                </article>
                 <div class="empty-state unavailable-state" *ngIf="noteView.notifications.length === 0">No alerts match the selected filters. Refresh after adding followed entities.</div>
               </section>
             </ng-container>

@@ -4782,7 +4782,16 @@ th {
 .briefing-archive .result-row { border-left: 3px solid #667ea0; border-top: 0; cursor: pointer; }
 .briefing-reader { background: #f8f9fc; }
 .briefing-item-feed { border-top: 3px solid #667ea0; }
-.briefing-item-feed .result-row { border-left: 4px solid #667ea0; border-top: 0; }
+.briefing-item-card { border-left: 4px solid #667ea0; display: grid; gap: 8px; padding: 14px 16px; }
+.briefing-item-card header, .inbox-alert-card header { align-items: center; color: var(--muted); display: flex; flex-wrap: wrap; font-size: .74rem; gap: 8px; }
+.briefing-item-card header span, .inbox-alert-card header span { color: var(--ink); font-weight: 800; }
+.briefing-item-card header small, .inbox-alert-card header small { margin-left: auto; }
+.briefing-item-card h3, .briefing-item-card p { margin: 0; }
+.briefing-decision-grid { display: grid; gap: 8px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.briefing-decision-grid section { background: #f6f8fb; border-top: 2px solid #9aa9bf; min-width: 0; padding: 9px; }
+.briefing-decision-grid section:nth-child(2) { border-color: #9b8162; }
+.briefing-decision-grid section:nth-child(3) { border-color: #638b78; }
+.briefing-decision-grid span, .inbox-alert-summary span { color: var(--muted); display: block; font-size: .68rem; font-weight: 800; margin-bottom: 3px; text-transform: uppercase; }
 @media (max-width: 760px) { .briefing-command { display: grid; gap: 16px; padding: 22px 16px; } .briefing-command .coverage-summary { border-left: 0; border-top: 1px solid #758194; flex-basis: auto; padding: 12px 0 0; } .briefing-workspace > article, .briefing-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
 
 /* Alerts are handled as an inbox with follow controls and compact feedback actions. */
@@ -4798,9 +4807,16 @@ th {
 .inbox-toolbar { background: #f0f6f7; display: flex; flex-wrap: wrap; gap: 14px; padding: 16px; }
 .inbox-toolbar label { flex: 1 1 210px; min-width: 0; }
 .inbox-alert-feed { border-top: 3px solid #5c8990; }
-.inbox-alert-feed .result-row { border-left: 4px solid #5c8990; border-top: 0; }
+.inbox-alert-card { border-left: 4px solid #5c8990; display: grid; gap: 9px; padding: 14px 16px; }
+.inbox-alert-card.high-severity { border-left-color: #bb634e; }
+.inbox-alert-card header strong { background: #eaf2f2; color: #365e63; font-size: .7rem; padding: 3px 7px; }
+.inbox-alert-card.high-severity header strong { background: #f9e9e5; color: #913d2e; }
+.inbox-alert-card h3, .inbox-alert-card p { margin: 0; }
+.inbox-alert-summary { display: grid; gap: 9px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.inbox-alert-summary p { background: #f7fafb; min-width: 0; padding: 9px; }
+.inbox-alert-card footer { color: var(--muted); font-size: .74rem; }
 .inbox-alert-feed .profile-control-actions { flex-wrap: wrap; justify-content: flex-start; }
-@media (max-width: 760px) { .inbox-command { display: grid; gap: 16px; padding: 22px 16px; } .inbox-command .coverage-summary { border-left: 0; border-top: 1px solid #708597; flex-basis: auto; padding: 12px 0 0; } .inbox-watchlist-workspace > article, .inbox-watchlist-workspace > article + article, .inbox-follow-workspace > article, .inbox-follow-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
+@media (max-width: 760px) { .inbox-command { display: grid; gap: 16px; padding: 22px 16px; } .inbox-command .coverage-summary { border-left: 0; border-top: 1px solid #708597; flex-basis: auto; padding: 12px 0 0; } .inbox-watchlist-workspace > article, .inbox-watchlist-workspace > article + article, .inbox-follow-workspace > article, .inbox-follow-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } .briefing-decision-grid, .inbox-alert-summary { grid-template-columns: 1fr; } .briefing-item-card header small, .inbox-alert-card header small { margin-left: 0; } }
 
 /* Foundations are a standards workbench: rule board, shared labels, and review playbook. */
 .foundation-command { align-items: start; background: #344044; color: #fbfdfd; display: flex; gap: 24px; justify-content: space-between; padding: 26px 30px; }
