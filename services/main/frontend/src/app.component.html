@@ -1302,7 +1302,7 @@
 
               <section class="company-profile-controls milestone-toolbar" aria-label="Strategy milestone filters">
                 <label>View<select [(ngModel)]="strategyMilestoneView"><option value="all">All milestones</option><option value="upcoming">Upcoming 180 days</option><option value="overdue">Overdue</option><option value="completed">Recently completed</option></select></label>
-                <label>Status<select [(ngModel)]="strategyMilestoneStatus"><option value="">All statuses</option><option *ngFor="let status of ['EXPECTED','STARTED','COMPLETED','DELAYED','CHANGED','CANCELLED','FAILED','UNKNOWN']" [value]="status">{{ promiseLabel(status) }}</option></select></label>
+                <label>Status<select [(ngModel)]="strategyMilestoneStatus"><option value="">All statuses</option><option *ngFor="let status of ['EXPECTED','STARTED','COMPLETED','DELAYED','CHANGED','CANCELLED','FAILED','UNKNOWN']" [value]="status">{{ milestoneStatusLabel(status) }}</option></select></label>
                 <label>Type<select [(ngModel)]="strategyMilestoneType"><option value="">All types</option><option *ngFor="let type of milestoneView.filters.types" [value]="type">{{ promiseLabel(type) }}</option></select></label>
                 <label>Origin<select [(ngModel)]="strategyMilestoneOrigin"><option value="">All origins</option><option *ngFor="let origin of ['MANAGEMENT_ANNOUNCED','REGULATOR_DEFINED','CONTRACTUAL','ANALYST_INFERRED']" [value]="origin">{{ promiseLabel(origin) }}</option></select></label>
                 <button type="button" class="primary-button" (click)="reloadStrategyMilestones()">Apply filters</button>
@@ -1315,14 +1315,14 @@
                   <div class="empty-state unavailable-state" *ngIf="milestoneView.milestones.length === 0">No reviewed milestones match these filters.</div>
                   <section class="milestone-initiative-lane" *ngFor="let lane of milestoneInitiativeLanes(milestoneView.milestones)"><header><h3>{{ lane.label }}</h3><span>{{ lane.description }}</span></header><button type="button" class="milestone-track" *ngFor="let milestone of lane.milestones" [class.selected]="milestone.slug === milestoneView.selected_milestone?.slug" [class.undated]="!milestone.expected_start_date && !milestone.expected_end_date" (click)="selectStrategyMilestone(milestone.slug)">
                     <div class="milestone-track-dates"><span>{{ milestone.expected_start_date || 'Start not stated' }}</span><i></i><span>{{ milestone.expected_end_date || 'End not stated' }}</span></div>
-                    <div class="milestone-track-title"><strong>{{ milestone.title }}</strong><span>{{ promiseLabel(milestone.milestone_type) }} · {{ promiseLabel(milestone.current_status) }}</span></div>
+                    <div class="milestone-track-title"><strong>{{ milestone.title }}</strong><span>{{ promiseLabel(milestone.milestone_type) }} · {{ milestoneStatusLabel(milestone.current_status) }}</span></div>
                     <p>{{ milestone.success_condition }}</p>
                     <small>{{ promiseLabel(milestone.origin) }}</small>
                   </button></section>
                 </article>
 
                 <article class="milestone-detail" *ngIf="milestoneView.selected_milestone as milestone; else noSelectedMilestone">
-                  <div class="panel-header"><div><p class="section-kicker">Reviewed execution detail</p><h2>{{ milestone.title }}</h2></div><span class="status-pill available">{{ promiseLabel(milestone.current_status) }}</span></div>
+                  <div class="panel-header"><div><p class="section-kicker">Reviewed execution detail</p><h2>{{ milestone.title }}</h2></div><span class="status-pill available">{{ milestoneStatusLabel(milestone.current_status) }}</span></div>
                   <p><strong>Success condition:</strong> {{ milestone.success_condition }}</p>
                   <dl class="account-grid">
                     <div class="metric"><dt>Origin</dt><dd>{{ promiseLabel(milestone.origin) }}</dd><small *ngIf="milestone.origin === 'ANALYST_INFERRED'">Reviewed inference, not a management commitment</small></div>
@@ -1339,7 +1339,7 @@
                   <div *ngFor="let dependency of milestone.dependencies"><strong>Depends on:</strong> {{ dependency.title }} · {{ dependency.relationship }}<p>{{ dependency.description }}</p></div>
                   <a [href]="milestone.source.url" target="_blank" rel="noopener">Open milestone source</a>
                   <h3>Status history</h3>
-                  <div class="result-row" *ngFor="let update of milestone.status_history"><strong>{{ promiseLabel(update.status) }}</strong><span>{{ update.status_date }}</span><p>{{ update.summary }}</p><p *ngIf="update.blocker">Blocker: {{ update.blocker }}</p><a [href]="update.source.url" target="_blank" rel="noopener">Open status source</a></div>
+                  <div class="result-row" *ngFor="let update of milestone.status_history"><strong>{{ milestoneStatusLabel(update.status) }}</strong><span>{{ update.status_date }}</span><p>{{ update.summary }}</p><p *ngIf="update.blocker">Blocker: {{ update.blocker }}</p><a [href]="update.source.url" target="_blank" rel="noopener">Open status source</a></div>
                 </article>
                 <ng-template #noSelectedMilestone><article class="panel empty-state unavailable-state">Select a reviewed milestone to inspect its execution history.</article></ng-template>
               </section>
@@ -3549,7 +3549,7 @@
               <section class="panel hero-card foundation-command">
                 <div>
                   <p class="section-kicker">Foundation Standards</p>
-                  <h2 id="foundation-heading">Shared Phase 2 operating rules</h2>
+                  <h2 id="foundation-heading">Research quality standards</h2>
                   <p>{{ foundationStandards()?.purpose || 'Shared rules for evidence, claims, metrics, periods, company identity, confidence, review, state labels, and freshness.' }}</p>
                 </div>
                 <div class="coverage-summary" *ngIf="foundationStandards() as standards">

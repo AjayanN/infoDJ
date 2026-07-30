@@ -1057,7 +1057,7 @@ class AppComponent {
       return 'Reviewed case-study library for failed or underperforming strategic moves, warning signs, outcomes, and lessons.';
     }
     if (this.activePage() === 'foundations') {
-      return 'Shared Phase 2 rules for evidence, claims, metrics, periods, identity, confidence, review, state labels, and freshness.';
+      return 'Shared standards for evidence, claims, metrics, periods, identity, confidence, review, state labels, and freshness.';
     }
     if (this.activePage() === 'leadership-decisions') {
       return 'Leadership roles, tenure context, stated priorities, material decisions, succession events, evidence, and non-causation guardrails.';
@@ -2738,6 +2738,20 @@ class AppComponent {
 
   promiseLabel(value: string): string {
     return managementPromiseLabel(value);
+  }
+
+  milestoneStatusLabel(status: string): string {
+    const labels: Record<string, string> = {
+      EXPECTED: 'Expected',
+      STARTED: 'In progress',
+      COMPLETED: 'Completed',
+      DELAYED: 'Delayed',
+      FAILED: 'Missed',
+      CANCELLED: 'Cancelled',
+      UNKNOWN: 'Unverifiable',
+      CHANGED: 'Changed'
+    };
+    return labels[status] || this.promiseLabel(status);
   }
 
   kpiBarWidth(value: number, series: { value: number }[]): number {
