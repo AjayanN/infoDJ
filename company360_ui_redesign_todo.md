@@ -180,7 +180,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 
 - [x] Convert dependency rows into a relationship map with customer groups, suppliers, platforms, channels, and partners. It groups only reviewed relationship types returned for the selected company and filters; named counterparties remain explicitly identified as source-backed. Verified with live Netflix data at desktop and mobile widths.
 - [ ] Add filters for customer, supplier, platform, distribution, concentration, and contract-risk categories.
-- [ ] Show named counterparties only when source-backed.
+- [x] Show named counterparties only when source-backed. Category-only relationships explicitly state that no counterparty is asserted.
 - [ ] Add contract-risk cards for renewal, exclusivity, minimum commitment, termination, and critical supplier gaps.
 - [ ] Acceptance: users should see where the business may depend on a small group, supplier, platform, or channel.
 
