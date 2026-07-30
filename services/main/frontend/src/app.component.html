@@ -2553,12 +2553,13 @@
               <section class="dashboard-two-column macro-profile-workspace">
                 <article class="panel macro-factor-profile">
                   <div class="panel-header"><div><p class="section-kicker">Sensitivities</p><h2>Factors and exposure channels</h2></div><span>{{ macroView.sensitivities.length }} rows</span></div>
-                  <div class="result-row" *ngFor="let row of macroView.sensitivities">
-                    <strong>{{ row.factor.name }} · {{ row.channel_label }}</strong>
-                    <span>{{ row.direction_label }} · {{ row.evidence_type_label }} · {{ row.materiality_label }}</span>
-                    <p>{{ row.evidence_summary }}</p>
-                    <p>{{ row.method }}</p>
-                    <small>sample {{ row.sample_size }} · lag {{ row.lag_assumption }} · {{ row.evidence_date || 'date unavailable' }}</small>
+                  <div class="macro-exposure-cards" *ngIf="macroView.sensitivities.length > 0">
+                    <article *ngFor="let row of macroView.sensitivities" [class]="'macro-exposure-card direction-' + row.direction.toLowerCase()">
+                      <header><strong>{{ row.factor.name }}</strong><span>{{ row.direction_label }}</span></header>
+                      <div class="macro-channel-tag">{{ row.channel_label }}</div>
+                      <p>{{ row.evidence_summary }}</p>
+                      <footer><span>{{ row.materiality_label }}</span><span>{{ row.evidence_type_label }}</span><span>{{ row.evidence_date || 'Date unavailable' }}</span></footer>
+                    </article>
                   </div>
                   <div class="empty-state unavailable-state" *ngIf="macroView.sensitivities.length === 0">No reviewed macro sensitivities are available for the selected filters.</div>
                 </article>
