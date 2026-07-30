@@ -147,7 +147,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 ### UI Name: Competitive Battlefield Map
 
 - [x] Show competitors as a relationship battlefield that groups source-backed peers by direct, substitute, platform/channel, supplier/customer, and other configured relationship types. Each peer retains its scope, geography, overlap, evidence, and confidence context. Verified with live Netflix data at desktop and mobile widths.
-- [ ] Add filters for relationship type, geography, product overlap, and source confidence.
+- [ ] Add filters for relationship type, geography, product overlap, and source confidence. The current competitive endpoint only exposes a relationship filter; geography, product-overlap, and confidence filters require API support.
 - [x] Add a product/pricing overlap matrix. Source-backed peer intersections now render as a dimension grid for product, customer, geography, scale, and pricing comparisons. Verified with live Netflix data at desktop and mobile widths.
 - [x] Add a competitive response timeline with source-backed actions. Verified with seven live Netflix competitive actions at desktop and mobile widths.
 - [x] Add moat-change cards: strengthening, weakening, mixed, unavailable. The status is derived only from supporting versus opposing reviewed evidence; verified as Mixed with live Netflix data.
@@ -245,7 +245,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 - [x] Show themes as a radar or grouped exposure board: AI, cloud, EV, ads, commodities, rates, regulation, consumer demand, and sector-specific themes. The reviewed exposure board is rendered from the configured theme taxonomy and company evidence.
 - [ ] Add exposure cards with materiality, direction, related KPIs, related events, and source status. Cards now show the source-backed exposure type, materiality, evidence date, source availability, and available event/KPI/capital links; data does not currently expose a separate directional field.
 - [ ] Link themes to capital allocation, earnings commentary, macro sensitivity, and risk signals.
-- [ ] Add filters for theme, materiality, source type, and company.
+- [ ] Add filters for theme, materiality, source type, and company. The current sector-theme endpoint only exposes theme and exposure-type filters; materiality, source-type, and company filtering require API support.
 - [ ] Acceptance: users should see which external themes matter to the company and why.
 
 ## 18. Macro Sensitivity Profile
