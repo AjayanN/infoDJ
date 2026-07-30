@@ -102,7 +102,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 ### UI Name: Promise Ledger
 
 - [x] Replace the promise list/detail split with a status board. The board groups reviewed promises into Active, Delivered, At risk, and Unverifiable lanes while keeping full detail on selection. Verified with live Netflix data at desktop and mobile widths.
-- [ ] Add a promise timeline showing statement date, target window, updates, and final classification.
+- [x] Add a promise timeline showing statement date, target window, updates, and final classification. The lifecycle rail preserves missing target dates and update history explicitly; verified with live Ford data at desktop and mobile widths.
 - [x] Show the original statement in a quote-style card with speaker and source.
 - [x] Show evaluation logic in plain language: what would count as success, failure, or too early.
 - [ ] Add linked KPI and milestone context as small relationship cards.

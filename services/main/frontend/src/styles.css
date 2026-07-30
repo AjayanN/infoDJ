@@ -4054,6 +4054,16 @@ th {
 
 .promise-evaluation p:last-child { color: #33465a; line-height: 1.45; margin: 5px 0 0; }
 
+.promise-lifecycle-rail { display: grid; gap: 8px; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 14px 0; }
+.promise-lifecycle-rail article { border-top: 3px solid #7695aa; display: grid; gap: 4px; min-width: 0; padding: 9px; }
+.promise-lifecycle-rail article.current { border-color: #5a8674; }
+.promise-lifecycle-rail span, .promise-lifecycle-rail small, .promise-relationship-cards span, .promise-relationship-cards small { color: var(--muted); font-size: .72rem; }
+.promise-lifecycle-rail strong { overflow-wrap: anywhere; }
+.promise-relationship-cards { display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 12px 0; }
+.promise-relationship-cards article { background: #f3f7f8; border-top: 2px solid #7190a9; display: grid; gap: 4px; min-width: 0; padding: 10px; }
+.promise-relationship-cards article.unavailable { border-color: #a78b6e; }
+.promise-relationship-cards p { margin: 0; }
+
 .promise-detail,
 .milestone-detail {
   background: #f9fbfc;
@@ -5060,6 +5070,8 @@ th {
     border-right: 0;
     padding: 18px 0;
   }
+  .promise-lifecycle-rail,
+  .promise-relationship-cards { grid-template-columns: 1fr; }
 
   .promise-detail,
   .milestone-detail {

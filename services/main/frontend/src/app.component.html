@@ -1217,9 +1217,8 @@
                   </dl>
                   <p *ngIf="promise.conditions"><strong>Conditions:</strong> {{ promise.conditions }}</p>
                   <section class="promise-evaluation"><p class="section-kicker">Evaluation logic</p><p>{{ promise.evaluation_rule || 'No measurable evaluation rule is available.' }}</p></section>
-                  <p *ngIf="promise.linked_kpi"><strong>{{ promise.linked_kpi.dependency_label }}:</strong> {{ promise.linked_kpi.name }} · {{ promise.linked_kpi.unit }} · {{ promise.linked_kpi.cadence }}</p>
-                  <p class="formula-note" *ngIf="promise.linked_kpi">{{ promise.linked_kpi.dependency_description }}</p>
-                  <p *ngIf="promise.linked_strategic_turn"><strong>Linked strategic turn:</strong> {{ promise.linked_strategic_turn.title }}</p>
+                  <section class="promise-lifecycle-rail" aria-label="Promise lifecycle"><article><span>Statement</span><strong>{{ promise.statement_date }}</strong></article><article><span>Target window</span><strong>{{ promise.target_start_date || 'Start not stated' }}</strong><small>through {{ promise.target_end_date || 'End not stated' }}</small></article><article><span>Updates</span><strong>{{ promise.updates.length }}</strong><small>{{ promise.updates.length ? 'Reviewed updates below' : 'No reviewed updates' }}</small></article><article class="current"><span>Current classification</span><strong>{{ promiseLabel(promise.current_status) }}</strong></article></section>
+                  <section class="promise-relationship-cards"><article *ngIf="promise.linked_kpi"><span>{{ promise.linked_kpi.dependency_label }}</span><strong>{{ promise.linked_kpi.name }}</strong><small>{{ promise.linked_kpi.unit }} · {{ promise.linked_kpi.cadence }}</small><p>{{ promise.linked_kpi.dependency_description }}</p></article><article *ngIf="promise.linked_strategic_turn"><span>Strategic turn</span><strong>{{ promise.linked_strategic_turn.title }}</strong></article><article class="unavailable" *ngIf="!promise.linked_kpi && !promise.linked_strategic_turn"><span>Related execution context</span><p>No reviewed KPI or strategic-turn link is available for this promise.</p></article></section>
                   <a *ngIf="promise.source" [href]="promise.source.url" target="_blank" rel="noopener">Open original source</a>
 
                   <h3>Status history</h3>
