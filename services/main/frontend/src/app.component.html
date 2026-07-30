@@ -2279,12 +2279,10 @@
                     </option>
                   </select>
                 </label>
-                <label>Measure
-                  <select [(ngModel)]="valuationMeasure">
-                    <option value="">All measures</option>
-                    <option *ngFor="let measure of valuationView.filters.measures" [value]="measure">{{ promiseLabel(measure) }}</option>
-                  </select>
-                </label>
+                <div class="valuation-measure-tabs" role="tablist" aria-label="Valuation measure">
+                  <button type="button" role="tab" [attr.aria-selected]="valuationMeasure === ''" [class.active]="valuationMeasure === ''" (click)="selectValuationMeasure('')">All</button>
+                  <button type="button" role="tab" *ngFor="let measure of valuationView.filters.measures" [attr.aria-selected]="valuationMeasure === measure" [class.active]="valuationMeasure === measure" (click)="selectValuationMeasure(measure)">{{ promiseLabel(measure) }}</button>
+                </div>
                 <div class="profile-control-actions">
                   <button type="button" class="primary-button" (click)="reloadValuationContext()">Update filters</button>
                   <button type="button" class="ghost-button" (click)="openCompany(valuationView.company.slug)">Back to Company 360</button>

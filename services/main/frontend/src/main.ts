@@ -1751,6 +1751,12 @@ class AppComponent {
     if (company) this.openValuationContext(company.slug, this.valuationContextDate, this.valuationMeasure);
   }
 
+  selectValuationMeasure(measure: string): void {
+    if (measure === this.valuationMeasure) return;
+    this.valuationMeasure = measure;
+    this.reloadValuationContext();
+  }
+
   printValuationContextBrief(): void {
     window.print();
   }

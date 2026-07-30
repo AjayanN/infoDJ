@@ -4970,6 +4970,9 @@ th {
 .valuation-command .profile-score-card { border-left: 1px solid #688091; padding-left: 22px; }
 .valuation-toolbar { background: #f0f4f6; display: flex; flex-wrap: wrap; gap: 14px; padding: 16px; }
 .valuation-toolbar label { flex: 1 1 220px; min-width: 0; }
+.valuation-measure-tabs { align-items: center; display: flex; flex: 1 1 320px; flex-wrap: wrap; gap: 5px; }
+.valuation-measure-tabs button { background: #e4ecf0; border: 1px solid #bdced7; color: #375d6a; font-size: .78rem; font-weight: 700; padding: 8px 10px; }
+.valuation-measure-tabs button.active { background: #286b84; border-color: #286b84; color: #fff; }
 .valuation-workbench, .valuation-research-desk { gap: 0; }
 .valuation-workbench > article, .valuation-research-desk > article { border-bottom: 1px solid var(--line); min-width: 0; padding: 22px 24px 22px 0; }
 .valuation-workbench > article + article, .valuation-research-desk > article + article { border-left: 1px solid var(--line); padding-left: 24px; padding-right: 0; }
