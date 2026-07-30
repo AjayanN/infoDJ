@@ -731,11 +731,12 @@
                         <h2 id="questions-heading">Evidence examples for business questions</h2>
                       </div>
                     </div>
-                    <div class="result-list dashboard-data-list" *ngIf="(dashboardSection('business-questions')?.items || []).length > 0; else dashboardGap">
-                      <article class="result-row evidence-row" *ngFor="let event of dashboardSection('business-questions')?.items || []">
-                        <strong>What changed at {{ event.company }}?</strong>
-                        <span>{{ event.event_date }} · {{ event.event_type }} · {{ event.source_count }} sources</span>
-                        <p>{{ event.actual_change || event.source_claim }}</p>
+                    <div class="question-answer-board" *ngIf="(dashboardSection('business-questions')?.items || []).length > 0; else dashboardGap">
+                      <article class="question-answer-card" *ngFor="let event of dashboardSection('business-questions')?.items || []">
+                        <header><span>Question</span><small>{{ event.event_date || 'Date unavailable' }} · {{ event.source_count }} sources</small></header>
+                        <h3>What changed at {{ event.company }}?</h3>
+                        <div><span>Source-backed answer</span><p>{{ event.actual_change || event.source_claim }}</p></div>
+                        <footer><span>{{ promiseLabel(event.event_type) }}</span><button type="button" class="link-button" (click)="openLatestMoveContext(event)">{{ latestMoveContext(event).label }}</button></footer>
                       </article>
                     </div>
                     <div class="pagination-row" *ngIf="(dashboardSection('business-questions')?.total_pages || 1) > 1">

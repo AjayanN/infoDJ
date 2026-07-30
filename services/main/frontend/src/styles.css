@@ -4967,6 +4967,18 @@ th {
 .dashboard-impact-lab .impact-row { border-left: 4px solid #aa7650; border-top: 0; }
 .dashboard-question-desk { border-top: 3px solid #6b7fa3; }
 .dashboard-question-desk .evidence-row { border-left: 4px solid #6b7fa3; border-top: 0; }
+.question-answer-board { display: grid; gap: 0; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.question-answer-card { border-bottom: 1px solid var(--line); border-left: 4px solid #6b7fa3; display: grid; gap: 11px; min-width: 0; padding: 16px; }
+.question-answer-card header, .question-answer-card footer { align-items: center; display: flex; gap: 8px; justify-content: space-between; }
+.question-answer-card header span, .question-answer-card > div > span { color: var(--muted); font-size: .67rem; font-weight: 800; text-transform: uppercase; }
+.question-answer-card header small { color: var(--muted); font-size: .72rem; }
+.question-answer-card h3, .question-answer-card p { margin: 0; }
+.question-answer-card h3 { font-size: 1rem; line-height: 1.35; }
+.question-answer-card > div { display: grid; gap: 5px; }
+.question-answer-card > div p { color: #52677e; font-size: .84rem; line-height: 1.5; }
+.question-answer-card footer { border-top: 1px solid var(--line); padding-top: 10px; }
+.question-answer-card footer > span { color: #52677e; font-size: .72rem; font-weight: 700; }
+.question-answer-card .link-button { font-size: .74rem; min-height: 28px; }
 @media (max-width: 760px) { .dashboard-confidence-audit .metric { border-bottom: 1px solid var(--line); border-right: 0; } }
 
 /* Ownership is read as a point-in-time ledger with a separate insider activity trail. */
