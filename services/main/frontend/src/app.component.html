@@ -2858,11 +2858,14 @@
 
                 <article class="panel failure-case-library">
                   <div class="panel-header"><div><p class="section-kicker">Library</p><h2>Case studies</h2></div><span>{{ strategyFailures()?.cases?.length || 0 }} shown</span></div>
-                  <div class="result-row" *ngFor="let row of strategyFailures()?.cases || []" (click)="selectStrategyFailure(row.id)" role="button" tabindex="0">
-                    <strong>{{ row.title }}</strong>
-                    <span>{{ row.company_name || row.company_slug || 'company not set' }} · {{ row.classification_label }} · {{ row.editorial_status_label }}</span>
+                  <div class="failure-case-grid">
+                    <article class="failure-case-tile" *ngFor="let row of strategyFailures()?.cases || []" (click)="selectStrategyFailure(row.id)" role="button" tabindex="0">
+                    <header><span>{{ row.category_label }}</span><small>{{ row.stage_label }}</small></header>
+                    <h3>{{ row.title }}</h3>
+                    <div class="failure-case-status"><span>{{ row.classification_label }}</span><span>{{ row.editorial_status_label }}</span></div>
                     <p>{{ row.decision_context || row.outcome_definition || 'Context not entered.' }}</p>
-                    <small>{{ row.category_label }} · {{ row.stage_label }} · evidence {{ row.evidence_count }} · warning signs {{ row.warning_sign_count }} · published {{ row.is_published ? 'yes' : 'no' }}</small>
+                    <footer>{{ row.company_name || row.company_slug || 'Company not set' }} · {{ row.evidence_count }} evidence · {{ row.warning_sign_count }} warning signs</footer>
+                    </article>
                   </div>
                   <div class="empty-state unavailable-state" *ngIf="(strategyFailures()?.cases?.length || 0) === 0">No failure cases match the selected filters.</div>
                 </article>
@@ -2896,9 +2899,8 @@
                   </article>
                   <article class="panel failure-quality-gate">
                     <div class="panel-header"><div><p class="section-kicker">Quality</p><h2>Publication checks</h2></div></div>
-                    <div class="result-row" *ngFor="let check of selected.quality?.checks | keyvalue">
-                      <strong>{{ check.key }}</strong>
-                      <span>{{ check.value ? 'available' : 'missing' }}</span>
+                    <div class="failure-quality-grid">
+                      <article *ngFor="let check of selected.quality?.checks | keyvalue" [class.complete]="check.value"><span>{{ promiseLabel(check.key) }}</span><strong>{{ check.value ? 'Ready' : 'Missing' }}</strong></article>
                     </div>
                     <p><strong>Minimum evidence:</strong> {{ selected.minimum_evidence || 'Unavailable.' }}</p>
                     <p><strong>Correction path:</strong> {{ selected.correction_path || 'Unavailable.' }}</p>

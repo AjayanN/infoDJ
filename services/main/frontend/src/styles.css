@@ -4729,13 +4729,23 @@ th {
 .failure-library-workspace > article, .failure-context-workspace > article, .failure-evidence-workspace > article, .failure-review-workspace > article { border-bottom: 1px solid var(--line); min-width: 0; padding: 22px 24px 22px 0; }
 .failure-library-workspace > article + article, .failure-context-workspace > article + article, .failure-evidence-workspace > article + article, .failure-review-workspace > article + article { border-left: 1px solid var(--line); padding-left: 24px; padding-right: 0; }
 .failure-case-intake, .failure-editorial-gate { background: #fbf9f5; }
-.failure-case-library .result-row { border-left: 3px solid #a17252; border-top: 0; cursor: pointer; }
+.failure-case-grid { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.failure-case-tile { border-top: 3px solid #a17252; cursor: pointer; display: grid; gap: 8px; min-width: 0; padding: 12px; }
+.failure-case-tile header, .failure-case-tile footer { align-items: center; color: var(--muted); display: flex; font-size: .72rem; justify-content: space-between; }
+.failure-case-tile h3, .failure-case-tile p { margin: 0; }
+.failure-case-status { display: flex; flex-wrap: wrap; gap: 5px; }
+.failure-case-status span { background: #f3eee9; color: #785235; font-size: .7rem; font-weight: 700; padding: 3px 6px; }
 .failure-context-board { border-top: 3px solid #a17252; }
 .failure-quality-gate .result-row { border-left: 3px solid #6d8495; border-top: 0; }
+.failure-quality-grid { display: grid; gap: 7px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.failure-quality-grid article { background: #fcf7f2; border-top: 2px solid #c98b68; display: grid; gap: 3px; min-width: 0; padding: 9px; }
+.failure-quality-grid article.complete { border-color: #5b8973; }
+.failure-quality-grid span { color: var(--muted); font-size: .72rem; }
+.failure-quality-grid article.complete strong { color: #397158; }
 .failure-evidence-log .result-row { border-left: 3px solid #5c8b79; border-top: 0; }
 .failure-warning-log .result-row { border-left: 3px solid #ac735a; border-top: 0; }
 .failure-link-register .result-row { border-left: 3px solid #6d8495; border-top: 0; }
-@media (max-width: 760px) { .failure-command, .failure-selected-command { display: grid; gap: 16px; padding: 22px 16px; } .failure-command .coverage-summary, .failure-selected-command .coverage-summary { border-left: 0; border-top: 1px solid #957b65; flex-basis: auto; padding: 12px 0 0; } .failure-library-workspace > article, .failure-library-workspace > article + article, .failure-context-workspace > article, .failure-context-workspace > article + article, .failure-evidence-workspace > article, .failure-evidence-workspace > article + article, .failure-review-workspace > article, .failure-review-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
+@media (max-width: 760px) { .failure-command, .failure-selected-command { display: grid; gap: 16px; padding: 22px 16px; } .failure-command .coverage-summary, .failure-selected-command .coverage-summary { border-left: 0; border-top: 1px solid #957b65; flex-basis: auto; padding: 12px 0 0; } .failure-library-workspace > article, .failure-library-workspace > article + article, .failure-context-workspace > article, .failure-context-workspace > article + article, .failure-evidence-workspace > article, .failure-evidence-workspace > article + article, .failure-review-workspace > article, .failure-review-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } .failure-case-grid, .failure-quality-grid { grid-template-columns: 1fr; } }
 
 /* Scenarios are parallel assumption boards, never presented as predictions. */
 .scenario-command, .scenario-selected-command { align-items: start; background: #284854; color: #f8fdfe; display: flex; gap: 24px; justify-content: space-between; padding: 26px 30px; }
