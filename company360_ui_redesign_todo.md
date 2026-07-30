@@ -253,10 +253,10 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 ### UI Name: Macro Exposure Radar
 
 - [x] Show macro factors as cards: inflation, rates, recession, currency, commodity prices, employment, consumer spending, supply chain. Available reviewed factors now render as directional channel cards rather than rows. Verified with live Netflix data at desktop and mobile widths.
-- [ ] Add channel labels: revenue, cost, demand, financing, valuation, supply, regulation.
-- [ ] Show direction only when supported: positive, negative, mixed, unclear.
+- [x] Add channel labels: revenue, cost, demand, financing, valuation, supply, regulation.
+- [x] Show direction only when supported: positive, negative, mixed, unclear.
 - [ ] Add stress-period examples where evidence exists.
-- [ ] Keep relationship limitations visible so users do not confuse correlation with causation.
+- [x] Keep relationship limitations visible so users do not confuse correlation with causation.
 - [ ] Acceptance: users should understand which economic forces could affect the company and how strong the evidence is.
 
 ## 19. Strategy Thesis Workspace
