@@ -151,7 +151,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 - [x] Add a product/pricing overlap matrix. Source-backed peer intersections now render as a dimension grid for product, customer, geography, scale, and pricing comparisons. Verified with live Netflix data at desktop and mobile widths.
 - [x] Add a competitive response timeline with source-backed actions. Verified with seven live Netflix competitive actions at desktop and mobile widths.
 - [x] Add moat-change cards: strengthening, weakening, mixed, unavailable. The status is derived only from supporting versus opposing reviewed evidence; verified as Mixed with live Netflix data.
-- [ ] Acceptance: users should understand who the company competes with and where the pressure is coming from.
+- [x] Acceptance: users can distinguish reviewed competitor relationship types, overlap dimensions, competitive actions, and mixed/strengthening/weakening evidence without overstating the available filters. Verified with live Netflix data at desktop and mobile widths.
 
 ## 9. Product and Pricing History
 
