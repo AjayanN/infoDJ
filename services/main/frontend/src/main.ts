@@ -122,6 +122,7 @@ type ValueFlowGraph = { nodes: ValueFlowNode[]; edges: ValueFlowEdge[] };
 type KpiEventGroup = { type: string; label: string; count: number; latestDate: string; events: DashboardEvent[]; hiddenCount: number };
 type LatestMoveFilter = 'all' | 'product' | 'pricing' | 'acquisition' | 'geography' | 'leadership' | 'regulation' | 'capital' | 'competition';
 type LatestMoveGroup = { type: string; label: string; events: DashboardEvent[] };
+type RiskSignalGroup = { key: string; label: string; events: DashboardEvent[] };
 type KpiMetricGroup = { key: string; label: string; variants: KpiDefinition[]; selected: boolean; defaultSlug: string };
 type BlockedKpiPeer = OperatingKpiResponse['blocked_peer_metrics'][number];
 type KpiBlockerReason = { key: string; label: string; count: number };
@@ -817,6 +818,31 @@ class AppComponent {
     if (/capital|dividend|buyback|repurchase|investment|capex/.test(terms)) return 'capital';
     if (/compet|rival|moat|market share/.test(terms)) return 'competition';
     return 'all';
+  }
+
+  riskSignalGroups(events: DashboardEvent[]): RiskSignalGroup[] {
+    const grouped = new Map<string, DashboardEvent[]>();
+    for (const event of events) {
+      const key = this.riskSignalCategory(event);
+      grouped.set(key, [...(grouped.get(key) || []), event]);
+    }
+    return [...grouped.entries()].map(([key, groupedEvents]) => ({
+      key,
+      label: this.promiseLabel(key),
+      events: groupedEvents
+    }));
+  }
+
+  riskSignalCategory(event: DashboardEvent): string {
+    const terms = `${event.signal || ''} ${event.event_type} ${event.decision_theme}`.toLowerCase();
+    if (/regulat|legal|litigat|antitrust|compliance/.test(terms)) return 'REGULATORY_AND_LITIGATION';
+    if (/compet|rival|market_share/.test(terms)) return 'COMPETITION';
+    if (/macro|inflation|interest|currency|demand/.test(terms)) return 'MACRO';
+    if (/supplier|customer|platform|dependency|concentration/.test(terms)) return 'DEPENDENCY';
+    if (/leadership|executive|board/.test(terms)) return 'LEADERSHIP';
+    if (/valuation|market_price|multiple/.test(terms)) return 'VALUATION_CONTEXT';
+    if (/kpi|revenue|margin|deteriorat/.test(terms)) return 'KPI_DETERIORATION';
+    return 'BUSINESS_MODEL';
   }
 
   searchRange(meta: PaginationMeta): string {

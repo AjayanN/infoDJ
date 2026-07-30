@@ -5047,7 +5047,12 @@ th {
 .regulatory-case-entry footer { align-items: center; color: var(--muted); display: flex; flex-wrap: wrap; font-size: .75rem; gap: 8px; }
 .regulatory-case-entry footer span + span { border-left: 1px solid var(--line); padding-left: 8px; }
 
-.risk-signal-card { border-left: 4px solid #a87555; display: grid; gap: 9px; padding: 13px 14px; }
+.risk-signal-board { display: grid; gap: 22px; }
+.risk-signal-lane { border-top: 2px solid #a87555; display: grid; }
+.risk-signal-lane > header { align-items: baseline; display: flex; justify-content: space-between; padding: 11px 0; }
+.risk-signal-lane > header strong { color: #704830; font-size: .88rem; }
+.risk-signal-lane > header span { color: var(--muted); font-size: .72rem; font-variant-numeric: tabular-nums; }
+.risk-signal-card { border-left: 4px solid #a87555; border-top: 1px solid var(--line); display: grid; gap: 9px; padding: 13px 14px; }
 .risk-signal-card header, .risk-signal-card footer { align-items: center; display: flex; flex-wrap: wrap; gap: 8px; }
 .risk-signal-card header > span, .risk-signal-card footer { color: var(--muted); font-size: .74rem; }
 .risk-signal-card header strong { color: var(--ink); }.risk-signal-card header small { margin-left: auto; }

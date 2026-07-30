@@ -507,12 +507,15 @@
                         <h2 id="risk-heading">Source-backed risk signals</h2>
                       </div>
                     </div>
-                    <div class="result-list dashboard-data-list" *ngIf="(dashboardSection('risk-signals')?.items || []).length > 0; else dashboardGap">
-                      <article class="risk-signal-card" *ngFor="let signal of dashboardSection('risk-signals')?.items || []">
-                        <header><span>{{ signal.company }}</span><strong>{{ promiseLabel(signal.signal || signal.event_type) }}</strong><small>{{ signal.event_date || 'Date unavailable' }}</small></header>
-                        <p><span>Observed disclosure</span>{{ signal.actual_change || signal.source_claim }}</p>
-                        <footer><span>Confidence {{ signal.confidence_score | number:'1.2-2' }}</span><span>{{ signal.source_count }} source records</span><small>{{ signal.calculation_method }}</small></footer>
-                      </article>
+                    <div class="risk-signal-board" *ngIf="riskSignalGroups(dashboardSection('risk-signals')?.items || []).length > 0; else dashboardGap">
+                      <section class="risk-signal-lane" *ngFor="let group of riskSignalGroups(dashboardSection('risk-signals')?.items || [])">
+                        <header><strong>{{ group.label }}</strong><span>{{ group.events.length }} signals</span></header>
+                        <article class="risk-signal-card" *ngFor="let signal of group.events">
+                          <header><span>{{ signal.company }}</span><strong>{{ promiseLabel(signal.signal || signal.event_type) }}</strong><small>{{ signal.event_date || 'Date unavailable' }}</small></header>
+                          <p><span>Observed disclosure</span>{{ signal.actual_change || signal.source_claim }}</p>
+                          <footer><span>Confidence {{ signal.confidence_score | number:'1.2-2' }}</span><span>{{ signal.source_count }} source records</span><small>{{ signal.calculation_method }}</small></footer>
+                        </article>
+                      </section>
                     </div>
                     <div class="pagination-row" *ngIf="(dashboardSection('risk-signals')?.total_pages || 1) > 1">
                       <span>{{ dashboardSectionRange('risk-signals') }}</span>

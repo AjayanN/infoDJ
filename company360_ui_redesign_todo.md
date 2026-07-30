@@ -345,7 +345,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 
 ### UI Name: Risk Watch Panel
 
-- [ ] Group risks by business model, KPI deterioration, competition, regulatory, litigation, macro, dependency, leadership, and valuation context.
+- [x] Group risks by business model, KPI deterioration, competition, regulatory, litigation, macro, dependency, leadership, and valuation context.
 - [ ] Add severity and freshness indicators.
 - [ ] Link every risk signal to source-backed evidence and related feature pages.
 - [ ] Separate observed risk disclosure from inferred impact.
