@@ -114,10 +114,10 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 ### UI Name: Quarterly Intelligence Brief
 
 - [x] Use a quarter selector timeline at the top. The period rail exposes reviewed quarters as selectable visual segments and retains the existing period control as an accessible fallback. Verified with live Netflix data at desktop and mobile widths.
-- [ ] Redesign each quarter as a briefing: what happened, why management says it happened, what changed in guidance, what risks emerged, and what strategic moves were announced.
+- [x] Redesign each quarter as a briefing: what happened, why management says it happened, what changed in guidance, what risks emerged, and what strategic moves were announced.
 - [ ] Add a "Guidance changed?" badge with up, down, reaffirmed, withdrawn, or unavailable.
-- [ ] Add KPI movement chips linked back to the Operating Metrics Workbench.
-- [ ] Add "questions to monitor next quarter" when evidence suggests open items.
+- [x] Add KPI movement chips linked back to the Operating Metrics Workbench. The earnings browser flow opens the selected KPI series in company scope.
+- [x] Add "questions to monitor next quarter" when evidence suggests open items.
 - [ ] Acceptance: the page should read like an analyst briefing, not a filing excerpt dump.
 
 ## 6. Strategy Milestone Tracker
