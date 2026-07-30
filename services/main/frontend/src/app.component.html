@@ -1686,7 +1686,16 @@
                 <section class="dashboard-two-column product-before-after-workspace">
                   <article class="product-comparison-ledger">
                     <div class="panel-header"><div><p class="section-kicker">Before and after</p><h2>Product and plan comparisons</h2></div></div>
-                    <div class="result-row" *ngFor="let row of productView.comparison"><strong>{{ row.title }}</strong><span>{{ row.change_type }} · {{ row.effective_date || row.announcement_date || 'date unavailable' }}</span><p><strong>Before:</strong> {{ row.before || 'Unavailable' }}</p><p><strong>After:</strong> {{ row.after || 'Unavailable' }}</p></div>
+                    <div class="product-comparison-grid" *ngIf="productView.comparison.length > 0">
+                      <article *ngFor="let row of productView.comparison">
+                        <header><strong>{{ row.title }}</strong><span>{{ row.change_type }}</span></header>
+                        <small>{{ row.effective_date || row.announcement_date || 'Date unavailable' }}</small>
+                        <div class="product-comparison-states">
+                          <section><span>Before</span><p>{{ row.before || 'Not disclosed' }}</p></section>
+                          <section><span>After</span><p>{{ row.after || 'Not disclosed' }}</p></section>
+                        </div>
+                      </article>
+                    </div>
                     <div class="empty-state" *ngIf="productView.comparison.length === 0">No before-and-after product comparison is available.</div>
                   </article>
                   <article class="panel">

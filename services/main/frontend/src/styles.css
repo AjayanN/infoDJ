@@ -4408,7 +4408,16 @@ th {
 .product-change-event { border-left: 3px solid #32856e; border-top: 1px solid var(--line); display: grid; gap: 8px; padding: 13px 0 13px 13px; }
 .product-change-event:first-of-type { border-top: 0; }.product-change-event > div:last-of-type { display: grid; gap: 2px; }.product-change-event > div:last-of-type span { color: #26735f; font-size: .75rem; }.product-change-event p { margin: 0; }
 .product-change-dates { align-items: center; color: var(--muted); display: grid; font-size: .72rem; gap: 8px; grid-template-columns: minmax(80px, 1fr) minmax(40px, .7fr) minmax(80px, 1fr); }.product-change-dates span { display: grid; gap: 2px; }.product-change-dates span:last-child { text-align: right; }.product-change-dates b { color: #4e6476; font-size: .64rem; text-transform: uppercase; }.product-change-dates i { background: #8bc4b5; height: 3px; position: relative; }.product-change-dates i::before, .product-change-dates i::after { background: #32856e; content: ''; height: 8px; position: absolute; top: -3px; width: 8px; }.product-change-dates i::before { left: 0; }.product-change-dates i::after { right: 0; }
-.product-comparison-ledger .result-row { border-left: 3px solid #6a85a0; }
+.product-comparison-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); margin-top: 14px; }
+.product-comparison-grid > article { border-left: 3px solid #6a85a0; border-top: 1px solid var(--line); display: grid; gap: 8px; min-width: 0; padding: 12px; }
+.product-comparison-grid header { align-items: start; display: flex; gap: 8px; justify-content: space-between; }
+.product-comparison-grid header span { color: #4d6682; font-size: .72rem; text-align: right; }
+.product-comparison-grid > article > small { color: var(--muted); font-size: .72rem; }
+.product-comparison-states { display: grid; gap: 1px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.product-comparison-states section { background: #f3f6f8; display: grid; gap: 6px; min-width: 0; padding: 10px; }
+.product-comparison-states section:last-child { background: #edf6f3; border-left: 2px solid #32856e; }
+.product-comparison-states span { color: var(--muted); font-size: .68rem; font-weight: 800; text-transform: uppercase; }
+.product-comparison-states p { margin: 0; overflow-wrap: anywhere; }
 @media (max-width: 760px) { .product-command { display: grid; gap: 16px; padding: 22px 16px; } .product-command .coverage-summary { border-left: 0; border-top: 1px solid #708397; padding-left: 0; padding-top: 12px; } .product-timeline-workspace > article, .product-timeline-workspace > article + article, .product-before-after-workspace > article, .product-before-after-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
 
 /* Acquisitions are reviewed as deal journeys, not isolated transaction rows. */
