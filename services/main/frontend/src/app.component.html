@@ -2418,6 +2418,7 @@
                       · {{ matter.authority || 'authority unavailable' }}
                       · {{ matter.business_area || 'business area unavailable' }}
                     </small>
+                    <footer><span>Next known date: {{ matter.next_date || 'Not disclosed' }}</span><span>{{ matter.materiality_label }}</span><a *ngIf="matter.source" [href]="matter.source.url" target="_blank" rel="noopener">Open source</a></footer>
                   </div>
                   <div class="empty-state unavailable-state" *ngIf="regulatoryView.matters.length === 0">No reviewed regulatory or litigation matters are available for the selected filters.</div>
                 </article>

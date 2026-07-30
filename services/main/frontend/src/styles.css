@@ -5032,6 +5032,8 @@ th {
 .regulatory-matter-docket .panel-header, .regulatory-calendar-rail .panel-header { border-bottom: 2px solid #4d3f55; margin-bottom: 4px; padding-bottom: 14px; }
 .regulatory-case-entry { border-left: 4px solid #876478; border-top: 0; padding-left: 14px; }
 .regulatory-case-entry > span { color: #684b5d; font-weight: 700; }
+.regulatory-case-entry footer { align-items: center; color: var(--muted); display: flex; flex-wrap: wrap; font-size: .75rem; gap: 8px; }
+.regulatory-case-entry footer span + span { border-left: 1px solid var(--line); padding-left: 8px; }
 .regulatory-calendar-entry { border-left: 4px solid #4e7892; border-top: 0; padding-left: 14px; }
 .regulatory-calendar-entry > strong { color: #315b75; font-variant-numeric: tabular-nums; }
 .regulatory-exposure-ledger { background: #fbf9fb; }

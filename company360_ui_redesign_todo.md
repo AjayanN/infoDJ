@@ -231,11 +231,11 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 
 ### UI Name: Regulatory Matter Calendar
 
-- [ ] Use a calendar plus matter list layout.
+- [x] Use a calendar plus matter list layout. Verified with live Netflix regulatory matter and calendar data at desktop and mobile widths.
 - [ ] Add filters for matter type, status, authority, materiality, and geography.
-- [ ] Show matter cards with current status, next known date, potential business exposure when disclosed, and source.
-- [ ] Add legal guardrail text once in the page header instead of repeating it in every row.
-- [ ] Add source gaps for missing deadline, authority, jurisdiction, or exposure detail.
+- [x] Show matter cards with current status, next known date, potential business exposure when disclosed, and source. Missing dates and exposure are explicitly labelled; verified with live Netflix data.
+- [x] Add legal guardrail text once in the page header instead of repeating it in every row.
+- [x] Add source gaps for missing deadline, authority, jurisdiction, or exposure detail.
 - [ ] Acceptance: users should know what matters exist, what dates are known, and what is not being concluded.
 
 ## 17. Sector and Theme Intelligence
