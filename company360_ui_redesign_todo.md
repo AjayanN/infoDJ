@@ -7,7 +7,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 - [ ] The initial Company 360 UI pass was rejected in product review. It layered new panels onto the existing page structure and did not constitute a redesign. Do not use its commits, builds, or HTTP smoke checks as acceptance evidence for this backlog.
 - [ ] Do not mark a feature complete because it has a shared shell, a restyled card, or a working route. Each feature must use the UI model appropriate to the task it fulfills and must be reviewed in a browser with real company data.
 - [ ] The Company 360 profile must not retain separate legacy blocks below the new workspace. Financial context, profile changes, source gaps, and evidence must be integrated into the same research flow and deduplicated where needed.
-- [ ] Dashboard redesign is in scope. It is the entry point to Company 360 and must be redesigned as a coverage control room, company directory, and activity feed before this backlog can be accepted.
+- [x] Dashboard redesign is in scope. It is the entry point to Company 360 and is implemented as a coverage control room, company directory, and activity feed. The company search interaction was browser-tested with live data.
 - [ ] All Company 360 feature pages remain incomplete until their individual acceptance criterion is met. The intended interaction model for each page is part of that criterion: graph, map, workbench, board, timeline, matrix, calendar, table, or briefing as appropriate.
 
 ## Delivered And Browser-Checked: 2026-07-28
