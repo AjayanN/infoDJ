@@ -1479,7 +1479,7 @@
                     <div class="panel-header"><div><p class="section-kicker">Context lines</p><h2>Cash-flow and balance context</h2></div></div>
                     <div class="result-row" *ngFor="let item of period.context_items">
                       <strong>{{ item.category_label }}</strong>
-                      <span>{{ item.value | number:'1.0-0' }} {{ item.unit }} · {{ item.concept }}</span>
+                      <span>{{ item.value | number:'1.0-0' }} {{ item.unit }}</span>
                       <p>{{ item.evidence_text }}</p>
                     </div>
                     <div class="empty-state" *ngIf="period.context_items.length === 0">No reviewed context facts are available.</div>
