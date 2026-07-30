@@ -37,11 +37,11 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 
 ### UI Name: Research Cockpit Navigation
 
-- [ ] Group Company 360 actions into clear categories: Business model, Performance, Strategy, Market position, Risk, Ownership, User workspace.
-- [ ] Replace the long button wall with grouped cards that explain why each feature matters.
-- [ ] Add a feature search/filter inside Company 360 so users can type "pricing", "lawsuit", "leadership", or "risk" and jump to the right feature.
-- [ ] Add a persistent company/date context strip across all feature pages.
-- [ ] Add "Back to Company 360", "Change company", and "Compare peer" actions consistently.
+- [x] Group Company 360 actions into clear categories: Business model, Performance, Strategy, Market position, Risk, Ownership, User workspace.
+- [x] Replace the long button wall with grouped cards that explain why each feature matters.
+- [x] Add a feature search/filter inside Company 360 so users can type "pricing", "lawsuit", "leadership", or "risk" and jump to the right feature. Browser-tested with the pricing query.
+- [x] Add a persistent company/date context strip across all feature pages.
+- [x] Add "Back to Company 360", "Change company", and "Compare peer" actions consistently.
 
 ### UI Name: Source Lens Drawer
 
@@ -62,8 +62,8 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 
 ### UI Name: Company Dossier
 
-- [ ] Redesign the hero into an executive dossier: summary, business identity, coverage score, latest reviewed date, and key source freshness.
-- [ ] Replace flat section cards with grouped profile blocks: What it sells, Who it serves, How it earns, Where it operates, Who runs it, Who it competes with.
+- [x] Redesign the hero into an executive dossier: summary, business identity, coverage score, latest reviewed date, and key source freshness.
+- [x] Replace flat section cards with grouped profile blocks: What it sells, Who it serves, How it earns, Where it operates, Who runs it, Who it competes with.
 - [x] Add a "Business at a glance" visual using chips for products, customer groups, revenue sources, geographies, leadership, and competitors. Verified with live Netflix data at desktop and mobile widths.
 - [ ] Add a "What changed recently" strip linking to latest moves, earnings, milestones, and risk signals.
 - [x] Add a "Missing profile evidence" area using the shared Evidence Gap Card System. It now sits in the Company Dossier briefing rather than in a separate activity-rail block.
