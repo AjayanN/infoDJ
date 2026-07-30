@@ -1325,6 +1325,22 @@ class AppComponent {
     });
   }
 
+  private syncCompanyContext(slug: string): void {
+    if (!slug || !this.token() || this.companyProfile()?.company.slug === slug) {
+      return;
+    }
+    this.companyProfile.set(null);
+    this.api.companyProfile(this.token(), slug).subscribe({
+      next: (response) => {
+        if (this.activePage() !== 'company') {
+          this.companyProfile.set(response);
+          this.companyProfileDate = response.profile?.effective_date || '';
+        }
+      },
+      error: () => undefined
+    });
+  }
+
   selectCompanyProfileDate(): void {
     const company = this.companyProfile()?.company;
     if (company && this.companyProfileDate) {
@@ -1428,6 +1444,7 @@ class AppComponent {
     if (!slug || !this.token()) {
       return;
     }
+    this.syncCompanyContext(slug);
     this.activePage.set('business-model');
     this.menuOpen.set(false);
     this.businessModelLoading.set(true);
@@ -1470,6 +1487,7 @@ class AppComponent {
   openOperatingKpis(slug: string, metric = ''): void {
     if (!slug || !this.token()) return;
     const requestId = ++this.operatingKpiRequestId;
+    this.syncCompanyContext(slug);
     this.activePage.set('operating-kpis');
     this.menuOpen.set(false);
     this.operatingKpiLoading.set(true);
@@ -1513,6 +1531,7 @@ class AppComponent {
 
   openManagementPromises(slug: string, promise = ''): void {
     if (!slug || !this.token()) return;
+    this.syncCompanyContext(slug);
     this.activePage.set('management-promises');
     this.menuOpen.set(false);
     this.managementPromiseLoading.set(true);
@@ -1545,6 +1564,7 @@ class AppComponent {
 
   openStrategyMilestones(slug: string, milestone = ''): void {
     if (!slug || !this.token()) return;
+    this.syncCompanyContext(slug);
     this.activePage.set('strategy-milestones');
     this.menuOpen.set(false);
     this.strategyMilestoneLoading.set(true);
@@ -1577,6 +1597,7 @@ class AppComponent {
 
   openEarnings(slug: string, period = ''): void {
     if (!slug || !this.token()) return;
+    this.syncCompanyContext(slug);
     this.activePage.set('earnings');
     this.menuOpen.set(false);
     this.earningsLoading.set(true);
@@ -1602,6 +1623,7 @@ class AppComponent {
 
   openCapitalAllocation(slug: string, period = ''): void {
     if (!slug || !this.token()) return;
+    this.syncCompanyContext(slug);
     this.activePage.set('capital-allocation');
     this.menuOpen.set(false);
     this.capitalAllocationLoading.set(true);
@@ -1640,6 +1662,7 @@ class AppComponent {
 
   openCompetitivePosition(slug: string, asOf = '', relationship = ''): void {
     if (!slug || !this.token()) return;
+    this.syncCompanyContext(slug);
     this.activePage.set('competitive-position');
     this.menuOpen.set(false);
     this.competitivePositionLoading.set(true);
@@ -1666,6 +1689,7 @@ class AppComponent {
 
   openProductPricing(slug: string, asOf = '', type = ''): void {
     if (!slug || !this.token()) return;
+    this.syncCompanyContext(slug);
     this.activePage.set('product-pricing');
     this.menuOpen.set(false);
     this.productPricingLoading.set(true);
@@ -1692,6 +1716,7 @@ class AppComponent {
 
   openAcquisitionLifecycle(slug: string, stage = '', transactionType = '', outcome = '', deal = ''): void {
     if (!slug || !this.token()) return;
+    this.syncCompanyContext(slug);
     this.activePage.set('acquisition-lifecycle');
     this.menuOpen.set(false);
     this.acquisitionLifecycleLoading.set(true);
@@ -1734,6 +1759,7 @@ class AppComponent {
 
   openCustomerSupplierDependency(slug: string, asOf = '', type = '', confidence = ''): void {
     if (!slug || !this.token()) return;
+    this.syncCompanyContext(slug);
     this.activePage.set('customer-supplier-dependency');
     this.menuOpen.set(false);
     this.customerSupplierDependencyLoading.set(true);
@@ -1767,6 +1793,7 @@ class AppComponent {
 
   openGeographicExpansion(slug: string, asOf = '', status = '', marketType = ''): void {
     if (!slug || !this.token()) return;
+    this.syncCompanyContext(slug);
     this.activePage.set('geographic-expansion');
     this.menuOpen.set(false);
     this.geographicExpansionLoading.set(true);
@@ -1800,6 +1827,7 @@ class AppComponent {
 
   openOwnershipInsider(slug: string, asOf = '', holderType = '', transactionType = ''): void {
     if (!slug || !this.token()) return;
+    this.syncCompanyContext(slug);
     this.activePage.set('ownership-insider');
     this.menuOpen.set(false);
     this.ownershipInsiderLoading.set(true);
@@ -1833,6 +1861,7 @@ class AppComponent {
 
   openValuationContext(slug: string, asOf = '', measure = ''): void {
     if (!slug || !this.token()) return;
+    this.syncCompanyContext(slug);
     this.activePage.set('valuation-context');
     this.menuOpen.set(false);
     this.valuationContextLoading.set(true);
@@ -1870,6 +1899,7 @@ class AppComponent {
 
   openRegulatoryLitigation(slug: string, asOf = '', matterType = '', status = ''): void {
     if (!slug || !this.token()) return;
+    this.syncCompanyContext(slug);
     this.activePage.set('regulatory-litigation');
     this.menuOpen.set(false);
     this.regulatoryLitigationLoading.set(true);
@@ -1903,6 +1933,7 @@ class AppComponent {
 
   openSectorThemes(slug: string, asOf = '', theme = '', exposureType = ''): void {
     if (!slug || !this.token()) return;
+    this.syncCompanyContext(slug);
     this.activePage.set('sector-themes');
     this.menuOpen.set(false);
     this.sectorThemesLoading.set(true);
@@ -1936,6 +1967,7 @@ class AppComponent {
 
   openMacroSensitivity(slug: string, asOf = '', factor = '', channel = ''): void {
     if (!slug || !this.token()) return;
+    this.syncCompanyContext(slug);
     this.activePage.set('macro-sensitivity');
     this.menuOpen.set(false);
     this.macroSensitivityLoading.set(true);
@@ -2705,6 +2737,7 @@ class AppComponent {
 
   openLeadershipDecisions(slug: string, asOf = '', roleType = '', decisionType = ''): void {
     if (!slug || !this.token()) return;
+    this.syncCompanyContext(slug);
     this.activePage.set('leadership-decisions');
     this.menuOpen.set(false);
     this.leadershipDecisionLoading.set(true);
