@@ -1252,6 +1252,11 @@ button:disabled {
   color: var(--muted);
 }
 
+.company-profile-hero .coverage-summary span,
+.company-profile-hero .coverage-summary small {
+  color: #4b6276;
+}
+
 .company-profile-section-grid,
 .evidence-grid {
   display: grid;
@@ -3110,6 +3115,12 @@ th {
   }
 }
 
+/* Hero copy is light, but the embedded coverage card is intentionally light. */
+.company-profile-hero .coverage-summary span,
+.company-profile-hero .coverage-summary small {
+  color: #4b6276 !important;
+}
+
 /* Dashboard is an operational coverage surface, not a collection of feature cards. */
 .dashboard-grid {
   gap: 28px;
@@ -4884,4 +4895,10 @@ th {
   .promise-board-lanes {
     grid-template-columns: 1fr;
   }
+}
+
+/* Hero copy is light, but the embedded coverage card is intentionally light. */
+.company-profile-hero .coverage-summary span,
+.company-profile-hero .coverage-summary small {
+  color: #4b6276 !important;
 }
