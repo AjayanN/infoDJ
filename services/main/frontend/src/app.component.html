@@ -1874,11 +1874,12 @@
 
                 <article class="dependency-contract-risk">
                   <div class="panel-header"><div><p class="section-kicker">Contract risk</p><h2>Terms and concentration</h2></div><span>{{ dependencyView.contract_terms.length }} terms</span></div>
-                  <div class="result-row" *ngFor="let term of dependencyView.contract_terms">
-                    <strong>{{ term.counterparty_name }}</strong>
-                    <span>{{ term.term_type_label }} · expires {{ term.expiration_date || 'date unavailable' }}</span>
-                    <p>{{ term.description }}</p>
-                    <a *ngIf="term.source" [href]="term.source.url" target="_blank" rel="noopener">Open source</a>
+                  <div class="dependency-contract-card-grid" *ngIf="dependencyView.contract_terms.length > 0">
+                    <article *ngFor="let term of dependencyView.contract_terms">
+                      <header><strong>{{ term.counterparty_name }}</strong><span>{{ term.term_type_label }}</span></header>
+                      <p>{{ term.description }}</p>
+                      <footer><span>Expires {{ term.expiration_date || 'not disclosed' }}</span><a *ngIf="term.source" [href]="term.source.url" target="_blank" rel="noopener">Open source</a></footer>
+                    </article>
                   </div>
                   <div class="empty-state unavailable-state" *ngIf="dependencyView.contract_terms.length === 0">No reviewed renewal, expiration, exclusivity, minimum commitment, or termination terms are available.</div>
                 </article>

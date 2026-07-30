@@ -4505,7 +4505,12 @@ th {
 .dependency-risk { border-top: 1px solid var(--line); color: var(--muted); font-size: 0.81rem; padding-top: 9px; }
 .dependency-risk strong { color: var(--ink); display: block; font-size: 0.7rem; margin-bottom: 3px; text-transform: uppercase; }
 .dependency-relationship-card small { color: var(--muted); font-size: 0.72rem; }
-.dependency-contract-risk .result-row { border-left: 3px solid #b47c4c; border-top: 0; }
+.dependency-contract-card-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 14px; }
+.dependency-contract-card-grid article { border-left: 3px solid #b47c4c; border-top: 1px solid var(--line); display: grid; gap: 9px; min-width: 0; padding: 12px; }
+.dependency-contract-card-grid header { align-items: start; display: flex; gap: 8px; justify-content: space-between; }
+.dependency-contract-card-grid header span { color: #81552e; font-size: .72rem; text-align: right; }
+.dependency-contract-card-grid p { margin: 0; }
+.dependency-contract-card-grid footer { border-top: 1px solid var(--line); color: var(--muted); display: flex; flex-wrap: wrap; font-size: .72rem; gap: 8px; justify-content: space-between; padding-top: 8px; }
 @media (max-width: 760px) { .dependency-command { display: grid; gap: 16px; padding: 22px 16px; } .dependency-map-workspace > article, .dependency-map-workspace > article + article, .dependency-guardrail-workspace > article, .dependency-guardrail-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } .dependency-relationship-board { grid-template-columns: 1fr; } .dependency-card-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 /* Geography is a footprint atlas with dated entry and exit evidence. */
