@@ -140,7 +140,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 - [x] Add a capital-flow visual showing where cash was directed. The allocation mix is now a proportional, category-labelled flow ledger with the reported amount and deployment share visible beside each bar. Verified with live Netflix data at desktop and mobile widths.
 - [x] Separate reported cash-flow facts from strategic interpretation.
 - [ ] Link large allocations to acquisitions, product launches, geographic expansion, or milestones when available.
-- [ ] Acceptance: users should see where management is placing the largest bets.
+- [x] Acceptance: users can scan allocation buckets, deployment shares, period-specific flow bars, and the source-backed underlying amounts to identify the largest reported uses of cash. Verified with live Netflix data at desktop and mobile widths.
 
 ## 8. Competitive Position Dashboard
 
