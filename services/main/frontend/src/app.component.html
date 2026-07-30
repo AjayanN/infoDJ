@@ -3409,12 +3409,19 @@
                   </article>
                   <article class="panel thesis-evidence-balance">
                     <div class="panel-header"><div><p class="section-kicker">Evidence Balance</p><h2>Supporting and opposing evidence</h2></div><span>{{ thesis.evidence?.length || 0 }} rows</span></div>
-                    <div class="result-row" *ngFor="let evidence of thesis.evidence || []">
-                      <strong>{{ evidence.title }}</strong>
-                      <span>{{ evidence.side_label }} · {{ evidence.evidence_type_label }} · {{ evidence.source_date || 'date unavailable' }}</span>
-                      <p>{{ evidence.summary }}</p>
-                      <small>{{ evidence.separation_note }}</small>
-                      <a *ngIf="evidence.source_url" [href]="evidence.source_url" target="_blank" rel="noopener">Open source</a>
+                    <div class="thesis-evidence-balance-grid" *ngIf="(thesis.evidence?.length || 0) > 0">
+                      <section class="thesis-evidence-lane supporting">
+                        <header><strong>Supporting</strong><span>{{ thesis.balance.supporting }}</span></header>
+                        <article *ngFor="let evidence of thesis.evidence || []" [hidden]="evidence.side !== 'SUPPORTING'"><strong>{{ evidence.title }}</strong><span>{{ evidence.evidence_type_label }} · {{ evidence.source_date || 'date unavailable' }}</span><p>{{ evidence.summary }}</p><small>{{ evidence.separation_note }}</small><a *ngIf="evidence.source_url" [href]="evidence.source_url" target="_blank" rel="noopener">Open source</a></article>
+                      </section>
+                      <section class="thesis-evidence-lane opposing">
+                        <header><strong>Opposing</strong><span>{{ thesis.balance.opposing }}</span></header>
+                        <article *ngFor="let evidence of thesis.evidence || []" [hidden]="evidence.side !== 'OPPOSING'"><strong>{{ evidence.title }}</strong><span>{{ evidence.evidence_type_label }} · {{ evidence.source_date || 'date unavailable' }}</span><p>{{ evidence.summary }}</p><small>{{ evidence.separation_note }}</small><a *ngIf="evidence.source_url" [href]="evidence.source_url" target="_blank" rel="noopener">Open source</a></article>
+                      </section>
+                      <section class="thesis-evidence-lane neutral">
+                        <header><strong>Neutral</strong><span>{{ thesis.balance.neutral }}</span></header>
+                        <article *ngFor="let evidence of thesis.evidence || []" [hidden]="evidence.side !== 'NEUTRAL'"><strong>{{ evidence.title }}</strong><span>{{ evidence.evidence_type_label }} · {{ evidence.source_date || 'date unavailable' }}</span><p>{{ evidence.summary }}</p><small>{{ evidence.separation_note }}</small><a *ngIf="evidence.source_url" [href]="evidence.source_url" target="_blank" rel="noopener">Open source</a></article>
+                      </section>
                     </div>
                     <div class="empty-state unavailable-state" *ngIf="(thesis.evidence?.length || 0) === 0">No evidence attached yet.</div>
                   </article>

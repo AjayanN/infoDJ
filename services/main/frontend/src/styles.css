@@ -4688,11 +4688,18 @@ th {
 .thesis-register .result-row { border-left: 3px solid #5e7fa1; border-top: 0; cursor: pointer; }
 .thesis-suggestion-desk { border-top: 3px solid #5d8c80; }
 .thesis-suggestion-desk .result-row { border-left: 3px solid #5d8c80; border-top: 0; }
-.thesis-evidence-balance .result-row { border-left: 4px solid #8c6d9e; border-top: 0; }
+.thesis-evidence-balance-grid { display: grid; gap: 10px; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 14px; }
+.thesis-evidence-lane { border-top: 3px solid #7b8597; display: grid; gap: 9px; min-width: 0; padding: 10px; }
+.thesis-evidence-lane.supporting { border-color: #438467; }.thesis-evidence-lane.opposing { border-color: #b46652; }
+.thesis-evidence-lane > header { align-items: center; display: flex; justify-content: space-between; }
+.thesis-evidence-lane > header span { color: var(--muted); font-size: .78rem; font-weight: 800; }
+.thesis-evidence-lane > article { background: #f7f9fb; border-left: 3px solid #7b8597; display: grid; gap: 6px; min-width: 0; padding: 10px; }
+.thesis-evidence-lane.supporting > article { border-left-color: #438467; }.thesis-evidence-lane.opposing > article { border-left-color: #b46652; }
+.thesis-evidence-lane article span, .thesis-evidence-lane article small { color: var(--muted); font-size: .72rem; }.thesis-evidence-lane article p { margin: 0; }
 .thesis-falsification-board .result-row { border-left: 3px solid #bd7d4f; border-top: 0; }
 .thesis-indicator-board .result-row { border-left: 3px solid #5d8c80; border-top: 0; }
 .thesis-revision-trail .result-row { border-left: 3px solid #5e7fa1; border-top: 0; }
-@media (max-width: 760px) { .thesis-command, .thesis-selected-command { display: grid; gap: 16px; padding: 22px 16px; } .thesis-command .coverage-summary, .thesis-selected-command .coverage-summary { border-left: 0; border-top: 1px solid #70829a; flex-basis: auto; padding: 12px 0 0; } .thesis-intake-workspace > article, .thesis-intake-workspace > article + article, .thesis-evidence-workspace > article, .thesis-evidence-workspace > article + article, .thesis-monitor-workspace > article, .thesis-monitor-workspace > article + article, .thesis-revision-workspace > article, .thesis-revision-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
+@media (max-width: 760px) { .thesis-command, .thesis-selected-command { display: grid; gap: 16px; padding: 22px 16px; } .thesis-command .coverage-summary, .thesis-selected-command .coverage-summary { border-left: 0; border-top: 1px solid #70829a; flex-basis: auto; padding: 12px 0 0; } .thesis-evidence-balance-grid { grid-template-columns: 1fr; } .thesis-intake-workspace > article, .thesis-intake-workspace > article + article, .thesis-evidence-workspace > article, .thesis-evidence-workspace > article + article, .thesis-monitor-workspace > article, .thesis-monitor-workspace > article + article, .thesis-revision-workspace > article, .thesis-revision-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
 
 /* Contradictions are neutral claim pairs with an explicit human-review path. */
 .contradiction-command, .contradiction-selected-command { align-items: start; background: #4a3b48; color: #fffafd; display: flex; gap: 24px; justify-content: space-between; padding: 26px 30px; }
