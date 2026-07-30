@@ -192,7 +192,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 - [x] Add an expansion timeline for source-backed market entries and exits. The timeline explicitly reports when no dated rows are reviewed.
 - [x] Add market detail cards: local partner, regulatory barrier, revenue contribution, outcome, and source gaps. The cards state when these fields are not disclosed rather than treating generic market presence as complete evidence. Verified with live Netflix data at desktop and mobile widths.
 - [x] Avoid implying a dated market entry from generic geographic presence.
-- [ ] Acceptance: users should understand where the company operates and what expansion evidence is actually known.
+- [x] Acceptance: users should understand where the company operates and what expansion evidence is actually known.
 
 ## 13. Leadership Decision Record
 
