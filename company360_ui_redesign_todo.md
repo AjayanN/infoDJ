@@ -160,7 +160,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 - [x] Show product launches, discontinuations, packaging changes, and price changes on one timeline. Each event renders announcement and effective-date markers without implying unavailable dates. Verified with live Netflix data at desktop and mobile widths.
 - [x] Add product family cards for current offerings. Offerings are grouped by their reviewed product type and retain availability, geography, customer segment, price-count, and description. Verified with live Netflix data at desktop and mobile widths.
 - [x] Use before/after cards for pricing or package changes. Source-backed product and plan comparisons now render as paired prior/revised states.
-- [ ] Separate confirmed list prices from missing price-context states.
+- [ ] Separate confirmed list prices from missing price-context states. Verified 2026-07-30: all 20 configured companies have zero reviewed `PriceObservation` records, so only the missing-price state can be rendered truthfully until source-backed list prices are ingested.
 - [ ] Link product changes to KPI movements, earnings commentary, and competitive responses when available.
 - [ ] Acceptance: users should see how the offering changed over time and what evidence supports it.
 
@@ -181,7 +181,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 - [x] Convert dependency rows into a relationship map with customer groups, suppliers, platforms, channels, and partners. It groups only reviewed relationship types returned for the selected company and filters; named counterparties remain explicitly identified as source-backed. Verified with live Netflix data at desktop and mobile widths.
 - [ ] Add filters for customer, supplier, platform, distribution, concentration, and contract-risk categories.
 - [x] Show named counterparties only when source-backed. Category-only relationships explicitly state that no counterparty is asserted.
-- [ ] Add contract-risk cards for renewal, exclusivity, minimum commitment, termination, and critical supplier gaps.
+- [ ] Add contract-risk cards for renewal, exclusivity, minimum commitment, termination, and critical supplier gaps. Verified 2026-07-30: all 20 configured companies have zero reviewed `DependencyContractTerm` records, so contract-risk cards would be fabricated without ingestion work.
 - [ ] Acceptance: users should see where the business may depend on a small group, supplier, platform, or channel.
 
 ## 12. Geographic Expansion Map
@@ -211,7 +211,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 
 - [x] Show ownership categories as cards: founder, insider, institution, public float, voting control, unavailable. The coverage board presents source-backed category counts and clear not-reviewed states without inferring ownership.
 - [x] Separate economic ownership from voting control. The coverage board and holder table keep the two disclosure types distinct.
-- [ ] Add insider activity timeline for source-backed purchases, sales, plans, and holdings changes.
+- [ ] Add insider activity timeline for source-backed purchases, sales, plans, and holdings changes. Verified 2026-07-30: all 20 configured companies have zero reviewed `InsiderTransaction` records, so no insider timeline can be rendered without source-backed transaction ingestion.
 - [x] Add holder table with filters by holder type and transaction type. The responsive holder table follows the existing reviewed holder and transaction filters.
 - [ ] Add source gaps for missing ownership percentages, plan details, and holder identity.
 - [ ] Acceptance: users should understand who controls or materially owns the company without overreading incomplete disclosure.
