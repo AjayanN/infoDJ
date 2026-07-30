@@ -2146,19 +2146,47 @@
                 </div>
               </section>
 
+              <section class="ownership-control-cards" aria-label="Ownership coverage">
+                <article [class.is-unavailable]="ownerView.coverage.insider_context_count === 0">
+                  <span>Insider context</span>
+                  <strong>{{ ownerView.coverage.insider_context_count || 'Not reviewed' }}</strong>
+                  <small>{{ ownerView.coverage.insider_context_count ? 'reviewed people' : 'No reviewed holder context' }}</small>
+                </article>
+                <article [class.is-unavailable]="ownerView.coverage.ownership_percent_count === 0">
+                  <span>Economic ownership</span>
+                  <strong>{{ ownerView.coverage.ownership_percent_count || 'Not reviewed' }}</strong>
+                  <small>{{ ownerView.coverage.ownership_percent_count ? 'disclosed percentage rows' : 'Percentages not estimated' }}</small>
+                </article>
+                <article [class.is-unavailable]="ownerView.coverage.voting_control_count === 0">
+                  <span>Voting control</span>
+                  <strong>{{ ownerView.coverage.voting_control_count || 'Not reviewed' }}</strong>
+                  <small>{{ ownerView.coverage.voting_control_count ? 'control disclosure rows' : 'No control inference' }}</small>
+                </article>
+                <article [class.is-unavailable]="ownerView.coverage.institutional_position_count === 0">
+                  <span>Institutional holders</span>
+                  <strong>{{ ownerView.coverage.institutional_position_count || 'Not reviewed' }}</strong>
+                  <small>{{ ownerView.coverage.institutional_position_count ? 'reviewed institutions' : 'No 13F / 13D / 13G context' }}</small>
+                </article>
+                <article class="is-unavailable">
+                  <span>Public float</span>
+                  <strong>Not reviewed</strong>
+                  <small>Float requires a source-backed share-count record</small>
+                </article>
+              </section>
+
               <section class="dashboard-two-column ownership-ledger-workspace">
                 <article class="panel ownership-position-ledger">
                   <div class="panel-header"><div><p class="section-kicker">Position register</p><h2>Ownership and insider context</h2></div><span>{{ ownerView.positions.length }} reviewed holders</span></div>
-                  <div class="result-row" *ngFor="let position of ownerView.positions">
-                    <strong>{{ position.holder_name }}</strong>
-                    <span>{{ position.holder_type_label }} · {{ position.position_type_label }} · confidence {{ position.confidence_score | number:'1.2-2' }}</span>
-                    <p>{{ position.evidence_text }}</p>
-                    <small>
-                      economic ownership <ng-container *ngIf="position.economic_ownership_pct === null; else ownershipPct">unavailable</ng-container>
-                      <ng-template #ownershipPct>{{ position.economic_ownership_pct | number:'1.2-2' }}%</ng-template>
-                      · voting power <ng-container *ngIf="position.voting_power_pct === null; else votingPct">unavailable</ng-container>
-                      <ng-template #votingPct>{{ position.voting_power_pct | number:'1.2-2' }}%</ng-template>
-                    </small>
+                  <div class="ownership-holder-table" *ngIf="ownerView.positions.length > 0">
+                    <div class="ownership-holder-table-head" role="row">
+                      <span>Holder</span><span>Category</span><span>Economic</span><span>Voting</span>
+                    </div>
+                    <div class="ownership-holder-table-row" role="row" *ngFor="let position of ownerView.positions" [title]="position.evidence_text">
+                      <strong>{{ position.holder_name }}</strong>
+                      <span>{{ position.holder_type_label }}</span>
+                      <span><ng-container *ngIf="position.economic_ownership_pct === null; else ownershipPct">Not disclosed</ng-container><ng-template #ownershipPct>{{ position.economic_ownership_pct | number:'1.2-2' }}%</ng-template></span>
+                      <span><ng-container *ngIf="position.voting_power_pct === null; else votingPct">Not disclosed</ng-container><ng-template #votingPct>{{ position.voting_power_pct | number:'1.2-2' }}%</ng-template></span>
+                    </div>
                   </div>
                   <div class="empty-state unavailable-state" *ngIf="ownerView.positions.length === 0">No reviewed ownership positions are available for the selected filters.</div>
                 </article>

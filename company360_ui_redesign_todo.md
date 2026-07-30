@@ -209,10 +209,10 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 
 ### UI Name: Ownership Control Panel
 
-- [ ] Show ownership categories as cards: founder, insider, institution, public float, voting control, unavailable.
-- [ ] Separate economic ownership from voting control.
+- [x] Show ownership categories as cards: founder, insider, institution, public float, voting control, unavailable. The coverage board presents source-backed category counts and clear not-reviewed states without inferring ownership.
+- [x] Separate economic ownership from voting control. The coverage board and holder table keep the two disclosure types distinct.
 - [ ] Add insider activity timeline for source-backed purchases, sales, plans, and holdings changes.
-- [ ] Add holder table with filters by holder type and transaction type.
+- [x] Add holder table with filters by holder type and transaction type. The responsive holder table follows the existing reviewed holder and transaction filters.
 - [ ] Add source gaps for missing ownership percentages, plan details, and holder identity.
 - [ ] Acceptance: users should understand who controls or materially owns the company without overreading incomplete disclosure.
 

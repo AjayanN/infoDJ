@@ -4762,17 +4762,27 @@ th {
 .ownership-command .section-kicker, .ownership-command p, .ownership-command .profile-score-card span, .ownership-command .profile-score-card small { color: #d2dbe7; }
 .ownership-toolbar { background: #f0f4f7; display: flex; flex-wrap: wrap; gap: 14px; padding: 16px; }
 .ownership-toolbar label { flex: 1 1 190px; min-width: 0; }
+.ownership-control-cards { border-bottom: 1px solid var(--line); border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.ownership-control-cards article { border-left: 3px solid #477f9f; display: grid; gap: 6px; min-width: 0; padding: 14px 16px; }
+.ownership-control-cards article + article { border-left: 1px solid var(--line); }
+.ownership-control-cards article.is-unavailable { border-top: 3px solid #a97955; }
+.ownership-control-cards span { color: var(--muted); font-size: .74rem; }
+.ownership-control-cards strong { color: var(--ink); font-size: 1.05rem; }
+.ownership-control-cards small { color: #506174; font-size: .72rem; line-height: 1.35; }
 .ownership-ledger-workspace, .ownership-audit-workspace { gap: 0; }
 .ownership-ledger-workspace > article, .ownership-audit-workspace > article { border-bottom: 1px solid var(--line); min-width: 0; padding: 22px 24px 22px 0; }
 .ownership-ledger-workspace > article + article, .ownership-audit-workspace > article + article { border-left: 1px solid var(--line); padding-left: 24px; padding-right: 0; }
-.ownership-position-ledger .result-row { border-left: 3px solid #477f9f; border-top: 0; }
-.ownership-position-ledger .result-row small { color: #355064; display: block; font-weight: 700; line-height: 1.55; }
+.ownership-holder-table { border-top: 2px solid #477f9f; display: grid; margin-top: 14px; }
+.ownership-holder-table-head, .ownership-holder-table-row { display: grid; gap: 10px; grid-template-columns: minmax(150px, 1.6fr) minmax(92px, 1fr) minmax(90px, .85fr) minmax(90px, .85fr); }
+.ownership-holder-table-head { background: #edf3f7; color: #486176; font-size: .7rem; font-weight: 800; padding: 9px 10px; text-transform: uppercase; }
+.ownership-holder-table-row { align-items: center; border-bottom: 1px solid var(--line); color: #506174; font-size: .8rem; padding: 11px 10px; }
+.ownership-holder-table-row strong { color: var(--ink); font-size: .86rem; }
 .ownership-activity-feed .result-row { border-left: 3px solid #9a6b55; border-top: 0; }
 .ownership-activity-feed .result-row small { color: #6b4b3d; display: block; font-weight: 700; line-height: 1.55; }
 .ownership-control-audit { background: #f6f8fa; }
 .ownership-control-audit p { border-left: 3px solid #596f8d; color: #33465b; line-height: 1.6; margin: 14px 0 0; padding-left: 12px; }
 .ownership-evidence-desk .evidence-card { border-left: 3px solid #5a877d; border-radius: 0; }
-@media (max-width: 760px) { .ownership-command { display: grid; gap: 16px; padding: 22px 16px; } .ownership-ledger-workspace > article, .ownership-ledger-workspace > article + article, .ownership-audit-workspace > article, .ownership-audit-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
+@media (max-width: 760px) { .ownership-command { display: grid; gap: 16px; padding: 22px 16px; } .ownership-control-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ownership-control-cards article + article { border-left: 0; } .ownership-control-cards article:nth-child(even) { border-left: 1px solid var(--line); } .ownership-control-cards article:last-child { grid-column: span 2; } .ownership-holder-table-head, .ownership-holder-table-row { grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); } .ownership-holder-table-head span, .ownership-holder-table-row > * { min-width: 0; overflow-wrap: anywhere; } .ownership-ledger-workspace > article, .ownership-ledger-workspace > article + article, .ownership-audit-workspace > article, .ownership-audit-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } }
 
 /* Valuation is a calculation workbench: inputs, comparables, and dated context stay distinct. */
 .valuation-command { background: #293c4b; color: #f8fbff; padding: 26px 30px; }
