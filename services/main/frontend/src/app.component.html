@@ -1575,9 +1575,11 @@
                   <article class="competitive-overlap-matrix">
                     <div class="panel-header"><div><p class="section-kicker">Comparison</p><h2>Product, customer, geography, and scale</h2></div></div>
                     <ng-container *ngFor="let group of ['PRODUCT_OVERLAP','CUSTOMER_OVERLAP','GEOGRAPHIC_OVERLAP','SCALE_COMPARISON','PRICING_POSITION']">
-                      <h3>{{ promiseLabel(group) }}</h3>
-                      <div class="result-row" *ngFor="let item of competitiveView.comparison[group] || []"><strong>{{ item.peer_name || item.label }}</strong><p>{{ item.description }}</p></div>
-                      <div class="empty-state" *ngIf="!(competitiveView.comparison[group] || []).length">No reviewed {{ promiseLabel(group) | lowercase }} dimension is available.</div>
+                      <section class="competitive-dimension-grid">
+                        <header><h3>{{ promiseLabel(group) }}</h3><span>{{ (competitiveView.comparison[group] || []).length }}</span></header>
+                        <div class="competitive-dimension-cell" *ngFor="let item of competitiveView.comparison[group] || []"><strong>{{ item.peer_name || item.label }}</strong><p>{{ item.description }}</p></div>
+                        <div class="empty-state" *ngIf="!(competitiveView.comparison[group] || []).length">No reviewed {{ promiseLabel(group) | lowercase }} dimension is available.</div>
+                      </section>
                     </ng-container>
                   </article>
                   <article class="competitive-actions-feed">
