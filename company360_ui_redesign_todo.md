@@ -127,7 +127,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 - [x] Show milestones on a horizontal or vertical execution timeline. Tracks render reviewed start/end dates when known and a dashed track when dates are absent; selected tracks open the execution detail. Verified with live Netflix data at desktop and mobile widths.
 - [ ] Group milestones by strategic initiative.
 - [ ] Use clear status states: expected, in progress, completed, delayed, missed, cancelled, unverifiable.
-- [ ] Show expected versus actual dates where available.
+- [x] Show expected versus actual dates where available. The execution rail displays source-backed expected windows and the detail view exposes dated status history when supplied.
 - [ ] Add linked promises, KPIs, capital allocation, acquisitions, and earnings events.
 - [ ] Acceptance: users should see whether a strategic decision is actually progressing.
 
