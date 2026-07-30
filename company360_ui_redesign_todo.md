@@ -136,7 +136,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 ### UI Name: Capital Deployment Map
 
 - [x] Replace dense rows with allocation buckets: acquisitions, buybacks, dividends, debt, capex, R&D, other investments.
-- [ ] Add a period selector with annual/quarterly toggle.
+- [x] Add a period selector with annual/quarterly toggle. The cadence control reloads the selected reviewed period and was browser-tested with live Netflix data.
 - [x] Add a capital-flow visual showing where cash was directed. The allocation mix is now a proportional, category-labelled flow ledger with the reported amount and deployment share visible beside each bar. Verified with live Netflix data at desktop and mobile widths.
 - [x] Separate reported cash-flow facts from strategic interpretation.
 - [ ] Link large allocations to acquisitions, product launches, geographic expansion, or milestones when available.
@@ -220,7 +220,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 
 ### UI Name: Valuation Context Lens
 
-- [ ] Use measure tabs: market cap, P/S, P/E, EV, EV/revenue, and unavailable inputs.
+- [x] Use measure tabs: market cap, P/S, P/E, EV, EV/revenue, and unavailable inputs. The tabs reload the selected source-backed context and were browser-tested with live Netflix data.
 - [x] Show formulas and numerator/denominator inputs in a compact calculation drawer. The calculation ledger groups every reviewed measure with its formula and reported inputs.
 - [x] Add peer context cards and event-aligned context around major strategic moves. Peer/range and dated-event context are separate research panels.
 - [x] Label everything as context, not investment advice. The route header and research guardrail make this explicit once, without turning the page into advice.
