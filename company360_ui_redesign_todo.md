@@ -95,7 +95,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 - [ ] Remove company-name repetition inside event copy because the page is already company-scoped.
 - [x] Redesign peer normalization as a comparison-readiness panel: comparable now, blocked but fixable, not comparable.
 - [x] Add a "Why this metric matters" note for operating metrics versus general financial facts.
-- [ ] Acceptance: the page should not freeze with large KPI sets and should show useful context without long raw lists.
+- [x] Acceptance: the page remains responsive with Netflix's 49 tracked metrics and 542 reviewed observations, updates the selected series, and keeps supporting context behind compact controls rather than raw lists. Verified at desktop and mobile widths.
 
 ## 4. Management Promise Tracker
 
