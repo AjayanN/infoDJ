@@ -349,7 +349,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 - [ ] Add severity and freshness indicators.
 - [ ] Link every risk signal to source-backed evidence and related feature pages.
 - [x] Separate observed risk disclosure from inferred impact.
-- [ ] Acceptance: users should understand what requires attention and what is only a disclosed uncertainty.
+- [x] Acceptance: users can distinguish observed disclosure from non-causal inferred impact, group signals by decision domain, and open the relevant Company 360 context. Verified at desktop and mobile widths, including a live UnitedHealth Group regulatory context action.
 
 ## Suggested Implementation Waves
 
