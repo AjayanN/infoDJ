@@ -2935,6 +2935,8 @@ th {
   margin-bottom: 12px;
 }
 
+.briefing-evidence-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+
 .briefing-evidence-strip h3 {
   margin: 0;
 }

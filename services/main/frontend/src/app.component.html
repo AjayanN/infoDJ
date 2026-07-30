@@ -781,7 +781,7 @@
                     </div>
                   </section>
                   <section class="briefing-evidence-strip" aria-labelledby="company-evidence-strip-heading">
-                    <header><div><p class="section-kicker">Current evidence</p><h3 id="company-evidence-strip-heading">Changes, reported facts, and review coverage</h3></div><button type="button" class="ghost-button" (click)="openCompanyDashboard('latest-moves')">View all moves</button></header>
+                    <header><div><p class="section-kicker">Current evidence</p><h3 id="company-evidence-strip-heading">Changes, reported facts, and review coverage</h3></div><div class="briefing-evidence-actions"><button type="button" class="ghost-button" (click)="openCompanyDashboard('latest-moves')">Moves</button><button type="button" class="ghost-button" (click)="openEarnings(companyView.company.slug)">Earnings</button><button type="button" class="ghost-button" (click)="openStrategyMilestones(companyView.company.slug)">Milestones</button><button type="button" class="ghost-button" (click)="openCompanyDashboard('risk-signals')">Risks</button></div></header>
                     <div class="briefing-evidence-grid">
                       <article class="briefing-evidence-tile activity-tile">
                         <span>Latest moves</span>
