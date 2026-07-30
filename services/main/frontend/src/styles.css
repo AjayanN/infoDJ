@@ -4820,6 +4820,9 @@ th {
 .regulatory-toolbar { background: #f5f2f6; display: flex; flex-wrap: wrap; gap: 14px; padding: 16px; }
 .regulatory-toolbar label { flex: 1 1 200px; min-width: 0; }
 .regulatory-evidence-counters { border-top: 2px solid #5f4c69; }
+.regulatory-evidence-counters .metric-card { border-radius: 0; border-right: 1px solid var(--line); box-shadow: none; display: grid; gap: 4px; min-width: 0; padding: 12px 14px; }
+.regulatory-evidence-counters .metric-card strong { font-size: 1.05rem; }
+.regulatory-evidence-counters .metric-card span { font-size: .74rem; line-height: 1.3; }
 .regulatory-docket-workspace, .regulatory-review-workspace { gap: 0; }
 .regulatory-docket-workspace > article, .regulatory-review-workspace > article { border-bottom: 1px solid var(--line); min-width: 0; padding: 22px 24px 22px 0; }
 .regulatory-docket-workspace > article + article, .regulatory-review-workspace > article + article { border-left: 1px solid var(--line); padding-left: 24px; padding-right: 0; }
