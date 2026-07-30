@@ -1665,12 +1665,12 @@
                 <section class="dashboard-two-column product-timeline-workspace">
                   <article class="product-change-timeline">
                     <div class="panel-header"><div><p class="section-kicker">Timeline</p><h2>Launches, updates, packaging, and pricing changes</h2></div></div>
-                    <div class="result-row" *ngFor="let change of productView.changes">
-                      <strong>{{ change.title }}</strong>
-                      <span>{{ change.change_type_label }} · announced {{ change.announcement_date || 'date unavailable' }} · effective {{ change.effective_date || 'date unavailable' }}</span>
+                    <article class="product-change-event" *ngFor="let change of productView.changes">
+                      <div class="product-change-dates"><span><b>Announced</b>{{ change.announcement_date || 'Not dated' }}</span><i></i><span><b>Effective</b>{{ change.effective_date || 'Not dated' }}</span></div>
+                      <div><strong>{{ change.title }}</strong><span>{{ change.change_type_label }}</span></div>
                       <p>{{ change.evidence_text }}</p>
                       <a *ngIf="change.source" [href]="change.source.url" target="_blank" rel="noopener">Open source</a>
-                    </div>
+                    </article>
                     <div class="empty-state unavailable-state" *ngIf="productView.changes.length === 0">No reviewed product or pricing timeline changes are available.</div>
                   </article>
                   <article class="product-price-context">

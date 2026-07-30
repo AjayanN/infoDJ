@@ -157,7 +157,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 
 ### UI Name: Product Timeline Studio
 
-- [ ] Show product launches, discontinuations, packaging changes, and price changes on one timeline.
+- [x] Show product launches, discontinuations, packaging changes, and price changes on one timeline. Each event renders announcement and effective-date markers without implying unavailable dates. Verified with live Netflix data at desktop and mobile widths.
 - [x] Add product family cards for current offerings. Offerings are grouped by their reviewed product type and retain availability, geography, customer segment, price-count, and description. Verified with live Netflix data at desktop and mobile widths.
 - [ ] Use before/after cards for pricing or package changes.
 - [ ] Separate confirmed list prices from missing price-context states.
