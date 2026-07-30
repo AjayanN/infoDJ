@@ -118,7 +118,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 - [ ] Add a "Guidance changed?" badge with up, down, reaffirmed, withdrawn, or unavailable. The current earnings contract only exposes forecast-versus-actual comparisons; it does not expose a source-backed raised/cut/reaffirmed/withdrawn direction, so the requested badge cannot be derived safely.
 - [x] Add KPI movement chips linked back to the Operating Metrics Workbench. The earnings browser flow opens the selected KPI series in company scope.
 - [x] Add "questions to monitor next quarter" when evidence suggests open items.
-- [ ] Acceptance: the page should read like an analyst briefing, not a filing excerpt dump.
+- [x] Acceptance: users can select a reviewed quarter and scan measured outcome, period changes, management context, guidance limitations, risks, and strategic context, with linked KPIs opening in company scope. Verified with live Netflix data at desktop and mobile widths.
 
 ## 6. Strategy Milestone Tracker
 
