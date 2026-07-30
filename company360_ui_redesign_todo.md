@@ -172,7 +172,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 - [x] Add a selected-deal detail panel with target, price, rationale, synergies, integration progress, and outcome.
 - [x] Use a deal timeline for announcement, close, integration updates, impairment/divestiture, or outcome review.
 - [x] Add clear unavailable cards for missing price, payment form, approval, synergies, and integration results.
-- [ ] Acceptance: users should know what was bought, why, and whether the promised deal logic was later supported.
+- [x] Acceptance: users should know what was bought, why, and whether the promised deal logic was later supported.
 
 ## 11. Customer and Supplier Dependency
 
