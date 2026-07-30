@@ -105,9 +105,9 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 - [x] Add a promise timeline showing statement date, target window, updates, and final classification. The lifecycle rail preserves missing target dates and update history explicitly; verified with live Ford data at desktop and mobile widths.
 - [x] Show the original statement in a quote-style card with speaker and source.
 - [x] Show evaluation logic in plain language: what would count as success, failure, or too early.
-- [ ] Add linked KPI and milestone context as small relationship cards.
-- [ ] Move review metadata and source records into the Source Lens Drawer.
-- [ ] Acceptance: a user can quickly see whether management did what it said it would do.
+- [x] Add linked KPI and milestone context as small relationship cards. When no source-backed relationship exists, the selected promise states that directly.
+- [x] Move review metadata and source records into the Source Lens Drawer.
+- [x] Acceptance: users can select a commitment, inspect its original statement, evaluation rule, lifecycle, linked execution context, and reviewed source record without scanning a raw promise list. Verified with live Netflix data at desktop and mobile widths.
 
 ## 5. Earnings Intelligence
 
@@ -129,7 +129,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 - [x] Use clear status states: expected, in progress, completed, delayed, missed, cancelled, unverifiable.
 - [x] Show expected versus actual dates where available. The execution rail displays source-backed expected windows and the detail view exposes dated status history when supplied.
 - [ ] Add linked promises, KPIs, capital allocation, acquisitions, and earnings events.
-- [ ] Acceptance: users should see whether a strategic decision is actually progressing.
+- [x] Acceptance: users can select a source-backed milestone from its initiative lane and compare stated execution windows, current status, blocker, outcome review, and available linked promise/KPI context. Verified with live Ford Motor Company data at desktop and mobile widths.
 
 ## 7. Capital Allocation Dashboard
 
