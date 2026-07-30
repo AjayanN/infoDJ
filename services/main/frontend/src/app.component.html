@@ -1448,9 +1448,13 @@
               </section>
 
               <section class="company-profile-controls capital-toolbar" aria-label="Capital allocation period controls">
+                <div class="capital-cadence-toggle" role="group" aria-label="Reporting cadence">
+                  <button type="button" [class.active]="capitalAllocationCadence === 'QUARTERLY'" (click)="setCapitalAllocationCadence('QUARTERLY')">Quarterly</button>
+                  <button type="button" [class.active]="capitalAllocationCadence === 'ANNUAL'" (click)="setCapitalAllocationCadence('ANNUAL')">Annual</button>
+                </div>
                 <label>Reporting period
                   <select [(ngModel)]="capitalAllocationPeriod">
-                    <option *ngFor="let period of allocationView.periods" [value]="period.key">{{ period.fiscal_period }} FY{{ period.fiscal_year }} · ended {{ period.period_end }}</option>
+                    <option *ngFor="let period of capitalPeriodsForCadence(allocationView)" [value]="period.key">{{ period.fiscal_period }} FY{{ period.fiscal_year }} · ended {{ period.period_end }}</option>
                   </select>
                 </label>
                 <button type="button" class="primary-button" (click)="reloadCapitalAllocation()">Open period</button>

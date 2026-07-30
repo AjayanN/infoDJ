@@ -303,6 +303,7 @@ class AppComponent {
   strategyMilestoneSlug = '';
   earningsPeriod = '';
   capitalAllocationPeriod = '';
+  capitalAllocationCadence = 'QUARTERLY';
   competitivePositionDate = '';
   competitiveRelationship = '';
   productPricingDate = '';
@@ -1511,6 +1512,19 @@ class AppComponent {
   reloadCapitalAllocation(): void {
     const company = this.capitalAllocation()?.company;
     if (company) this.openCapitalAllocation(company.slug, this.capitalAllocationPeriod);
+  }
+
+  capitalPeriodsForCadence(view: CapitalAllocationResponse) {
+    return view.periods.filter((period) => period.cadence === this.capitalAllocationCadence);
+  }
+
+  setCapitalAllocationCadence(cadence: string): void {
+    this.capitalAllocationCadence = cadence;
+    const view = this.capitalAllocation();
+    const period = view ? this.capitalPeriodsForCadence(view)[0] : null;
+    if (!period) return;
+    this.capitalAllocationPeriod = period.key;
+    this.reloadCapitalAllocation();
   }
 
   printCapitalAllocationBrief(): void {

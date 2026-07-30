@@ -4217,6 +4217,22 @@ th {
   min-width: 0;
 }
 
+.capital-cadence-toggle {
+  display: inline-flex;
+  min-width: max-content;
+}
+
+.capital-cadence-toggle button {
+  background: #e5edf1;
+  border: 1px solid #bdd0d9;
+  color: #365b69;
+  font-weight: 700;
+  padding: 9px 12px;
+}
+
+.capital-cadence-toggle button + button { border-left: 0; }
+.capital-cadence-toggle button.active { background: #286b84; border-color: #286b84; color: #fff; }
+
 .capital-deployment-brief,
 .capital-validation-strip,
 .capital-drilldown-ledger {
