@@ -4963,6 +4963,19 @@ th {
 .peer-activity-strip dd { color: #315b4a; font-size: 1rem; font-variant-numeric: tabular-nums; font-weight: 800; margin: 0; }
 .dashboard-scorecard-workbench { border-top: 3px solid #5f7f91; }
 .dashboard-scorecard-workbench .evidence-row { border-left: 4px solid #5f7f91; border-top: 0; }
+.strategy-scorecard-board { display: grid; gap: 0; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.strategy-scorecard-card { border-bottom: 1px solid var(--line); border-left: 4px solid #5f7f91; display: grid; gap: 12px; min-width: 0; padding: 16px; }
+.strategy-scorecard-card header { align-items: center; color: var(--muted); display: flex; font-size: .74rem; justify-content: space-between; }
+.strategy-scorecard-card header span { color: #3d6072; font-weight: 800; }
+.strategy-scorecard-card h3, .strategy-scorecard-card p { margin: 0; }
+.strategy-scorecard-card h3 { font-size: 1rem; line-height: 1.35; }
+.strategy-scorecard-card p { color: #52677e; font-size: .82rem; line-height: 1.45; }
+.scorecard-confidence { align-items: center; display: grid; gap: 5px; grid-template-columns: 1fr auto; }
+.scorecard-confidence > span { color: var(--muted); font-size: .67rem; font-weight: 800; text-transform: uppercase; }
+.scorecard-confidence > strong { color: #315b75; font-size: .86rem; font-variant-numeric: tabular-nums; }
+.scorecard-meter { background: #e2ebf1; grid-column: 1 / -1; height: 5px; overflow: hidden; }
+.scorecard-meter i { background: #5f7f91; display: block; height: 100%; min-width: 2px; }
+.strategy-scorecard-card footer { border-top: 1px solid var(--line); color: var(--muted); font-size: .72rem; padding-top: 10px; }
 .dashboard-peer-matrix { border-top: 3px solid #5c8b79; }
 .dashboard-peer-matrix .pattern-card { border-left: 4px solid #5c8b79; border-radius: 0; }
 .dashboard-impact-lab { border-top: 3px solid #aa7650; }

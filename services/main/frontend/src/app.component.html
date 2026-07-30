@@ -605,11 +605,12 @@
                         <h2 id="scorecard-heading">Evidence-backed scorecard candidates</h2>
                       </div>
                     </div>
-                    <div class="result-list dashboard-data-list" *ngIf="(dashboardSection('strategy-scorecard')?.items || []).length > 0; else dashboardGap">
-                      <article class="result-row evidence-row" *ngFor="let turn of dashboardSection('strategy-scorecard')?.items || []">
-                        <strong>{{ turn.company }} · {{ turn.title }}</strong>
-                        <span>{{ turn.start_date }} · {{ turn.source_count }} sources · confidence {{ turn.confidence_score | number:'1.2-2' }}</span>
+                    <div class="strategy-scorecard-board" *ngIf="(dashboardSection('strategy-scorecard')?.items || []).length > 0; else dashboardGap">
+                      <article class="strategy-scorecard-card" *ngFor="let turn of dashboardSection('strategy-scorecard')?.items || []">
+                        <header><span>{{ turn.company }}</span><small>{{ turn.start_date || 'Date unavailable' }}</small></header>
+                        <h3>{{ turn.title }}</h3>
                         <p>{{ turn.score_reason }}</p>
+                        <div class="scorecard-confidence"><span>Evidence confidence</span><strong>{{ turn.confidence_score | number:'1.2-2' }}</strong><div class="scorecard-meter" aria-hidden="true"><i [style.width.%]="(turn.confidence_score || 0) * 100"></i></div></div>
                         <div class="impact-window-grid" *ngIf="(turn.market_reaction || []).length > 0">
                           <div class="impact-line-chart" aria-hidden="true">
                             <svg viewBox="0 0 180 58" preserveAspectRatio="none">
@@ -624,6 +625,7 @@
                             </svg>
                           </div>
                         </div>
+                        <footer>{{ turn.source_count }} source records</footer>
                       </article>
                     </div>
                     <div class="pagination-row" *ngIf="(dashboardSection('strategy-scorecard')?.total_pages || 1) > 1">
