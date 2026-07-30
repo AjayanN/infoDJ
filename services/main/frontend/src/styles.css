@@ -4299,6 +4299,10 @@ th {
 .competitive-overlap-tags { display: flex; flex-wrap: wrap; gap: 5px; }
 .competitive-overlap-tags small { background: #eaf2f3; border: 1px solid #c5dadd; color: #2d626a; font-size: 11px; font-weight: 700; padding: 3px 5px; }
 
+.competitive-dimension-grid { border-top: 1px solid var(--line); display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); padding: 13px 0; }
+.competitive-dimension-grid > header { align-items: center; display: flex; grid-column: 1 / -1; justify-content: space-between; }.competitive-dimension-grid h3 { font-size: .75rem; margin: 0; text-transform: uppercase; }.competitive-dimension-grid > header span { background: #e5eff3; color: #2b6573; font-size: .72rem; font-weight: 700; min-width: 22px; padding: 3px 6px; text-align: center; }
+.competitive-dimension-cell { border-left: 3px solid #4f8398; min-width: 0; padding: 8px 0 8px 9px; }.competitive-dimension-cell strong { color: var(--ink); font-size: .8rem; }.competitive-dimension-cell p { color: var(--muted); font-size: .78rem; line-height: 1.4; margin: 4px 0 0; }
+
 .competitive-matrix-workspace,
 .competitive-evidence-balance {
   gap: 0;

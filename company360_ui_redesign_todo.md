@@ -148,7 +148,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 
 - [x] Show competitors as a relationship battlefield that groups source-backed peers by direct, substitute, platform/channel, supplier/customer, and other configured relationship types. Each peer retains its scope, geography, overlap, evidence, and confidence context. Verified with live Netflix data at desktop and mobile widths.
 - [ ] Add filters for relationship type, geography, product overlap, and source confidence.
-- [ ] Add a product/pricing overlap matrix.
+- [x] Add a product/pricing overlap matrix. Source-backed peer intersections now render as a dimension grid for product, customer, geography, scale, and pricing comparisons. Verified with live Netflix data at desktop and mobile widths.
 - [ ] Add a competitive response timeline with source-backed actions.
 - [ ] Add moat-change cards: strengthening, weakening, mixed, unavailable.
 - [ ] Acceptance: users should understand who the company competes with and where the pressure is coming from.
