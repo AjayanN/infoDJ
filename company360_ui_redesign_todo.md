@@ -339,7 +339,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 - [x] Add filters for product, pricing, acquisition, geography, leadership, regulation, capital allocation, and competitive response.
 - [x] Add "why this matters" snippets that link to the relevant Company 360 feature.
 - [ ] Deduplicate repeated source mentions and avoid raw ingestion labels.
-- [ ] Acceptance: users should see recent source-backed strategic activity without scanning all dashboards.
+- [x] Acceptance: users can scan type/date-grouped source-backed moves, filter the feed, and open the relevant Company 360 context from an event. Verified at desktop and mobile widths, including a live Newmont context action.
 
 ## 27. Risk Signals
 
