@@ -4470,14 +4470,15 @@ th {
   padding: 8px 10px;
 }
 
-.competitive-actions-feed .result-row {
-  border-left: 3px solid #5f8fb4;
-  border-top: 0;
-}
-
-.competitive-moat-evidence .result-row {
-  border-left: 3px solid #338464;
-}
+.competitive-action-timeline { border-left: 2px solid #8fa6b7; display: grid; gap: 12px; margin: 12px 0 0 8px; padding-left: 14px; }
+.competitive-action-timeline article { display: grid; gap: 4px; grid-template-columns: 100px minmax(0, 1fr); position: relative; }
+.competitive-action-timeline article::before { background: #4f8398; border: 2px solid #f7f9fb; border-radius: 50%; content: ''; height: 8px; left: -20px; position: absolute; top: 4px; width: 8px; }
+.competitive-action-timeline span { color: var(--muted); font-size: .73rem; }.competitive-action-timeline p { margin: 0; }
+.competitive-moat-board { border-top: 3px solid #6f8498; display: grid; gap: 12px; padding: 18px 0; }
+.competitive-moat-board > header { align-items: center; display: flex; justify-content: space-between; }.competitive-moat-board h2 { margin: 0; }
+.competitive-moat-board > header > strong { background: #edf2f5; color: #526a79; font-size: .78rem; padding: 5px 8px; }.competitive-moat-board > header > strong.strengthening { background:#e8f4ed; color:#387153; }.competitive-moat-board > header > strong.weakening { background:#f9e9e5; color:#913d2e; }.competitive-moat-board > header > strong.mixed { background:#f5f0e8; color:#80613e; }
+.competitive-moat-counts { display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }.competitive-moat-counts article { border-top: 3px solid #438467; display: grid; gap: 3px; padding: 9px; }.competitive-moat-counts article.opposing { border-color:#b46652; }.competitive-moat-counts strong { font-size: 1.25rem; }.competitive-moat-counts span { color:var(--muted); font-size:.75rem; }
+.competitive-evidence-card { border-left: 3px solid #438467; display: grid; gap: 5px; padding: 10px 12px; }.competitive-evidence-card.opposing { border-color:#b46652; }.competitive-evidence-card p { margin:0; }
 
 .competitive-pressure-evidence .result-row {
   border-left: 3px solid #ba6d55;
@@ -4505,6 +4506,8 @@ th {
     border-top: 1px solid var(--line);
     padding: 18px 0;
   }
+  .competitive-action-timeline article { grid-template-columns: 1fr; }
+  .competitive-moat-board > header { align-items: start; flex-direction: column; gap: 8px; }
 }
 
 /* Product and pricing is an offering catalogue with a dated change studio. */

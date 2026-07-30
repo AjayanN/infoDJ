@@ -1602,22 +1602,26 @@
                     </ng-container>
                   </article>
                   <article class="competitive-actions-feed">
-                    <div class="panel-header"><div><p class="section-kicker">Market share</p><h2>Series and methodology</h2></div></div>
+                    <div class="panel-header"><div><p class="section-kicker">Competitive response</p><h2>Reviewed actions over time</h2></div><span>{{ competitiveView.competitive_actions.length }} actions</span></div>
                     <div class="empty-state unavailable-state" *ngIf="competitiveView.market_share.status === 'unavailable'">{{ competitiveView.market_share.reason }}</div>
-                    <div class="result-row" *ngFor="let action of competitiveView.competitive_actions"><strong>{{ action.event_type }}</strong><span>{{ action.event_date }}</span><p>{{ action.actual_change }}</p></div>
+                    <div class="competitive-action-timeline" *ngIf="competitiveView.competitive_actions.length > 0"><article *ngFor="let action of competitiveView.competitive_actions"><span>{{ action.event_date || 'Date unavailable' }}</span><div><strong>{{ promiseLabel(action.event_type) }}</strong><p>{{ action.actual_change || action.source_claim }}</p></div></article></div>
                     <div class="empty-state" *ngIf="competitiveView.competitive_actions.length === 0">No reviewed competitive actions are available for this company yet.</div>
                   </article>
                 </section>
 
+                <section class="competitive-moat-board" aria-label="Competitive moat evidence balance">
+                  <header><div><p class="section-kicker">Moat change</p><h2>Supporting and opposing evidence</h2></div><strong [class.strengthening]="competitiveView.moat_evidence.length > 0 && competitiveView.opposing_evidence.length === 0" [class.weakening]="competitiveView.moat_evidence.length === 0 && competitiveView.opposing_evidence.length > 0" [class.mixed]="competitiveView.moat_evidence.length > 0 && competitiveView.opposing_evidence.length > 0">{{ competitiveView.moat_evidence.length > 0 && competitiveView.opposing_evidence.length > 0 ? 'Mixed' : competitiveView.moat_evidence.length > 0 ? 'Strengthening evidence' : competitiveView.opposing_evidence.length > 0 ? 'Weakening evidence' : 'Unavailable' }}</strong></header>
+                  <div class="competitive-moat-counts"><article class="supporting"><strong>{{ competitiveView.moat_evidence.length }}</strong><span>supporting signals</span></article><article class="opposing"><strong>{{ competitiveView.opposing_evidence.length }}</strong><span>pressure signals</span></article></div>
+                </section>
                 <section class="dashboard-two-column competitive-evidence-balance">
                   <article class="competitive-moat-evidence">
                     <div class="panel-header"><div><p class="section-kicker">Moat evidence</p><h2>Supporting evidence</h2></div></div>
-                    <div class="result-row" *ngFor="let item of competitiveView.moat_evidence"><strong>{{ item.peer_name || item.label }}</strong><p>{{ item.description }}</p></div>
+                    <article class="competitive-evidence-card supporting" *ngFor="let item of competitiveView.moat_evidence"><strong>{{ item.peer_name || item.label }}</strong><p>{{ item.description }}</p></article>
                     <div class="empty-state" *ngIf="competitiveView.moat_evidence.length === 0">No reviewed moat evidence is available.</div>
                   </article>
                   <article class="competitive-pressure-evidence">
                     <div class="panel-header"><div><p class="section-kicker">Opposing evidence</p><h2>Pressure and uncertainty</h2></div></div>
-                    <div class="result-row conflict-row" *ngFor="let item of competitiveView.opposing_evidence"><strong>{{ item.peer_name || item.label }}</strong><p>{{ item.description }}</p></div>
+                    <article class="competitive-evidence-card opposing" *ngFor="let item of competitiveView.opposing_evidence"><strong>{{ item.peer_name || item.label }}</strong><p>{{ item.description }}</p></article>
                     <div class="empty-state" *ngIf="competitiveView.opposing_evidence.length === 0">No reviewed opposing evidence is available.</div>
                   </article>
                 </section>
