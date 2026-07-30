@@ -438,14 +438,36 @@
                         <p class="section-kicker">Event scanner</p>
                         <h2 id="latest-moves-heading">Latest strategic moves</h2>
                       </div>
+                      <span class="panel-meta" *ngIf="dashboardCompanySlug()">Company scope</span>
                     </div>
-                    <div class="result-list dashboard-data-list" *ngIf="(dashboardSection('latest-moves')?.items || []).length > 0; else dashboardGap">
-                      <article class="result-row evidence-row" *ngFor="let event of dashboardSection('latest-moves')?.items || []">
-                        <strong>{{ event.company }} · {{ event.event_type }}</strong>
-                        <span>{{ event.event_date }} · {{ event.review_status }} · {{ event.source_count }} sources</span>
-                        <p>{{ event.actual_change || event.source_claim }}</p>
-                      </article>
+                    <div class="latest-move-filterbar" *ngIf="(dashboardSection('latest-moves')?.items || []).length > 0">
+                      <div class="segmented latest-move-filters" role="tablist" aria-label="Filter latest moves">
+                        <button
+                          type="button"
+                          *ngFor="let filter of latestMoveFilters()"
+                          [class.active]="latestMoveFilter() === filter.id"
+                          [attr.aria-selected]="latestMoveFilter() === filter.id"
+                          (click)="setLatestMoveFilter(filter.id)"
+                        >{{ filter.label }}</button>
+                      </div>
                     </div>
+                    <div class="latest-move-board" *ngIf="latestMoveGroups(dashboardSection('latest-moves')?.items || []).length > 0; else latestMoveGap">
+                      <section class="latest-move-lane" *ngFor="let group of latestMoveGroups(dashboardSection('latest-moves')?.items || [])">
+                        <header><strong>{{ group.label }}</strong><span>{{ group.events.length }} {{ group.events.length === 1 ? 'event' : 'events' }}</span></header>
+                        <article class="latest-move-card" *ngFor="let event of group.events">
+                          <header><span>{{ event.event_date || 'Date unavailable' }}</span><small>{{ event.source_count }} sources</small><small>confidence {{ event.confidence_score | number:'1.2-2' }}</small></header>
+                          <h3>{{ event.company }}</h3>
+                          <p>{{ event.actual_change || event.source_claim }}</p>
+                          <footer *ngIf="event.decision_theme"><span>Decision theme</span>{{ promiseLabel(event.decision_theme) }}</footer>
+                        </article>
+                      </section>
+                    </div>
+                    <ng-template #latestMoveGap>
+                      <div class="empty-state unavailable-state" *ngIf="(dashboardSection('latest-moves')?.items || []).length > 0; else dashboardGap">
+                        <strong>No moves match this category.</strong>
+                        <span>Choose another category to review the available source-backed events.</span>
+                      </div>
+                    </ng-template>
                     <div class="pagination-row" *ngIf="(dashboardSection('latest-moves')?.total_pages || 1) > 1">
                       <span>{{ dashboardSectionRange('latest-moves') }}</span>
                       <button type="button" class="ghost-button" (click)="setDashboardSectionPage('latest-moves', (dashboardSection('latest-moves')?.page || 1) - 1)" [disabled]="!dashboardSection('latest-moves')?.has_previous">Previous</button>

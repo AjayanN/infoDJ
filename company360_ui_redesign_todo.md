@@ -335,8 +335,8 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 
 ### UI Name: Strategic Moves Feed
 
-- [ ] Show company-scoped latest moves as an event feed grouped by event type and date.
-- [ ] Add filters for product, pricing, acquisition, geography, leadership, regulation, capital allocation, and competitive response.
+- [x] Show company-scoped latest moves as an event feed grouped by event type and date.
+- [x] Add filters for product, pricing, acquisition, geography, leadership, regulation, capital allocation, and competitive response.
 - [ ] Add "why this matters" snippets that link to the relevant Company 360 feature.
 - [ ] Deduplicate repeated source mentions and avoid raw ingestion labels.
 - [ ] Acceptance: users should see recent source-backed strategic activity without scanning all dashboards.

@@ -120,6 +120,8 @@ type ValueFlowDrag = { nodeKey: string; space: DOMRect } | null;
 type ValueFlowFocus = { type: 'edge' | 'node'; key: string } | null;
 type ValueFlowGraph = { nodes: ValueFlowNode[]; edges: ValueFlowEdge[] };
 type KpiEventGroup = { type: string; label: string; count: number; latestDate: string; events: DashboardEvent[]; hiddenCount: number };
+type LatestMoveFilter = 'all' | 'product' | 'pricing' | 'acquisition' | 'geography' | 'leadership' | 'regulation' | 'capital' | 'competition';
+type LatestMoveGroup = { type: string; label: string; events: DashboardEvent[] };
 type KpiMetricGroup = { key: string; label: string; variants: KpiDefinition[]; selected: boolean; defaultSlug: string };
 type BlockedKpiPeer = OperatingKpiResponse['blocked_peer_metrics'][number];
 type KpiBlockerReason = { key: string; label: string; count: number };
@@ -182,6 +184,7 @@ class AppComponent {
   activePage = signal<AppPage>('dashboard');
   dashboardView = signal<DashboardViewId>('company-intelligence');
   dashboardCompanySlug = signal('');
+  latestMoveFilter = signal<LatestMoveFilter>('all');
   menuOpen = signal(false);
   token = signal(localStorage.getItem('infodj_token') || '');
   currentUser = signal<CurrentUser | null>(null);
@@ -768,6 +771,52 @@ class AppComponent {
     const start = (section.page - 1) * section.page_size + 1;
     const end = Math.min(section.page * section.page_size, section.eligible_count);
     return `${start}-${end} of ${section.eligible_count}`;
+  }
+
+  setLatestMoveFilter(filter: LatestMoveFilter): void {
+    this.latestMoveFilter.set(filter);
+  }
+
+  latestMoveFilters(): { id: LatestMoveFilter; label: string }[] {
+    return [
+      { id: 'all', label: 'All moves' },
+      { id: 'product', label: 'Product' },
+      { id: 'pricing', label: 'Pricing' },
+      { id: 'acquisition', label: 'Acquisition' },
+      { id: 'geography', label: 'Geography' },
+      { id: 'leadership', label: 'Leadership' },
+      { id: 'regulation', label: 'Regulation' },
+      { id: 'capital', label: 'Capital' },
+      { id: 'competition', label: 'Competition' }
+    ];
+  }
+
+  latestMoveGroups(events: DashboardEvent[]): LatestMoveGroup[] {
+    const filter = this.latestMoveFilter();
+    const visible = events.filter((event) => filter === 'all' || this.latestMoveCategory(event) === filter);
+    const byType = new Map<string, DashboardEvent[]>();
+    for (const event of visible) {
+      const type = event.event_type || 'UNCLASSIFIED';
+      byType.set(type, [...(byType.get(type) || []), event]);
+    }
+    return [...byType.entries()].map(([type, groupedEvents]) => ({
+      type,
+      label: this.promiseLabel(type),
+      events: groupedEvents
+    }));
+  }
+
+  latestMoveCategory(event: DashboardEvent): LatestMoveFilter {
+    const terms = `${event.event_type} ${event.decision_theme}`.toLowerCase();
+    if (/price|pricing|packag|subscription/.test(terms)) return 'pricing';
+    if (/product|launch|platform|service|feature/.test(terms)) return 'product';
+    if (/acqui|merger|deal|purchase/.test(terms)) return 'acquisition';
+    if (/geograph|market entry|international|region|country/.test(terms)) return 'geography';
+    if (/leadership|chief executive|ceo|executive|board|appoint/.test(terms)) return 'leadership';
+    if (/regulat|litigat|legal|antitrust|compliance/.test(terms)) return 'regulation';
+    if (/capital|dividend|buyback|repurchase|investment|capex/.test(terms)) return 'capital';
+    if (/compet|rival|moat|market share/.test(terms)) return 'competition';
+    return 'all';
   }
 
   searchRange(meta: PaginationMeta): string {
