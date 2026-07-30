@@ -4667,10 +4667,20 @@ th {
 .leadership-tenure-track > p { grid-column: 1 / -1; margin: 7px 0 0; }
 .tenure-flags { display: flex; flex-wrap: wrap; gap: 6px; grid-column: 1 / -1; margin-top: 9px; }
 .tenure-flags span { background: #f0eaf6; color: #5c4675; font-size: .7rem; padding: 3px 6px; }
+.leadership-undated-register { border-top: 2px solid #a98dc0; column-gap: 22px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 18px; }
+.leadership-undated-register > header { align-items: baseline; display: flex; grid-column: 1 / -1; justify-content: space-between; padding: 11px 0; }
+.leadership-undated-register > header strong { color: #5c4675; font-size: .84rem; }
+.leadership-undated-register > header span { color: var(--muted); font-size: .72rem; }
+.leadership-undated-register > article { border-top: 1px solid var(--line); display: grid; gap: 4px; min-width: 0; padding: 14px 0 16px; }
+.undated-record-heading { align-items: baseline; display: flex; gap: 9px; justify-content: space-between; }
+.undated-record-heading span { color: #76529b; font-size: .68rem; text-transform: uppercase; }
+.leadership-undated-register > article > span { color: var(--muted); font-size: .78rem; }
+.leadership-undated-register > article > p { margin: 3px 0 0; }
+.leadership-undated-register .tenure-flags { margin-top: 4px; }
 .leadership-decision-record .result-row { border-left: 3px solid #b7785f; border-top: 0; }
 .leadership-attribution-guardrail { background: #faf7fc; }
 .leadership-evidence-register .evidence-card { border-top: 2px solid #8666a8; }
-@media (max-width: 760px) { .leadership-command { display: grid; gap: 16px; padding: 22px 16px; } .leadership-tenure-workspace > article, .leadership-tenure-workspace > article + article, .leadership-guardrail-workspace > article, .leadership-guardrail-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } .leadership-tenure-track { grid-template-columns: 1fr; row-gap: 7px; } .tenure-line { grid-row: 2; } .tenure-end { text-align: left; } .tenure-role { margin-top: 4px; } }
+@media (max-width: 760px) { .leadership-command { display: grid; gap: 16px; padding: 22px 16px; } .leadership-tenure-workspace > article, .leadership-tenure-workspace > article + article, .leadership-guardrail-workspace > article, .leadership-guardrail-workspace > article + article { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0; } .leadership-tenure-track { grid-template-columns: 1fr; row-gap: 7px; } .tenure-line { grid-row: 2; } .tenure-end { text-align: left; } .tenure-role { margin-top: 4px; } .leadership-undated-register { grid-template-columns: minmax(0, 1fr); } }
 
 /* Themes are an exposure radar with an evidence board, not a taxonomy dump. */
 .theme-command { background: #334552; color: #f8fbff; padding: 26px 30px; }

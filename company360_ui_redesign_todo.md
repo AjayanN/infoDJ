@@ -198,12 +198,12 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 
 ### UI Name: Leadership Tenure Timeline
 
-- [x] Show executive roles and tenure as timeline bars. Dated roles render as bounded tracks; roles without reviewed dates render as dashed, explicitly undated tracks. Verified with live Ford Motor Company data at desktop and mobile widths.
+- [x] Show executive roles and tenure as timeline bars. Dated roles render as bounded tracks; roles without reviewed dates render in a clearly labelled evidence register rather than a synthetic timeline. Verified with live Ford Motor Company data at desktop and mobile widths.
 - [x] Add a leadership-change timeline for appointments, departures, succession, and board changes. Undated records are visibly treated as date-unavailable rather than assigned a false tenure date.
 - [ ] Link major decisions and priorities to each leader only when source-backed.
-- [ ] Show performance during tenure as context, with non-causation language.
-- [ ] Add source gaps for missing tenure dates, compensation, board context, and decision links.
-- [ ] Acceptance: users should see who led, when, what priorities were stated, and what cannot be attributed.
+- [x] Show performance during tenure as context, with non-causation language.
+- [x] Add source gaps for missing tenure dates, compensation, board context, and decision links.
+- [x] Acceptance: users can distinguish dated tenure from undated role evidence, review source gaps and non-causation guardrails, and see when priorities or decision links are not reviewed. Verified with live Ford Motor Company data at desktop and mobile widths.
 
 ## 14. Ownership and Insider Activity
 

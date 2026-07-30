@@ -2814,6 +2814,14 @@ class AppComponent {
     return labels[status] || this.promiseLabel(status);
   }
 
+  datedLeadershipRoles(roles: LeadershipDecisionResponse['roles']): LeadershipDecisionResponse['roles'] {
+    return roles.filter((role) => Boolean(role.start_date || role.end_date));
+  }
+
+  undatedLeadershipRoles(roles: LeadershipDecisionResponse['roles']): LeadershipDecisionResponse['roles'] {
+    return roles.filter((role) => !role.start_date && !role.end_date);
+  }
+
   kpiBarWidth(value: number, series: { value: number }[]): number {
     const maximum = Math.max(...series.map((row) => Math.abs(row.value)), 1);
     return Math.max(2, Math.round((Math.abs(value) / maximum) * 100));

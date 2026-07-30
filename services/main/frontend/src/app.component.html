@@ -2127,8 +2127,8 @@
               <section class="dashboard-two-column leadership-tenure-workspace">
                 <article class="panel leadership-tenure-timeline">
                   <div class="panel-header"><div><p class="section-kicker">Roles</p><h2>Tenure tracks</h2></div><span>{{ leaderView.coverage.dated_role_count }} dated</span></div>
-                  <div class="leadership-tenure-tracks" *ngIf="leaderView.roles.length > 0">
-                    <article class="leadership-tenure-track" *ngFor="let role of leaderView.roles" [class.undated]="!role.start_date">
+                  <div class="leadership-tenure-tracks" *ngIf="datedLeadershipRoles(leaderView.roles).length > 0">
+                    <article class="leadership-tenure-track" *ngFor="let role of datedLeadershipRoles(leaderView.roles)">
                       <div class="tenure-date tenure-start">{{ role.start_date || 'Date unavailable' }}</div>
                       <div class="tenure-line" aria-hidden="true"><span></span></div>
                       <div class="tenure-date tenure-end">{{ role.end_date || 'Current / end unavailable' }}</div>
@@ -2137,6 +2137,11 @@
                       <div class="tenure-flags"><span *ngIf="role.interim_status">Interim</span><span *ngIf="role.co_leadership">Co-leadership</span><span *ngFor="let priority of role.stated_priorities">{{ priority }}</span></div>
                     </article>
                   </div>
+                  <div class="empty-state unavailable-state" *ngIf="leaderView.roles.length > 0 && datedLeadershipRoles(leaderView.roles).length === 0">No reviewed tenure dates are available for the selected roles.</div>
+                  <section class="leadership-undated-register" *ngIf="undatedLeadershipRoles(leaderView.roles).length > 0">
+                    <header><strong>Undated leadership context</strong><span>{{ undatedLeadershipRoles(leaderView.roles).length }} records</span></header>
+                    <article *ngFor="let role of undatedLeadershipRoles(leaderView.roles)"><div class="undated-record-heading"><strong>{{ role.leader_name }}</strong><span>Dates unavailable</span></div><span>{{ role.role_title || role.role_type_label || 'Role unavailable' }}</span><p>{{ role.evidence_text }}</p><div class="tenure-flags"><span *ngIf="role.interim_status">Interim</span><span *ngIf="role.co_leadership">Co-leadership</span><span *ngFor="let priority of role.stated_priorities">{{ priority }}</span></div></article>
+                  </section>
                   <div class="empty-state unavailable-state" *ngIf="leaderView.roles.length === 0">No reviewed leadership roles are available for the selected filters.</div>
                 </article>
 
