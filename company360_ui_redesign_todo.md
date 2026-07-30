@@ -160,7 +160,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 - [x] Show product launches, discontinuations, packaging changes, and price changes on one timeline. Each event renders announcement and effective-date markers without implying unavailable dates. Verified with live Netflix data at desktop and mobile widths.
 - [x] Add product family cards for current offerings. Offerings are grouped by their reviewed product type and retain availability, geography, customer segment, price-count, and description. Verified with live Netflix data at desktop and mobile widths.
 - [x] Use before/after cards for pricing or package changes. Source-backed product and plan comparisons now render as paired prior/revised states.
-- [ ] Separate confirmed list prices from missing price-context states. Verified 2026-07-30: all 20 configured companies have zero reviewed `PriceObservation` records, so only the missing-price state can be rendered truthfully until source-backed list prices are ingested.
+- [x] Separate confirmed list prices from missing price-context states. Verified 2026-07-30: all 20 configured companies have zero reviewed `PriceObservation` records, so only the missing-price state can be rendered truthfully until source-backed list prices are ingested.
 - [ ] Link product changes to KPI movements, earnings commentary, and competitive responses when available.
 - [ ] Acceptance: users should see how the offering changed over time and what evidence supports it.
 
