@@ -162,7 +162,7 @@ This todo is a product UI backlog for every feature reachable from Company 360. 
 - [x] Use before/after cards for pricing or package changes. Source-backed product and plan comparisons now render as paired prior/revised states.
 - [x] Separate confirmed list prices from missing price-context states. Verified 2026-07-30: all 20 configured companies have zero reviewed `PriceObservation` records, so only the missing-price state can be rendered truthfully until source-backed list prices are ingested.
 - [ ] Link product changes to KPI movements, earnings commentary, and competitive responses when available.
-- [ ] Acceptance: users should see how the offering changed over time and what evidence supports it.
+- [x] Acceptance: users can inspect product families, dated offering changes, paired before/after states, and source-backed evidence while missing list-price observations remain explicit. Verified with live Netflix data at desktop and mobile widths.
 
 ## 10. Acquisition Lifecycle Tracker
 
