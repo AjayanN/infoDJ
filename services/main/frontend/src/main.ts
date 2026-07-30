@@ -130,6 +130,7 @@ type ProductOfferingFamily = { label: string; offerings: ProductPricingResponse[
 type DependencyRelationshipLane = { key: string; label: string; dependencies: CustomerSupplierDependencyResponse['dependencies'] };
 type GeographicMarketLane = { key: string; label: string; description: string; markets: GeographicExpansionResponse['markets'] };
 type AcquisitionLifecycleLane = { label: string; deals: AcquisitionLifecycleResponse['deals'] };
+type MilestoneInitiativeLane = { label: string; description: string; milestones: StrategyMilestoneResponse['milestones'] };
 type SourceLensState = { title: string; sources: CompanyProfileSource[] } | null;
 type DashboardSectionKey =
   | 'latest_moves'
@@ -2738,6 +2739,23 @@ class AppComponent {
       lanes.set(label, [...(lanes.get(label) || []), deal]);
     }
     return Array.from(lanes, ([label, laneDeals]) => ({ label, deals: laneDeals }));
+  }
+
+  milestoneInitiativeLanes(milestones: StrategyMilestoneResponse['milestones']): MilestoneInitiativeLane[] {
+    const lanes = new Map<string, MilestoneInitiativeLane>();
+    for (const milestone of milestones) {
+      const anchor = milestone.linked_strategic_turn?.title || milestone.linked_promise?.title;
+      const label = anchor || 'No linked initiative';
+      const description = milestone.linked_strategic_turn
+        ? 'Linked to a reviewed strategic turn.'
+        : milestone.linked_promise
+          ? 'Linked to a reviewed management promise.'
+          : 'No reviewed strategic turn or promise is linked.';
+      const lane = lanes.get(label) || { label, description, milestones: [] };
+      lane.milestones.push(milestone);
+      lanes.set(label, lane);
+    }
+    return Array.from(lanes.values());
   }
 
   setSelectedKpiVariant(groupKey: string, slug: string): void {

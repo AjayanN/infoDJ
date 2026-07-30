@@ -1276,12 +1276,12 @@
                 <article class="milestone-register">
                   <div class="panel-header"><div><p class="section-kicker">Execution timeline</p><h2>Milestone register</h2></div></div>
                   <div class="empty-state unavailable-state" *ngIf="milestoneView.milestones.length === 0">No reviewed milestones match these filters.</div>
-                  <button type="button" class="milestone-track" *ngFor="let milestone of milestoneView.milestones" [class.selected]="milestone.slug === milestoneView.selected_milestone?.slug" [class.undated]="!milestone.expected_start_date && !milestone.expected_end_date" (click)="selectStrategyMilestone(milestone.slug)">
+                  <section class="milestone-initiative-lane" *ngFor="let lane of milestoneInitiativeLanes(milestoneView.milestones)"><header><h3>{{ lane.label }}</h3><span>{{ lane.description }}</span></header><button type="button" class="milestone-track" *ngFor="let milestone of lane.milestones" [class.selected]="milestone.slug === milestoneView.selected_milestone?.slug" [class.undated]="!milestone.expected_start_date && !milestone.expected_end_date" (click)="selectStrategyMilestone(milestone.slug)">
                     <div class="milestone-track-dates"><span>{{ milestone.expected_start_date || 'Start not stated' }}</span><i></i><span>{{ milestone.expected_end_date || 'End not stated' }}</span></div>
                     <div class="milestone-track-title"><strong>{{ milestone.title }}</strong><span>{{ promiseLabel(milestone.milestone_type) }} · {{ promiseLabel(milestone.current_status) }}</span></div>
                     <p>{{ milestone.success_condition }}</p>
                     <small>{{ promiseLabel(milestone.origin) }}</small>
-                  </button>
+                  </button></section>
                 </article>
 
                 <article class="milestone-detail" *ngIf="milestoneView.selected_milestone as milestone; else noSelectedMilestone">

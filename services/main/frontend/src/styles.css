@@ -3943,6 +3943,11 @@ th {
   border-right: 1px solid var(--line);
   padding: 22px 24px 22px 0;
 }
+.milestone-initiative-lane { border-top: 2px solid #95adbd; display: grid; gap: 8px; padding-top: 12px; }
+.milestone-initiative-lane + .milestone-initiative-lane { margin-top: 18px; }
+.milestone-initiative-lane > header { align-items: baseline; display: flex; gap: 10px; justify-content: space-between; }
+.milestone-initiative-lane h3 { font-size: .9rem; margin: 0; }
+.milestone-initiative-lane > header span { color: var(--muted); font-size: .72rem; text-align: right; }
 
 .promise-ledger-workspace > *,
 .milestone-timeline-workspace > * {
