@@ -3337,6 +3337,10 @@ th {
     grid-template-columns: 1fr;
   }
 
+  .earnings-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
   .briefing-block > header {
     align-items: start;
     flex-direction: column;
@@ -3986,6 +3990,28 @@ th {
 }
 .kpi-picker-action:hover, .kpi-picker-action:focus-visible { border-bottom-color: #147a7d; color: #0c5b5e; }
 .kpi-catalogue-toggle { background: #eef4f7; border: 1px solid #cddbe4; color: #28475e; display: block; font-size: 12px; font-weight: 800; margin: 12px auto 0; padding: 8px 12px; }
+
+.earnings-kpi-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.earnings-kpi-grid article {
+  background: #f7fafb;
+  border-left: 3px solid #4d91a1;
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 14px;
+}
+
+.earnings-kpi-grid span { color: #506b80; font-size: 11px; font-weight: 800; line-height: 1.3; }
+.earnings-kpi-grid strong { color: #233f58; font-size: 17px; overflow-wrap: anywhere; }
+.earnings-kpi-change { color: #67778a; font-size: 12px; font-weight: 700; }
+.earnings-kpi-change.positive { color: #197052; }
+.earnings-kpi-change.negative { color: #ae493d; }
+.earnings-kpi-more { color: var(--muted); display: block; margin-top: 12px; }
 
 .kpi-summary-card select {
   max-width: 100%;

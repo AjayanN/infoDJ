@@ -1410,13 +1410,17 @@
                   <article class="earnings-kpi-context">
                     <div class="panel-header"><div><p class="section-kicker">Operating movement</p><h2>Canonical KPI changes</h2></div></div>
                     <div class="empty-state" *ngIf="period.operating_kpis.length === 0">No canonical KPI observations align with this period.</div>
-                    <div class="result-row" *ngFor="let kpi of period.operating_kpis">
-                      <strong>{{ kpi.name }}</strong><span>{{ kpi.value | number:'1.0-3' }} {{ kpi.unit }} · {{ kpi.period_end }}</span>
-                      <p><strong>{{ kpi.dependency_label }}:</strong> {{ kpi.dependency_description }}</p>
-                      <small *ngIf="kpi.previous_value !== null">Previous {{ kpi.previous_value | number:'1.0-3' }} · change {{ kpi.change_pct | number:'1.1-1' }}%</small>
-                      <small *ngIf="kpi.quality_flags.length > 0">{{ kpi.quality_flags.join(' · ') }}</small>
-                      <button type="button" class="ghost-button" (click)="openOperatingKpis(earningsView.company.slug, kpi.slug)">View KPI series</button>
+                    <div class="earnings-kpi-grid" *ngIf="period.operating_kpis.length > 0">
+                      <article *ngFor="let kpi of period.operating_kpis.slice(0, 4)">
+                        <span>{{ kpi.name }}</span>
+                        <strong>{{ kpi.value | number:'1.0-3' }} {{ kpi.unit }}</strong>
+                        <div class="earnings-kpi-change" [class.positive]="(kpi.change_pct || 0) > 0" [class.negative]="(kpi.change_pct || 0) < 0">
+                          {{ kpi.previous_value === null ? 'Prior period unavailable' : ((kpi.change_pct || 0) | number:'1.1-1') + '% vs prior' }}
+                        </div>
+                        <button type="button" class="kpi-picker-action" (click)="openOperatingKpis(earningsView.company.slug, kpi.slug)">Open series</button>
+                      </article>
                     </div>
+                    <small class="earnings-kpi-more" *ngIf="period.operating_kpis.length > 4">{{ period.operating_kpis.length - 4 }} additional aligned KPIs are available in the KPI workspace.</small>
                   </article>
                   <article class="earnings-management-brief">
                     <div class="panel-header"><div><p class="section-kicker">Management explanation</p><h2>What management said drove the period</h2></div></div>
