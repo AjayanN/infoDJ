@@ -133,3 +133,25 @@ def normalized_offers(value: Any) -> list[str]:
 
 def clean_text(value: Any) -> str:
     return " ".join(str(value or "").split())
+
+
+def official_product_price_links(html: str, *, base_url: str, limit: int = 12) -> list[str]:
+    """Discover same-site product and pricing links for later robots-checked collection."""
+
+    soup = BeautifulSoup(html, "html.parser")
+    origin = urlparse(base_url).netloc.lower()
+    links = []
+    for anchor in soup.select("a[href]"):
+        href = urljoin(base_url, anchor.get("href", ""))
+        parsed = urlparse(href)
+        if parsed.netloc.lower() != origin:
+            continue
+        text = f"{anchor.get_text(' ', strip=True)} {parsed.path}".lower()
+        if not any(word in text for word in ("pricing", "price", "plan", "product", "shop", "store", "subscribe")):
+            continue
+        clean = href.split("#", 1)[0]
+        if clean not in links:
+            links.append(clean)
+        if len(links) >= limit:
+            break
+    return links
