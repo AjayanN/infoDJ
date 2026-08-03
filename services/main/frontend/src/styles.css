@@ -3753,6 +3753,7 @@ th {
 
 .model-flow-workbench {
   border-bottom: 1px solid var(--line);
+  min-width: 0;
   padding: 22px 0 28px;
 }
 
@@ -3766,6 +3767,9 @@ th {
   border-radius: 0;
   box-shadow: none;
   height: min(680px, 72vh);
+  max-width: 100%;
+  min-width: 0;
+  overscroll-behavior-inline: contain;
   padding: 20px;
 }
 
