@@ -141,7 +141,7 @@ class AlphaVantageMarketPriceClient:
         response = self.session.get(
             self.base_url,
             params={
-                "function": "TIME_SERIES_DAILY_ADJUSTED",
+                "function": "TIME_SERIES_DAILY",
                 "symbol": symbol,
                 "outputsize": "compact",
                 "datatype": "csv",
