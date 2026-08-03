@@ -5,7 +5,9 @@ from django.core.management.base import BaseCommand, CommandError
 from apps.companies.models import Company
 from apps.ingestion.models import SourceDocument
 from apps.ingestion.services.company_profile_client import robots_allows
+from apps.ingestion.services.company_profile_client import official_product_price_links
 from apps.ingestion.services.official_product_price import store_official_prices
+from apps.ingestion.services.url_utils import url_hash
 from apps.ingestion.services.wikidata_client import DEFAULT_USER_AGENT
 
 
@@ -27,7 +29,7 @@ class Command(BaseCommand):
             companies = companies[options["offset"] : options["offset"] + options["company_limit"]] if options["company_limit"] else companies[options["offset"] :]
         if not companies.exists():
             raise CommandError(f"Company not found: {options['company']}")
-        totals = {"pages_seen": 0, "pages_skipped": 0, "pages_failed": 0, "prices_found": 0, "prices_inserted": 0, "prices_updated": 0, "skipped": 0}
+        totals = {"pages_seen": 0, "pages_discovered": 0, "pages_skipped": 0, "pages_failed": 0, "prices_found": 0, "prices_inserted": 0, "prices_updated": 0, "skipped": 0}
         session = requests.Session()
         session.headers["User-Agent"] = DEFAULT_USER_AGENT
         for company in companies:
@@ -41,6 +43,12 @@ class Command(BaseCommand):
                     response = session.get(page.url, timeout=20)
                     response.raise_for_status()
                     result = store_official_prices(company=company, source=page, html=response.text)
+                    for link in official_product_price_links(response.text, base_url=response.url or page.url):
+                        _source, created = SourceDocument.objects.get_or_create(
+                            url_hash=url_hash(link),
+                            defaults={"company": company, "source_api": "OFFICIAL_WEBSITE", "url": link, "canonical_url": link, "title": f"{company.name} official product or pricing page", "publisher": company.name, "language": "en", "status": "DISCOVERED"},
+                        )
+                        totals["pages_discovered"] += 1 if created else 0
                 except (requests.RequestException, PermissionError):
                     totals["pages_failed"] += 1
                     continue
