@@ -4,10 +4,14 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from bs4 import BeautifulSoup
+
+from apps.companies.models import ProductCatalogSnapshot, ProductOffering, ProductOfferingType, PriceObservation
+from apps.ingestion.models import SourceDocument
 
 
 @dataclass(frozen=True)
@@ -73,3 +77,33 @@ def unique_prices(rows: list[OfficialPrice]) -> list[OfficialPrice]:
             seen.add(key)
             result.append(row)
     return result
+
+
+def store_official_prices(*, company, source: SourceDocument, html: str, observed_date: date | None = None) -> dict[str, int]:
+    snapshot = (
+        ProductCatalogSnapshot.objects.filter(company=company, status__in=["PUBLISHED", "REVIEWED"])
+        .order_by("-effective_date", "-updated_at")
+        .first()
+    )
+    if snapshot is None:
+        return {"prices_found": 0, "prices_inserted": 0, "prices_updated": 0, "skipped": 0}
+    counters = {"prices_found": 0, "prices_inserted": 0, "prices_updated": 0, "skipped": 0}
+    for row in parse_official_prices(html):
+        counters["prices_found"] += 1
+        offering, _ = ProductOffering.objects.get_or_create(
+            snapshot=snapshot,
+            offering_type=ProductOfferingType.PLAN,
+            name=row.name,
+            defaults={"description": "First-party structured offer.", "evidence_text": row.evidence_text, "confidence_score": "0.950"},
+        )
+        _price, created = PriceObservation.objects.update_or_create(
+            offering=offering,
+            observed_date=observed_date or date.today(),
+            currency=row.currency,
+            geography="",
+            customer_segment="",
+            billing_period="",
+            defaults={"amount": row.amount, "source_document": source, "evidence_text": row.evidence_text, "confidence_score": "0.950"},
+        )
+        counters["prices_inserted" if created else "prices_updated"] += 1
+    return counters
