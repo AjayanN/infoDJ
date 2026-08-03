@@ -22,7 +22,7 @@ class Command(BaseCommand):
         parser.add_argument("--include-market-data", action="store_true")
         parser.add_argument("--include-financial-facts", action="store_true")
         parser.add_argument("--include-insider-transactions", action="store_true")
-        parser.add_argument("--insider-form-limit", type=int, default=25)
+        parser.add_argument("--insider-form-limit", type=int, default=5)
         parser.add_argument("--include-macro-context", action="store_true")
         parser.add_argument("--include-quality-scoring", action="store_true")
         parser.add_argument("--include-company-profiles", action="store_true")

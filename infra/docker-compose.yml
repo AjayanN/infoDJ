@@ -12,7 +12,7 @@ services:
   ingestion:
     build:
       context: ../services/ingestion
-    command: .venv/bin/python manage.py run_ingestion_api_with_scheduler --host 0.0.0.0 --port 8001 --scheduler-timezone UTC --limit 20 --batch-size 10 --include-gdelt --include-market-data --include-financial-facts --include-company-profiles --include-macro-context --include-quality-scoring --split-batches
+    command: .venv/bin/python manage.py run_ingestion_api_with_scheduler --host 0.0.0.0 --port 8001 --scheduler-timezone UTC --limit 20 --batch-size 10 --include-gdelt --include-market-data --include-financial-facts --include-insider-transactions --insider-form-limit 5 --include-company-profiles --include-macro-context --include-quality-scoring --split-batches
     env_file:
       - ./env/ingestion.env
     ports:

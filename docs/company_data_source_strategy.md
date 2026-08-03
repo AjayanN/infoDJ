@@ -94,6 +94,11 @@ terms, competitive claims, and private-company history.
 5. Record a visible coverage/gap state for every category and route the next
    collection job from that gap.
 
+The deployed ingestion scheduler refreshes the newest five Forms 3/4/5 for the
+companies assigned to each daily batch. Historical ownership forms are kept as
+an explicit, rate-controlled backfill because they are useful history but do
+not belong in every daily refresh.
+
 ## Delivery Sequence
 
 1. Complete the SEC spine for every active U.S. issuer: CIK resolution,

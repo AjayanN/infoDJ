@@ -22,7 +22,7 @@ class Command(BaseCommand):
         parser.add_argument("--include-market-data", action="store_true")
         parser.add_argument("--include-financial-facts", action="store_true")
         parser.add_argument("--include-insider-transactions", action="store_true")
-        parser.add_argument("--insider-form-limit", type=int, default=25)
+        parser.add_argument("--insider-form-limit", type=int, default=5)
         parser.add_argument("--include-macro-context", action="store_true")
         parser.add_argument("--include-quality-scoring", action="store_true")
         parser.add_argument("--include-company-profiles", action="store_true")
@@ -62,8 +62,14 @@ class Command(BaseCommand):
         if options["include_market_data"]:
             call_command("ingest_market_prices", days=30)
 
-        if options["include_insider_transactions"]:
-            call_command("ingest_sec_form4", all=True, limit=options["insider_form_limit"])
+        if options["include_insider_transactions"] and not options["retry_failed_only"]:
+            call_command(
+                "ingest_sec_form4",
+                all=True,
+                limit=options["insider_form_limit"],
+                offset=options["offset"],
+                company_limit=options["batch_size"] or options["limit"],
+            )
 
         if options["include_macro_context"]:
             self.stdout.write(
