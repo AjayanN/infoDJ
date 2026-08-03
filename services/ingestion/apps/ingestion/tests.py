@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 from datetime import date
+import os
+from unittest.mock import patch
 
 from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.test import Client, TestCase
 from django.utils.text import slugify
 
@@ -125,6 +128,7 @@ from apps.ingestion.services.market_price_client import (
     parse_fmp_historical_prices,
 )
 from apps.ingestion.services.sec_form4 import form4_sources, ingest_form4_sources, ownership_xml_url, parse_ownership_xml
+from apps.ingestion.management.commands.ingest_market_prices import build_market_client
 from apps.ingestion.services.sec_profile_builder import SecProfileData, apply_profile_fallbacks, parse_sec_profile_text
 from apps.ingestion.services.wikidata_client import normalize_company_entity
 
@@ -2467,6 +2471,11 @@ class MarketPriceClientTests(TestCase):
         self.assertEqual([bar.price_date.isoformat() for bar in bars], ["2022-10-13", "2022-10-14"])
         self.assertEqual(bars[0].provider, "ALPHA_VANTAGE")
         self.assertEqual(str(bars[0].close_price), "8.25")
+
+    def test_auto_provider_requires_configured_authenticated_feed(self):
+        with patch.dict(os.environ, {"FMP_API_KEY": "", "ALPHA_VANTAGE_API_KEY": ""}, clear=False):
+            with self.assertRaisesMessage(CommandError, "No automatic market-data provider is configured"):
+                build_market_client({"provider": "auto", "fmp_api_key": "", "alpha_vantage_api_key": ""})
 
 
 class SecForm4IngestionTests(TestCase):

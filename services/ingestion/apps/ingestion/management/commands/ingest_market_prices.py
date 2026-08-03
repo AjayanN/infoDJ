@@ -38,7 +38,7 @@ class Command(BaseCommand):
             "--provider",
             choices=("auto", "fmp", "alpha_vantage", "stooq"),
             default="auto",
-            help="Market data provider. auto tries FMP, then Alpha Vantage, then Stooq when configured.",
+            help="Market data provider. auto tries configured FMP, then configured Alpha Vantage. Stooq is explicit only.",
         )
         parser.add_argument("--fmp-api-key", default="", help="FMP API key. Defaults to FMP_API_KEY.")
         parser.add_argument("--alpha-vantage-api-key", default="", help="Alpha Vantage API key. Defaults to ALPHA_VANTAGE_API_KEY.")
@@ -212,9 +212,11 @@ def build_market_client(options):
         clients.append(FMPMarketPriceClient(api_key=fmp_key))
     if alpha_key:
         clients.append(AlphaVantageMarketPriceClient(api_key=alpha_key))
-    stooq = StooqMarketPriceClient()
-    stooq.provider = STOOQ_PROVIDER
-    clients.append(stooq)
+    if not clients:
+        raise CommandError(
+            "No automatic market-data provider is configured. Set FMP_API_KEY or ALPHA_VANTAGE_API_KEY, "
+            "or use --provider stooq only for an explicitly verified local deployment."
+        )
     return MarketPriceClientChain(clients)
 
 

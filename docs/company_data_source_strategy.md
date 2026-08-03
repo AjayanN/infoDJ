@@ -74,6 +74,9 @@ provider and raw response metadata.
 For production redistribution, choose and contract with one market-data vendor
 after confirming exchange coverage, latency, historical rights, and user-count
 licensing. Do not represent an unaudited free EOD fallback as real-time data.
+The deployment scheduler only refreshes market data when `FMP_API_KEY` or
+`ALPHA_VANTAGE_API_KEY` is configured. The unauthenticated Stooq endpoint is
+not an automatic fallback because it can return anti-bot HTML instead of data.
 
 ### Tier 3: document-derived evidence
 
