@@ -292,6 +292,7 @@ class AppComponent {
   operatingKpiStart = '';
   operatingKpiEnd = '';
   operatingKpiComparableOnly = false;
+  showAllKpiMetrics = false;
   selectedKpiVariants: Record<string, string> = {};
   operatingKpiMetricGroups = signal<KpiMetricGroup[]>([]);
   operatingKpiEventGroups = signal<KpiEventGroup[]>([]);
@@ -3308,6 +3309,11 @@ class AppComponent {
     return [...new Set(
       sectionKeys.flatMap((key) => (company.sections[key]?.items || []).map((item) => this.profileItemLabel(item)))
     )].slice(0, 8);
+  }
+
+  visibleOperatingKpiMetricGroups(): KpiMetricGroup[] {
+    const groups = this.operatingKpiMetricGroups();
+    return this.showAllKpiMetrics ? groups : groups.slice(0, 12);
   }
 
   companyVisualNodes(company: CompanyProfileResponse): CompanyVisualNode[] {

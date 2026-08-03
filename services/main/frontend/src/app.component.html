@@ -1052,18 +1052,18 @@
                 </div>
               </section>
 
-              <section class="kpi-summary-grid kpi-catalogue" aria-label="KPI dictionary">
-                <article class="kpi-summary-card" *ngFor="let group of operatingKpiMetricGroups(); trackBy: trackKpiMetricGroup" [class.selected]="group.selected">
-                  <span>{{ group.variants.length }} {{ group.variants.length === 1 ? 'series' : 'series variants' }}</span><h3>{{ group.label }}</h3>
-                  <p>{{ group.variants[0].description }}</p><small>{{ group.variants[0].scope }}</small>
-                  <label>Choose series
-                    <select [ngModel]="selectedKpiVariant(group)" (ngModelChange)="setSelectedKpiVariant(group.key, $event)">
-                      <option *ngFor="let metric of group.variants" [value]="metric.slug">{{ kpiVariantLabel(metric) }}</option>
-                    </select>
-                  </label>
-                  <button type="button" class="ghost-button" (click)="openOperatingKpis(kpiView.company.slug, selectedKpiVariant(group))">View series</button>
+              <section class="kpi-summary-grid kpi-catalogue" aria-label="KPI visual picker">
+                <article class="kpi-summary-card" *ngFor="let group of visibleOperatingKpiMetricGroups(); trackBy: trackKpiMetricGroup" [class.selected]="group.selected">
+                  <span>{{ group.variants.length }} {{ group.variants.length === 1 ? 'series' : 'variants' }}</span><h3>{{ group.label }}</h3>
+                  <select [attr.aria-label]="'Choose ' + group.label + ' series'" [ngModel]="selectedKpiVariant(group)" (ngModelChange)="setSelectedKpiVariant(group.key, $event)">
+                    <option *ngFor="let metric of group.variants" [value]="metric.slug">{{ kpiVariantLabel(metric) }}</option>
+                  </select>
+                  <button type="button" class="kpi-picker-action" (click)="openOperatingKpis(kpiView.company.slug, selectedKpiVariant(group))">View series</button>
                 </article>
               </section>
+              <button type="button" class="kpi-catalogue-toggle" *ngIf="operatingKpiMetricGroups().length > 12" (click)="showAllKpiMetrics = !showAllKpiMetrics" [attr.aria-expanded]="showAllKpiMetrics">
+                {{ showAllKpiMetrics ? 'Show core metrics' : 'Browse all ' + operatingKpiMetricGroups().length + ' metrics' }}
+              </button>
 
               <section class="kpi-trend-workbench" aria-labelledby="kpi-trend-heading">
                 <div class="panel-header"><div><p class="section-kicker">Trend and table</p><h2 id="kpi-trend-heading">{{ kpiView.selected_metric?.name || 'KPI series' }}</h2></div><span>{{ kpiView.selected_metric?.unit }}</span></div>

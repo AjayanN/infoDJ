@@ -3952,23 +3952,40 @@ th {
 }
 
 .kpi-catalogue .kpi-summary-card {
-  background: transparent;
-  border: 0;
-  border-left: 1px solid var(--line);
+  background: #f8fbfc;
+  border: 1px solid #d7e2e9;
   border-radius: 0;
   min-width: 0;
-  padding: 18px;
+  min-height: 122px;
+  padding: 16px;
 }
 
 .kpi-catalogue .kpi-summary-card:first-child {
-  border-left: 0;
-  padding-left: 0;
+  border-left: 1px solid #d7e2e9;
+  padding-left: 16px;
 }
 
 .kpi-catalogue .kpi-summary-card.selected {
-  background: #edf5fa;
-  box-shadow: inset 0 -3px 0 #2376ae;
+  background: #e8f4f5;
+  box-shadow: inset 0 -4px 0 #147a7d;
 }
+
+.kpi-summary-card > span { color: #617889; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+.kpi-summary-card h3 { color: #243c55; font-size: 15px; line-height: 1.2; }
+.kpi-picker-action {
+  align-self: end;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #47748d;
+  color: #245875;
+  font-size: 11px;
+  font-weight: 800;
+  justify-self: start;
+  min-height: auto;
+  padding: 3px 0;
+}
+.kpi-picker-action:hover, .kpi-picker-action:focus-visible { border-bottom-color: #147a7d; color: #0c5b5e; }
+.kpi-catalogue-toggle { background: #eef4f7; border: 1px solid #cddbe4; color: #28475e; display: block; font-size: 12px; font-weight: 800; margin: 12px auto 0; padding: 8px 12px; }
 
 .kpi-summary-card select {
   max-width: 100%;
