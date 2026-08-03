@@ -182,10 +182,15 @@ def parse_date_option(value: str):
 
 def ticker_for_company(company) -> str:
     aliases = company.aliases if isinstance(company.aliases, list) else []
+    candidates = []
     for alias in aliases:
-        ticker = str(alias).strip().upper()
-        if TICKER_RE.match(ticker):
-            return ticker
+        raw = str(alias).strip()
+        ticker = raw.upper()
+        if raw == ticker and TICKER_RE.match(ticker):
+            candidates.append(ticker)
+    if candidates:
+        # Short exchange symbols beat corporate abbreviations such as JPMC.
+        return min(candidates, key=lambda value: (len(value), value))
     return ""
 
 

@@ -21,6 +21,8 @@ class Command(BaseCommand):
         parser.add_argument("--include-gdelt", action="store_true")
         parser.add_argument("--include-market-data", action="store_true")
         parser.add_argument("--include-financial-facts", action="store_true")
+        parser.add_argument("--include-insider-transactions", action="store_true")
+        parser.add_argument("--insider-form-limit", type=int, default=25)
         parser.add_argument("--include-macro-context", action="store_true")
         parser.add_argument("--include-quality-scoring", action="store_true")
         parser.add_argument("--include-company-profiles", action="store_true")
@@ -46,6 +48,8 @@ class Command(BaseCommand):
             scheduler_command.append("--include-market-data")
         if options["include_financial_facts"]:
             scheduler_command.append("--include-financial-facts")
+        if options["include_insider_transactions"]:
+            scheduler_command.extend(["--include-insider-transactions", "--insider-form-limit", str(options["insider_form_limit"])])
         if options["include_macro_context"]:
             scheduler_command.append("--include-macro-context")
         if options["include_quality_scoring"]:

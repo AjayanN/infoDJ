@@ -1407,6 +1407,8 @@ class InsiderTransaction(models.Model):
     insider_role = models.CharField(max_length=255, blank=True)
     transaction_type = models.CharField(max_length=32, choices=InsiderTransactionType.choices, db_index=True)
     transaction_date = models.DateField(null=True, blank=True, db_index=True)
+    filing_accession_number = models.CharField(max_length=32, blank=True, db_index=True)
+    transaction_code = models.CharField(max_length=16, blank=True)
     shares = models.DecimalField(max_digits=24, decimal_places=6, null=True, blank=True)
     price = models.DecimalField(max_digits=18, decimal_places=6, null=True, blank=True)
     value = models.DecimalField(max_digits=24, decimal_places=6, null=True, blank=True)
@@ -1434,7 +1436,19 @@ class InsiderTransaction(models.Model):
     class Meta:
         ordering = ["-transaction_date", "insider_name"]
         constraints = [
-            models.UniqueConstraint(fields=["snapshot", "insider_name", "transaction_type", "transaction_date"], name="unique_insider_transaction")
+            models.UniqueConstraint(
+                fields=[
+                    "snapshot",
+                    "insider_name",
+                    "transaction_type",
+                    "transaction_date",
+                    "filing_accession_number",
+                    "transaction_code",
+                    "shares",
+                    "price",
+                ],
+                name="unique_insider_transaction",
+            )
         ]
 
 

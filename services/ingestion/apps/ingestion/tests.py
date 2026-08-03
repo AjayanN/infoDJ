@@ -124,6 +124,7 @@ from apps.ingestion.services.market_price_client import (
     parse_alpha_vantage_daily_csv,
     parse_fmp_historical_prices,
 )
+from apps.ingestion.services.sec_form4 import form4_sources, ingest_form4_sources, ownership_xml_url, parse_ownership_xml
 from apps.ingestion.services.sec_profile_builder import SecProfileData, apply_profile_fallbacks, parse_sec_profile_text
 from apps.ingestion.services.wikidata_client import normalize_company_entity
 
@@ -2466,3 +2467,74 @@ class MarketPriceClientTests(TestCase):
         self.assertEqual([bar.price_date.isoformat() for bar in bars], ["2022-10-13", "2022-10-14"])
         self.assertEqual(bars[0].provider, "ALPHA_VANTAGE")
         self.assertEqual(str(bars[0].close_price), "8.25")
+
+
+class SecForm4IngestionTests(TestCase):
+    xml = """<?xml version=\"1.0\"?>
+    <ownershipDocument>
+      <reportingOwner><reportingOwnerId><rptOwnerName>Jane Example</rptOwnerName></reportingOwnerId>
+      <reportingOwnerRelationship><isDirector>1</isDirector><isOfficer>1</isOfficer><officerTitle>Chief Executive Officer</officerTitle></reportingOwnerRelationship></reportingOwner>
+      <footnotes><footnote id=\"F1\">Sale pursuant to a Rule 10b5-1 plan.</footnote></footnotes>
+      <nonDerivativeTable><nonDerivativeTransaction>
+        <transactionDate><value>2026-07-21</value></transactionDate>
+        <transactionCoding><transactionCode>S</transactionCode><footnoteId id=\"F1\" /></transactionCoding>
+        <transactionAmounts><transactionShares><value>1250</value></transactionShares><transactionPricePerShare><value>99.50</value></transactionPricePerShare><transactionAcquiredDisposedCode><value>D</value></transactionAcquiredDisposedCode></transactionAmounts>
+        <postTransactionAmounts><sharesOwnedFollowingTransaction><value>5000</value></sharesOwnedFollowingTransaction></postTransactionAmounts>
+      </nonDerivativeTransaction></nonDerivativeTable>
+      <derivativeTable><derivativeTransaction>
+        <transactionDate><value>2026-07-21</value></transactionDate>
+        <transactionCoding><transactionCode>M</transactionCode></transactionCoding>
+        <transactionAmounts><transactionShares><value>300</value></transactionShares><transactionPricePerShare><value>2.50</value></transactionPricePerShare><transactionAcquiredDisposedCode><value>A</value></transactionAcquiredDisposedCode></transactionAmounts>
+      </derivativeTransaction></derivativeTable>
+    </ownershipDocument>"""
+
+    def setUp(self):
+        self.company = Company.objects.create(name="Example Corp", aliases=["EXM"], country="United States")
+        self.source = SourceDocument.objects.create(
+            company=self.company,
+            source_api="SEC_EDGAR",
+            url="https://www.sec.gov/Archives/edgar/data/1/000012345626000001/form4.xml",
+            title="Example Corp 4 filing 2026-07-22",
+            publisher="SEC EDGAR",
+            published_date="2026-07-22T00:00:00Z",
+        )
+
+    def test_parser_keeps_form4_code_and_10b5_1_evidence(self):
+        rows = parse_ownership_xml(self.xml)
+
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(rows[0].insider_name, "Jane Example")
+        self.assertEqual(rows[0].transaction_type, "SALE")
+        self.assertEqual(rows[0].transaction_code, "S")
+        self.assertTrue(rows[0].planned_sale)
+        self.assertEqual(str(rows[0].value), "124375.00")
+        self.assertEqual(rows[1].transaction_type, "EXERCISE")
+
+    def test_normalizes_edgar_xsl_url_to_the_original_xml(self):
+        self.assertEqual(
+            ownership_xml_url("https://www.sec.gov/Archives/edgar/data/1/000012345626000001/xslF345X06/form4.xml"),
+            "https://www.sec.gov/Archives/edgar/data/1/000012345626000001/form4.xml",
+        )
+
+    def test_ingestion_uses_existing_form4_source_and_is_idempotent(self):
+        session = FakeForm4Session(self.xml)
+
+        first = ingest_form4_sources(company=self.company, sources=form4_sources(self.company), session=session)
+        second = ingest_form4_sources(company=self.company, sources=form4_sources(self.company), session=session)
+        snapshot = OwnershipInsiderSnapshot.objects.get(company=self.company, effective_date=date(2026, 7, 22))
+        row = snapshot.insider_transactions.get(transaction_code="S")
+
+        self.assertEqual(first["transactions_inserted"], 2)
+        self.assertEqual(second["transactions_updated"], 2)
+        self.assertEqual(row.filing_accession_number, "0000123456-26-000001")
+        self.assertEqual(row.insider_role, "Director; Chief Executive Officer")
+        self.assertEqual(row.source_document, self.source)
+
+
+class FakeForm4Session:
+    def __init__(self, xml):
+        self.xml = xml
+        self.headers = {}
+
+    def get(self, url, timeout):
+        return FakeProfileResponse(url=url, text=self.xml)
