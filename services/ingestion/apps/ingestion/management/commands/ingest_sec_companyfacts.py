@@ -17,6 +17,8 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--company", help="Company slug to ingest. Omit with --all.")
         parser.add_argument("--all", action="store_true", help="Ingest all active companies with a SEC CIK.")
+        parser.add_argument("--offset", type=int, default=0, help="Company offset when processing a scheduled batch.")
+        parser.add_argument("--company-limit", type=int, default=0, help="Maximum companies to process; 0 means all.")
         parser.add_argument("--forms", default="10-K,10-Q")
         parser.add_argument("--concepts", default=",".join(USEFUL_US_GAAP_CONCEPTS))
         parser.add_argument("--limit", type=int, default=500, help="Maximum facts to store per company.")
@@ -26,6 +28,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if bool(options["company"]) == bool(options["all"]):
             raise CommandError("Pass exactly one of --company or --all.")
+        if options["offset"] < 0 or options["company_limit"] < 0:
+            raise CommandError("--offset and --company-limit must not be negative.")
 
         financial_fact_model = self._financial_fact_model()
         forms = tuple(value.strip().upper() for value in options["forms"].split(",") if value.strip())
@@ -81,7 +85,10 @@ class Command(BaseCommand):
 
     def _companies(self, options):
         if options["all"]:
-            return Company.objects.filter(is_active=True).order_by("name")
+            companies = Company.objects.filter(is_active=True).order_by("name")
+            if options["company_limit"]:
+                return companies[options["offset"] : options["offset"] + options["company_limit"]]
+            return companies[options["offset"] :]
         try:
             return [Company.objects.get(slug=options["company"])]
         except Company.DoesNotExist as exc:

@@ -102,6 +102,10 @@ companies assigned to each daily batch. Historical ownership forms are kept as
 an explicit, rate-controlled backfill because they are useful history but do
 not belong in every daily refresh.
 
+The same batch boundary applies to SEC Company Facts. A split daily schedule
+refreshes companies 1-10 and 11-20 once each, rather than fetching the full
+universe in every scheduler slot.
+
 ## Delivery Sequence
 
 1. Complete the SEC spine for every active U.S. issuer: CIK resolution,

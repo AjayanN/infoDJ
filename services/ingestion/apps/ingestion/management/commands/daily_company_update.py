@@ -58,8 +58,14 @@ class Command(BaseCommand):
                 retry_failed_only=options["retry_failed_only"],
             )
 
-        if options["include_financial_facts"]:
-            call_command("ingest_sec_companyfacts", all=True, limit=500)
+        if options["include_financial_facts"] and not options["retry_failed_only"]:
+            call_command(
+                "ingest_sec_companyfacts",
+                all=True,
+                limit=500,
+                offset=options["offset"],
+                company_limit=options["batch_size"] or options["limit"],
+            )
 
         if options["include_market_data"]:
             if os.getenv("FMP_API_KEY") or os.getenv("ALPHA_VANTAGE_API_KEY"):
