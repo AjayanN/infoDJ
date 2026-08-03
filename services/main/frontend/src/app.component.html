@@ -1736,9 +1736,8 @@
                     </article>
                     <div class="empty-state unavailable-state" *ngIf="productView.changes.length === 0">No reviewed product or pricing timeline changes are available.</div>
                   </article>
-                  <article class="product-price-context">
+                  <article class="product-price-context" *ngIf="productView.price_observations.length > 0">
                     <div class="panel-header"><div><p class="section-kicker">Price context</p><h2>List prices and packaging</h2></div></div>
-                    <div class="empty-state unavailable-state" *ngIf="productView.price_context.status === 'unavailable'">{{ productView.price_context.reason }}</div>
                     <p>{{ productView.price_context.promotion_policy }}</p>
                     <div class="result-row" *ngFor="let price of productView.price_observations"><strong>{{ price.offering_name }}</strong><span>{{ price.amount | number:'1.0-2' }} {{ price.currency }} · {{ price.billing_period || 'period unavailable' }} · {{ price.geography || 'geography unavailable' }}</span><p>{{ price.evidence_text }}</p></div>
                   </article>
@@ -1933,7 +1932,7 @@
                   <div class="empty-state unavailable-state" *ngIf="dependencyView.dependencies.length === 0">No reviewed dependency relationships are available for the selected filters.</div>
                 </article>
 
-                <article class="dependency-contract-risk">
+                <article class="dependency-contract-risk" *ngIf="dependencyView.contract_terms.length > 0">
                   <div class="panel-header"><div><p class="section-kicker">Contract risk</p><h2>Terms and concentration</h2></div><span>{{ dependencyView.contract_terms.length }} terms</span></div>
                   <div class="dependency-contract-card-grid" *ngIf="dependencyView.contract_terms.length > 0">
                     <article *ngFor="let term of dependencyView.contract_terms">
@@ -1942,7 +1941,6 @@
                       <footer><span>Expires {{ term.expiration_date || 'not disclosed' }}</span><a *ngIf="term.source" [href]="term.source.url" target="_blank" rel="noopener">Open source</a></footer>
                     </article>
                   </div>
-                  <div class="empty-state unavailable-state" *ngIf="dependencyView.contract_terms.length === 0">No reviewed renewal, expiration, exclusivity, minimum commitment, or termination terms are available.</div>
                 </article>
               </section>
 
