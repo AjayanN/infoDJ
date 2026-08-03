@@ -123,6 +123,7 @@ type KpiEventGroup = { type: string; label: string; count: number; latestDate: s
 type LatestMoveFilter = 'all' | 'product' | 'pricing' | 'acquisition' | 'geography' | 'leadership' | 'regulation' | 'capital' | 'competition';
 type LatestMoveGroup = { type: string; label: string; events: DashboardEvent[] };
 type LatestMoveContext = { feature: CompanyFeatureId; label: string; note: string };
+type CompanyVisualNode = { label: string; sections: string[]; featureId: CompanyFeatureId; tone: string; items: string[] };
 type RiskSignalGroup = { key: string; label: string; events: DashboardEvent[] };
 type KpiMetricGroup = { key: string; label: string; variants: KpiDefinition[]; selected: boolean; defaultSlug: string };
 type BlockedKpiPeer = OperatingKpiResponse['blocked_peer_metrics'][number];
@@ -3307,6 +3308,23 @@ class AppComponent {
     return [...new Set(
       sectionKeys.flatMap((key) => (company.sections[key]?.items || []).map((item) => this.profileItemLabel(item)))
     )].slice(0, 8);
+  }
+
+  companyVisualNodes(company: CompanyProfileResponse): CompanyVisualNode[] {
+    const nodes: Omit<CompanyVisualNode, 'items'>[] = [
+      { label: 'Offerings', sections: ['products', 'brands', 'segments'], featureId: 'product-pricing', tone: 'offerings' },
+      { label: 'Customers', sections: ['customer_groups'], featureId: 'customer-supplier-dependency', tone: 'customers' },
+      { label: 'Revenue', sections: ['revenue_sources'], featureId: 'business-model', tone: 'revenue' },
+      { label: 'Markets', sections: ['geographies', 'subsidiaries'], featureId: 'geographic-expansion', tone: 'markets' },
+      { label: 'Leadership', sections: ['leadership', 'strategic_priorities'], featureId: 'leadership-decisions', tone: 'leadership' },
+      { label: 'Competition', sections: ['competitors'], featureId: 'competitive-position', tone: 'competition' }
+    ];
+    return nodes.map((node) => ({ ...node, items: this.dossierChips(company, node.sections).slice(0, 3) }));
+  }
+
+  openCompanyVisualNode(node: CompanyVisualNode): void {
+    const feature = this.companyFeatures.find((item) => item.id === node.featureId);
+    if (feature) this.openCompanyFeature(feature);
   }
 
   sourceFreshness(company: CompanyProfileResponse): string {

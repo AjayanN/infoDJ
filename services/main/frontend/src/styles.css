@@ -17,6 +17,12 @@
   --error-text: #a33a2c;
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   background: var(--bg);
@@ -2757,13 +2763,15 @@ th {
   align-items: start;
   display: grid;
   gap: 0;
-  grid-template-columns: minmax(218px, 0.68fr) minmax(0, 1.75fr) minmax(255px, 0.82fr);
+  grid-template-columns: minmax(218px, 0.68fr) minmax(0, 2.45fr);
 }
 
 .research-index {
   border-right: 1px solid var(--line);
   display: grid;
   gap: 16px;
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
   padding: 4px 20px 20px 0;
   position: sticky;
   top: 84px;
@@ -2873,6 +2881,115 @@ th {
   line-height: 1.6;
   margin: 8px 0 0;
 }
+
+.company-constellation {
+  background:
+    linear-gradient(#dfe8ef 1px, transparent 1px),
+    linear-gradient(90deg, #dfe8ef 1px, transparent 1px),
+    #f8fbfc;
+  background-size: 28px 28px;
+  border: 1px solid #c8d6df;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  min-height: 450px;
+  overflow: hidden;
+  padding: 26px;
+  position: relative;
+}
+
+.constellation-orbit {
+  border: 1px solid #b8cad6;
+  border-radius: 50%;
+  left: 50%;
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.orbit-one { height: 235px; width: 235px; }
+.orbit-two { border-style: dashed; height: 390px; width: 390px; }
+
+.constellation-core {
+  align-self: center;
+  background: #17324d;
+  border: 8px solid #d9e7ed;
+  border-radius: 50%;
+  color: #ffffff;
+  display: grid;
+  gap: 6px;
+  height: 162px;
+  justify-self: center;
+  padding: 32px 20px;
+  place-content: center;
+  position: relative;
+  text-align: center;
+  width: 162px;
+  z-index: 2;
+}
+
+.constellation-core span,
+.constellation-core small {
+  color: #b9d0db;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.constellation-core strong { font-size: 17px; line-height: 1.15; overflow-wrap: anywhere; }
+
+.constellation-node {
+  background: #ffffff;
+  border: 1px solid #b9cad6;
+  box-shadow: 0 5px 0 rgba(31, 67, 88, 0.12);
+  color: #23384c;
+  display: grid;
+  gap: 2px;
+  max-width: 206px;
+  min-height: 82px;
+  padding: 11px 12px;
+  position: relative;
+  text-align: left;
+  width: 100%;
+  z-index: 3;
+}
+
+.constellation-node:hover,
+.constellation-node:focus-visible { border-color: #1c6871; box-shadow: 0 5px 0 rgba(31, 101, 104, 0.26); transform: translateY(-2px); }
+.constellation-node span { color: #557084; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+.constellation-node strong { font-size: 22px; line-height: 1; }
+.constellation-node small { color: #526579; font-size: 11px; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.constellation-node:nth-of-type(1) { grid-column: 1; grid-row: 1; }
+.constellation-node:nth-of-type(2) { grid-column: 3; grid-row: 1; justify-self: end; }
+.constellation-node:nth-of-type(3) { align-self: center; grid-column: 1; grid-row: 2; }
+.constellation-node:nth-of-type(4) { align-self: center; grid-column: 3; grid-row: 2; justify-self: end; }
+.constellation-node:nth-of-type(5) { align-self: end; grid-column: 1; grid-row: 3; }
+.constellation-node:nth-of-type(6) { align-self: end; grid-column: 3; grid-row: 3; justify-self: end; }
+.constellation-node.offerings { border-top: 3px solid #a65d45; }
+.constellation-node.customers { border-top: 3px solid #3f8178; }
+.constellation-node.revenue { border-top: 3px solid #476c9a; }
+.constellation-node.markets { border-top: 3px solid #9b772e; }
+.constellation-node.leadership { border-top: 3px solid #765f9e; }
+.constellation-node.competition { border-top: 3px solid #9a4a57; }
+
+.visual-coverage-strip {
+  align-items: stretch;
+  border-bottom: 1px solid var(--line);
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 0;
+  grid-template-columns: 154px repeat(2, minmax(0, 1fr));
+}
+
+.coverage-ring { align-items: center; display: grid; padding: 16px; place-items: center; }
+.coverage-ring::before { background: conic-gradient(#1a7376 var(--coverage), #d8e2e8 0); border-radius: 50%; content: ''; grid-area: 1 / 1; height: 106px; width: 106px; }
+.coverage-ring > div { align-items: center; background: #ffffff; border-radius: 50%; display: grid; gap: 2px; grid-area: 1 / 1; height: 84px; place-content: center; text-align: center; width: 84px; }
+.coverage-ring strong { color: #21435b; font-size: 20px; }
+.coverage-ring span { color: var(--muted); font-size: 9px; font-weight: 800; text-transform: uppercase; }
+.visual-summary { border-left: 1px solid var(--line); display: grid; gap: 5px; min-width: 0; padding: 25px 18px; }
+.visual-summary > span { color: #60758a; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+.visual-summary strong { color: #243e57; font-size: 18px; overflow-wrap: anywhere; }
+.visual-summary small { color: var(--muted); font-size: 12px; line-height: 1.35; }
 
 .briefing-at-glance,
 .briefing-gap-register {
@@ -3126,10 +3243,40 @@ th {
   .research-workbench,
   .briefing-summary,
   .briefing-at-glance-grid,
-  .briefing-evidence-grid {
+  .briefing-evidence-grid,
+  .visual-coverage-strip {
     display: grid;
     grid-template-columns: 1fr;
   }
+
+  .company-constellation {
+    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-height: auto;
+    padding: 14px;
+  }
+
+  .constellation-orbit { display: none; }
+
+  .constellation-core {
+    border-width: 5px;
+    grid-column: 1 / -1;
+    grid-row: 1;
+    height: 126px;
+    padding: 20px;
+    width: 126px;
+  }
+
+  .constellation-node,
+  .constellation-node:nth-of-type(n) {
+    align-self: stretch;
+    grid-column: auto;
+    grid-row: auto;
+    justify-self: stretch;
+    max-width: none;
+  }
+
+  .visual-summary { border-left: 0; border-top: 1px solid var(--line); }
 
   .briefing-at-glance > header,
   .briefing-gap-register > header,
@@ -3171,6 +3318,8 @@ th {
 
   .research-index {
     border-bottom: 1px solid var(--line);
+    max-height: none;
+    overflow: visible;
     padding-bottom: 20px;
   }
 

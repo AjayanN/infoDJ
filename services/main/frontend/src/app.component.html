@@ -808,15 +808,34 @@
 
                 <section class="research-briefing" aria-labelledby="briefing-heading">
                   <header><p class="section-kicker">Executive brief</p><h2 id="briefing-heading">What to know now</h2><span>Source-backed company context. Not investment advice.</span></header>
-                  <div class="briefing-summary">
-                    <div><h3>Business model</h3><p>{{ companyView.sections['business_model'].text || 'No reviewed business-model summary is available.' }}</p></div>
-                    <div><h3>How it earns</h3><div class="briefing-chips" *ngIf="dossierChips(companyView, ['revenue_sources']).length > 0; else noRevenueChips"><span *ngFor="let chip of dossierChips(companyView, ['revenue_sources'])">{{ chip }}</span></div><ng-template #noRevenueChips><p class="briefing-gap">Revenue-source evidence is unavailable.</p></ng-template></div>
-                  </div>
-                  <section class="briefing-at-glance" aria-labelledby="business-at-a-glance-heading">
-                    <header><div><p class="section-kicker">Business at a glance</p><h3 id="business-at-a-glance-heading">The operating picture</h3></div><span>Reviewed company profile evidence</span></header>
-                    <div class="briefing-at-glance-grid">
-                      <article *ngFor="let group of companyAtGlanceGroups"><h4>{{ group.label }}</h4><div class="briefing-chips" *ngIf="dossierChips(companyView, group.sections).length > 0; else atGlanceGap"><span *ngFor="let chip of dossierChips(companyView, group.sections)">{{ chip }}</span></div><ng-template #atGlanceGap><p class="briefing-gap">No reviewed evidence.</p></ng-template></article>
+                  <section class="company-constellation" aria-label="Company visual map">
+                    <div class="constellation-orbit orbit-one" aria-hidden="true"></div>
+                    <div class="constellation-orbit orbit-two" aria-hidden="true"></div>
+                    <div class="constellation-core">
+                      <span>Company map</span>
+                      <strong>{{ companyView.company.name }}</strong>
+                      <small>{{ companyView.coverage.completeness_percent }}% profile coverage</small>
                     </div>
+                    <button type="button" class="constellation-node" *ngFor="let node of companyVisualNodes(companyView); let index = index" [class]="'constellation-node node-' + index + ' ' + node.tone" (click)="openCompanyVisualNode(node)" [attr.aria-label]="'Open ' + node.label + ' workspace'">
+                      <span>{{ node.label }}</span>
+                      <strong>{{ node.items.length }}</strong>
+                      <small>{{ node.items.length ? node.items.join(' · ') : 'Evidence unavailable' }}</small>
+                    </button>
+                  </section>
+                  <section class="visual-coverage-strip" aria-label="Company evidence coverage">
+                    <article class="coverage-ring" [style.--coverage]="companyView.coverage.completeness_percent + '%'">
+                      <div><strong>{{ companyView.coverage.completeness_percent }}%</strong><span>profile coverage</span></div>
+                    </article>
+                    <article class="visual-summary">
+                      <span>Business model</span>
+                      <strong>{{ dossierChips(companyView, ['revenue_sources']).length || 0 }} revenue signals</strong>
+                      <small>{{ companyView.sections['business_model'].text ? 'Source-backed model available' : 'Model evidence unavailable' }}</small>
+                    </article>
+                    <article class="visual-summary">
+                      <span>Evidence base</span>
+                      <strong>{{ companyView.coverage.source_count }} sources</strong>
+                      <small>{{ sourceFreshness(companyView) }}</small>
+                    </article>
                   </section>
                   <section class="briefing-evidence-strip" aria-labelledby="company-evidence-strip-heading">
                     <header><div><p class="section-kicker">Current evidence</p><h3 id="company-evidence-strip-heading">Changes, reported facts, and review coverage</h3></div><div class="briefing-evidence-actions"><button type="button" class="ghost-button" (click)="openCompanyDashboard('latest-moves')">Moves</button><button type="button" class="ghost-button" (click)="openEarnings(companyView.company.slug)">Earnings</button><button type="button" class="ghost-button" (click)="openStrategyMilestones(companyView.company.slug)">Milestones</button><button type="button" class="ghost-button" (click)="openCompanyDashboard('risk-signals')">Risks</button></div></header>
@@ -840,13 +859,6 @@
                         <span>Source coverage</span><strong>{{ companyView.coverage.source_count }}</strong><p>Reviewed source records behind this brief.</p><button type="button" class="ghost-button" *ngIf="companyView.evidence.length > 0" (click)="openSourceLens('Company evidence', companyView.evidence)">Open source lens</button>
                       </article>
                     </div>
-                  </section>
-                  <section class="briefing-block" *ngFor="let block of companyDossierBlocks">
-                    <header><h3>{{ block.title }}</h3><span>{{ block.description }}</span></header>
-                    <ng-container *ngIf="dossierEntries(companyView, block.sections).length > 0; else briefingBlockGap">
-                      <article *ngFor="let entry of dossierEntries(companyView, block.sections)"><h4>{{ entry.label }}</h4><p *ngIf="entry.text">{{ entry.text }}</p><ul *ngIf="entry.items.length > 0"><li *ngFor="let item of entry.items">{{ item }}</li></ul></article>
-                    </ng-container>
-                    <ng-template #briefingBlockGap><p class="briefing-gap">No reviewed profile evidence is available for this area.</p></ng-template>
                   </section>
                   <section class="briefing-gap-register" *ngIf="companyView.source_gaps.length > 0" aria-labelledby="profile-gap-heading">
                     <header><div><p class="section-kicker">Coverage gaps</p><h3 id="profile-gap-heading">Missing profile evidence</h3></div><span>{{ companyView.source_gaps.length }} areas to complete</span></header>
