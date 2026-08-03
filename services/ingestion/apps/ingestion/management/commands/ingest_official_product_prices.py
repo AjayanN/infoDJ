@@ -16,11 +16,15 @@ class Command(BaseCommand):
         parser.add_argument("--company", help="Company slug. Omit with --all.")
         parser.add_argument("--all", action="store_true")
         parser.add_argument("--limit", type=int, default=3, help="Maximum official pages per company.")
+        parser.add_argument("--offset", type=int, default=0)
+        parser.add_argument("--company-limit", type=int, default=0)
 
     def handle(self, *args, **options):
         if bool(options["company"]) == bool(options["all"]):
             raise CommandError("Pass exactly one of --company or --all.")
         companies = Company.objects.filter(is_active=True).order_by("name") if options["all"] else Company.objects.filter(slug=options["company"])
+        if options["all"]:
+            companies = companies[options["offset"] : options["offset"] + options["company_limit"]] if options["company_limit"] else companies[options["offset"] :]
         if not companies.exists():
             raise CommandError(f"Company not found: {options['company']}")
         totals = {"pages_seen": 0, "pages_skipped": 0, "pages_failed": 0, "prices_found": 0, "prices_inserted": 0, "prices_updated": 0, "skipped": 0}

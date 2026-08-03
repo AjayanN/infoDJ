@@ -37,6 +37,7 @@ class Command(BaseCommand):
         parser.add_argument("--include-market-data", action="store_true")
         parser.add_argument("--include-financial-facts", action="store_true")
         parser.add_argument("--include-insider-transactions", action="store_true")
+        parser.add_argument("--include-official-product-prices", action="store_true")
         parser.add_argument("--insider-form-limit", type=int, default=5)
         parser.add_argument("--include-macro-context", action="store_true")
         parser.add_argument("--include-quality-scoring", action="store_true")
@@ -101,6 +102,7 @@ class Command(BaseCommand):
             "include_market_data": options["include_market_data"],
             "include_financial_facts": options["include_financial_facts"],
             "include_insider_transactions": options["include_insider_transactions"],
+            "include_official_product_prices": options["include_official_product_prices"],
             "insider_form_limit": options["insider_form_limit"],
             "include_macro_context": options["include_macro_context"],
             "include_quality_scoring": options["include_quality_scoring"],
