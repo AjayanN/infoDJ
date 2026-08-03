@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import re
 
 from apps.ingestion.models import ArticleExtraction, SourceGapResolutionCandidate
-from apps.ingestion.services.article_extractor import extract_source_document
+from apps.ingestion.services.article_extractor import ArticleExtractor, extract_source_document
 from apps.ingestion.services.source_gap_resolver import SOURCE_RULES, confidence_for
 
 
@@ -16,7 +16,14 @@ class CandidateExtractionResult:
     candidates_failed: int
 
 
-def extract_source_gap_candidates(*, limit: int = 100, dashboard: str = "", gap_type: str = "") -> CandidateExtractionResult:
+def extract_source_gap_candidates(
+    *,
+    limit: int = 100,
+    dashboard: str = "",
+    gap_type: str = "",
+    timeout: float = 10.0,
+    retry_failed: bool = False,
+) -> CandidateExtractionResult:
     candidates = SourceGapResolutionCandidate.objects.filter(review_status="NEEDS_REVIEW").select_related("source_document")
     if dashboard:
         candidates = candidates.filter(dashboard=dashboard)
@@ -26,16 +33,30 @@ def extract_source_gap_candidates(*, limit: int = 100, dashboard: str = "", gap_
     documents_extracted = 0
     updated = 0
     failed = 0
+    extractions: dict[int, ArticleExtraction] = {}
     for candidate in candidates.order_by("company_id", "dashboard", "gap_type", "-confidence_score")[:limit]:
         checked += 1
-        extraction = ArticleExtraction.objects.filter(
-            source_document=candidate.source_document,
-            extraction_status="SUCCEEDED",
-        ).first()
+        extraction = extractions.get(candidate.source_document_id)
         if extraction is None:
-            extraction = extract_source_document(candidate.source_document, article_extraction_model=ArticleExtraction)
+            extraction = ArticleExtraction.objects.filter(source_document=candidate.source_document).first()
+            if extraction is not None:
+                extractions[candidate.source_document_id] = extraction
+        if extraction is None:
+            extraction = extract_source_document(
+                candidate.source_document,
+                article_extraction_model=ArticleExtraction,
+                extractor=ArticleExtractor(timeout=timeout),
+            )
+            extractions[candidate.source_document_id] = extraction
             if extraction.extraction_status == "SUCCEEDED":
                 documents_extracted += 1
+        elif extraction.extraction_status == "FAILED" and retry_failed:
+            extraction = extract_source_document(
+                candidate.source_document,
+                article_extraction_model=ArticleExtraction,
+                extractor=ArticleExtractor(timeout=timeout),
+            )
+            extractions[candidate.source_document_id] = extraction
         if extraction.extraction_status != "SUCCEEDED":
             candidate.extraction_status = "FAILED"
             candidate.metadata = {

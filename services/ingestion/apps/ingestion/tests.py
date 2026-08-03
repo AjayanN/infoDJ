@@ -1616,6 +1616,50 @@ class IngestionSearchApiTests(TestCase):
         self.assertIn("insider transaction", excerpt)
         self.assertLess(len(excerpt), len(text))
 
+    def test_source_gap_candidate_extractor_reuses_recorded_failure(self):
+        source = SourceDocument.objects.create(
+            company=self.netflix,
+            source_api="OFFICIAL_WEBSITE",
+            url="https://example.com/blocked-store",
+            title="Blocked store page",
+            publisher="Example",
+            language="en",
+        )
+        ArticleExtraction.objects.create(
+            source_document=source,
+            extraction_status="FAILED",
+            extraction_error="403 Client Error",
+            extractor_name="none",
+        )
+        gap = SourceGap.objects.create(
+            company=self.netflix,
+            dashboard="product_pricing_history",
+            gap_type="product_list_prices",
+            provider="product-pricing-history",
+            reason="Product pricing unavailable.",
+            next_ingestion_task="Review official pricing.",
+        )
+        candidate = SourceGapResolutionCandidate.objects.create(
+            company=self.netflix,
+            source_gap=gap,
+            dashboard=gap.dashboard,
+            gap_type=gap.gap_type,
+            source_document=source,
+            candidate_type="official_product_price_source",
+            evidence_text="Store page.",
+            confidence_score="0.500",
+            extraction_status="CANDIDATE",
+            review_status="NEEDS_REVIEW",
+        )
+
+        result = extract_source_gap_candidates(limit=10)
+
+        self.assertEqual(result.candidates_checked, 1)
+        self.assertEqual(result.documents_extracted, 0)
+        self.assertEqual(result.candidates_failed, 1)
+        candidate.refresh_from_db()
+        self.assertEqual(candidate.metadata["extraction_error"], "403 Client Error")
+
     def test_source_gaps_api_exposes_resolution_candidates(self):
         gap = SourceGap.objects.create(
             company=self.netflix,
