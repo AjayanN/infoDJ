@@ -129,6 +129,7 @@ from apps.ingestion.services.market_price_client import (
 )
 from apps.ingestion.services.sec_form4 import form4_sources, ingest_form4_sources, ownership_xml_url, parse_ownership_xml
 from apps.ingestion.management.commands.ingest_market_prices import build_market_client
+from apps.ingestion.services.official_product_price import parse_official_prices
 from apps.ingestion.services.sec_profile_builder import SecProfileData, apply_profile_fallbacks, parse_sec_profile_text
 from apps.ingestion.services.wikidata_client import normalize_company_entity
 
@@ -2476,6 +2477,22 @@ class MarketPriceClientTests(TestCase):
         with patch.dict(os.environ, {"FMP_API_KEY": "", "ALPHA_VANTAGE_API_KEY": ""}, clear=False):
             with self.assertRaisesMessage(CommandError, "No automatic market-data provider is configured"):
                 build_market_client({"provider": "auto", "fmp_api_key": "", "alpha_vantage_api_key": ""})
+
+
+class OfficialProductPriceTests(TestCase):
+    def test_parses_only_explicit_json_ld_offers(self):
+        prices = parse_official_prices(
+            '''<script type="application/ld+json">{
+                "@type": "Product", "name": "Example Pro", "offers": {
+                  "@type": "Offer", "price": "19.99", "priceCurrency": "USD"
+                }
+            }</script><p>Prices may change.</p>'''
+        )
+
+        self.assertEqual(len(prices), 1)
+        self.assertEqual(prices[0].name, "Example Pro")
+        self.assertEqual(str(prices[0].amount), "19.99")
+        self.assertEqual(prices[0].currency, "USD")
 
 
 class SecForm4IngestionTests(TestCase):
