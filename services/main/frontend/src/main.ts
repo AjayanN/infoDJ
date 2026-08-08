@@ -58,6 +58,7 @@ import {
   SearchSuggestion,
   Subscription
 } from './app/services/infodj-api.service';
+import { founderStageCheckpoint, founderStageLabel, founderStageProgress, type FounderStage } from './app/founder-stage.utils';
 import {
   businessModelComponentLabel,
   businessModelRelationshipLabel,
@@ -100,6 +101,8 @@ type DashboardView = {
 };
 
 type DashboardAvailability = 'available' | 'unavailable';
+type FounderPriority = { number: string; title: string; detail: string; outcome: string };
+type FounderRisk = { label: string; status: 'address now' | 'watch closely' | 'build proof'; detail: string };
 type CompanyFeatureId =
   | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings'
   | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle'
@@ -184,6 +187,8 @@ class AppComponent {
   private readonly api = inject(InfoDjApiService);
 
   authView = signal<AuthView>('login');
+  founderStage = signal<FounderStage | ''>(this.savedFounderStage());
+  researchMenuOpen = signal(false);
   activePage = signal<AppPage>('dashboard');
   dashboardView = signal<DashboardViewId>('company-intelligence');
   dashboardCompanySlug = signal('');
@@ -675,6 +680,85 @@ class AppComponent {
     this.error.set('');
   }
 
+  toggleResearchMenu(): void {
+    this.researchMenuOpen.update((isOpen) => !isOpen);
+  }
+
+  chooseFounderStage(stage: FounderStage): void {
+    this.founderStage.set(stage);
+    localStorage.setItem('infodj_founder_stage', stage);
+    this.setAuthView('signup');
+  }
+
+  founderStageLabel(): string {
+    const stage = this.founderStage();
+    return stage ? founderStageLabel(stage) : 'Choose your stage';
+  }
+
+  founderPriorities(): FounderPriority[] {
+    const plans: Record<FounderStage, FounderPriority[]> = {
+      validate: [
+        { number: '01', title: 'Interview target customers', detail: 'Run 15 structured conversations with people who have the problem today.', outcome: 'Prove the problem is urgent enough to solve.' },
+        { number: '02', title: 'Choose a narrow ideal customer', detail: 'Write the first segment you can serve exceptionally well.', outcome: 'Make your offer and learning loop specific.' },
+        { number: '03', title: 'Test willingness to pay', detail: 'Ask for a commitment before investing heavily in the build.', outcome: 'Separate interest from real demand.' }
+      ],
+      build: [
+        { number: '01', title: 'Define the smallest valuable workflow', detail: 'Prioritize the one job customers need solved end to end.', outcome: 'Build toward a usable outcome, not a feature list.' },
+        { number: '02', title: 'Recruit design partners', detail: 'Work with a small set of customers who will test the product closely.', outcome: 'Create a fast, evidence-rich product loop.' },
+        { number: '03', title: 'Set product learning metrics', detail: 'Measure activation, repeated use, and the reason people return.', outcome: 'Know whether the product is becoming useful.' }
+      ],
+      launch: [
+        { number: '01', title: 'Prove repeatable activation', detail: 'Track the moment a new customer reaches first value.', outcome: 'Find and remove the biggest onboarding friction.' },
+        { number: '02', title: 'Test one acquisition channel', detail: 'Run a focused experiment with a clear customer and message.', outcome: 'Learn which route can bring qualified demand.' },
+        { number: '03', title: 'Create a weekly founder metric review', detail: 'Review demand, activation, retention, and runway every week.', outcome: 'Turn signals into timely decisions.' }
+      ],
+      grow: [
+        { number: '01', title: 'Find the retention constraint', detail: 'Segment customers to see who stays, who leaves, and why.', outcome: 'Focus growth on a product people keep using.' },
+        { number: '02', title: 'Make your best channel repeatable', detail: 'Document audience, message, cost, and conversion for the strongest channel.', outcome: 'Create a dependable growth engine.' },
+        { number: '03', title: 'Protect unit economics', detail: 'Track payback, margin, and support load as volume increases.', outcome: 'Grow without hiding an unsustainable model.' }
+      ],
+      scale: [
+        { number: '01', title: 'Clarify the operating cadence', detail: 'Give each team clear outcomes, owners, and weekly decision forums.', outcome: 'Keep execution aligned as complexity rises.' },
+        { number: '02', title: 'Stress-test growth assumptions', detail: 'Model what changes if conversion, retention, or cost shifts.', outcome: 'Spot fragile growth before it becomes a crisis.' },
+        { number: '03', title: 'Invest behind the durable advantage', detail: 'Use evidence to choose the product, channel, or capability worth compounding.', outcome: 'Turn growth into a defensible position.' }
+      ]
+    };
+    const stage = this.founderStage();
+    return stage ? plans[stage] : [];
+  }
+
+  founderRisks(): FounderRisk[] {
+    const risks: Record<FounderStage, FounderRisk[]> = {
+      validate: [
+        { label: 'Problem urgency', status: 'address now', detail: 'Do target customers describe a costly, recurring problem?' },
+        { label: 'Customer focus', status: 'build proof', detail: 'Can you name the first segment you will serve?' },
+        { label: 'Willingness to pay', status: 'watch closely', detail: 'Have customers made a meaningful commitment?' }
+      ],
+      build: [
+        { label: 'Scope creep', status: 'address now', detail: 'Is the product focused on one valuable workflow?' },
+        { label: 'Learning speed', status: 'watch closely', detail: 'Are design partners giving you weekly product evidence?' },
+        { label: 'Activation signal', status: 'build proof', detail: 'Can you tell when a new user gets first value?' }
+      ],
+      launch: [
+        { label: 'Activation', status: 'address now', detail: 'Do new customers reach value quickly and consistently?' },
+        { label: 'Channel fit', status: 'build proof', detail: 'Is one acquisition channel producing qualified demand?' },
+        { label: 'Runway', status: 'watch closely', detail: 'Does the current experiment pace fit your cash horizon?' }
+      ],
+      grow: [
+        { label: 'Retention', status: 'address now', detail: 'Are your best customers returning at a healthy rate?' },
+        { label: 'Unit economics', status: 'watch closely', detail: 'Does growth improve, rather than strain, contribution margin?' },
+        { label: 'Channel concentration', status: 'build proof', detail: 'Can one channel change disrupt the whole pipeline?' }
+      ],
+      scale: [
+        { label: 'Execution alignment', status: 'address now', detail: 'Do teams have clear, shared outcomes and ownership?' },
+        { label: 'Growth resilience', status: 'watch closely', detail: 'Have you modeled a slower demand or retention period?' },
+        { label: 'Strategic focus', status: 'build proof', detail: 'Are large investments tied to a durable advantage?' }
+      ]
+    };
+    const stage = this.founderStage();
+    return stage ? risks[stage] : [];
+  }
+
   setActivePage(page: AppPage): void {
     this.activePage.set(page);
     this.menuOpen.set(false);
@@ -691,6 +775,16 @@ class AppComponent {
 
   toggleMenu(): void {
     this.menuOpen.update((open) => !open);
+  }
+
+  stageProgress(): number {
+    const stage = this.founderStage();
+    return stage ? founderStageProgress(stage) : 0;
+  }
+
+  stageCheckpoint(): string {
+    const stage = this.founderStage();
+    return stage ? founderStageCheckpoint(stage) : 'Choose your company stage';
   }
 
   setDashboardView(view: DashboardViewId): void {
@@ -3545,6 +3639,13 @@ class AppComponent {
     this.avatarPreview = '';
     this.avatarFilename = '';
     this.message.set(message);
+  }
+
+  private savedFounderStage(): FounderStage | '' {
+    const stage = localStorage.getItem('infodj_founder_stage');
+    return ['validate', 'build', 'launch', 'grow', 'scale'].includes(stage || '')
+      ? stage as FounderStage
+      : '';
   }
 
   private patchSubscription(subscription: Subscription): void {

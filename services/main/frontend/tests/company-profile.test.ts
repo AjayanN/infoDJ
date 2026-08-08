@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+import { founderStageCheckpoint, founderStageLabel, founderStageProgress } from '../src/app/founder-stage.utils';
+
 import {
   businessModelComponentLabel,
   businessModelRelationshipLabel,
@@ -62,4 +64,17 @@ test('deduplicates source lens records by canonical URL and preserves source con
   };
   assert.equal(deduplicateSourceLensRecords([source, { ...source, id: 2 }]).length, 1);
   assert.equal(sourceLensWhyUsed(source), 'Used for company profile');
+});
+
+
+test('maps founder stages to a clear visual progress progression', () => {
+  assert.deepEqual(
+    ['validate', 'build', 'launch', 'grow', 'scale'].map((stage) => founderStageProgress(stage as Parameters<typeof founderStageProgress>[0])),
+    [18, 36, 54, 72, 90]
+  );
+});
+
+test('gives every founder stage a human-readable label and checkpoint', () => {
+  assert.equal(founderStageLabel('launch'), 'Launch');
+  assert.equal(founderStageCheckpoint('grow'), 'Make retention power the growth engine');
 });
