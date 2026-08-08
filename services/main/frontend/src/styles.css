@@ -5929,3 +5929,37 @@ th {
   .coverage-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .coverage-metrics div:nth-child(odd) { border-left: 0; }
 }
+
+
+.stage-choice {
+  display: grid;
+  gap: 10px;
+  max-width: 310px;
+}
+.stage-choice h3 {
+  color: #f5fbff;
+  font-size: 20px;
+  letter-spacing: -.03em;
+  line-height: 1.08;
+  margin: 0;
+}
+.stage-choice-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.stage-choice-buttons button {
+  background: rgba(127, 224, 206, .08);
+  border: 1px solid rgba(127, 224, 206, .36);
+  border-radius: 99px;
+  color: #eafcff;
+  font-size: 11px;
+  font-weight: 800;
+  min-height: 30px;
+  padding: 5px 10px;
+}
+.stage-choice-buttons button:hover,
+.stage-choice-buttons button:focus-visible {
+  background: #7fe0ce;
+  color: #0b2943;
+}
