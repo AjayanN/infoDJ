@@ -1,11 +1,68 @@
 <ng-container *ngIf="!token(); else authenticatedApp">
   <a class="skip-link" href="#auth-content">Skip to authentication form</a>
-  <main id="auth-content" class="auth-page" tabindex="-1">
-    <section class="auth-card" aria-labelledby="auth-title" [attr.aria-busy]="loading()">
+  <main id="entry-content" class="auth-page founder-entry">
+    <section class="entry-story" aria-labelledby="entry-title">
+      <div class="entry-brand" aria-label="InfoDJ">
+        <span class="entry-brand-mark" aria-hidden="true">i</span>
+        <span>InfoDJ</span>
+      </div>
+
+      <div class="entry-copy">
+        <p class="entry-kicker">Your company’s next right move</p>
+        <h1 id="entry-title">Build with clarity, not just momentum.</h1>
+        <p>InfoDJ turns your company stage, risks, and goals into a focused action plan—grounded in what comparable companies actually changed.</p>
+      </div>
+
+      <section class="entry-stage-map" aria-labelledby="stage-map-title">
+        <div class="entry-section-heading">
+          <p class="entry-kicker">Start where you are</p>
+          <h2 id="stage-map-title">Your company journey</h2>
+        </div>
+        <div class="stage-rail" aria-label="Company stages">
+          <button type="button" [class.stage-highlight]="founderStage() === 'validate'" (click)="chooseFounderStage('validate')"><span>01</span>Validate</button>
+          <button type="button" [class.stage-highlight]="founderStage() === 'build'" (click)="chooseFounderStage('build')"><span>02</span>Build</button>
+          <button type="button" [class.stage-highlight]="founderStage() === 'launch'" (click)="chooseFounderStage('launch')"><span>03</span>Launch</button>
+          <button type="button" [class.stage-highlight]="founderStage() === 'grow'" (click)="chooseFounderStage('grow')"><span>04</span>Grow</button>
+          <button type="button" [class.stage-highlight]="founderStage() === 'scale'" (click)="chooseFounderStage('scale')"><span>05</span>Scale</button>
+        </div>
+      </section>
+
+      <section class="entry-preview" aria-labelledby="preview-title">
+        <div class="entry-preview-heading">
+          <div>
+            <p class="entry-kicker">A clear starting point</p>
+            <h2 id="preview-title">Your decision cockpit</h2>
+          </div>
+          <span class="preview-status">Sample plan</span>
+        </div>
+        <div class="preview-grid">
+          <article class="preview-priorities">
+            <p>Next best actions</p>
+            <ol>
+              <li><span>1</span><div><strong>Validate customer demand</strong><small>Talk to 15 target customers</small></div></li>
+              <li><span>2</span><div><strong>Define your ideal customer</strong><small>Turn patterns into a clear ICP</small></div></li>
+              <li><span>3</span><div><strong>Test the value proposition</strong><small>Measure which message earns interest</small></div></li>
+            </ol>
+          </article>
+          <article class="preview-risks">
+            <p>Risk radar</p>
+            <div class="risk-radar" role="img" aria-label="Sample risk radar">
+              <span class="radar-ring ring-one"></span><span class="radar-ring ring-two"></span><span class="radar-axis axis-one"></span><span class="radar-axis axis-two"></span><span class="radar-shape"></span><span class="radar-dot dot-one"></span><span class="radar-dot dot-two"></span>
+            </div>
+            <div class="risk-legend"><span><i class="risk-high"></i>Demand</span><span><i class="risk-medium"></i>Go-to-market</span><span><i class="risk-low"></i>Execution</span></div>
+          </article>
+        </div>
+      </section>
+
+      <p class="entry-proof"><strong>From uncertainty to a plan.</strong> See the risks to address, the metrics to watch, and the decisions that moved similar companies forward.</p>
+    </section>
+
+    <section id="auth-content" class="auth-card" aria-labelledby="auth-title" [attr.aria-busy]="loading()" tabindex="-1">
       <div class="auth-brand">
-        <p class="eyebrow">InfoDJ Admin</p>
+        <p class="eyebrow">Get your starting plan</p>
         <h1 id="auth-title">{{ authTitle() }}</h1>
-        <p id="auth-description">Use an account to access the admin workspace, subscription controls, and company intelligence screens.</p>
+        <p id="auth-description">Start with your company stage. We’ll help you focus on the next decision, not every possible one.</p>
+        <p class="auth-stage-context" *ngIf="founderStage()">Starting from: <strong>{{ founderStageLabel() }}</strong></p>
       </div>
 
       <section class="status-strip compact" *ngIf="message() || error()" aria-label="Authentication status">
@@ -23,7 +80,7 @@
           [class.active]="authView() === 'login'"
           (click)="setAuthView('login')"
         >
-          Login
+          Log in
         </button>
         <button
           id="signup-tab"
@@ -34,7 +91,7 @@
           [class.active]="authView() === 'signup'"
           (click)="setAuthView('signup')"
         >
-          Signup
+          Create account
         </button>
       </div>
 
@@ -55,7 +112,7 @@
           Password
           <input id="login-password" name="password" [(ngModel)]="password" autocomplete="current-password" type="password" required />
         </label>
-        <button type="submit" class="primary-button" [disabled]="loading()" [attr.aria-disabled]="loading()">Login</button>
+        <button type="submit" class="primary-button" [disabled]="loading()" [attr.aria-disabled]="loading()">Open my workspace</button>
         <button type="button" class="ghost-button full-width" (click)="startGoogleLogin()" [disabled]="loading()" [attr.aria-disabled]="loading()">Continue with Google</button>
         <button type="button" class="link-button" (click)="setAuthView('forgot')">Forgot password?</button>
       </form>
@@ -81,7 +138,7 @@
           Password
           <input id="signup-password" name="signup_password" [(ngModel)]="password" autocomplete="new-password" type="password" required minlength="8" />
         </label>
-        <button type="submit" class="primary-button" [disabled]="loading()" [attr.aria-disabled]="loading()">Create account</button>
+        <button type="submit" class="primary-button" [disabled]="loading()" [attr.aria-disabled]="loading()">Create my action plan</button>
         <button type="button" class="ghost-button full-width" (click)="startGoogleLogin()" [disabled]="loading()" [attr.aria-disabled]="loading()">Continue with Google</button>
       </form>
 
@@ -114,8 +171,13 @@
         <strong>Business intelligence</strong>
       </div>
       <nav class="side-nav" aria-label="Main menu">
-        <button type="button" [class.active]="activePage() === 'dashboard'" [attr.aria-current]="activePage() === 'dashboard' ? 'page' : null" (click)="setActivePage('dashboard')">Dashboard</button>
-        <button type="button" *ngIf="companyProfile()" [class.active]="activePage() === 'company'" [attr.aria-current]="activePage() === 'company' ? 'page' : null" (click)="setActivePage('company')">Company 360</button>
+        <button type="button" [class.active]="activePage() === 'dashboard'" [attr.aria-current]="activePage() === 'dashboard' ? 'page' : null" (click)="setActivePage('dashboard')">Home</button>
+        <button type="button" class="research-menu-trigger" [class.active]="researchMenuOpen()" [attr.aria-expanded]="researchMenuOpen()" (click)="toggleResearchMenu()">Research workspace <span aria-hidden="true">{{ researchMenuOpen() ? '' : '+' }}</span></button>
+        <button type="button" [class.active]="activePage() === 'profile'" [attr.aria-current]="activePage() === 'profile' ? 'page' : null" (click)="setActivePage('profile')">Profile</button>
+        <button type="button" [class.active]="activePage() === 'subscription'" [attr.aria-current]="activePage() === 'subscription' ? 'page' : null" (click)="setActivePage('subscription')">Subscription</button>
+        <section class="research-nav-drawer" *ngIf="researchMenuOpen()" aria-label="Research tools">
+          <p>Research tools</p>
+<button type="button" *ngIf="companyProfile()" [class.active]="activePage() === 'company'" [attr.aria-current]="activePage() === 'company' ? 'page' : null" (click)="setActivePage('company')">Company 360</button>
         <button type="button" *ngIf="businessModel()" [class.active]="activePage() === 'business-model'" [attr.aria-current]="activePage() === 'business-model' ? 'page' : null" (click)="setActivePage('business-model')">Business Model</button>
         <button type="button" *ngIf="operatingKpis()" [class.active]="activePage() === 'operating-kpis'" [attr.aria-current]="activePage() === 'operating-kpis' ? 'page' : null" (click)="setActivePage('operating-kpis')">Operating KPIs</button>
         <button type="button" *ngIf="managementPromises()" [class.active]="activePage() === 'management-promises'" [attr.aria-current]="activePage() === 'management-promises' ? 'page' : null" (click)="setActivePage('management-promises')">Promises</button>
@@ -140,8 +202,7 @@
         <button type="button" [class.active]="activePage() === 'contradictions'" [attr.aria-current]="activePage() === 'contradictions' ? 'page' : null" (click)="openContradictions()">Contradictions</button>
         <button type="button" [class.active]="activePage() === 'strategy-failures'" [attr.aria-current]="activePage() === 'strategy-failures' ? 'page' : null" (click)="openStrategyFailures()">Failures</button>
         <button type="button" [class.active]="activePage() === 'foundations'" [attr.aria-current]="activePage() === 'foundations' ? 'page' : null" (click)="openFoundations()">Standards</button>
-        <button type="button" [class.active]="activePage() === 'profile'" [attr.aria-current]="activePage() === 'profile' ? 'page' : null" (click)="setActivePage('profile')">Profile</button>
-        <button type="button" [class.active]="activePage() === 'subscription'" [attr.aria-current]="activePage() === 'subscription' ? 'page' : null" (click)="setActivePage('subscription')">Subscription</button>
+        </section>
       </nav>
     </aside>
 
@@ -191,11 +252,89 @@
         <ng-container [ngSwitch]="activePage()">
           <section *ngSwitchCase="'dashboard'" class="dashboard-grid" aria-labelledby="dashboard-heading">
             <ng-container *ngIf="dashboard() as dash; else dashboardEmpty">
+              <section class="founder-command-board" *ngIf="founderStage() && dash.summary.company_count > 0" aria-labelledby="founder-command-heading">
+                <header class="founder-command-heading">
+                  <div>
+                    <p class="section-kicker">Founder command center</p>
+                    <h2 id="founder-command-heading">Find your next proof point</h2>
+                  </div>
+                  <div class="founder-command-actions">
+                    <button type="button" class="ghost-button" (click)="setDashboardView('companies-like-mine')">Compare companies</button>
+                    <button type="button" class="primary-button" *ngIf="dash.top_companies.length > 0" (click)="openCompany(dash.top_companies[0].slug)">Open a Company 360</button>
+                  </div>
+                </header>
+
+                <div class="founder-command-grid">
+                  <section class="stage-compass" aria-label="Company stage progress">
+                    <div class="stage-compass-gauge" [style.--stage-progress.%]="stageProgress()" aria-hidden="true">
+                      <div><strong>{{ stageProgress() }}</strong><span>%</span></div>
+                    </div>
+                    <div class="stage-compass-copy">
+                      <span class="stage-chip">{{ founderStageLabel() }}</span>
+                      <h3>{{ stageCheckpoint() }}</h3>
+                      <p>Use the portfolio to see how established companies solved the same type of constraint.</p>
+                    </div>
+                  </section>
+
+                  <section class="portfolio-landscape" aria-labelledby="portfolio-landscape-heading">
+                    <div class="compact-panel-heading">
+                      <div><p class="section-kicker">Learning landscape</p><h3 id="portfolio-landscape-heading">Where the evidence is</h3></div>
+                      <span>{{ dash.summary.sector_count }} sectors</span>
+                    </div>
+                    <div class="sector-orbit" *ngIf="dash.sector_counts.length > 0">
+                      <button
+                        type="button"
+                        *ngFor="let sector of dash.sector_counts.slice(0, 6); let index = index"
+                        [class]="'sector-orbit-node tone-' + (index % 4)"
+                        [style.--sector-size.%]="sectorShare(sector.event_count, dash)"
+                        (click)="searchQuery = sector.sector; runSearch()"
+                      >
+                        <strong>{{ sector.sector }}</strong>
+                        <span>{{ sector.company_count }} companies</span>
+                        <small>{{ sector.event_count }} signals</small>
+                      </button>
+                    </div>
+                  </section>
+                  <section class="founder-risk-radar" aria-labelledby="risk-radar-heading">
+                    <div class="compact-panel-heading">
+                      <div><p class="section-kicker">Risk pulse</p><h3 id="risk-radar-heading">What to watch</h3></div>
+                      <button type="button" class="text-action" (click)="setDashboardView('risk-signals')">View all</button>
+                    </div>
+                    <div class="risk-radar-graphic" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
+                    <div class="risk-radar-list">
+                      <button type="button" *ngFor="let group of riskSignalGroups(dash.dashboards.risk_signals).slice(0, 3)" (click)="setDashboardView('risk-signals')">
+                        <span>{{ group.label }}</span><strong>{{ group.events.length }}</strong>
+                      </button>
+                      <span class="risk-radar-empty" *ngIf="riskSignalGroups(dash.dashboards.risk_signals).length === 0">No risk signals yet</span>
+                    </div>
+                  </section>
+                </div>
+
+                <section class="company-signal-panel" aria-labelledby="company-signal-heading">
+                  <div class="compact-panel-heading">
+                    <div><p class="section-kicker">Comparable companies</p><h3 id="company-signal-heading">Open a signal-rich company</h3></div>
+                    <span>{{ dash.summary.company_count }} in your portfolio</span>
+                  </div>
+                  <div class="company-signal-grid">
+                    <button type="button" class="company-signal-card" *ngFor="let company of dash.top_companies.slice(0, 6)" (click)="openCompany(company.slug)">
+                      <span class="company-signal-sector">{{ company.sector || 'Unclassified' }}</span>
+                      <strong>{{ company.name }}</strong>
+                      <div class="company-signal-meter" aria-hidden="true"><i [style.width.%]="companyShare(company.event_count, dash)"></i></div>
+                      <dl>
+                        <div><dt>Signals</dt><dd>{{ company.event_count }}</dd></div>
+                        <div><dt>Turns</dt><dd>{{ company.strategic_turn_count }}</dd></div>
+                        <div><dt>Sources</dt><dd>{{ company.source_count }}</dd></div>
+                      </dl>
+                    </button>
+                  </div>
+                </section>
+              </section>
+
               <section class="coverage-command" aria-labelledby="dashboard-heading">
                 <div class="coverage-command-copy">
-                  <p class="section-kicker">Research coverage</p>
-                  <h2 id="dashboard-heading">Strategic intelligence control room</h2>
-                  <p>Search the evidence base, open a company brief, or move into a focused research workflow.</p>
+                  <p class="section-kicker">{{ founderStage() ? founderStageLabel() + ' stage' : 'Research coverage' }}</p>
+                  <h2 id="dashboard-heading">{{ founderStage() ? 'Your decision cockpit' : 'Strategic intelligence control room' }}</h2>
+                  <p>{{ founderStage() ? 'Use comparable-company evidence to identify the risks, decisions, and signals that matter most at your stage.' : 'Search the evidence base, open a company brief, or move into a focused research workflow.' }}</p>
                 </div>
                 <form class="dashboard-search" (ngSubmit)="runSearch()">
                   <label for="global-search">
