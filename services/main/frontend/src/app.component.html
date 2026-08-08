@@ -252,7 +252,7 @@
         <ng-container [ngSwitch]="activePage()">
           <section *ngSwitchCase="'dashboard'" class="dashboard-grid" aria-labelledby="dashboard-heading">
             <ng-container *ngIf="dashboard() as dash; else dashboardEmpty">
-              <section class="founder-command-board" *ngIf="founderStage() && dash.summary.company_count > 0" aria-labelledby="founder-command-heading">
+              <section class="founder-command-board" *ngIf="dash.summary.company_count > 0" aria-labelledby="founder-command-heading">
                 <header class="founder-command-heading">
                   <div>
                     <p class="section-kicker">Founder command center</p>
@@ -266,14 +266,29 @@
 
                 <div class="founder-command-grid">
                   <section class="stage-compass" aria-label="Company stage progress">
-                    <div class="stage-compass-gauge" [style.--stage-progress.%]="stageProgress()" aria-hidden="true">
-                      <div><strong>{{ stageProgress() }}</strong><span>%</span></div>
-                    </div>
-                    <div class="stage-compass-copy">
-                      <span class="stage-chip">{{ founderStageLabel() }}</span>
-                      <h3>{{ stageCheckpoint() }}</h3>
-                      <p>Use the portfolio to see how established companies solved the same type of constraint.</p>
-                    </div>
+                    <ng-container *ngIf="founderStage(); else stageChooser">
+                      <div class="stage-compass-gauge" [style.--stage-progress.%]="stageProgress()" aria-hidden="true">
+                        <div><strong>{{ stageProgress() }}</strong><span>%</span></div>
+                      </div>
+                      <div class="stage-compass-copy">
+                        <span class="stage-chip">{{ founderStageLabel() }}</span>
+                        <h3>{{ stageCheckpoint() }}</h3>
+                        <p>Use the portfolio to see how established companies solved the same type of constraint.</p>
+                      </div>
+                    </ng-container>
+                    <ng-template #stageChooser>
+                      <div class="stage-choice">
+                        <span class="stage-chip">Set your starting point</span>
+                        <h3>Which stage best describes you?</h3>
+                        <div class="stage-choice-buttons">
+                          <button type="button" (click)="chooseFounderStage('validate')">Validate</button>
+                          <button type="button" (click)="chooseFounderStage('build')">Build</button>
+                          <button type="button" (click)="chooseFounderStage('launch')">Launch</button>
+                          <button type="button" (click)="chooseFounderStage('grow')">Grow</button>
+                          <button type="button" (click)="chooseFounderStage('scale')">Scale</button>
+                        </div>
+                      </div>
+                    </ng-template>
                   </section>
 
                   <section class="portfolio-landscape" aria-labelledby="portfolio-landscape-heading">
@@ -332,8 +347,8 @@
 
               <section class="coverage-command" aria-labelledby="dashboard-heading">
                 <div class="coverage-command-copy">
-                  <p class="section-kicker">{{ founderStage() ? founderStageLabel() + ' stage' : 'Research coverage' }}</p>
-                  <h2 id="dashboard-heading">{{ founderStage() ? 'Your decision cockpit' : 'Strategic intelligence control room' }}</h2>
+                  <p class="section-kicker">{{ founderStage() ? founderStageLabel() + ' stage' : 'Founder workspace' }}</p>
+                  <h2 id="dashboard-heading">{{ founderStage() ? 'Your decision cockpit' : 'Your company map' }}</h2>
                   <p>{{ founderStage() ? 'Use comparable-company evidence to identify the risks, decisions, and signals that matter most at your stage.' : 'Search the evidence base, open a company brief, or move into a focused research workflow.' }}</p>
                 </div>
                 <form class="dashboard-search" (ngSubmit)="runSearch()">
