@@ -3988,8 +3988,12 @@ th {
 }
 
 .model-command .coverage-summary {
+  background: transparent;
+  border: 0;
   border-left: 1px solid #4c6378;
-  padding-left: 24px;
+  color: #f8fbff;
+  flex: 0 0 190px;
+  padding: 4px 0 4px 24px;
 }
 
 .model-command .coverage-summary strong {
