@@ -999,7 +999,13 @@
             </ng-container>
 
             <ng-template #dashboardEmpty>
-              <div class="panel empty-state">Dashboard data has not loaded yet.</div>
+              <section class="panel dashboard-loading-state" role="status" aria-live="polite" aria-busy="true">
+                <p class="section-kicker">Preparing your workspace</p>
+                <h2>Building your dashboard</h2>
+                <p>Gathering portfolio coverage, company signals, and the next useful starting point.</p>
+                <div class="dashboard-loading-buffer" aria-hidden="true"><span></span></div>
+                <small>This refreshes automatically when the data is ready.</small>
+              </section>
             </ng-template>
           </section>
 
