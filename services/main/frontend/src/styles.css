@@ -6536,3 +6536,105 @@ th {
   .founder-360-entry { align-items: stretch; flex-direction: column; padding: 14px 20px; }
   .founder-360-entry .primary-button { width: 100%; }
 }
+
+
+/* Phone-first founder dashboard: no clipped grids, horizontal overflow, or desktop-density cards. */
+@media (max-width: 700px) {
+  .workspace { gap: 14px; padding: 12px; }
+  .topbar { gap: 10px; padding: 12px 14px; }
+  .topbar-title { gap: 10px; }
+  .topbar h1 { font-size: 22px; }
+  .topbar-title p:last-child {
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    display: -webkit-box;
+    font-size: 11px;
+    line-height: 1.35;
+    margin-top: 3px;
+    overflow: hidden;
+  }
+  .top-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; }
+  .top-actions button { font-size: 11px; min-height: 38px; padding: 6px; }
+
+  .dashboard-grid,
+  .founder-command-board,
+  .founder-command-grid,
+  .founder-workspace-tools,
+  .founder-learning-loop,
+  .portfolio-example-map { min-width: 0; }
+
+  .founder-command-board { border-radius: 16px; margin-bottom: 14px; }
+  .founder-command-heading { align-items: flex-start; flex-direction: column; gap: 13px; padding: 18px; }
+  .founder-command-heading h2 { font-size: 25px; line-height: 1.05; }
+  .founder-command-actions { width: 100%; }
+  .founder-command-actions .primary-button { min-height: 42px; width: 100%; }
+
+  .founder-command-grid { grid-template-columns: minmax(0, 1fr); }
+  .stage-compass,
+  .portfolio-landscape,
+  .company-signal-panel { padding: 18px; }
+  .stage-compass { gap: 14px; grid-template-columns: 92px minmax(0, 1fr); }
+  .stage-compass-gauge { padding: 9px; }
+  .stage-compass-gauge::before { inset: 9px; }
+  .stage-compass-gauge strong { font-size: 29px; }
+  .stage-compass-copy h3 { font-size: 18px; }
+  .stage-compass-copy p { font-size: 12px; }
+
+  .compact-panel-heading { gap: 10px; }
+  .compact-panel-heading h3 { font-size: 16px; }
+  .compact-panel-heading > span { font-size: 10px; }
+  .sector-orbit { display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); min-height: 0; }
+  .sector-orbit-node { border-radius: 12px; min-height: 70px; padding: 11px; }
+  .sector-orbit-node strong { font-size: 11px; }
+
+  .founder-risk-radar { padding: 18px; }
+  .risk-radar-graphic { margin: 12px auto; max-width: 92px; }
+  .risk-radar-list button { font-size: 10px; min-height: 30px; }
+
+  .company-signal-grid { gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 14px; }
+  .company-signal-card { border-radius: 12px; gap: 8px; min-height: 126px; padding: 12px; }
+  .company-signal-card > strong { font-size: 14px; }
+  .company-signal-card dl { gap: 4px; }
+  .company-signal-card dd { font-size: 12px; }
+  .company-signal-card dt { font-size: 8px; }
+
+  .founder-learning-loop { padding: 18px; }
+  .learning-loop-diagram article { min-height: 0; padding: 13px; }
+  .portfolio-example-map { align-items: stretch; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .portfolio-example { border-radius: 12px; min-height: 72px; padding: 10px; }
+  .portfolio-example strong,
+  .portfolio-example small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .portfolio-example-map-action { grid-column: 1 / -1; margin: 0; width: 100%; }
+
+  .founder-inline-search { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 14px 18px; }
+  .founder-inline-search label { grid-column: 1 / -1; }
+  .founder-inline-search .primary-button,
+  .founder-refresh-button { min-height: 42px; width: 100%; }
+  .founder-search-state { padding: 9px 18px; }
+  .founder-mini-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    overflow: visible;
+  }
+  .founder-mini-metrics div { border-bottom: 1px solid rgba(166, 207, 231, .14); padding: 10px 12px; }
+  .founder-mini-metrics div:nth-child(4) { border-left: 0; }
+  .founder-mini-metrics dd { font-size: 17px; }
+  .founder-360-entry { gap: 12px; padding: 14px 18px; }
+  .founder-360-entry strong { line-height: 1.4; }
+
+  .coverage-command.search-feedback { border-radius: 14px; }
+  .coverage-command.search-feedback .search-results { gap: 12px; padding: 14px; }
+  .coverage-command.search-feedback .search-results > section { padding: 14px; }
+  .coverage-command.search-feedback .result-row { padding: 11px; }
+}
+
+@media (max-width: 420px) {
+  .top-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .top-actions button:last-child { grid-column: 1 / -1; }
+  .stage-compass { grid-template-columns: 1fr; }
+  .stage-compass-gauge { max-width: 98px; }
+  .company-signal-grid { grid-template-columns: minmax(0, 1fr); }
+  .portfolio-example-map { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .founder-mini-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .founder-mini-metrics div:nth-child(4) { border-left: 1px solid rgba(166, 207, 231, .14); }
+  .founder-mini-metrics div:nth-child(odd) { border-left: 0; }
+}
