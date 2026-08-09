@@ -2455,6 +2455,62 @@ select:focus {
   padding: 18px;
 }
 
+.dashboard-loading-state {
+  align-items: start;
+  display: grid;
+  gap: 10px;
+  min-height: 188px;
+  padding: 24px;
+}
+
+.dashboard-loading-state h2,
+.dashboard-loading-state p {
+  margin: 0;
+}
+
+.dashboard-loading-state h2 {
+  color: var(--ink);
+}
+
+.dashboard-loading-state > p:not(.section-kicker) {
+  line-height: 1.5;
+  max-width: 560px;
+}
+
+.dashboard-loading-state small {
+  color: var(--muted);
+}
+
+.dashboard-loading-buffer {
+  background: #dfe7ee;
+  border-radius: 999px;
+  height: 8px;
+  max-width: 440px;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.dashboard-loading-buffer span {
+  animation: dashboard-loading-buffer 1.6s ease-in-out infinite;
+  background: linear-gradient(90deg, #0b6bcb, #67b7a1);
+  border-radius: inherit;
+  height: 100%;
+  left: -38%;
+  position: absolute;
+  top: 0;
+  width: 42%;
+}
+
+@keyframes dashboard-loading-buffer {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(330%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-loading-buffer span { animation: none; left: 0; width: 58%; }
+}
+
 .comparison-note {
   align-items: center;
   background: #f7f9fb;
