@@ -6039,6 +6039,21 @@ th {
   outline: 0;
 }
 
+.founder-search-state {
+  background: rgba(127, 224, 206, .12);
+  border-top: 1px solid rgba(166, 207, 231, .14);
+  color: #dffcf6;
+  font-size: 12px;
+  font-weight: 700;
+  margin: 0;
+  padding: 10px 28px;
+}
+
+.founder-search-state.error {
+  background: rgba(210, 89, 89, .16);
+  color: #ffd7d7;
+}
+
 .founder-mini-metrics {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -6131,6 +6146,7 @@ th {
 @media (max-width: 700px) {
   .founder-inline-search { grid-template-columns: minmax(0, 1fr) auto; padding: 16px 20px; }
   .founder-inline-search label { grid-column: 1 / -1; }
+  .founder-search-state { padding: 10px 20px; }
   .founder-mini-metrics { grid-template-columns: repeat(5, minmax(96px, 1fr)); overflow-x: auto; }
   .founder-mini-metrics div { padding: 12px 14px; }
   .founder-workflow-tabs { padding: 11px 20px; }
