@@ -1151,6 +1151,40 @@ class AppComponent {
     return 'Dashboard';
   }
 
+  sectionQuestion(): string {
+    const questions: Record<AppPage, string> = {
+      dashboard: 'What is the next proof point for my company?',
+      company: 'What should I understand about this company before making a decision?',
+      'business-model': 'How does this company create, deliver, and capture value?',
+      'operating-kpis': 'Which operating metrics best explain performance right now?',
+      'management-promises': 'Which management commitments are on track, changed, or at risk?',
+      'strategy-milestones': 'What execution milestones show whether the strategy is working?',
+      earnings: 'What do the latest reported results say about the company’s progress?',
+      'capital-allocation': 'Where is management placing capital, and what does that reveal?',
+      'competitive-position': 'Where does the company have an advantage or face pressure?',
+      'product-pricing': 'How are the product, packaging, and pricing evolving?',
+      'acquisition-lifecycle': 'What are acquisitions meant to achieve, and how are they progressing?',
+      'customer-supplier-dependency': 'Which customer, supplier, or platform dependencies could change outcomes?',
+      'geographic-expansion': 'Which markets are driving expansion, and what is changing there?',
+      'leadership-decisions': 'Which leadership decisions and changes matter most to execution?',
+      'ownership-insider': 'Who has economic control, and what ownership signals are disclosed?',
+      'valuation-context': 'What valuation context is supported by the available evidence?',
+      'regulatory-litigation': 'Which regulatory or legal issues could affect the company next?',
+      'sector-themes': 'Which sector themes are materially shaping this company?',
+      'macro-sensitivity': 'Which macro factors can materially change the company’s outlook?',
+      'strategy-theses': 'What belief are we testing, and what evidence would change our mind?',
+      watchlists: 'Which companies or signals need attention now?',
+      briefings: 'What changed recently that deserves a decision or follow-up?',
+      scenarios: 'What happens if the key assumptions change?',
+      contradictions: 'Which source-backed claims need reconciliation before a decision?',
+      'strategy-failures': 'What can we learn from comparable strategic failures?',
+      foundations: 'What standards make this research reliable and comparable?',
+      profile: 'How should this workspace reflect and support the account owner?',
+      subscription: 'Which plan gives this workspace the access it needs?'
+    };
+    return questions[this.activePage()];
+  }
+
   pageDescription(): string {
     if (this.activePage() === 'company') {
       return 'Source-backed company structure, strategic priorities, recent changes, and evidence coverage.';
