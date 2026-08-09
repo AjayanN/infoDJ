@@ -259,7 +259,6 @@
                     <h2 id="founder-command-heading">Find your next proof point</h2>
                   </div>
                   <div class="founder-command-actions">
-                    <button type="button" class="ghost-button" (click)="setDashboardView('companies-like-mine')">Compare companies</button>
                     <button type="button" class="primary-button" *ngIf="dash.top_companies.length > 0" (click)="openCompany(dash.top_companies[0].slug)">Open a Company 360</button>
                   </div>
                 </header>
@@ -343,9 +342,48 @@
                     </button>
                   </div>
                 </section>
+
+                <section class="founder-workspace-tools" aria-label="Founder workspace controls">
+                  <form class="founder-inline-search" (ngSubmit)="runSearch()">
+                    <label for="founder-global-search">
+                      <span>Search the portfolio</span>
+                      <input
+                        id="founder-global-search"
+                        name="founder_global_search"
+                        [(ngModel)]="searchQuery"
+                        (input)="updateSearchSuggestions()"
+                        autocomplete="off"
+                        placeholder="Company, move, market, or risk"
+                      />
+                    </label>
+                    <button type="submit" class="primary-button" [disabled]="searchLoading()" [attr.aria-disabled]="searchLoading()">Search</button>
+                    <button type="button" class="founder-refresh-button" (click)="loadDashboard()" [disabled]="dashboardLoading()" [attr.aria-disabled]="dashboardLoading()">Refresh</button>
+                  </form>
+
+                  <dl class="founder-mini-metrics" aria-label="Portfolio totals">
+                    <div><dt>Companies</dt><dd>{{ dash.summary.company_count }}</dd></div>
+                    <div><dt>Sources</dt><dd>{{ dash.summary.source_count }}</dd></div>
+                    <div><dt>Signals</dt><dd>{{ dash.summary.event_count }}</dd></div>
+                    <div><dt>Turns</dt><dd>{{ dash.summary.strategic_turn_count }}</dd></div>
+                    <div><dt>Sectors</dt><dd>{{ dash.summary.sector_count }}</dd></div>
+                  </dl>
+
+                  <div class="founder-workflow-tabs" aria-label="Research workflow selector">
+                    <span>Explore</span>
+                    <button
+                      type="button"
+                      *ngFor="let view of dashboardViews"
+                      [class.active]="dashboardView() === view.id"
+                      [attr.aria-pressed]="dashboardView() === view.id"
+                      (click)="setDashboardView(view.id)"
+                    >
+                      {{ view.shortName }}
+                    </button>
+                  </div>
+                </section>
               </section>
 
-              <section class="coverage-command" aria-labelledby="dashboard-heading">
+              <section class="coverage-command" [class.search-feedback]="dash.summary.company_count > 0" *ngIf="dash.summary.company_count === 0 || suggestions().length > 0 || searchResults()" aria-labelledby="dashboard-heading">
                 <div class="coverage-command-copy">
                   <p class="section-kicker">{{ founderStage() ? founderStageLabel() + ' stage' : 'Founder workspace' }}</p>
                   <h2 id="dashboard-heading">{{ founderStage() ? 'Your decision cockpit' : 'Your company map' }}</h2>
@@ -436,7 +474,7 @@
                 </div>
               </section>
 
-              <section class="dashboard-switcher" aria-label="Research workflow selector">
+              <section class="dashboard-switcher" *ngIf="dash.summary.company_count === 0" aria-label="Research workflow selector">
                 <p class="section-kicker">Research workflows</p>
                 <button
                   type="button"
@@ -450,7 +488,7 @@
                 </button>
               </section>
 
-              <section class="dashboard-surface-heading" aria-live="polite">
+              <section class="dashboard-surface-heading" *ngIf="dash.summary.company_count === 0" aria-live="polite">
                 <div>
                   <p class="section-kicker">Active dashboard</p>
                   <h2>{{ activeDashboardView().name }}</h2>
