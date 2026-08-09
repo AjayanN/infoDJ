@@ -6735,3 +6735,22 @@ th {
   .section-question { border-radius: 10px; margin-bottom: 14px; padding: 12px 14px; }
   .section-question h2 { font-size: 17px; }
 }
+
+
+/* Panel titles keep their reference label, while a plain-language question explains why the section exists. */
+.subtitle-question {
+  color: #547084 !important;
+  font-size: 12px !important;
+  font-weight: 600;
+  line-height: 1.42 !important;
+  margin: 5px 0 0 !important;
+}
+
+.dashboard-grid .subtitle-question,
+.founder-command-board .subtitle-question {
+  color: #a9c2d8 !important;
+}
+
+@media (max-width: 700px) {
+  .subtitle-question { font-size: 11px !important; }
+}
