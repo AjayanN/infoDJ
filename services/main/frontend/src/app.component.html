@@ -838,15 +838,19 @@
                         <h2 id="compare-heading">Comparable strategic turns</h2>
                       </div>
                     </div>
-                    <div class="pattern-grid" *ngIf="(dashboardSection('compare-turns')?.items || []).length > 0; else dashboardGap">
-                      <article class="pattern-card" *ngFor="let group of dashboardSection('compare-turns')?.items || []">
-                        <div>
-                          <strong>{{ group.turn_type }}</strong>
-                          <span>{{ group.sample_size }} eligible turns across {{ group.company_count }} companies</span>
+                    <div class="pattern-grid compare-visual-grid" *ngIf="(dashboardSection('compare-turns')?.items || []).length > 0; else dashboardGap">
+                      <article class="pattern-card compare-visual-card" *ngFor="let group of dashboardSection('compare-turns')?.items || []">
+                        <div class="compare-visual-header">
+                          <div class="compare-turn-orbit" aria-hidden="true"><strong>{{ group.sample_size }}</strong><span>turns</span></div>
+                          <div>
+                            <strong>{{ group.turn_type }}</strong>
+                            <span>{{ group.company_count }} companies represented</span>
+                          </div>
                         </div>
-                        <ul>
-                          <li *ngFor="let turn of group.turns">{{ turn.company }} · {{ turn.start_date || 'Date unavailable' }}: {{ turn.title }}</li>
-                        </ul>
+                        <div class="compare-turn-meter" aria-hidden="true"><i></i></div>
+                        <div class="compare-turn-samples">
+                          <span *ngFor="let turn of group.turns.slice(0, 2)">{{ turn.company }}<small>{{ turn.title }}</small></span>
+                        </div>
                       </article>
                     </div>
                     <div class="pagination-row" *ngIf="(dashboardSection('compare-turns')?.total_pages || 1) > 1">
