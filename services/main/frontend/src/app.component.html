@@ -343,6 +343,40 @@
                   </div>
                 </section>
 
+                <section class="founder-learning-loop" aria-labelledby="founder-learning-loop-heading">
+                  <header class="compact-panel-heading">
+                    <div><p class="section-kicker">How InfoDJ works</p><h3 id="founder-learning-loop-heading">Turn portfolio evidence into a company decision</h3></div>
+                    <span>Examples from your portfolio</span>
+                  </header>
+                  <div class="learning-loop-diagram">
+                    <article>
+                      <span class="learning-loop-icon evidence-icon" aria-hidden="true"></span>
+                      <strong>See the signal</strong>
+                      <small>{{ dash.summary.source_count }} source records become structured evidence.</small>
+                    </article>
+                    <i class="learning-loop-arrow" aria-hidden="true"></i>
+                    <article>
+                      <span class="learning-loop-icon pattern-icon" aria-hidden="true"></span>
+                      <strong>Compare the pattern</strong>
+                      <small>{{ dash.summary.strategic_turn_count }} strategic turns reveal comparable choices.</small>
+                    </article>
+                    <i class="learning-loop-arrow" aria-hidden="true"></i>
+                    <article>
+                      <span class="learning-loop-icon action-icon" aria-hidden="true"></span>
+                      <strong>Open the context</strong>
+                      <small>Use Company 360 to inspect the evidence behind each move.</small>
+                    </article>
+                  </div>
+                  <div class="portfolio-example-map" *ngIf="dash.top_companies.length > 0">
+                    <button type="button" *ngFor="let company of dash.top_companies.slice(0, 3); let index = index" [class]="'portfolio-example example-' + index" (click)="openCompany(company.slug)">
+                      <span>{{ company.sector || 'Portfolio' }}</span>
+                      <strong>{{ company.name }}</strong>
+                      <small>{{ company.event_count }} signals</small>
+                    </button>
+                    <button type="button" class="portfolio-example-map-action" (click)="openCompany(dash.top_companies[0].slug)">Explore Company 360</button>
+                  </div>
+                </section>
+
                 <section class="founder-workspace-tools" aria-label="Founder workspace controls">
                   <form class="founder-inline-search" (ngSubmit)="runSearch()">
                     <label for="founder-global-search">
@@ -371,17 +405,9 @@
                     <div><dt>Sectors</dt><dd>{{ dash.summary.sector_count }}</dd></div>
                   </dl>
 
-                  <div class="founder-workflow-tabs" aria-label="Research workflow selector">
-                    <span>Explore</span>
-                    <button
-                      type="button"
-                      *ngFor="let view of dashboardViews"
-                      [class.active]="dashboardView() === view.id"
-                      [attr.aria-pressed]="dashboardView() === view.id"
-                      (click)="setDashboardView(view.id)"
-                    >
-                      {{ view.shortName }}
-                    </button>
+                  <div class="founder-360-entry">
+                    <div><span>Deep research belongs in Company 360</span><strong>Open a company to see risks, milestones, metrics, and evidence.</strong></div>
+                    <button type="button" class="primary-button" *ngIf="dash.top_companies.length > 0" (click)="openCompany(dash.top_companies[0].slug)">Open Company 360</button>
                   </div>
                 </section>
               </section>
@@ -427,21 +453,21 @@
                     <h3 id="company-results-heading">Companies</h3>
                     <div class="empty-state" *ngIf="results.results.companies.length === 0">No company matches.</div>
                     <div class="result-list" *ngIf="results.results.companies.length > 0">
-                      <article class="result-row actionable-row" *ngFor="let company of results.results.companies">
+                      <article class="result-row actionable-row" *ngFor="let company of results.results.companies.slice(0, 3)">
                         <strong>{{ company.name }}</strong>
                         <span>{{ company.sector || 'Unclassified' }}</span>
                         <span>{{ company.event_count || 0 }} events, {{ company.strategic_turn_count || 0 }} turns</span>
                         <button type="button" class="ghost-button" (click)="openCompany(company.slug)">Open Company 360</button>
                       </article>
                     </div>
-                    <div class="pagination-row" *ngIf="results.pagination.companies.total > 0">
+                    <div class="pagination-row" *ngIf="dash.summary.company_count === 0 && results.pagination.companies.total > 0">
                       <span>Showing {{ searchRange(results.pagination.companies) }} company matches</span>
                       <button type="button" class="ghost-button" *ngIf="results.pagination.companies.total_pages > 1" (click)="setSearchPage('companies', results.pagination.companies.page - 1)" [disabled]="!results.pagination.companies.has_previous">Previous</button>
                       <button type="button" class="ghost-button" *ngIf="results.pagination.companies.total_pages > 1" (click)="setSearchPage('companies', results.pagination.companies.page + 1)" [disabled]="!results.pagination.companies.has_next">Next</button>
                     </div>
                   </section>
 
-                  <section aria-labelledby="event-results-heading">
+                  <section *ngIf="dash.summary.company_count === 0" aria-labelledby="event-results-heading">
                     <h3 id="event-results-heading">Business events</h3>
                     <div class="empty-state" *ngIf="results.results.events.length === 0">No event matches.</div>
                     <div class="result-list" *ngIf="results.results.events.length > 0">
@@ -458,7 +484,7 @@
                     </div>
                   </section>
 
-                  <section aria-labelledby="turn-results-heading">
+                  <section *ngIf="dash.summary.company_count === 0" aria-labelledby="turn-results-heading">
                     <h3 id="turn-results-heading">Strategic turns with specific detail</h3>
                     <div class="empty-state" *ngIf="results.results.strategic_turns.length === 0">No strategic turn matches.</div>
                     <div class="result-list" *ngIf="results.results.strategic_turns.length > 0">
@@ -477,6 +503,7 @@
                 </div>
               </section>
 
+              <ng-container *ngIf="dash.summary.company_count === 0">
               <section class="dashboard-switcher" *ngIf="dash.summary.company_count === 0" aria-label="Research workflow selector">
                 <p class="section-kicker">Research workflows</p>
                 <button
@@ -950,6 +977,8 @@
                 </ng-container>
               </ng-template>
 
+              </ng-container>
+
               <ng-template #dashboardGap>
                 <div class="empty-state unavailable-state">
                   <strong>{{ activeDashboardView().name }} data unavailable.</strong>
@@ -1037,7 +1066,7 @@
                     </article>
                   </section>
                   <section class="briefing-evidence-strip" aria-labelledby="company-evidence-strip-heading">
-                    <header><div><p class="section-kicker">Current evidence</p><h3 id="company-evidence-strip-heading">Changes, reported facts, and review coverage</h3></div><div class="briefing-evidence-actions"><button type="button" class="ghost-button" (click)="openCompanyDashboard('latest-moves')">Moves</button><button type="button" class="ghost-button" (click)="openEarnings(companyView.company.slug)">Earnings</button><button type="button" class="ghost-button" (click)="openStrategyMilestones(companyView.company.slug)">Milestones</button><button type="button" class="ghost-button" (click)="openCompanyDashboard('risk-signals')">Risks</button></div></header>
+                    <header><div><p class="section-kicker">Current evidence</p><h3 id="company-evidence-strip-heading">Changes, reported facts, and review coverage</h3></div><div class="briefing-evidence-actions"><button type="button" class="ghost-button" (click)="openStrategyMilestones(companyView.company.slug)">Moves</button><button type="button" class="ghost-button" (click)="openEarnings(companyView.company.slug)">Earnings</button><button type="button" class="ghost-button" (click)="openStrategyMilestones(companyView.company.slug)">Milestones</button><button type="button" class="ghost-button" (click)="openRegulatoryLitigation(companyView.company.slug)">Risks</button></div></header>
                     <div class="briefing-evidence-grid">
                       <article class="briefing-evidence-tile activity-tile">
                         <span>Latest moves</span>

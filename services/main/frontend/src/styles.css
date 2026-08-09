@@ -6420,3 +6420,119 @@ th {
   .dashboard-grid .compare-turn-samples > span { align-items: flex-start; flex-direction: column; gap: 3px; }
   .dashboard-grid .compare-turn-samples small { max-width: 100%; text-align: left; width: 100%; }
 }
+
+
+/* The populated founder dashboard is an orientation map; research stays in Company 360. */
+.founder-learning-loop {
+  background: rgba(9, 31, 52, .8);
+  border-top: 1px solid rgba(166, 207, 231, .16);
+  padding: 22px 28px;
+}
+
+.learning-loop-diagram {
+  align-items: stretch;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) 34px minmax(0, 1fr) 34px minmax(0, 1fr);
+  margin-top: 16px;
+}
+
+.learning-loop-diagram article {
+  background: rgba(244, 251, 255, .055);
+  border: 1px solid rgba(166, 207, 231, .18);
+  border-radius: 14px;
+  display: grid;
+  gap: 7px;
+  min-height: 126px;
+  padding: 15px;
+}
+
+.learning-loop-diagram strong { color: #f3fbff; font-size: 14px; }
+.learning-loop-diagram small { color: #a9c2d8; font-size: 11px; line-height: 1.45; }
+.learning-loop-icon {
+  border-radius: 10px;
+  display: block;
+  height: 28px;
+  position: relative;
+  width: 28px;
+}
+.evidence-icon { background: linear-gradient(135deg, #7fe0ce, #3f8da6); }
+.pattern-icon { background: linear-gradient(135deg, #9cb8ff, #526ca9); }
+.action-icon { background: linear-gradient(135deg, #f0c36e, #b87d48); }
+.learning-loop-icon::before,
+.learning-loop-icon::after { background: rgba(8, 30, 50, .62); content: ''; position: absolute; }
+.evidence-icon::before { height: 2px; left: 7px; right: 7px; top: 9px; box-shadow: 0 5px 0 rgba(8, 30, 50, .62), 0 10px 0 rgba(8, 30, 50, .62); }
+.pattern-icon::before { border: 2px solid rgba(8, 30, 50, .62); border-radius: 50%; inset: 6px; }
+.pattern-icon::after { height: 2px; left: 9px; right: 3px; top: 13px; transform: rotate(-35deg); }
+.action-icon::before { border: 2px solid rgba(8, 30, 50, .62); border-radius: 50%; height: 9px; left: 8px; top: 5px; width: 9px; }
+.action-icon::after { border-bottom: 2px solid rgba(8, 30, 50, .62); border-left: 2px solid rgba(8, 30, 50, .62); height: 7px; left: 8px; top: 15px; transform: rotate(-45deg); width: 12px; }
+
+.learning-loop-arrow { align-self: center; border-top: 1px dashed #5c86a3; display: block; position: relative; }
+.learning-loop-arrow::after { border-right: 1px solid #7fe0ce; border-top: 1px solid #7fe0ce; content: ''; height: 7px; position: absolute; right: 1px; top: -4px; transform: rotate(45deg); width: 7px; }
+
+.portfolio-example-map {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 14px;
+}
+
+.portfolio-example,
+.portfolio-example-map-action {
+  border-radius: 99px;
+  min-height: 38px;
+  padding: 7px 12px;
+}
+
+.portfolio-example {
+  background: rgba(156, 184, 255, .1);
+  border: 1px solid rgba(156, 184, 255, .25);
+  color: #eff8ff;
+  display: grid;
+  gap: 1px;
+  text-align: left;
+}
+
+.portfolio-example span { color: #7fe0ce; font-size: 9px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+.portfolio-example strong { font-size: 12px; }
+.portfolio-example small { color: #a9c2d8; font-size: 10px; }
+.portfolio-example.example-1 { background: rgba(127, 224, 206, .1); }
+.portfolio-example.example-2 { background: rgba(240, 195, 110, .11); }
+
+.portfolio-example-map-action {
+  background: transparent;
+  border: 1px solid #7fe0ce;
+  color: #7fe0ce;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  margin-left: auto;
+}
+
+.founder-360-entry {
+  align-items: center;
+  background: rgba(11, 37, 61, .72);
+  border-top: 1px solid rgba(166, 207, 231, .14);
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 14px 28px;
+}
+
+.founder-360-entry div { display: grid; gap: 3px; }
+.founder-360-entry span { color: #7fe0ce; font-size: 10px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+.founder-360-entry strong { color: #eaf8ff; font-size: 12px; }
+
+.coverage-command.search-feedback .search-results {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (max-width: 700px) {
+  .founder-learning-loop { padding: 20px; }
+  .learning-loop-diagram { gap: 7px; grid-template-columns: 1fr; }
+  .learning-loop-arrow { height: 14px; margin-left: 15px; transform: rotate(90deg); width: 20px; }
+  .portfolio-example-map-action { margin-left: 0; width: 100%; }
+  .founder-360-entry { align-items: stretch; flex-direction: column; padding: 14px 20px; }
+  .founder-360-entry .primary-button { width: 100%; }
+}
