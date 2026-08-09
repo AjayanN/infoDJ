@@ -249,6 +249,10 @@
             <button type="button" class="primary-button" (click)="openCompanyDashboard('companies-like-mine')">Compare peers</button>
           </div>
         </section>
+        <section class="section-question" aria-labelledby="section-question-heading">
+          <span>Question this view answers</span>
+          <h2 id="section-question-heading">{{ sectionQuestion() }}</h2>
+        </section>
         <ng-container [ngSwitch]="activePage()">
           <section *ngSwitchCase="'dashboard'" class="dashboard-grid" aria-labelledby="dashboard-heading">
             <ng-container *ngIf="dashboard() as dash; else dashboardEmpty">
