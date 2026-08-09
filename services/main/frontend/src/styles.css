@@ -2456,11 +2456,13 @@ select:focus {
 }
 
 .dashboard-loading-state {
-  align-items: start;
+  align-content: center;
+  justify-items: center;
   display: grid;
-  gap: 10px;
-  min-height: 188px;
-  padding: 24px;
+  gap: 12px;
+  min-height: 260px;
+  padding: 28px 24px;
+  text-align: center;
 }
 
 .dashboard-loading-state h2,
@@ -2474,7 +2476,7 @@ select:focus {
 
 .dashboard-loading-state > p:not(.section-kicker) {
   line-height: 1.5;
-  max-width: 560px;
+  max-width: 620px;
 }
 
 .dashboard-loading-state small {
@@ -2484,8 +2486,8 @@ select:focus {
 .dashboard-loading-buffer {
   background: #dfe7ee;
   border-radius: 999px;
-  height: 8px;
-  max-width: 440px;
+  height: 12px;
+  max-width: 640px;
   overflow: hidden;
   position: relative;
   width: 100%;
