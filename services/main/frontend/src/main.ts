@@ -249,6 +249,7 @@ class AppComponent {
   });
   suggestions = signal<SearchSuggestion[]>([]);
   searchError = signal('');
+  private restoringBrowserHistory = false;
   checkoutOrder = signal<RazorpayOrder | null>(null);
   healthStatus = signal('');
   message = signal('');
@@ -656,6 +657,7 @@ class AppComponent {
     this.consumeAuthCallback();
     this.consumePasswordResetLink();
     if (this.token()) {
+      this.initializeBrowserHistory();
       this.loadMe();
       this.loadHistory();
       this.loadDashboard();
@@ -760,8 +762,47 @@ class AppComponent {
     return stage ? risks[stage] : [];
   }
 
-  setActivePage(page: AppPage): void {
+  private setPage(page: AppPage, recordHistory = true): void {
+    const changed = this.activePage() !== page;
     this.activePage.set(page);
+    if (changed && recordHistory && this.token() && !this.restoringBrowserHistory) {
+      window.history.pushState({ infodj: true, page }, document.title, window.location.href);
+    }
+  }
+
+  private initializeBrowserHistory(): void {
+    const state = window.history.state as { infodj?: boolean } | null;
+    if (state?.infodj) {
+      return;
+    }
+    window.history.replaceState({ infodj: true, page: 'dashboard', root: true }, document.title, window.location.href);
+    window.history.pushState({ infodj: true, page: 'dashboard', guard: true }, document.title, window.location.href);
+  }
+
+  @HostListener('window:popstate', ['$event'])
+  onBrowserHistoryChange(event: PopStateEvent): void {
+    const state = event.state as { infodj?: boolean; page?: AppPage; root?: boolean } | null;
+    if (!this.token() || !state?.infodj) {
+      return;
+    }
+    if (state.root) {
+      if (window.confirm('You are leaving InfoDJ. Do you want to exit?')) {
+        window.history.back();
+        return;
+      }
+      window.history.pushState({ infodj: true, page: 'dashboard', guard: true }, document.title, window.location.href);
+      return;
+    }
+    if (!state.page) {
+      return;
+    }
+    this.restoringBrowserHistory = true;
+    this.setActivePage(state.page);
+    this.restoringBrowserHistory = false;
+  }
+
+  setActivePage(page: AppPage): void {
+    this.setPage(page);
     this.menuOpen.set(false);
     this.message.set('');
     this.error.set('');
@@ -1439,7 +1480,7 @@ class AppComponent {
     if (!slug || !this.token()) {
       return;
     }
-    this.activePage.set('company');
+    this.setPage('company');
     this.menuOpen.set(false);
     this.companyLoading.set(true);
     this.companyProfile.set(null);
@@ -1551,7 +1592,7 @@ class AppComponent {
       risk_signals: 1,
       company_situations: 1
     }));
-    this.activePage.set('dashboard');
+    this.setPage('dashboard');
     this.menuOpen.set(false);
     this.message.set('');
     this.error.set('');
@@ -1577,7 +1618,7 @@ class AppComponent {
       return;
     }
     this.syncCompanyContext(slug);
-    this.activePage.set('business-model');
+    this.setPage('business-model');
     this.menuOpen.set(false);
     this.businessModelLoading.set(true);
     this.error.set('');
@@ -1620,7 +1661,7 @@ class AppComponent {
     if (!slug || !this.token()) return;
     const requestId = ++this.operatingKpiRequestId;
     this.syncCompanyContext(slug);
-    this.activePage.set('operating-kpis');
+    this.setPage('operating-kpis');
     this.menuOpen.set(false);
     this.operatingKpiLoading.set(true);
     this.error.set('');
@@ -1664,7 +1705,7 @@ class AppComponent {
   openManagementPromises(slug: string, promise = ''): void {
     if (!slug || !this.token()) return;
     this.syncCompanyContext(slug);
-    this.activePage.set('management-promises');
+    this.setPage('management-promises');
     this.menuOpen.set(false);
     this.managementPromiseLoading.set(true);
     this.error.set('');
@@ -1697,7 +1738,7 @@ class AppComponent {
   openStrategyMilestones(slug: string, milestone = ''): void {
     if (!slug || !this.token()) return;
     this.syncCompanyContext(slug);
-    this.activePage.set('strategy-milestones');
+    this.setPage('strategy-milestones');
     this.menuOpen.set(false);
     this.strategyMilestoneLoading.set(true);
     this.error.set('');
@@ -1730,7 +1771,7 @@ class AppComponent {
   openEarnings(slug: string, period = ''): void {
     if (!slug || !this.token()) return;
     this.syncCompanyContext(slug);
-    this.activePage.set('earnings');
+    this.setPage('earnings');
     this.menuOpen.set(false);
     this.earningsLoading.set(true);
     this.error.set('');
@@ -1756,7 +1797,7 @@ class AppComponent {
   openCapitalAllocation(slug: string, period = ''): void {
     if (!slug || !this.token()) return;
     this.syncCompanyContext(slug);
-    this.activePage.set('capital-allocation');
+    this.setPage('capital-allocation');
     this.menuOpen.set(false);
     this.capitalAllocationLoading.set(true);
     this.error.set('');
@@ -1795,7 +1836,7 @@ class AppComponent {
   openCompetitivePosition(slug: string, asOf = '', relationship = ''): void {
     if (!slug || !this.token()) return;
     this.syncCompanyContext(slug);
-    this.activePage.set('competitive-position');
+    this.setPage('competitive-position');
     this.menuOpen.set(false);
     this.competitivePositionLoading.set(true);
     this.error.set('');
@@ -1822,7 +1863,7 @@ class AppComponent {
   openProductPricing(slug: string, asOf = '', type = ''): void {
     if (!slug || !this.token()) return;
     this.syncCompanyContext(slug);
-    this.activePage.set('product-pricing');
+    this.setPage('product-pricing');
     this.menuOpen.set(false);
     this.productPricingLoading.set(true);
     this.error.set('');
@@ -1849,7 +1890,7 @@ class AppComponent {
   openAcquisitionLifecycle(slug: string, stage = '', transactionType = '', outcome = '', deal = ''): void {
     if (!slug || !this.token()) return;
     this.syncCompanyContext(slug);
-    this.activePage.set('acquisition-lifecycle');
+    this.setPage('acquisition-lifecycle');
     this.menuOpen.set(false);
     this.acquisitionLifecycleLoading.set(true);
     this.error.set('');
@@ -1892,7 +1933,7 @@ class AppComponent {
   openCustomerSupplierDependency(slug: string, asOf = '', type = '', confidence = ''): void {
     if (!slug || !this.token()) return;
     this.syncCompanyContext(slug);
-    this.activePage.set('customer-supplier-dependency');
+    this.setPage('customer-supplier-dependency');
     this.menuOpen.set(false);
     this.customerSupplierDependencyLoading.set(true);
     this.error.set('');
@@ -1926,7 +1967,7 @@ class AppComponent {
   openGeographicExpansion(slug: string, asOf = '', status = '', marketType = ''): void {
     if (!slug || !this.token()) return;
     this.syncCompanyContext(slug);
-    this.activePage.set('geographic-expansion');
+    this.setPage('geographic-expansion');
     this.menuOpen.set(false);
     this.geographicExpansionLoading.set(true);
     this.error.set('');
@@ -1960,7 +2001,7 @@ class AppComponent {
   openOwnershipInsider(slug: string, asOf = '', holderType = '', transactionType = ''): void {
     if (!slug || !this.token()) return;
     this.syncCompanyContext(slug);
-    this.activePage.set('ownership-insider');
+    this.setPage('ownership-insider');
     this.menuOpen.set(false);
     this.ownershipInsiderLoading.set(true);
     this.error.set('');
@@ -1994,7 +2035,7 @@ class AppComponent {
   openValuationContext(slug: string, asOf = '', measure = ''): void {
     if (!slug || !this.token()) return;
     this.syncCompanyContext(slug);
-    this.activePage.set('valuation-context');
+    this.setPage('valuation-context');
     this.menuOpen.set(false);
     this.valuationContextLoading.set(true);
     this.error.set('');
@@ -2032,7 +2073,7 @@ class AppComponent {
   openRegulatoryLitigation(slug: string, asOf = '', matterType = '', status = ''): void {
     if (!slug || !this.token()) return;
     this.syncCompanyContext(slug);
-    this.activePage.set('regulatory-litigation');
+    this.setPage('regulatory-litigation');
     this.menuOpen.set(false);
     this.regulatoryLitigationLoading.set(true);
     this.error.set('');
@@ -2066,7 +2107,7 @@ class AppComponent {
   openSectorThemes(slug: string, asOf = '', theme = '', exposureType = ''): void {
     if (!slug || !this.token()) return;
     this.syncCompanyContext(slug);
-    this.activePage.set('sector-themes');
+    this.setPage('sector-themes');
     this.menuOpen.set(false);
     this.sectorThemesLoading.set(true);
     this.error.set('');
@@ -2100,7 +2141,7 @@ class AppComponent {
   openMacroSensitivity(slug: string, asOf = '', factor = '', channel = ''): void {
     if (!slug || !this.token()) return;
     this.syncCompanyContext(slug);
-    this.activePage.set('macro-sensitivity');
+    this.setPage('macro-sensitivity');
     this.menuOpen.set(false);
     this.macroSensitivityLoading.set(true);
     this.error.set('');
@@ -2133,7 +2174,7 @@ class AppComponent {
 
   openStrategyTheses(companySlug = '', companyName = ''): void {
     if (!this.token()) return;
-    this.activePage.set('strategy-theses');
+    this.setPage('strategy-theses');
     this.menuOpen.set(false);
     if (companySlug) {
       this.thesisFilterCompany = companySlug;
@@ -2299,7 +2340,7 @@ class AppComponent {
 
   openWatchlists(companySlug = '', companyName = ''): void {
     if (!this.token()) return;
-    this.activePage.set('watchlists');
+    this.setPage('watchlists');
     this.menuOpen.set(false);
     if (companySlug) {
       this.watchItemType = 'COMPANY';
@@ -2417,7 +2458,7 @@ class AppComponent {
 
   openBriefings(): void {
     if (!this.token()) return;
-    this.activePage.set('briefings');
+    this.setPage('briefings');
     this.menuOpen.set(false);
     this.loadBriefings();
   }
@@ -2478,7 +2519,7 @@ class AppComponent {
 
   openScenarios(companySlug = '', companyName = ''): void {
     if (!this.token()) return;
-    this.activePage.set('scenarios');
+    this.setPage('scenarios');
     this.menuOpen.set(false);
     if (companySlug) {
       this.scenarioCompanyFilter = companySlug;
@@ -2608,7 +2649,7 @@ class AppComponent {
 
   openContradictions(companySlug = '', companyName = ''): void {
     if (!this.token()) return;
-    this.activePage.set('contradictions');
+    this.setPage('contradictions');
     this.menuOpen.set(false);
     if (companySlug) {
       this.contradictionCompanyFilter = companySlug;
@@ -2688,7 +2729,7 @@ class AppComponent {
 
   openStrategyFailures(companySlug = '', companyName = '', sector = ''): void {
     if (!this.token()) return;
-    this.activePage.set('strategy-failures');
+    this.setPage('strategy-failures');
     this.menuOpen.set(false);
     if (companySlug) {
       this.failureCompanyFilter = companySlug;
@@ -2850,7 +2891,7 @@ class AppComponent {
 
   openFoundations(): void {
     if (!this.token()) return;
-    this.activePage.set('foundations');
+    this.setPage('foundations');
     this.menuOpen.set(false);
     this.loadFoundations();
   }
@@ -2870,7 +2911,7 @@ class AppComponent {
   openLeadershipDecisions(slug: string, asOf = '', roleType = '', decisionType = ''): void {
     if (!slug || !this.token()) return;
     this.syncCompanyContext(slug);
-    this.activePage.set('leadership-decisions');
+    this.setPage('leadership-decisions');
     this.menuOpen.set(false);
     this.leadershipDecisionLoading.set(true);
     this.error.set('');
@@ -3626,7 +3667,8 @@ class AppComponent {
     this.currentUser.set(user);
     this.message.set(message);
     this.error.set('');
-    this.activePage.set('dashboard');
+    this.initializeBrowserHistory();
+    this.setPage('dashboard');
     this.menuOpen.set(false);
     this.password = '';
     this.loadHistory();
@@ -3643,7 +3685,8 @@ class AppComponent {
     this.suggestions.set([]);
     this.checkoutOrder.set(null);
     this.authView.set('login');
-    this.activePage.set('dashboard');
+    window.history.replaceState({}, document.title, window.location.href);
+    this.setPage('dashboard');
     this.menuOpen.set(false);
     this.avatarPreview = '';
     this.avatarFilename = '';
