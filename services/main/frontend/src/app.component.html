@@ -356,9 +356,12 @@
                         placeholder="Company, move, market, or risk"
                       />
                     </label>
-                    <button type="submit" class="primary-button" [disabled]="searchLoading()" [attr.aria-disabled]="searchLoading()">Search</button>
+                    <button type="submit" class="primary-button" [disabled]="searchLoading()" [attr.aria-disabled]="searchLoading()">{{ searchLoading() ? 'Searching…' : 'Search' }}</button>
                     <button type="button" class="founder-refresh-button" (click)="loadDashboard()" [disabled]="dashboardLoading()" [attr.aria-disabled]="dashboardLoading()">Refresh</button>
                   </form>
+                  <p class="founder-search-state" *ngIf="searchLoading() || searchError()" aria-live="polite" [class.error]="searchError()">
+                    {{ searchLoading() ? 'Searching the evidence base…' : searchError() }}
+                  </p>
 
                   <dl class="founder-mini-metrics" aria-label="Portfolio totals">
                     <div><dt>Companies</dt><dd>{{ dash.summary.company_count }}</dd></div>
@@ -383,7 +386,7 @@
                 </section>
               </section>
 
-              <section class="coverage-command" [class.search-feedback]="dash.summary.company_count > 0" *ngIf="dash.summary.company_count === 0 || suggestions().length > 0 || searchResults()" aria-labelledby="dashboard-heading">
+              <section id="search-results-panel" class="coverage-command" [class.search-feedback]="dash.summary.company_count > 0" *ngIf="dash.summary.company_count === 0 || suggestions().length > 0 || searchLoading() || searchError() || searchResults()" aria-labelledby="dashboard-heading">
                 <div class="coverage-command-copy">
                   <p class="section-kicker">{{ founderStage() ? founderStageLabel() + ' stage' : 'Founder workspace' }}</p>
                   <h2 id="dashboard-heading">{{ founderStage() ? 'Your decision cockpit' : 'Your company map' }}</h2>

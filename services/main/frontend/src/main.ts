@@ -248,6 +248,7 @@ class AppComponent {
     company_situations: 1
   });
   suggestions = signal<SearchSuggestion[]>([]);
+  searchError = signal('');
   checkoutOrder = signal<RazorpayOrder | null>(null);
   healthStatus = signal('');
   message = signal('');
@@ -1368,10 +1369,14 @@ class AppComponent {
   runSearch(query = this.searchQuery): void {
     const normalized = query.trim();
     if (!normalized) {
-      this.error.set('Enter a search query.');
+      const message = 'Enter a search query.';
+      this.searchError.set(message);
+      this.error.set(message);
       return;
     }
     this.searchQuery = normalized;
+    this.searchError.set('');
+    this.searchResults.set(null);
     this.searchLoading.set(true);
     this.suggestions.set([]);
     const pages = { companies: 1, events: 1, strategic_turns: 1 };
@@ -1385,9 +1390,11 @@ class AppComponent {
         this.searchResults.set(response);
         this.searchLoading.set(false);
         this.error.set('');
+        setTimeout(() => document.getElementById('search-results-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
       },
       error: (response) => {
         this.searchLoading.set(false);
+        this.searchError.set(response.error?.error || response.error?.detail || response.message || 'Search failed. Try again.');
         this.showError(response);
       }
     });
@@ -1409,10 +1416,12 @@ class AppComponent {
       next: (response) => {
         this.searchResults.set(response);
         this.searchLoading.set(false);
+        this.searchError.set('');
         this.error.set('');
       },
       error: (response) => {
         this.searchLoading.set(false);
+        this.searchError.set(response.error?.error || response.error?.detail || response.message || 'Search failed. Try again.');
         this.showError(response);
       }
     });
