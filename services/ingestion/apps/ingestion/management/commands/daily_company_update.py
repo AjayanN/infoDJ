@@ -77,6 +77,7 @@ class Command(BaseCommand):
                         "Market-data refresh skipped: configure FMP_API_KEY or ALPHA_VANTAGE_API_KEY. "
                         "The unauthenticated Stooq endpoint is not used automatically."
                     )
+                )
 
         if options["include_insider_transactions"] and not options["retry_failed_only"]:
             call_command(
