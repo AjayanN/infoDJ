@@ -393,6 +393,13 @@
                     <button type="submit" class="primary-button" [disabled]="searchLoading()" [attr.aria-disabled]="searchLoading()">{{ searchLoading() ? 'Searching…' : 'Search' }}</button>
                     <button type="button" class="founder-refresh-button" (click)="loadDashboard()" [disabled]="dashboardLoading()" [attr.aria-disabled]="dashboardLoading()">Refresh</button>
                   </form>
+                  <div class="founder-inline-suggestions" *ngIf="suggestions().length > 0" aria-label="Quick company matches">
+                    <span>Quick matches</span>
+                    <button type="button" *ngFor="let suggestion of suggestions().slice(0, 5)" (click)="useSuggestion(suggestion)">
+                      <strong>{{ suggestion.label }}</strong>
+                      <small>{{ suggestion.sector || suggestion.description || 'Open Company 360' }}</small>
+                    </button>
+                  </div>
                   <p class="founder-search-state" *ngIf="searchLoading() || searchError()" aria-live="polite" [class.error]="searchError()">
                     {{ searchLoading() ? 'Searching the evidence base…' : searchError() }}
                   </p>
@@ -412,7 +419,7 @@
                 </section>
               </section>
 
-              <section id="search-results-panel" class="coverage-command" [class.search-feedback]="dash.summary.company_count > 0" *ngIf="dash.summary.company_count === 0 || suggestions().length > 0 || searchLoading() || searchError() || searchResults()" aria-labelledby="dashboard-heading">
+              <section id="search-results-panel" class="coverage-command" [class.search-feedback]="dash.summary.company_count > 0" *ngIf="dash.summary.company_count === 0 || searchLoading() || searchError() || searchResults()" aria-labelledby="dashboard-heading">
                 <div class="coverage-command-copy">
                   <p class="section-kicker">{{ founderStage() ? founderStageLabel() + ' stage' : 'Founder workspace' }}</p>
                   <h2 id="dashboard-heading">{{ founderStage() ? 'Your decision cockpit' : 'Your company map' }}</h2>
@@ -441,7 +448,7 @@
                   <div><dt>Sectors</dt><dd>{{ dash.summary.sector_count }}</dd></div>
                 </dl>
 
-                <div class="suggestion-row" *ngIf="suggestions().length > 0" aria-label="Search suggestions">
+                <div class="suggestion-row" *ngIf="dash.summary.company_count === 0 && suggestions().length > 0" aria-label="Search suggestions">
                   <button type="button" class="suggestion-button" *ngFor="let suggestion of suggestions()" (click)="useSuggestion(suggestion)">
                     <span>{{ suggestion.label }}</span>
                     <small>{{ suggestion.sector || suggestion.description }}</small>

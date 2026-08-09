@@ -6638,3 +6638,65 @@ th {
   .founder-mini-metrics div:nth-child(4) { border-left: 1px solid rgba(166, 207, 231, .14); }
   .founder-mini-metrics div:nth-child(odd) { border-left: 0; }
 }
+
+
+/* Suggestions belong directly beneath the founder search input. */
+.founder-inline-suggestions {
+  background: rgba(11, 37, 61, .72);
+  border-top: 1px solid rgba(166, 207, 231, .14);
+  display: grid;
+  gap: 7px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  padding: 12px 28px 15px;
+}
+
+.founder-inline-suggestions > span {
+  color: #8eb0c7;
+  font-size: 10px;
+  font-weight: 800;
+  grid-column: 1 / -1;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.founder-inline-suggestions button {
+  background: rgba(127, 224, 206, .08);
+  border: 1px solid rgba(127, 224, 206, .24);
+  border-radius: 10px;
+  color: #effbff;
+  display: grid;
+  gap: 3px;
+  min-height: 54px;
+  min-width: 0;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.founder-inline-suggestions button:hover,
+.founder-inline-suggestions button:focus-visible {
+  background: rgba(127, 224, 206, .19);
+  border-color: #7fe0ce;
+  outline: 0;
+}
+
+.founder-inline-suggestions strong,
+.founder-inline-suggestions small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.founder-inline-suggestions strong { font-size: 12px; }
+.founder-inline-suggestions small { color: #a9c2d8; font-size: 10px; }
+
+@media (max-width: 700px) {
+  .founder-inline-suggestions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 12px 18px 14px;
+  }
+  .founder-inline-suggestions button { min-height: 50px; }
+}
+
+@media (max-width: 420px) {
+  .founder-inline-suggestions { grid-template-columns: minmax(0, 1fr); }
+}
