@@ -2,7 +2,7 @@ import 'zone.js';
 
 import { CommonModule } from '@angular/common';
 import { provideHttpClient } from '@angular/common/http';
-import { Component, HostListener, inject, signal } from '@angular/core';
+import { AfterViewChecked, Component, HostListener, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideRouter, Routes } from '@angular/router';
@@ -183,7 +183,7 @@ const routes: Routes = [
   imports: [CommonModule, FormsModule],
   templateUrl: './app.component.html'
 })
-class AppComponent {
+class AppComponent implements AfterViewChecked {
   private readonly api = inject(InfoDjApiService);
 
   authView = signal<AuthView>('login');
@@ -652,6 +652,49 @@ class AppComponent {
       nextAction: 'Add compare-turns API and turn suggestion search.'
     }
   ];
+
+  ngAfterViewChecked(): void {
+    const headings = document.querySelectorAll<HTMLElement>(
+      '.panel-header h2, .panel-header h3, .compact-panel-heading h3, .research-briefing > header h2, .briefing-evidence-strip > header h3'
+    );
+    headings.forEach((heading) => {
+      const title = (heading.textContent || '').trim();
+      if (!title) {
+        return;
+      }
+      const existing = heading.nextElementSibling;
+      if (existing?.classList.contains('subtitle-question')) {
+        if (existing.getAttribute('data-subtitle-source') !== title) {
+          existing.textContent = this.subtitleQuestion(title);
+          existing.setAttribute('data-subtitle-source', title);
+        }
+        return;
+      }
+      const question = document.createElement('p');
+      question.className = 'subtitle-question';
+      question.setAttribute('data-subtitle-source', title);
+      question.textContent = this.subtitleQuestion(title);
+      heading.insertAdjacentElement('afterend', question);
+    });
+  }
+
+  private subtitleQuestion(title: string): string {
+    const normalized = title.toLowerCase();
+    if (/unavailable|missing|gap/.test(normalized)) return 'What information is still missing before we decide?';
+    if (/source|evidence|document/.test(normalized)) return 'What evidence supports this conclusion?';
+    if (/risk|litigation|regulatory|pressure|warning/.test(normalized)) return 'What could change the decision or require attention?';
+    if (/change|movement|timeline|history|latest|new and removed/.test(normalized)) return 'What changed, and why does it matter now?';
+    if (/metric|kpi|earnings|result|performance|trend/.test(normalized)) return 'What do the numbers say about progress?';
+    if (/compet|peer|compar|moat/.test(normalized)) return 'Where is the company stronger, weaker, or different?';
+    if (/capital|allocation|cash-flow|deployment/.test(normalized)) return 'Where is management investing, and what does that signal?';
+    if (/product|pricing|catalog|offering/.test(normalized)) return 'How is the offer evolving for customers?';
+    if (/milestone|commitment|promise|execution/.test(normalized)) return 'Is the strategy being delivered as intended?';
+    if (/ownership|insider|control/.test(normalized)) return 'Who has influence, and what ownership signals matter?';
+    if (/macro|factor|sensitivity|stress/.test(normalized)) return 'Which outside forces could change the outlook?';
+    if (/scenario|assumption/.test(normalized)) return 'Which assumption would change the outcome most?';
+    if (/briefing|what to know|summary/.test(normalized)) return 'What should I understand before taking the next step?';
+    return 'What should we learn here before making the next decision?';
+  }
 
   constructor() {
     this.consumeAuthCallback();
