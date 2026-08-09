@@ -1029,6 +1029,7 @@ button:disabled {
 }
 
 .source-lens-drawer {
+  align-content: start;
   background: var(--panel);
   box-shadow: -18px 0 44px rgba(24, 33, 47, 0.2);
   display: grid;
@@ -1059,8 +1060,10 @@ button:disabled {
 }
 
 .source-lens-list {
+  align-content: start;
   display: grid;
   gap: 12px;
+  grid-auto-rows: max-content;
 }
 
 .source-lens-record {
