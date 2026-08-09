@@ -839,7 +839,7 @@
                       </div>
                     </div>
                     <div class="pattern-grid compare-visual-grid" *ngIf="(dashboardSection('compare-turns')?.items || []).length > 0; else dashboardGap">
-                      <article class="pattern-card compare-visual-card" *ngFor="let group of dashboardSection('compare-turns')?.items || []">
+                      <article class="pattern-card compare-visual-card" *ngFor="let group of (dashboardSection('compare-turns')?.items || []).slice(0, 4)">
                         <div class="compare-visual-header">
                           <div class="compare-turn-orbit" aria-hidden="true"><strong>{{ group.sample_size }}</strong><span>turns</span></div>
                           <div>
