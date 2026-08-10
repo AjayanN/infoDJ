@@ -2471,16 +2471,21 @@ select:focus {
 }
 
 .dashboard-loading-state h2 {
-  color: var(--ink);
+  color: #f4fbff;
+}
+
+.dashboard-loading-state .section-kicker {
+  color: #7fe0ce;
 }
 
 .dashboard-loading-state > p:not(.section-kicker) {
+  color: #cbdbe5;
   line-height: 1.5;
   max-width: 620px;
 }
 
 .dashboard-loading-state small {
-  color: var(--muted);
+  color: #b9ccdc;
 }
 
 .dashboard-money-loader {
