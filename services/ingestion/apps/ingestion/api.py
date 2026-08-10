@@ -611,6 +611,10 @@ def company_earnings(request: HttpRequest, slug: str) -> JsonResponse:
         selected.documents.filter(review_status="REVIEWED").select_related("source_document")
     )
     reviewed_explanations = [row.evidence_text for row in reviewed_documents if row.evidence_text]
+    pending_document = (
+        selected.documents.exclude(review_status="REVIEWED").exclude(evidence_text="")
+        .select_related("source_document").order_by("-confidence_score", "-id").first()
+    )
     management_explanation = selected.management_explanation or " ".join(reviewed_explanations)
     unanswered_questions = list(selected.unanswered_questions or [])
     if not management_explanation:
@@ -628,6 +632,10 @@ def company_earnings(request: HttpRequest, slug: str) -> JsonResponse:
             "measured_results": metrics,
             "operating_kpis": kpis,
             "management_explanation": management_explanation or None,
+            "pending_management_excerpt": ({
+                "evidence_text": pending_document.evidence_text,
+                "source": serialize_profile_source(pending_document.source_document),
+            } if pending_document else None),
             "infodj_interpretation": selected.infodj_interpretation or None,
             "unanswered_questions": unanswered_questions,
             "disclosure_changes": earnings_disclosure_changes(company, selected, previous),

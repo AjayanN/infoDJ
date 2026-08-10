@@ -1670,7 +1670,14 @@
                   <article class="earnings-management-brief">
                     <div class="panel-header"><div><p class="section-kicker">Management explanation</p><h2>What management said drove the period</h2></div></div>
                     <p *ngIf="period.management_explanation; else managementGap">{{ period.management_explanation }}</p>
-                    <ng-template #managementGap><div class="empty-state unavailable-state">No reviewed earnings release, presentation, shareholder letter, or call explanation is linked yet.</div></ng-template>
+                    <ng-template #managementGap>
+                      <article class="earnings-pending-excerpt" *ngIf="period.pending_management_excerpt as excerpt; else managementUnavailable">
+                        <p class="section-kicker">Official source collected · awaiting review</p>
+                        <p>{{ excerpt.evidence_text }}</p>
+                        <a [href]="excerpt.source.url" target="_blank" rel="noopener">Open official source</a>
+                      </article>
+                      <ng-template #managementUnavailable><div class="empty-state unavailable-state">No earnings release, presentation, shareholder letter, or call explanation has been collected for this period yet.</div></ng-template>
+                    </ng-template>
                     <h3>InfoDJ interpretation</h3>
                     <p *ngIf="period.infodj_interpretation; else interpretationGap">{{ period.infodj_interpretation }}</p>
                     <ng-template #interpretationGap><div class="empty-state">No reviewed InfoDJ interpretation. Measured results are shown without inferred causation.</div></ng-template>

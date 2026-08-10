@@ -207,6 +207,23 @@ def collect_latest_earnings_exhibit(company) -> dict[str, int | str]:
     period = company.earnings_periods.filter(is_published=True).order_by("-period_end", "-filed_date").first()
     if period is None:
         return {"created": 0, "updated": 0, "skipped": 1, "reason": "no earnings period"}
+    return collect_earnings_exhibit(company, period)
+
+
+def collect_earnings_exhibits(company) -> dict[str, int]:
+    totals = {"created": 0, "updated": 0, "skipped": 0}
+    periods = company.earnings_periods.filter(is_published=True).order_by("-period_end", "-filed_date")
+    for period in periods:
+        if period.documents.exclude(evidence_text="").exists():
+            totals["skipped"] += 1
+            continue
+        result = collect_earnings_exhibit(company, period)
+        for key in totals:
+            totals[key] += int(result[key])
+    return totals
+
+
+def collect_earnings_exhibit(company, period: EarningsPeriod) -> dict[str, int | str]:
     filings = list(
         SourceDocument.objects.filter(
             company=company,

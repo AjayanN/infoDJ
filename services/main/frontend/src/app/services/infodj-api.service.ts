@@ -708,6 +708,7 @@ export type EarningsResponse = {
       period_end: string; value: number; previous_value: number | null; change_pct: number | null; quality_flags: string[];
     }[];
     management_explanation: string | null;
+    pending_management_excerpt: { evidence_text: string; source: CompanyProfileSource } | null;
     infodj_interpretation: string | null;
     unanswered_questions: string[];
     disclosure_changes: { added: { concept: string; unit: string; label: string }[]; removed: { concept: string; unit: string; label: string }[] };
