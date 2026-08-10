@@ -3,7 +3,7 @@ from django.utils.text import slugify
 
 from apps.companies.company_universe import CROSS_SECTOR_COMPANIES
 from apps.companies.models import Company
-from apps.ingestion.services.earnings_intelligence import build_earnings_periods, collect_latest_earnings_exhibit
+from apps.ingestion.services.earnings_intelligence import build_earnings_periods, collect_earnings_exhibits, collect_latest_earnings_exhibit
 
 
 class Command(BaseCommand):
@@ -12,6 +12,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--company", default="", help="Optional company slug")
         parser.add_argument("--collect-exhibits", action="store_true")
+        parser.add_argument("--all-periods", action="store_true", help="Collect earnings exhibits for every published period.")
 
     def handle(self, *args, **options):
         slugs = [slugify(seed.name) for seed in CROSS_SECTOR_COMPANIES]
@@ -28,5 +29,6 @@ class Command(BaseCommand):
                 totals[key] += result[key]
             self.stdout.write(f"{companies[slug].name}: {result}")
             if options["collect_exhibits"]:
-                self.stdout.write(f"{companies[slug].name} exhibit: {collect_latest_earnings_exhibit(companies[slug])}")
+                collector = collect_earnings_exhibits if options["all_periods"] else collect_latest_earnings_exhibit
+                self.stdout.write(f"{companies[slug].name} exhibit: {collector(companies[slug])}")
         self.stdout.write(self.style.SUCCESS(f"Earnings Intelligence build complete: {totals}"))

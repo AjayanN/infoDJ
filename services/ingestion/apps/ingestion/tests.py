@@ -918,6 +918,31 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(payload["selected_period"]["document_set"][0]["source"]["id"], quarterly_source.id)
         self.assertTrue(any(gap["key"] == "management_explanation" for gap in payload["source_gaps"]))
 
+    def test_earnings_api_exposes_pending_official_management_excerpt(self):
+        period = EarningsPeriod.objects.create(
+            company=self.netflix, fiscal_year=2026, fiscal_period="Q1", period_end=date(2026, 3, 31),
+            filed_date=date(2026, 4, 20), accession_number="0001065280-26-000001",
+            headline="Netflix reported Q1 results.", source_document=self.source,
+            review_status="REVIEWED", is_published=True,
+        )
+        pending_source = SourceDocument.objects.create(
+            company=self.netflix, source_api="SEC_EDGAR_EXHIBIT", url="https://example.com/q1-release",
+            title="Netflix Q1 earnings release", publisher="SEC",
+        )
+        EarningsPeriodDocument.objects.create(
+            period=period, source_document=pending_source, document_type="EARNINGS_EXHIBIT",
+            evidence_text="Revenue grew, driven by higher membership and pricing.", review_status="NEEDS_REVIEW",
+        )
+
+        payload = self.client.get("/companies/netflix/earnings").json()
+
+        self.assertIsNone(payload["selected_period"]["management_explanation"])
+        self.assertEqual(
+            payload["selected_period"]["pending_management_excerpt"]["evidence_text"],
+            "Revenue grew, driven by higher membership and pricing.",
+        )
+        self.assertEqual(payload["selected_period"]["pending_management_excerpt"]["source"]["url"], pending_source.url)
+
     def test_earnings_api_reports_unavailable_without_reviewed_periods(self):
         response = self.client.get("/companies/netflix/earnings")
 
