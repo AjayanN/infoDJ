@@ -862,6 +862,10 @@ class AppComponent implements AfterViewChecked {
     this.menuOpen.update((open) => !open);
   }
 
+  closeMenu(): void {
+    this.menuOpen.set(false);
+  }
+
   stageProgress(): number {
     const stage = this.founderStage();
     return stage ? founderStageProgress(stage) : 0;
