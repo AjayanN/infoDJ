@@ -1,10 +1,11 @@
 import { createReadStream, existsSync, statSync } from 'node:fs';
-import { createServer } from 'node:http';
+import { createServer, request as proxyRequest } from 'node:http';
 import { extname, join, normalize } from 'node:path';
 
 const root = join(process.cwd(), 'dist', 'infodj-main-frontend', 'browser');
 const port = Number(process.env.PORT || 4200);
 const host = process.env.HOST || '0.0.0.0';
+const apiGateway = process.env.API_GATEWAY_URL || 'http://gateway:8000';
 
 const contentTypes = {
   '.css': 'text/css; charset=utf-8',
@@ -15,11 +16,32 @@ const contentTypes = {
   '.txt': 'text/plain; charset=utf-8',
 };
 
+function proxyApi(request, response) {
+  const target = new URL(request.url || '/', apiGateway);
+  const upstream = proxyRequest(target, {
+    method: request.method,
+    headers: { ...request.headers, host: target.host },
+  }, (upstreamResponse) => {
+    response.writeHead(upstreamResponse.statusCode || 502, upstreamResponse.headers);
+    upstreamResponse.pipe(response);
+  });
+  upstream.on('error', () => {
+    response.statusCode = 502;
+    response.setHeader('Content-Type', 'application/json; charset=utf-8');
+    response.end(JSON.stringify({ detail: 'InfoDJ API is temporarily unavailable.' }));
+  });
+  request.pipe(upstream);
+}
+
 createServer((request, response) => {
-  const url = new URL(request.url || '/', `http://${request.headers.host || 'localhost'}`);
+  const url = new URL(request.url || '/', 'http://' + (request.headers.host || 'localhost'));
+  if (url.pathname.startsWith('/api/app/')) {
+    proxyApi(request, response);
+    return;
+  }
+
   const requestedPath = normalize(decodeURIComponent(url.pathname)).replace(/^(\.\.[/\\])+/, '');
   let filePath = join(root, requestedPath);
-
   if (!existsSync(filePath) || statSync(filePath).isDirectory()) {
     filePath = join(root, 'index.html');
   }
@@ -33,5 +55,5 @@ createServer((request, response) => {
     })
     .pipe(response);
 }).listen(port, host, () => {
-  console.log(`InfoDJ frontend available at http://${host}:${port}/`);
+  console.log('InfoDJ frontend available at http://' + host + ':' + port + '/');
 });

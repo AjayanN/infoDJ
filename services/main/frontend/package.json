@@ -5,7 +5,8 @@
   "scripts": {
     "start": "ng build && node serve-static.mjs",
     "build": "ng build",
-    "test": "tsx --test tests/*.test.ts"
+    "test": "tsx --test tests/*.test.ts",
+    "start:production": "ng build --configuration production && node serve-static.mjs"
   },
   "dependencies": {
     "@angular/animations": "^18.0.0",
