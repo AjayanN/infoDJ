@@ -3536,6 +3536,15 @@ class AppComponent implements AfterViewChecked {
     )].slice(0, 8);
   }
 
+  revenueSourceCount(company: CompanyProfileResponse): number {
+    return new Set((company.sections['revenue_sources']?.items || []).map((item) => this.profileItemLabel(item))).size;
+  }
+
+  revenueSourcePreview(company: CompanyProfileResponse): string {
+    const sources = this.dossierChips(company, ['revenue_sources']);
+    return sources.length ? sources.join(' | ') + '. Amounts are in Earnings.' : '';
+  }
+
   visibleOperatingKpiMetricGroups(): KpiMetricGroup[] {
     const groups = this.operatingKpiMetricGroups();
     return this.showAllKpiMetrics ? groups : groups.slice(0, 12);

@@ -1073,9 +1073,11 @@
                       <div><strong>{{ companyView.coverage.completeness_percent }}%</strong><span>profile coverage</span></div>
                     </article>
                     <article class="visual-summary">
-                      <span>Business model</span>
-                      <strong>{{ dossierChips(companyView, ['revenue_sources']).length || 0 }} revenue signals</strong>
-                      <small>{{ companyView.sections['business_model'].text ? 'Source-backed model available' : 'Model evidence unavailable' }}</small>
+                      <span>Revenue streams</span>
+                      <strong>{{ revenueSourceCount(companyView) }} source{{ revenueSourceCount(companyView) === 1 ? '' : 's' }}</strong>
+                      <small *ngIf="revenueSourcePreview(companyView); else revenueSourceGap">{{ revenueSourcePreview(companyView) }}</small>
+                      <ng-template #revenueSourceGap><small>No reviewed revenue-source labels are available.</small></ng-template>
+                      <button type="button" class="inline-link-button" (click)="openCompanyFeature({ id: 'business-model', category: 'Business model', title: 'Business model map', purpose: '', keywords: '' })">Open revenue map</button>
                     </article>
                     <article class="visual-summary">
                       <span>Evidence base</span>
@@ -4045,10 +4047,6 @@
         </aside>
       </div>
 
-      <footer class="footer">
-        <span>InfoDJ Sprint 1</span>
-        <span>Main backend APIs only. Razorpay and Google secrets stay server-side.</span>
-      </footer>
     </div>
   </div>
 </ng-template>
