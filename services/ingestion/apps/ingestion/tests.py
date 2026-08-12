@@ -130,6 +130,8 @@ from apps.ingestion.services.market_price_client import (
 from apps.ingestion.services.sec_form4 import form4_sources, ingest_form4_sources, ownership_xml_url, parse_ownership_xml
 from apps.ingestion.management.commands.ingest_market_prices import build_market_client
 from apps.ingestion.services.official_product_price import parse_official_prices
+from apps.ingestion.services.energy_source_quality import is_promotable_energy_candidate
+from apps.ingestion.services.energy_sector_enrichment import enrich_energy_disclosures
 from apps.ingestion.services.sec_profile_builder import SecProfileData, apply_profile_fallbacks, parse_sec_profile_text
 from apps.ingestion.services.wikidata_client import normalize_company_entity
 
@@ -2151,6 +2153,87 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(
             {row["company"] for row in payload["sections"]["compare"]["items"][0]["turns"]},
             {"Netflix", "Example Streaming"},
+        )
+
+
+class EnergySourceQualityTests(TestCase):
+    def setUp(self):
+        self.company = Company.objects.create(name="Energy Test Co", industry="Energy", country="United States")
+        self.gap = SourceGap.objects.create(
+            company=self.company,
+            dashboard="product_pricing_history",
+            gap_type="product_list_prices",
+            provider="test",
+            reason="Need verified product prices.",
+            next_ingestion_task="Review first-party evidence.",
+        )
+
+    def candidate(self, *, source_api: str, evidence_text: str):
+        source = SourceDocument.objects.create(
+            company=self.company,
+            source_api=source_api,
+            url=f"https://example.com/{source_api.lower()}",
+            title="Energy source",
+            publisher="Test",
+            language="en",
+        )
+        return SourceGapResolutionCandidate.objects.create(
+            company=self.company,
+            source_gap=self.gap,
+            dashboard="product_pricing_history",
+            gap_type="product_list_prices",
+            candidate_type="product_price_source",
+            source_document=source,
+            evidence_text=evidence_text,
+            confidence_score="0.800",
+            extraction_status="EXTRACTED",
+            review_status="NEEDS_REVIEW",
+        )
+
+    def test_energy_candidates_require_first_party_explicit_price_evidence(self):
+        commodity_commentary = self.candidate(
+            source_api="GDELT_DOC_2",
+            evidence_text="Oil prices rose after market commentary.",
+        )
+        official_product_page = self.candidate(
+            source_api="OFFICIAL_WEBSITE",
+            evidence_text="Mobil lubricant product price is USD 12.00 per litre.",
+        )
+
+        self.assertFalse(is_promotable_energy_candidate(commodity_commentary))
+        self.assertTrue(is_promotable_energy_candidate(official_product_page))
+
+
+class EnergySectorEnrichmentTests(TestCase):
+    def test_first_party_disclosure_creates_source_linked_energy_records(self):
+        company = Company.objects.create(name="Energy Test Co", industry="Energy", country="United States")
+        source = SourceDocument.objects.create(
+            company=company,
+            source_api="SEC_EDGAR",
+            url="https://example.com/energy-10q",
+            title="Energy Test Co 10-Q",
+            publisher="SEC",
+            language="en",
+            published_date="2026-06-30",
+        )
+        ArticleExtraction.objects.create(
+            source_document=source,
+            clean_text=(
+                "Advantaged assets include Guyana, Permian and LNG. "
+                "High-value products include performance chemicals, performance lubricants, and lower-emission fuels."
+            ),
+            word_count=18,
+            extraction_status="SUCCEEDED",
+            extractor_name="test",
+        )
+
+        result = enrich_energy_disclosures(company)
+
+        self.assertEqual(result["events_created"], 3)
+        self.assertEqual(result["offerings_created"], 3)
+        self.assertEqual(
+            set(BusinessEvent.objects.filter(company=company).values_list("decision_theme", flat=True)),
+            {"ENERGY_ASSET_GUYANA", "ENERGY_ASSET_PERMIAN", "ENERGY_ASSET_LNG"},
         )
 
 
