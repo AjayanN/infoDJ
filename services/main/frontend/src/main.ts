@@ -808,9 +808,16 @@ class AppComponent implements AfterViewChecked {
   private setPage(page: AppPage, recordHistory = true): void {
     const changed = this.activePage() !== page;
     this.activePage.set(page);
+    if (changed) {
+      this.scrollToPageStart();
+    }
     if (changed && recordHistory && this.token() && !this.restoringBrowserHistory) {
       window.history.pushState({ infodj: true, page }, document.title, window.location.href);
     }
+  }
+
+  private scrollToPageStart(): void {
+    requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: 'auto' }));
   }
 
   private initializeBrowserHistory(): void {
