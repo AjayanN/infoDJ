@@ -23,6 +23,7 @@ from apps.companies.models import (
     PromiseReviewStatus,
 )
 from apps.ingestion.models import ArticleExtraction, SourceGapResolutionCandidate, SourceGapStatus
+from apps.ingestion.services.energy_source_quality import is_promotable_energy_candidate
 
 
 @dataclass(frozen=True)
@@ -76,6 +77,13 @@ def promote_source_gap_candidates(*, limit: int = 100, dashboard: str = "", gap_
 
 
 def promote_candidate(candidate: SourceGapResolutionCandidate) -> dict[str, object]:
+    if not is_promotable_energy_candidate(candidate):
+        return {
+            "promoted": False,
+            "created": 0,
+            "updated": 0,
+            "reason": "Energy candidates require explicit first-party product, price, or market evidence",
+        }
     if candidate.dashboard == "ownership_insider_activity" and candidate.gap_type in {"ownership_percentages", "voting_control", "institutional_positions"}:
         return promote_ownership_candidate(candidate)
     if candidate.dashboard == "customer_supplier_dependency" and candidate.gap_type == "concentration_percentages":
