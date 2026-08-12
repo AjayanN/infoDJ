@@ -129,6 +129,7 @@ from apps.ingestion.services.market_price_client import (
 )
 from apps.ingestion.services.sec_form4 import form4_sources, ingest_form4_sources, ownership_xml_url, parse_ownership_xml
 from apps.ingestion.management.commands.ingest_market_prices import build_market_client
+from apps.ingestion.management.commands.daily_company_update import Command as DailyCompanyUpdateCommand
 from apps.ingestion.services.official_product_price import parse_official_prices
 from apps.ingestion.services.energy_source_quality import is_promotable_energy_candidate
 from apps.ingestion.services.energy_sector_enrichment import enrich_energy_disclosures
@@ -2154,6 +2155,40 @@ class IngestionSearchApiTests(TestCase):
             {row["company"] for row in payload["sections"]["compare"]["items"][0]["turns"]},
             {"Netflix", "Example Streaming"},
         )
+
+
+class DailyCompanyUpdateTests(TestCase):
+    def test_extracts_reports_and_enriches_energy_before_dashboard_builders(self):
+        options = {
+            "limit": 20,
+            "offset": 0,
+            "batch_size": 0,
+            "sec_limit": 30,
+            "wikipedia_limit": 10,
+            "gdelt_records_per_query": 5,
+            "gdelt_query_limit": 3,
+            "skip_gdelt": True,
+            "skip_event_extraction": True,
+            "event_filing_limit": 8,
+            "retry_failed_only": False,
+            "include_market_data": False,
+            "include_financial_facts": False,
+            "include_insider_transactions": False,
+            "include_official_product_prices": False,
+            "insider_form_limit": 5,
+            "include_macro_context": False,
+            "include_quality_scoring": False,
+            "include_company_profiles": False,
+        }
+        with patch("apps.ingestion.management.commands.daily_company_update.call_command") as call:
+            DailyCompanyUpdateCommand().handle(**options)
+
+        command_names = [call_args.args[0] for call_args in call.call_args_list]
+        report_extraction = command_names.index("extract_report_filings")
+        energy_enrichment = command_names.index("enrich_energy_disclosures")
+        self.assertLess(report_extraction, energy_enrichment)
+        self.assertLess(energy_enrichment, command_names.index("build_product_pricing_history"))
+        self.assertLess(energy_enrichment, command_names.index("build_geographic_expansions"))
 
 
 class EnergySourceQualityTests(TestCase):
