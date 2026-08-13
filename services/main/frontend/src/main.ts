@@ -1394,7 +1394,7 @@ class AppComponent implements AfterViewChecked {
   signup(): void {
     this.withRequest(() =>
       this.api.signup(this.username, this.email, this.password).subscribe({
-        next: (response) => this.acceptSession(response.token, response.user, 'Account created.'),
+        next: (response) => this.acceptSession(response.token, response.user, 'Account created.', true),
         error: (response) => this.showError(response)
       })
     );
@@ -3854,11 +3854,26 @@ class AppComponent implements AfterViewChecked {
     }
   }
 
-  private acceptSession(token: string, user: CurrentUser, message: string): void {
+  private acceptSession(token: string, user: CurrentUser, message: string, saveOnboarding = false): void {
+    const onboardingSelection: Partial<FounderContext> = {
+      sector: this.founderSector,
+      stage: this.founderStage(),
+    };
     localStorage.setItem('infodj_token', token);
     this.token.set(token);
     this.currentUser.set(user);
     this.applyFounderContext(user.profile.founder_context);
+    if (saveOnboarding) {
+      if (onboardingSelection.sector) {
+        this.founderSector = onboardingSelection.sector;
+      }
+      if (onboardingSelection.stage) {
+        this.founderStage.set(onboardingSelection.stage as FounderStage);
+      }
+      if (onboardingSelection.sector || onboardingSelection.stage) {
+        this.saveFounderContext(onboardingSelection);
+      }
+    }
     this.message.set(message);
     this.error.set('');
     this.initializeBrowserHistory();
