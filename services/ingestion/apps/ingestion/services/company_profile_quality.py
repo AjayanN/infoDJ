@@ -5,6 +5,9 @@ import re
 from apps.companies.models import BusinessModelComponentType, BusinessModelSnapshot, CompanyProfileSnapshot
 
 
+PROFILE_SNAPSHOT_LIMIT = 20
+
+
 PROFILE_LIST_FIELDS = (
     "subsidiaries",
     "brands",
@@ -29,10 +32,11 @@ BLOCKED_SUMMARY_MARKERS = (
 
 
 def company_profile_quality_issues(company) -> list[str]:
-    profiles = list(
-        CompanyProfileSnapshot.objects.filter(company=company, status__in=["PUBLISHED", "REVIEWED"])
-        .order_by("-effective_date", "-updated_at")
+    profile_window = list(
+        CompanyProfileSnapshot.objects.filter(company=company)
+        .order_by("-effective_date", "-updated_at")[:PROFILE_SNAPSHOT_LIMIT]
     )
+    profiles = [row for row in profile_window if row.status in {"PUBLISHED", "REVIEWED"}]
     if not profiles:
         return ["no reviewed Company 360 profile"]
 

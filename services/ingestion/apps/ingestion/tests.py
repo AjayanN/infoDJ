@@ -283,6 +283,16 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(payload["evidence"][0]["title"], "Netflix 10-K")
         self.assertEqual(payload["source_gaps"], [])
 
+    def test_company_profile_coverage_reports_its_current_snapshot_contract(self):
+        response = self.client.get("/companies/netflix/profile")
+
+        self.assertEqual(response.status_code, 200)
+        coverage = response.json()["coverage"]
+        self.assertEqual(coverage["scoring_contract"]["snapshot_limit"], 20)
+        self.assertEqual(coverage["scoring_contract"]["eligible_snapshot_count"], 0)
+        self.assertIn("business_model", coverage["missing_sections"])
+        self.assertEqual(coverage["section_statuses"]["business_model"], "unavailable")
+
     def test_company_profile_reports_partial_section_gaps(self):
         response = self.client.get("/companies/netflix/profile")
 
@@ -2418,6 +2428,45 @@ class CompanyProfileCollectorTests(TestCase):
 
         self.assertEqual(data.products, ())
         self.assertEqual(data.brands, ())
+
+    def test_profile_quality_uses_the_same_snapshot_window_as_company_360(self):
+        company = Company.objects.create(name="Window Corp", description="A company with a current profile gap.")
+        source = SourceDocument.objects.create(
+            company=company,
+            source_api="SEC",
+            url="https://example.com/window-corp-10k",
+            title="Window Corp 10-K",
+        )
+        CompanyProfileSnapshot.objects.create(
+            company=company,
+            effective_date=date(2020, 1, 1),
+            source_document=source,
+            status="REVIEWED",
+            summary="A complete historical company profile.",
+            business_model="A sufficiently long historical business model description that should not satisfy current coverage.",
+            subsidiaries=["Window Holdings"],
+            brands=["Window"],
+            segments=["Software"],
+            products=["Window platform"],
+            customer_groups=["Business customers"],
+            revenue_sources=["Subscriptions"],
+            geographies=["United States"],
+            leadership=["Chief Executive Officer"],
+            competitors=["Example competitor"],
+            strategic_priorities=["Expand the platform"],
+        )
+        for index in range(20):
+            CompanyProfileSnapshot.objects.create(
+                company=company,
+                effective_date=date(2025 + (index // 12), (index % 12) + 1, 1),
+                source_document=source,
+                status="REVIEWED",
+            )
+
+        issues = company_profile_quality_issues(company)
+
+        self.assertIn("products unavailable", issues)
+        self.assertIn("revenue_sources unavailable", issues)
 
     def test_semantic_quality_rejects_filing_boilerplate_and_duplicate_labels(self):
         company = Company.objects.create(name="Quality Corp", description="A reviewed company summary.")

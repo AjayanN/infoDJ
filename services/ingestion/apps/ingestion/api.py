@@ -87,6 +87,7 @@ from apps.companies.models import (
 )
 from apps.curation.models import BusinessEvent, StrategicTurn, StrategicTurnSource
 from apps.ingestion.models import FinancialFact, IngestionJob, MarketPrice, SourceDocument, SourceGap, SourceGapResolutionCandidate
+from apps.ingestion.services.company_profile_quality import PROFILE_SNAPSHOT_LIMIT
 from apps.ingestion.services.dashboard_quality import (
     RISK_EVENT_TYPES,
     event_eligibility,
@@ -135,7 +136,7 @@ def company_profile(request: HttpRequest, slug: str) -> JsonResponse:
     snapshots = list(
         CompanyProfileSnapshot.objects.filter(company=company)
         .select_related("source_document")
-        .order_by("-effective_date", "-updated_at")[:20]
+        .order_by("-effective_date", "-updated_at")[:PROFILE_SNAPSHOT_LIMIT]
     )
     as_of = parse_iso_date(request.GET.get("as_of"))
     eligible_snapshots = [
@@ -237,6 +238,16 @@ def company_profile(request: HttpRequest, slug: str) -> JsonResponse:
                 "completeness_percent": completeness,
                 "available_sections": len(section_values) - len(missing_sections),
                 "total_sections": len(section_values),
+                "missing_sections": missing_sections,
+                "section_statuses": {
+                    key: "available" if value else "unavailable"
+                    for key, value in section_values.items()
+                },
+                "scoring_contract": {
+                    "snapshot_limit": PROFILE_SNAPSHOT_LIMIT,
+                    "eligible_snapshot_count": len(eligible_snapshots),
+                    "calculation": "Current reviewed or published sections available within the latest profile snapshot window.",
+                },
                 "source_count": SourceDocument.objects.filter(company=company).count(),
                 "snapshot_count": len(snapshots),
                 "last_updated": max_date_iso(
