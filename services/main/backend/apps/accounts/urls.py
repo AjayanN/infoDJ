@@ -12,6 +12,7 @@ urlpatterns = [
     path("auth/password-reset/confirm", api.password_reset_confirm, name="auth-password-reset-confirm"),
     path("auth/google/url", api.google_auth_url, name="auth-google-url"),
     path("auth/google/callback", api.google_callback, name="auth-google-callback"),
+    path("founder-decision", api.founder_decision, name="founder-decision"),
     path("founder-context", api.founder_context, name="founder-context"),
     path("founder-playbook", api.founder_playbook, name="founder-playbook"),
     path("profile/avatar", api.profile_avatar, name="profile-avatar"),

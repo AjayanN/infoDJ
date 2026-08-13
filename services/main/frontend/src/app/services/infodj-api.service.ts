@@ -24,6 +24,37 @@ export type FounderContext = {
   constraints: string;
 };
 
+export type FounderDecisionEvidence = {
+  id: number;
+  company: string;
+  company_slug: string;
+  event_date: string | null;
+  event_type: string;
+  actual_change: string;
+  confidence_score: number | null;
+  claim_type: 'reported_fact';
+  source: { title: string; url: string; published_date: string | null };
+};
+
+export type FounderDecisionPath = {
+  key: string;
+  title: string;
+  claim_type: 'founder_hypothesis';
+  next_action: string;
+  why_now: string;
+  evidence_status: 'observed_pattern' | 'unavailable';
+  evidence: FounderDecisionEvidence[];
+};
+
+export type FounderDecisionResponse = {
+  status: 'available' | 'insufficient_evidence' | 'unavailable';
+  directions: FounderDecisionPath[];
+  journey: FounderDecisionEvidence[];
+  risk_radar: { label: string; count: number; claim_type: 'reported_fact' }[];
+  coverage: { comparable_event_count: number; risk_event_count: number; sector_company_count: number; evidence_policy?: string };
+  source_gaps: { key: string; reason: string; next_action: string }[];
+};
+
 export type FounderPlaybook = {
   sector: string;
   sector_label: string;
@@ -1739,6 +1770,13 @@ export class InfoDjApiService {
 
   me(token: string) {
     return this.http.get<{ user: CurrentUser }>(`${this.apiBaseUrl}/auth/me`, { headers: this.authHeaders(token) });
+  }
+
+  founderDecision(token: string) {
+    return this.http.get<FounderDecisionResponse>(
+      `${this.apiBaseUrl}/founder-decision`,
+      { headers: this.authHeaders(token) }
+    );
   }
 
   founderContext(token: string) {

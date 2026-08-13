@@ -5827,6 +5827,16 @@ def serialize_business_event(event: BusinessEvent) -> dict[str, object]:
         "source_count": source_count,
         "review_status": event.review_status,
         "confidence_score": decimal_to_float(event.confidence_score),
+        "source": (
+            {
+                "id": event.source_document.id,
+                "title": event.source_document.title,
+                "url": event.source_document.url,
+                "published_date": event.source_document.published_date.isoformat() if event.source_document.published_date else None,
+            }
+            if event.source_document_id
+            else None
+        ),
         "quality": {
             "eligible": eligibility.eligible,
             "status": eligibility.status,
