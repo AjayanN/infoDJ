@@ -194,6 +194,69 @@ class FounderContextApiTests(TestCase):
         self.assertIn("Advertising", response.data["playbook"]["monetisation_models"])
 
 
+class FounderDecisionApiTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = get_user_model().objects.create_user(
+            username="founder-decisions",
+            email="decisions@example.com",
+            password="StrongPass123!",
+        )
+        UserProfile.objects.create(user=self.user, founder_sector="Energy", founder_stage="build")
+        token, _created = Token.objects.get_or_create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+
+    @patch("apps.accounts.api.ingestion_get")
+    def test_founder_decision_returns_only_source_linked_sector_evidence(self, ingestion_get):
+        ingestion_get.side_effect = [
+            ({"companies": [
+                {"slug": "exxonmobil", "sector": "Energy"},
+                {"slug": "netflix", "sector": "Communication Services"},
+            ]}, ""),
+            ({"latest_events": [
+                {
+                    "id": 1, "company": "ExxonMobil", "company_slug": "exxonmobil",
+                    "event_date": "2026-02-18", "event_type": "PRODUCT_EXPANSION",
+                    "actual_change": "Expanded a source-backed project.",
+                    "confidence_score": 0.9,
+                    "source": {"title": "ExxonMobil 10-K", "url": "https://example.com/exxon", "published_date": "2026-02-18"},
+                    "quality": {"eligible": True},
+                },
+                {
+                    "id": 2, "company": "Netflix", "company_slug": "netflix",
+                    "event_date": "2026-02-18", "event_type": "REVENUE_MODEL_EXPANSION",
+                    "actual_change": "Irrelevant sector event.",
+                    "confidence_score": 0.9,
+                    "source": {"title": "Netflix 10-K", "url": "https://example.com/netflix", "published_date": "2026-02-18"},
+                    "quality": {"eligible": True},
+                },
+            ], "risk_signals": []}, ""),
+        ]
+
+        response = self.client.get("/api/app/founder-decision")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status"], "available")
+        self.assertEqual(response.data["coverage"]["comparable_event_count"], 1)
+        self.assertEqual(response.data["journey"][0]["company_slug"], "exxonmobil")
+        self.assertEqual(response.data["directions"][0]["claim_type"], "founder_hypothesis")
+        self.assertEqual(response.data["directions"][0]["evidence"][0]["claim_type"], "reported_fact")
+
+    @patch("apps.accounts.api.ingestion_get")
+    def test_founder_decision_abstains_when_sector_evidence_is_missing(self, ingestion_get):
+        ingestion_get.side_effect = [
+            ({"companies": [{"slug": "netflix", "sector": "Communication Services"}]}, ""),
+            ({"latest_events": [], "risk_signals": []}, ""),
+        ]
+
+        response = self.client.get("/api/app/founder-decision")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status"], "insufficient_evidence")
+        self.assertEqual(response.data["directions"][0]["evidence_status"], "unavailable")
+        self.assertTrue(response.data["source_gaps"])
+
+
 class ProfileAvatarApiTests(TestCase):
     def setUp(self):
         self.media_root = tempfile.mkdtemp()

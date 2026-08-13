@@ -16,7 +16,9 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
+from apps.accounts.founder_decision import build_founder_decision
 from apps.accounts.founder_playbooks import FOUNDER_OBJECTIVES, FOUNDER_STAGES, playbook_for
+from apps.search.api import ingestion_get
 from apps.accounts.models import (
     SubscriptionChangeLog,
     SubscriptionStatus,
@@ -176,6 +178,35 @@ def logout(request):
 def me(request):
     profile = ensure_profile(request.user)
     return Response({"user": serialize_user(request.user, profile, request)})
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def founder_decision(request):
+    profile = ensure_profile(request.user)
+    context = serialize_founder_context(profile)
+    companies_payload, companies_error = ingestion_get("companies")
+    dashboard_payload, dashboard_error = ingestion_get("dashboard-data", {"limit": 50})
+    if companies_error or dashboard_error:
+        return Response(
+            {
+                "status": "unavailable",
+                "context": context,
+                "directions": [],
+                "journey": [],
+                "risk_radar": [],
+                "coverage": {"comparable_event_count": 0, "risk_event_count": 0, "sector_company_count": 0},
+                "source_gaps": [
+                    {
+                        "key": "founder_decision_ingestion",
+                        "reason": companies_error or dashboard_error,
+                        "next_action": "Restore the ingestion API before generating evidence-backed founder directions.",
+                    }
+                ],
+            },
+            status=503,
+        )
+    return Response(build_founder_decision(context, companies_payload.get("companies", []), dashboard_payload or {}))
 
 
 @api_view(["GET", "PATCH"])

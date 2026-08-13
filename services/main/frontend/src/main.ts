@@ -58,7 +58,8 @@ import {
   SearchSuggestion,
   Subscription,
   FounderContext,
-  FounderPlaybook
+  FounderPlaybook,
+  FounderDecisionResponse
 } from './app/services/infodj-api.service';
 import { founderStageCheckpoint, founderStageLabel, founderStageProgress, type FounderStage } from './app/founder-stage.utils';
 import {
@@ -192,6 +193,8 @@ class AppComponent implements AfterViewChecked {
   founderStage = signal<FounderStage | ''>(this.savedFounderStage());
   founderContext = signal<FounderContext | null>(null);
   founderPlaybook = signal<FounderPlaybook | null>(null);
+  founderDecision = signal<FounderDecisionResponse | null>(null);
+  founderDecisionLoading = signal(false);
   founderContextSaving = signal(false);
   founderSector = '';
   founderBusinessType = '';
@@ -771,6 +774,7 @@ class AppComponent implements AfterViewChecked {
     this.api.updateFounderContext(this.token(), context).subscribe({
       next: (response) => {
         this.applyFounderContext(response.founder_context, response.playbook);
+        this.loadFounderDecision();
         this.message.set('Founder context saved.');
         this.founderContextSaving.set(false);
       },
@@ -1510,9 +1514,29 @@ class AppComponent implements AfterViewChecked {
     });
   }
 
+  loadFounderDecision(): void {
+    if (!this.token()) {
+      return;
+    }
+    this.founderDecisionLoading.set(true);
+    this.api.founderDecision(this.token()).subscribe({
+      next: (response) => {
+        this.founderDecision.set(response);
+        this.founderDecisionLoading.set(false);
+      },
+      error: (response) => {
+        this.founderDecisionLoading.set(false);
+        this.showError(response);
+      }
+    });
+  }
+
   loadFounderContext(): void {
     this.api.founderContext(this.token()).subscribe({
-      next: (response) => this.applyFounderContext(response.founder_context, response.playbook),
+      next: (response) => {
+        this.applyFounderContext(response.founder_context, response.playbook);
+        this.loadFounderDecision();
+      },
       error: (response) => this.showError(response)
     });
   }

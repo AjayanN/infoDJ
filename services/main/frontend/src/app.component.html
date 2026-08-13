@@ -297,6 +297,37 @@
                     </article>
                   </section>
 
+                  <section class="founder-decision-cockpit" *ngIf="founderDecision() as decision" aria-labelledby="founder-decision-heading">
+                    <header class="compact-panel-heading">
+                      <div><p class="section-kicker">Evidence-backed directions</p><h3 id="founder-decision-heading">What could you test next?</h3></div>
+                      <span>{{ decision.coverage.comparable_event_count }} comparable moves</span>
+                    </header>
+                    <p class="founder-decision-empty" *ngIf="decision.status !== 'available'">Evidence is not sufficient for this field yet. {{ decision.source_gaps[0]?.next_action || 'Choose a field with reviewed comparable company evidence.' }}</p>
+                    <div class="decision-path-grid" *ngIf="decision.status === 'available'">
+                      <article class="decision-path-card" *ngFor="let path of decision.directions">
+                        <span>{{ path.title }} <small>Hypothesis to test</small></span>
+                        <strong>{{ path.next_action }}</strong>
+                        <p>{{ path.why_now }}</p>
+                        <button type="button" *ngFor="let evidence of path.evidence.slice(0, 1)" (click)="openCompany(evidence.company_slug)">
+                          <b>{{ evidence.company }}</b><small>{{ evidence.event_date | date:'mediumDate' }} - {{ evidence.actual_change }}</small>
+                        </button>
+                        <em *ngIf="path.evidence.length === 0">No source-linked comparable move yet.</em>
+                      </article>
+                    </div>
+                    <div class="founder-journey" *ngIf="decision.journey.length > 0">
+                      <div><p class="section-kicker">Observed comparable journey</p><h4>What have similar companies actually changed?</h4></div>
+                      <ol>
+                        <li *ngFor="let event of decision.journey.slice(0, 5)">
+                          <time>{{ event.event_date | date:'MMM y' }}</time><i></i><button type="button" (click)="openCompany(event.company_slug)"><strong>{{ event.company }}</strong><span>{{ event.actual_change }}</span></button>
+                        </li>
+                      </ol>
+                    </div>
+                    <div class="founder-risk-bars" *ngIf="decision.risk_radar.length > 0">
+                      <div><p class="section-kicker">Reported risk signals</p><h4>What might change the plan?</h4></div>
+                      <article *ngFor="let risk of decision.risk_radar"><span>{{ risk.label }}</span><i [style.width.%]="risk.count * 20"></i><strong>{{ risk.count }}</strong></article>
+                    </div>
+                  </section>
+
                   <section class="stage-compass" aria-label="Company stage progress">
                     <ng-container *ngIf="founderStage(); else stageChooser">
                       <div class="stage-compass-gauge" [style.--stage-progress.%]="stageProgress()" aria-hidden="true">
