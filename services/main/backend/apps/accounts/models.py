@@ -29,6 +29,14 @@ class UserProfile(models.Model):
     display_name = models.CharField(max_length=255, blank=True)
     company_name = models.CharField(max_length=255, blank=True)
     role = models.CharField(max_length=255, blank=True)
+    founder_sector = models.CharField(max_length=128, blank=True)
+    founder_business_type = models.CharField(max_length=255, blank=True)
+    founder_stage = models.CharField(max_length=32, blank=True)
+    founder_objective = models.CharField(max_length=64, blank=True)
+    founder_geography = models.CharField(max_length=128, blank=True)
+    founder_target_customer = models.CharField(max_length=255, blank=True)
+    founder_revenue_model = models.CharField(max_length=128, blank=True)
+    founder_constraints = models.TextField(blank=True)
     avatar = models.FileField(upload_to="avatars/%Y/%m/", blank=True)
     subscription_tier = models.CharField(
         max_length=32,
