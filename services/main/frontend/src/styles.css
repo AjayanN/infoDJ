@@ -6844,3 +6844,14 @@ th {
 @media (max-width: 700px) {
   .subtitle-question { font-size: 11px !important; }
 }
+
+
+.entry-sector-choice { display: grid; gap: 6px; margin-top: 22px; color: #d7e8f6; font-weight: 700; }
+.entry-sector-choice select, .founder-context-fields input, .founder-context-fields select { width: 100%; border: 1px solid #9fb7c8; border-radius: 8px; background: #f8fbfd; color: #13263b; padding: 10px 12px; font: inherit; }
+.founder-context-panel { grid-column: 1 / -1; border: 1px solid #365a70; border-radius: 12px; padding: 16px; background: rgba(10, 40, 62, .62); }
+.founder-context-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.founder-context-fields label { display: grid; gap: 6px; color: #c7dbe9; font-size: 12px; font-weight: 800; }
+.founder-playbook-preview { display: grid; gap: 4px; margin-top: 14px; padding: 12px; border-left: 3px solid #75d8c1; background: rgba(23, 72, 96, .55); color: #f7fcff; }
+.founder-playbook-preview span { color: #85e0cc; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+.founder-playbook-preview small { color: #b8cedd; }
+@media (max-width: 700px) { .founder-context-fields { grid-template-columns: 1fr; } .founder-context-panel { padding: 13px; } }

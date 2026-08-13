@@ -13,6 +13,30 @@ export type Subscription = {
   razorpay_subscription_id: string;
 };
 
+export type FounderContext = {
+  sector: string;
+  business_type: string;
+  stage: string;
+  objective: string;
+  geography: string;
+  target_customer: string;
+  revenue_model: string;
+  constraints: string;
+};
+
+export type FounderPlaybook = {
+  sector: string;
+  sector_label: string;
+  stage: string;
+  stage_question: string;
+  questions: string[];
+  metrics: string[];
+  risks: string[];
+  monetisation_models: string[];
+  source_requirements: string[];
+  evidence_policy: Record<string, string>;
+};
+
 export type UserProfile = {
   display_name: string;
   company_name: string;
@@ -21,6 +45,7 @@ export type UserProfile = {
   email_updates_enabled: boolean;
   product_updates_enabled: boolean;
   research_digest_enabled: boolean;
+  founder_context: FounderContext;
 };
 
 export type CurrentUser = {
@@ -1714,6 +1739,31 @@ export class InfoDjApiService {
 
   me(token: string) {
     return this.http.get<{ user: CurrentUser }>(`${this.apiBaseUrl}/auth/me`, { headers: this.authHeaders(token) });
+  }
+
+  founderContext(token: string) {
+    return this.http.get<{ founder_context: FounderContext; playbook: FounderPlaybook }>(
+      `${this.apiBaseUrl}/founder-context`,
+      { headers: this.authHeaders(token) }
+    );
+  }
+
+  updateFounderContext(token: string, context: Partial<FounderContext>) {
+    return this.http.patch<{ founder_context: FounderContext; playbook: FounderPlaybook }>(
+      `${this.apiBaseUrl}/founder-context`,
+      context,
+      { headers: this.authHeaders(token) }
+    );
+  }
+
+  founderPlaybook(token: string, sector = '', stage = '') {
+    const params: Record<string, string> = {};
+    if (sector) params['sector'] = sector;
+    if (stage) params['stage'] = stage;
+    return this.http.get<{ playbook: FounderPlaybook }>(
+      `${this.apiBaseUrl}/founder-playbook`,
+      { headers: this.authHeaders(token), params }
+    );
   }
 
   subscriptionHistory(token: string) {

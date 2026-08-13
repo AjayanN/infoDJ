@@ -145,6 +145,55 @@ class GoogleOAuthApiTests(TestCase):
         self.assertEqual(user.profile.display_name, "Google User")
 
 
+class FounderContextApiTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = get_user_model().objects.create_user(
+            username="founder-context",
+            email="context@example.com",
+            password="StrongPass123!",
+        )
+        UserProfile.objects.create(user=self.user)
+        token, _created = Token.objects.get_or_create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+
+    def test_founder_context_persists_and_returns_sector_stage_playbook(self):
+        response = self.client.patch(
+            "/api/app/founder-context",
+            {
+                "founder_sector": "Energy",
+                "founder_business_type": "Carbon management software",
+                "founder_stage": "build",
+                "founder_objective": "build_product",
+                "founder_geography": "United States",
+                "founder_target_customer": "Industrial operators",
+                "founder_revenue_model": "Subscription",
+                "founder_constraints": "Limited engineering capacity",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["founder_context"]["stage"], "build")
+        self.assertEqual(response.data["playbook"]["stage_question"], "What is the smallest workflow customers will repeatedly use?")
+        self.assertIn("Commodity exposure", response.data["playbook"]["risks"])
+        self.user.profile.refresh_from_db()
+        self.assertEqual(self.user.profile.founder_sector, "Energy")
+
+    def test_founder_context_rejects_invalid_stage(self):
+        response = self.client.patch("/api/app/founder-context", {"founder_stage": "hypergrowth"}, format="json")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data["error"], "invalid founder_stage")
+
+    def test_founder_playbook_uses_requested_pilot_sector(self):
+        response = self.client.get("/api/app/founder-playbook?sector=Communication%20Services&stage=launch")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["playbook"]["sector_label"], "Communication")
+        self.assertIn("Advertising", response.data["playbook"]["monetisation_models"])
+
+
 class ProfileAvatarApiTests(TestCase):
     def setUp(self):
         self.media_root = tempfile.mkdtemp()

@@ -56,7 +56,9 @@ import {
   RazorpayOrder,
   SearchResponse,
   SearchSuggestion,
-  Subscription
+  Subscription,
+  FounderContext,
+  FounderPlaybook
 } from './app/services/infodj-api.service';
 import { founderStageCheckpoint, founderStageLabel, founderStageProgress, type FounderStage } from './app/founder-stage.utils';
 import {
@@ -188,6 +190,16 @@ class AppComponent implements AfterViewChecked {
 
   authView = signal<AuthView>('login');
   founderStage = signal<FounderStage | ''>(this.savedFounderStage());
+  founderContext = signal<FounderContext | null>(null);
+  founderPlaybook = signal<FounderPlaybook | null>(null);
+  founderContextSaving = signal(false);
+  founderSector = '';
+  founderBusinessType = '';
+  founderObjective = '';
+  founderGeography = '';
+  founderTargetCustomer = '';
+  founderRevenueModel = '';
+  founderConstraints = '';
   researchMenuOpen = signal(false);
   activePage = signal<AppPage>('dashboard');
   dashboardView = signal<DashboardViewId>('company-intelligence');
@@ -733,7 +745,58 @@ class AppComponent implements AfterViewChecked {
   chooseFounderStage(stage: FounderStage): void {
     this.founderStage.set(stage);
     localStorage.setItem('infodj_founder_stage', stage);
+    if (this.token()) {
+      this.saveFounderContext({ stage });
+      return;
+    }
     this.setAuthView('signup');
+  }
+
+  saveFounderContext(overrides: Partial<FounderContext> = {}): void {
+    if (!this.token()) {
+      return;
+    }
+    const context: Partial<FounderContext> = {
+      sector: this.founderSector,
+      business_type: this.founderBusinessType,
+      stage: this.founderStage(),
+      objective: this.founderObjective,
+      geography: this.founderGeography,
+      target_customer: this.founderTargetCustomer,
+      revenue_model: this.founderRevenueModel,
+      constraints: this.founderConstraints,
+      ...overrides
+    };
+    this.founderContextSaving.set(true);
+    this.api.updateFounderContext(this.token(), context).subscribe({
+      next: (response) => {
+        this.applyFounderContext(response.founder_context, response.playbook);
+        this.message.set('Founder context saved.');
+        this.founderContextSaving.set(false);
+      },
+      error: (response) => {
+        this.founderContextSaving.set(false);
+        this.showError(response);
+      }
+    });
+  }
+
+  private applyFounderContext(context: FounderContext, playbook: FounderPlaybook | null = null): void {
+    this.founderContext.set(context);
+    this.founderSector = context.sector;
+    this.founderBusinessType = context.business_type;
+    this.founderObjective = context.objective;
+    this.founderGeography = context.geography;
+    this.founderTargetCustomer = context.target_customer;
+    this.founderRevenueModel = context.revenue_model;
+    this.founderConstraints = context.constraints;
+    if (['validate', 'build', 'launch', 'grow', 'scale'].includes(context.stage)) {
+      this.founderStage.set(context.stage as FounderStage);
+      localStorage.setItem('infodj_founder_stage', context.stage);
+    }
+    if (playbook) {
+      this.founderPlaybook.set(playbook);
+    }
   }
 
   founderStageLabel(): string {
@@ -1439,9 +1502,18 @@ class AppComponent implements AfterViewChecked {
     this.api.me(this.token()).subscribe({
       next: (response) => {
         this.currentUser.set(response.user);
+        this.applyFounderContext(response.user.profile.founder_context);
+        this.loadFounderContext();
         this.error.set('');
       },
       error: () => this.clearSession('Session expired. Login again.')
+    });
+  }
+
+  loadFounderContext(): void {
+    this.api.founderContext(this.token()).subscribe({
+      next: (response) => this.applyFounderContext(response.founder_context, response.playbook),
+      error: (response) => this.showError(response)
     });
   }
 
@@ -3762,6 +3834,7 @@ class AppComponent implements AfterViewChecked {
     localStorage.setItem('infodj_token', token);
     this.token.set(token);
     this.currentUser.set(user);
+    this.applyFounderContext(user.profile.founder_context);
     this.message.set(message);
     this.error.set('');
     this.initializeBrowserHistory();

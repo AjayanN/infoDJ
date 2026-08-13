@@ -25,6 +25,17 @@
           <button type="button" [class.stage-highlight]="founderStage() === 'grow'" (click)="chooseFounderStage('grow')"><span>04</span>Grow</button>
           <button type="button" [class.stage-highlight]="founderStage() === 'scale'" (click)="chooseFounderStage('scale')"><span>05</span>Scale</button>
         </div>
+        <label class="entry-sector-choice">What field are you building in?
+          <select name="entry_founder_sector" [(ngModel)]="founderSector">
+            <option value="">Choose your field</option>
+            <option value="Information Technology">Technology</option>
+            <option value="Communication Services">Communication</option>
+            <option value="Energy">Energy</option>
+            <option value="Financials">Financial services</option>
+            <option value="Health Care">Health care</option>
+            <option value="Consumer Discretionary">Consumer</option>
+          </select>
+        </label>
       </section>
 
       <section class="entry-preview" aria-labelledby="preview-title">
@@ -269,6 +280,23 @@
                 </header>
 
                 <div class="founder-command-grid">
+                  <section class="founder-context-panel" aria-labelledby="founder-context-heading">
+                    <div class="compact-panel-heading">
+                      <div><p class="section-kicker">Your context</p><h3 id="founder-context-heading">What are you building right now?</h3></div>
+                      <button type="button" class="text-action" (click)="saveFounderContext()" [disabled]="founderContextSaving()">{{ founderContextSaving() ? 'Saving...' : 'Save' }}</button>
+                    </div>
+                    <div class="founder-context-fields">
+                      <label>Field<select name="founder_sector" [(ngModel)]="founderSector"><option value="">Choose a field</option><option value="Information Technology">Technology</option><option value="Communication Services">Communication</option><option value="Energy">Energy</option><option value="Financials">Financial services</option><option value="Health Care">Health care</option><option value="Consumer Discretionary">Consumer</option></select></label>
+                      <label>Business type<input name="founder_business_type" [(ngModel)]="founderBusinessType" placeholder="e.g. carbon-management software" /></label>
+                      <label>Focus now<select name="founder_objective" [(ngModel)]="founderObjective"><option value="">Choose an outcome</option><option value="find_demand">Find demand</option><option value="build_product">Build product</option><option value="win_customers">Win customers</option><option value="improve_retention">Improve retention</option><option value="scale_operations">Scale operations</option></select></label>
+                    </div>
+                    <article class="founder-playbook-preview" *ngIf="founderPlaybook() as playbook">
+                      <span>{{ playbook.sector_label }} / {{ founderStageLabel() }}</span>
+                      <strong>{{ playbook.stage_question }}</strong>
+                      <small>Watch: {{ playbook.metrics.slice(0, 3).join(' / ') }}</small>
+                    </article>
+                  </section>
+
                   <section class="stage-compass" aria-label="Company stage progress">
                     <ng-container *ngIf="founderStage(); else stageChooser">
                       <div class="stage-compass-gauge" [style.--stage-progress.%]="stageProgress()" aria-hidden="true">

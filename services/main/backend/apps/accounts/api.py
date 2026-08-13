@@ -16,6 +16,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
+from apps.accounts.founder_playbooks import FOUNDER_OBJECTIVES, FOUNDER_STAGES, playbook_for
 from apps.accounts.models import (
     SubscriptionChangeLog,
     SubscriptionStatus,
@@ -175,6 +176,47 @@ def logout(request):
 def me(request):
     profile = ensure_profile(request.user)
     return Response({"user": serialize_user(request.user, profile, request)})
+
+
+@api_view(["GET", "PATCH"])
+@permission_classes([IsAuthenticated])
+def founder_context(request):
+    profile = ensure_profile(request.user)
+    if request.method == "PATCH":
+        allowed_fields = (
+            "founder_sector",
+            "founder_business_type",
+            "founder_stage",
+            "founder_objective",
+            "founder_geography",
+            "founder_target_customer",
+            "founder_revenue_model",
+            "founder_constraints",
+        )
+        updates = {}
+        for field in allowed_fields:
+            if field in request.data:
+                updates[field] = str(request.data.get(field) or "").strip()
+        if updates.get("founder_stage") and updates["founder_stage"] not in FOUNDER_STAGES:
+            return Response({"error": "invalid founder_stage"}, status=400)
+        if updates.get("founder_objective") and updates["founder_objective"] not in FOUNDER_OBJECTIVES:
+            return Response({"error": "invalid founder_objective"}, status=400)
+        for field, value in updates.items():
+            setattr(profile, field, value)
+        if updates:
+            profile.save(update_fields=[*updates.keys(), "updated_at"])
+    return Response({"founder_context": serialize_founder_context(profile), "playbook": playbook_for(profile.founder_sector, profile.founder_stage)})
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def founder_playbook(request):
+    profile = ensure_profile(request.user)
+    sector = (request.query_params.get("sector") or profile.founder_sector).strip()
+    stage = (request.query_params.get("stage") or profile.founder_stage).strip()
+    if stage and stage not in FOUNDER_STAGES:
+        return Response({"error": "invalid stage"}, status=400)
+    return Response({"playbook": playbook_for(sector, stage)})
 
 
 @api_view(["POST", "DELETE"])
@@ -420,8 +462,22 @@ def serialize_user(user, profile: UserProfile, request=None) -> dict:
             "email_updates_enabled": profile.email_updates_enabled,
             "product_updates_enabled": profile.product_updates_enabled,
             "research_digest_enabled": profile.research_digest_enabled,
+            "founder_context": serialize_founder_context(profile),
         },
         "subscription": serialize_subscription(profile),
+    }
+
+
+def serialize_founder_context(profile: UserProfile) -> dict:
+    return {
+        "sector": profile.founder_sector,
+        "business_type": profile.founder_business_type,
+        "stage": profile.founder_stage,
+        "objective": profile.founder_objective,
+        "geography": profile.founder_geography,
+        "target_customer": profile.founder_target_customer,
+        "revenue_model": profile.founder_revenue_model,
+        "constraints": profile.founder_constraints,
     }
 
 
