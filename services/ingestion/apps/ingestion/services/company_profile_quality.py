@@ -31,12 +31,41 @@ BLOCKED_SUMMARY_MARKERS = (
 )
 
 
-def company_profile_quality_issues(company) -> list[str]:
-    profile_window = list(
-        CompanyProfileSnapshot.objects.filter(company=company)
-        .order_by("-effective_date", "-updated_at")[:PROFILE_SNAPSHOT_LIMIT]
+
+
+
+def profile_snapshot_has_content(snapshot: CompanyProfileSnapshot) -> bool:
+    return bool(
+        snapshot.summary
+        or snapshot.business_model
+        or any(getattr(snapshot, field) for field in PROFILE_LIST_FIELDS)
     )
-    profiles = [row for row in profile_window if row.status in {"PUBLISHED", "REVIEWED"}]
+
+
+def reviewed_profile_snapshot_window(company, *, as_of=None) -> list[CompanyProfileSnapshot]:
+    queryset = CompanyProfileSnapshot.objects.filter(
+        company=company,
+        status__in=["PUBLISHED", "REVIEWED"],
+    ).order_by("-effective_date", "-updated_at")
+    if as_of is not None:
+        queryset = queryset.filter(effective_date__lte=as_of)
+    snapshots = []
+    source_types = set()
+    for snapshot in queryset.select_related("source_document"):
+        if not profile_snapshot_has_content(snapshot):
+            continue
+        source_type = snapshot.source_document.source_api if snapshot.source_document_id else "MANUAL"
+        if source_type in source_types:
+            continue
+        snapshots.append(snapshot)
+        source_types.add(source_type)
+        if len(snapshots) == PROFILE_SNAPSHOT_LIMIT:
+            break
+    return snapshots
+
+
+def company_profile_quality_issues(company) -> list[str]:
+    profiles = reviewed_profile_snapshot_window(company)
     if not profiles:
         return ["no reviewed Company 360 profile"]
 

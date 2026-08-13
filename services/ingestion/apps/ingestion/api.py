@@ -87,7 +87,11 @@ from apps.companies.models import (
 )
 from apps.curation.models import BusinessEvent, StrategicTurn, StrategicTurnSource
 from apps.ingestion.models import FinancialFact, IngestionJob, MarketPrice, SourceDocument, SourceGap, SourceGapResolutionCandidate
-from apps.ingestion.services.company_profile_quality import PROFILE_SNAPSHOT_LIMIT
+from apps.ingestion.services.company_profile_quality import (
+    PROFILE_SNAPSHOT_LIMIT,
+    profile_snapshot_has_content,
+    reviewed_profile_snapshot_window,
+)
 from apps.ingestion.services.dashboard_quality import (
     RISK_EVENT_TYPES,
     event_eligibility,
@@ -133,17 +137,17 @@ def companies(_request: HttpRequest) -> JsonResponse:
 @require_GET
 def company_profile(request: HttpRequest, slug: str) -> JsonResponse:
     company = get_company(slug)
-    snapshots = list(
-        CompanyProfileSnapshot.objects.filter(company=company)
-        .select_related("source_document")
-        .order_by("-effective_date", "-updated_at")[:PROFILE_SNAPSHOT_LIMIT]
-    )
     as_of = parse_iso_date(request.GET.get("as_of"))
-    eligible_snapshots = [
-        row
-        for row in snapshots
-        if row.status in {"PUBLISHED", "REVIEWED"} and (as_of is None or row.effective_date <= as_of)
-    ]
+    history_candidates = CompanyProfileSnapshot.objects.filter(
+        company=company,
+        status__in=["PUBLISHED", "REVIEWED"],
+    ).select_related("source_document").order_by("-effective_date", "-updated_at")
+    snapshots = [
+        snapshot
+        for snapshot in history_candidates
+        if profile_snapshot_has_content(snapshot)
+    ][:PROFILE_SNAPSHOT_LIMIT]
+    eligible_snapshots = reviewed_profile_snapshot_window(company, as_of=as_of)
     current = eligible_snapshots[0] if eligible_snapshots else None
     effective_dates = list(dict.fromkeys(snapshot.effective_date for snapshot in eligible_snapshots))
     previous_date = effective_dates[1] if len(effective_dates) > 1 else None
@@ -246,7 +250,7 @@ def company_profile(request: HttpRequest, slug: str) -> JsonResponse:
                 "scoring_contract": {
                     "snapshot_limit": PROFILE_SNAPSHOT_LIMIT,
                     "eligible_snapshot_count": len(eligible_snapshots),
-                    "calculation": "Current reviewed or published sections available within the latest profile snapshot window.",
+                    "calculation": "Latest meaningful reviewed or published snapshot per source type, up to the profile snapshot limit.",
                 },
                 "source_count": SourceDocument.objects.filter(company=company).count(),
                 "snapshot_count": len(snapshots),

@@ -34,7 +34,7 @@ def build_sec_company_profile(company) -> CompanyProfileSnapshot:
         )
         .exclude(clean_text="")
         .select_related("source_document")
-        .order_by("-word_count", "-source_document__published_date", "-updated_at")
+        .order_by("-source_document__published_date", "-updated_at", "-word_count")
         .first()
     )
     if extraction is None:

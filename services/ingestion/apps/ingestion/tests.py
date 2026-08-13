@@ -133,7 +133,12 @@ from apps.ingestion.management.commands.daily_company_update import Command as D
 from apps.ingestion.services.official_product_price import parse_official_prices
 from apps.ingestion.services.energy_source_quality import is_promotable_energy_candidate
 from apps.ingestion.services.energy_sector_enrichment import enrich_energy_disclosures
-from apps.ingestion.services.sec_profile_builder import SecProfileData, apply_profile_fallbacks, parse_sec_profile_text
+from apps.ingestion.services.sec_profile_builder import (
+    SecProfileData,
+    apply_profile_fallbacks,
+    build_sec_company_profile,
+    parse_sec_profile_text,
+)
 from apps.ingestion.services.wikidata_client import normalize_company_entity
 
 
@@ -420,6 +425,68 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(sections["summary"]["text"], "Netflix is a global entertainment service.")
         self.assertEqual(sections["subsidiaries"]["items"], ["Netflix Studios"])
         self.assertEqual(sections["products"]["items"], ["Streaming plans", "Games"])
+
+    def test_company_profile_ignores_empty_snapshots_when_selecting_current_sections(self):
+        CompanyProfileSnapshot.objects.create(
+            company=self.netflix,
+            effective_date=date(2024, 12, 31),
+            source_document=self.source,
+            status="REVIEWED",
+            summary="Netflix is a global entertainment service.",
+            products=["Streaming plans"],
+            revenue_sources=["Subscriptions"],
+        )
+        for index in range(25):
+            CompanyProfileSnapshot.objects.create(
+                company=self.netflix,
+                effective_date=date(2025 + (index // 12), (index % 12) + 1, 1),
+                source_document=self.source,
+                status="REVIEWED",
+            )
+
+        response = self.client.get("/companies/netflix/profile")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["sections"]["products"]["items"], ["Streaming plans"])
+        self.assertEqual(response.json()["coverage"]["scoring_contract"]["eligible_snapshot_count"], 1)
+
+    def test_company_profile_combines_latest_meaningful_snapshot_per_source_type(self):
+        sec_source = SourceDocument.objects.create(
+            company=self.netflix,
+            source_api="SEC",
+            url="https://example.com/netflix-2024-10k",
+            title="Netflix 2024 10-K",
+        )
+        official_source = SourceDocument.objects.create(
+            company=self.netflix,
+            source_api="OFFICIAL_WEBSITE",
+            url="https://example.com/netflix-about",
+            title="Netflix about",
+        )
+        CompanyProfileSnapshot.objects.create(
+            company=self.netflix,
+            effective_date=date(2024, 12, 31),
+            source_document=sec_source,
+            status="REVIEWED",
+            summary="Netflix is a global entertainment service.",
+            products=["Streaming plans"],
+            revenue_sources=["Subscriptions"],
+        )
+        for index in range(25):
+            CompanyProfileSnapshot.objects.create(
+                company=self.netflix,
+                effective_date=date(2025 + (index // 12), (index % 12) + 1, 1),
+                source_document=official_source,
+                status="REVIEWED",
+                summary=f"Official profile refresh {index}.",
+            )
+
+        response = self.client.get("/companies/netflix/profile")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["sections"]["products"]["items"], ["Streaming plans"])
+        self.assertEqual(response.json()["sections"]["revenue_sources"]["items"], ["Subscriptions"])
+        self.assertEqual(response.json()["coverage"]["scoring_contract"]["eligible_snapshot_count"], 2)
 
     def test_company_profile_same_date_sources_do_not_create_false_changes(self):
         for source_api, summary, products in (
@@ -2380,6 +2447,42 @@ class CompanyProfileCollectorTests(TestCase):
             self.assertTrue(fallback["brands"], seed.name)
             self.assertTrue(fallback["products"], seed.name)
 
+    def test_sec_profile_builder_prefers_the_latest_filing_over_the_longest_extraction(self):
+        company = Company.objects.create(name="ExxonMobil", slug="exxonmobil", country="United States")
+        older_source = SourceDocument.objects.create(
+            company=company,
+            source_api="SEC_EDGAR",
+            url="https://example.com/exxon-2024-10k",
+            title="ExxonMobil 2024 10-K",
+            published_date="2025-02-19T00:00:00Z",
+        )
+        latest_source = SourceDocument.objects.create(
+            company=company,
+            source_api="SEC_EDGAR",
+            url="https://example.com/exxon-2025-10k",
+            title="ExxonMobil 2025 10-K",
+            published_date="2026-02-18T00:00:00Z",
+        )
+        ArticleExtraction.objects.create(
+            source_document=older_source,
+            clean_text="ITEM 1. Business Older filing content. ITEM 1A. Risk Factors",
+            word_count=1000,
+            extraction_status="SUCCEEDED",
+        )
+        ArticleExtraction.objects.create(
+            source_document=latest_source,
+            clean_text="ITEM 1. Business Latest filing content. ITEM 1A. Risk Factors",
+            word_count=100,
+            extraction_status="SUCCEEDED",
+        )
+
+        snapshot = build_sec_company_profile(company)
+
+        self.assertEqual(snapshot.source_document, latest_source)
+        self.assertEqual(snapshot.segments, ["Upstream", "Energy Products", "Chemical Products", "Specialty Products"])
+        self.assertIn("Fuel and lubricant distributors", snapshot.customer_groups)
+        self.assertIn("Fuel and lubricant sales", snapshot.revenue_sources)
+
     def test_parse_sec_profile_text_extracts_functional_company_sections(self):
         text = """
         ITEM 1. Business Example Corp is a diversified services company with operations in three segments:
@@ -2461,6 +2564,7 @@ class CompanyProfileCollectorTests(TestCase):
                 effective_date=date(2025 + (index // 12), (index % 12) + 1, 1),
                 source_document=source,
                 status="REVIEWED",
+                summary=f"Current profile refresh {index}.",
             )
 
         issues = company_profile_quality_issues(company)
