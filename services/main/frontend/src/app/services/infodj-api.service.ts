@@ -46,12 +46,24 @@ export type FounderDecisionPath = {
   evidence: FounderDecisionEvidence[];
 };
 
+export type FounderCoveragePassportItem = {
+  label: string;
+  status: 'available' | 'stale' | 'missing';
+  evidence_strength: 'strong' | 'moderate' | 'weak' | 'missing';
+  count: number;
+  last_observed_on: string | null;
+  claim_type: 'reported_fact';
+  description: string;
+  next_action: string;
+};
+
 export type FounderDecisionResponse = {
   status: 'available' | 'insufficient_evidence' | 'unavailable';
   directions: FounderDecisionPath[];
   journey: FounderDecisionEvidence[];
   risk_radar: { label: string; count: number; claim_type: 'reported_fact' }[];
   coverage: { comparable_event_count: number; risk_event_count: number; sector_company_count: number; evidence_policy?: string };
+  coverage_passport: FounderCoveragePassportItem[];
   source_gaps: { key: string; reason: string; next_action: string }[];
 };
 

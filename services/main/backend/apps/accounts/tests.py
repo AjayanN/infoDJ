@@ -241,6 +241,10 @@ class FounderDecisionApiTests(TestCase):
         self.assertEqual(response.data["journey"][0]["company_slug"], "exxonmobil")
         self.assertEqual(response.data["directions"][0]["claim_type"], "founder_hypothesis")
         self.assertEqual(response.data["directions"][0]["evidence"][0]["claim_type"], "reported_fact")
+        passport = {item["label"]: item for item in response.data["coverage_passport"]}
+        self.assertEqual(passport["Comparable moves"]["count"], 1)
+        self.assertEqual(passport["Comparable moves"]["last_observed_on"], "2026-02-18")
+        self.assertEqual(passport["Source diversity"]["evidence_strength"], "weak")
 
     @patch("apps.accounts.api.ingestion_get")
     def test_founder_decision_abstains_when_sector_evidence_is_missing(self, ingestion_get):

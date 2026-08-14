@@ -6868,6 +6868,23 @@ th {
 .decision-path-card button { display: grid; gap: 3px; padding: 9px; border: 0; border-radius: 7px; background: rgba(127, 224, 206, .12); color: #eefaff; text-align: left; }
 .decision-path-card button small { color: #b9d0de; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .decision-path-card em { color: #bacbd8; font-size: 12px; }
+.founder-coverage-passport { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(160, 201, 223, .22); }
+.founder-coverage-passport > div { grid-column: 1 / -1; }
+.founder-coverage-passport h4 { margin: 3px 0 0; font-size: 17px; }
+.founder-coverage-passport article { display: grid; align-content: start; gap: 7px; min-height: 152px; padding: 12px; border: 1px solid #315a73; border-radius: 9px; background: rgba(20, 56, 82, .78); }
+.founder-coverage-passport article[data-status="stale"] { border-color: #d5a957; }
+.founder-coverage-passport article[data-status="missing"] { border-color: #7b90a0; background: rgba(255,255,255,.05); }
+.founder-coverage-passport header { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.founder-coverage-passport header strong { font-size: 13px; }
+.founder-coverage-passport header span { color: #80e3cb; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+.founder-coverage-passport article[data-status="stale"] header span { color: #f1ca75; }
+.founder-coverage-passport article[data-status="missing"] header span { color: #bdcad4; }
+.founder-coverage-passport b { font-size: 20px; }
+.founder-coverage-passport b small { color: #a9c2d8; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+.founder-coverage-passport p, .founder-coverage-passport time, .founder-coverage-passport em { margin: 0; color: #c2d5e3; font-size: 11px; line-height: 1.35; }
+.founder-coverage-passport em { color: #f1ca75; font-style: normal; }
+@media (max-width: 850px) { .founder-coverage-passport { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .founder-coverage-passport { grid-template-columns: 1fr; } .founder-coverage-passport article { min-height: 0; } }
 .founder-journey, .founder-risk-bars { margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(160, 201, 223, .22); }
 .founder-journey h4, .founder-risk-bars h4 { margin: 3px 0 0; font-size: 17px; }
 .founder-journey ol { display: flex; gap: 0; padding: 0; overflow-x: auto; list-style: none; }
