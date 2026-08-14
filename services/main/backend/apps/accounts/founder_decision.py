@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
+from datetime import date, timedelta
 
 from apps.accounts.founder_playbooks import playbook_for
 
@@ -10,6 +11,8 @@ DIRECTION_SPECS = (
     ("lowest_risk", "Lowest risk", "Reduce the most material uncertainty before committing more resources.", "risks"),
     ("highest_upside", "Highest upside", "Test the path with the strongest potential to compound an advantage.", "metrics"),
 )
+
+FRESH_EVIDENCE_WINDOW = timedelta(days=365)
 
 
 def build_founder_decision(context: dict, companies: list[dict], dashboard: dict) -> dict:
@@ -54,6 +57,7 @@ def build_founder_decision(context: dict, companies: list[dict], dashboard: dict
         )
 
     risk_counts = Counter(str(event.get("event_type") or "OTHER") for event in risk_events)
+    coverage_passport = build_coverage_passport(comparable_events, risk_events, companies, sector)
     return {
         "status": status,
         "context": context,
@@ -74,6 +78,7 @@ def build_founder_decision(context: dict, companies: list[dict], dashboard: dict
             "sector_company_count": sum(1 for row in companies if row.get("sector") == sector),
             "evidence_policy": "Only dated eligible events with a linked source are used as comparable evidence.",
         },
+        "coverage_passport": coverage_passport,
         "source_gaps": (
             []
             if comparable_events
@@ -86,6 +91,39 @@ def build_founder_decision(context: dict, companies: list[dict], dashboard: dict
             ]
         ),
     }
+
+
+def build_coverage_passport(comparable_events: list[dict], risk_events: list[dict], companies: list[dict], sector: str) -> list[dict]:
+    sector_companies = [row for row in companies if row.get("sector") == sector]
+    dates = [parse_event_date(event.get("event_date")) for event in comparable_events]
+    latest_date = max((value for value in dates if value), default=None)
+    source_urls = {
+        str((event.get("source") or {}).get("url") or "")
+        for event in [*comparable_events, *risk_events]
+        if (event.get("source") or {}).get("url")
+    }
+    is_stale = bool(latest_date and latest_date < date.today() - FRESH_EVIDENCE_WINDOW)
+    comparable_status = "missing" if not comparable_events else "stale" if is_stale else "available"
+    return [
+        passport_item("Comparable moves", comparable_status, len(comparable_events), latest_date.isoformat() if latest_date else None, "Dated, source-linked strategic moves from companies in your selected field.", "Run sector ingestion and review comparable company events."),
+        passport_item("Risk signals", "available" if risk_events else "missing", len(risk_events), latest_date.isoformat() if latest_date else None, "Source-linked risks that may affect a founder's next decision.", "Collect and review sector risk disclosures before treating risks as comparable evidence."),
+        passport_item("Peer landscape", "available" if len(sector_companies) >= 2 else "missing", len(sector_companies), None, "Configured companies available for same-sector comparison.", "Add or classify more companies in this field before drawing peer conclusions."),
+        passport_item("Source diversity", "available" if len(source_urls) >= 2 else "missing", len(source_urls), latest_date.isoformat() if latest_date else None, "Distinct direct sources behind the founder cockpit evidence.", "Collect at least two direct sources before relying on a pattern."),
+    ]
+
+
+def passport_item(label: str, status: str, count: int, last_observed_on: str | None, description: str, next_action: str) -> dict:
+    strength = "strong" if count >= 6 else "moderate" if count >= 3 else "weak" if count else "missing"
+    return {"label": label, "status": status, "evidence_strength": strength, "count": count, "last_observed_on": last_observed_on, "claim_type": "reported_fact", "description": description, "next_action": next_action}
+
+
+def parse_event_date(value: object) -> date | None:
+    if not value:
+        return None
+    try:
+        return date.fromisoformat(str(value)[:10])
+    except ValueError:
+        return None
 
 
 def serialize_event(event: dict) -> dict:

@@ -314,6 +314,17 @@
                         <em *ngIf="path.evidence.length === 0">No source-linked comparable move yet.</em>
                       </article>
                     </div>
+                    <section class="founder-coverage-passport" *ngIf="decision.coverage_passport.length > 0" aria-labelledby="founder-coverage-heading">
+                      <div><p class="section-kicker">Evidence passport</p><h4 id="founder-coverage-heading">What can you trust today?</h4></div>
+                      <article *ngFor="let item of decision.coverage_passport" [attr.data-status]="item.status">
+                        <header><strong>{{ item.label }}</strong><span>{{ item.status }}</span></header>
+                        <b>{{ item.count }} <small>{{ item.evidence_strength }} evidence</small></b>
+                        <p>{{ item.description }}</p>
+                        <time *ngIf="item.last_observed_on">Last observed {{ item.last_observed_on | date:'mediumDate' }}</time>
+                        <em *ngIf="item.status !== 'available'">{{ item.next_action }}</em>
+                      </article>
+                    </section>
+
                     <div class="founder-journey" *ngIf="decision.journey.length > 0">
                       <div><p class="section-kicker">Observed comparable journey</p><h4>What have similar companies actually changed?</h4></div>
                       <ol>
