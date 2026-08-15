@@ -161,6 +161,7 @@ class FounderContextApiTests(TestCase):
         response = self.client.patch(
             "/api/app/founder-context",
             {
+                "company_name": "Northstar Energy",
                 "founder_sector": "Energy",
                 "founder_business_type": "Carbon management software",
                 "founder_stage": "build",
@@ -174,10 +175,12 @@ class FounderContextApiTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["founder_context"]["company_name"], "Northstar Energy")
         self.assertEqual(response.data["founder_context"]["stage"], "build")
         self.assertEqual(response.data["playbook"]["stage_question"], "What is the smallest workflow customers will repeatedly use?")
         self.assertIn("Commodity exposure", response.data["playbook"]["risks"])
         self.user.profile.refresh_from_db()
+        self.assertEqual(self.user.profile.company_name, "Northstar Energy")
         self.assertEqual(self.user.profile.founder_sector, "Energy")
 
     def test_founder_context_rejects_invalid_stage(self):
@@ -192,6 +195,26 @@ class FounderContextApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["playbook"]["sector_label"], "Communication")
         self.assertIn("Advertising", response.data["playbook"]["monetisation_models"])
+
+    def test_founder_playbook_covers_each_supported_sector(self):
+        expected_labels = {
+            "Financials": "Financial services",
+            "Health Care": "Health care",
+            "Consumer Discretionary": "Consumer",
+            "Consumer Staples": "Consumer staples",
+            "Industrials": "Industrials",
+            "Materials": "Materials",
+            "Real Estate": "Real estate",
+            "Utilities": "Utilities",
+        }
+
+        for sector, label in expected_labels.items():
+            response = self.client.get("/api/app/founder-playbook", {"sector": sector, "stage": "validate"})
+
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.data["playbook"]["sector_label"], label)
+            self.assertTrue(response.data["playbook"]["questions"])
+            self.assertTrue(response.data["playbook"]["source_requirements"])
 
 
 class FounderDecisionApiTests(TestCase):

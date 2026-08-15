@@ -14,6 +14,7 @@ export type Subscription = {
 };
 
 export type FounderContext = {
+  company_name: string;
   sector: string;
   business_type: string;
   stage: string;

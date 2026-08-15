@@ -79,7 +79,7 @@ declare global {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-type AppPage = 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider' | 'valuation-context' | 'regulatory-litigation' | 'sector-themes' | 'macro-sensitivity' | 'strategy-theses' | 'watchlists' | 'briefings' | 'scenarios' | 'contradictions' | 'strategy-failures' | 'foundations' | 'profile' | 'subscription';
+type AppPage = 'setup' | 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider' | 'valuation-context' | 'regulatory-litigation' | 'sector-themes' | 'macro-sensitivity' | 'strategy-theses' | 'watchlists' | 'briefings' | 'scenarios' | 'contradictions' | 'strategy-failures' | 'foundations' | 'profile' | 'subscription';
 type DashboardViewId =
   | 'company-intelligence'
   | 'turn-impact'
@@ -196,6 +196,8 @@ class AppComponent implements AfterViewChecked {
   founderDecision = signal<FounderDecisionResponse | null>(null);
   founderDecisionLoading = signal(false);
   founderContextSaving = signal(false);
+  founderSetupStep = signal(0);
+  founderCompanyName = '';
   founderSector = '';
   founderBusinessType = '';
   founderObjective = '';
@@ -204,7 +206,7 @@ class AppComponent implements AfterViewChecked {
   founderRevenueModel = '';
   founderConstraints = '';
   researchMenuOpen = signal(false);
-  activePage = signal<AppPage>('dashboard');
+  activePage = signal<AppPage>('setup');
   dashboardView = signal<DashboardViewId>('company-intelligence');
   dashboardCompanySlug = signal('');
   latestMoveFilter = signal<LatestMoveFilter>('all');
@@ -718,7 +720,6 @@ class AppComponent implements AfterViewChecked {
       this.initializeBrowserHistory();
       this.loadMe();
       this.loadHistory();
-      this.loadDashboard();
     }
   }
 
@@ -755,11 +756,12 @@ class AppComponent implements AfterViewChecked {
     this.setAuthView('signup');
   }
 
-  saveFounderContext(overrides: Partial<FounderContext> = {}): void {
+  saveFounderContext(overrides: Partial<FounderContext> = {}, openCockpit = false): void {
     if (!this.token()) {
       return;
     }
     const context: Partial<FounderContext> = {
+      company_name: this.founderCompanyName,
       sector: this.founderSector,
       business_type: this.founderBusinessType,
       stage: this.founderStage(),
@@ -775,8 +777,12 @@ class AppComponent implements AfterViewChecked {
       next: (response) => {
         this.applyFounderContext(response.founder_context, response.playbook);
         this.loadFounderDecision();
-        this.message.set('Founder context saved.');
+        this.message.set(openCockpit ? 'Your focus plan is ready.' : 'Founder context saved.');
         this.founderContextSaving.set(false);
+        if (openCockpit) {
+          this.setPage('dashboard');
+          this.loadDashboard();
+        }
       },
       error: (response) => {
         this.founderContextSaving.set(false);
@@ -787,6 +793,7 @@ class AppComponent implements AfterViewChecked {
 
   private applyFounderContext(context: FounderContext, playbook: FounderPlaybook | null = null): void {
     this.founderContext.set(context);
+    this.founderCompanyName = context.company_name;
     this.founderSector = context.sector;
     this.founderBusinessType = context.business_type;
     this.founderObjective = context.objective;
@@ -872,6 +879,35 @@ class AppComponent implements AfterViewChecked {
     return stage ? risks[stage] : [];
   }
 
+  nextFounderSetupStep(): void {
+    const step = this.founderSetupStep();
+    const answers = [this.founderCompanyName, this.founderSector, this.founderBusinessType, this.founderStage(), this.founderObjective];
+    if (!answers[step]) {
+      this.error.set('Choose an answer before continuing.');
+      return;
+    }
+    this.error.set('');
+    this.founderSetupStep.set(Math.min(step + 1, answers.length - 1));
+  }
+
+  previousFounderSetupStep(): void {
+    this.error.set('');
+    this.founderSetupStep.update((step) => Math.max(step - 1, 0));
+  }
+
+  completeFounderSetup(): void {
+    if (!this.founderCompanyName || !this.founderSector || !this.founderBusinessType || !this.founderStage() || !this.founderObjective) {
+      this.error.set('Complete the five questions to create a useful plan.');
+      return;
+    }
+    this.error.set('');
+    this.saveFounderContext({}, true);
+  }
+
+  hasCompleteFounderSetup(context: FounderContext): boolean {
+    return Boolean(context.company_name && context.sector && context.business_type && context.stage && context.objective);
+  }
+
   private setPage(page: AppPage, recordHistory = true): void {
     const changed = this.activePage() !== page;
     this.activePage.set(page);
@@ -892,8 +928,8 @@ class AppComponent implements AfterViewChecked {
     if (state?.infodj) {
       return;
     }
-    window.history.replaceState({ infodj: true, page: 'dashboard', root: true }, document.title, window.location.href);
-    window.history.pushState({ infodj: true, page: 'dashboard', guard: true }, document.title, window.location.href);
+    window.history.replaceState({ infodj: true, page: 'setup', root: true }, document.title, window.location.href);
+    window.history.pushState({ infodj: true, page: 'setup', guard: true }, document.title, window.location.href);
   }
 
   @HostListener('window:popstate', ['$event'])
@@ -907,7 +943,7 @@ class AppComponent implements AfterViewChecked {
         window.history.back();
         return;
       }
-      window.history.pushState({ infodj: true, page: 'dashboard', guard: true }, document.title, window.location.href);
+      window.history.pushState({ infodj: true, page: 'setup', guard: true }, document.title, window.location.href);
       return;
     }
     if (!state.page) {
@@ -1188,6 +1224,9 @@ class AppComponent implements AfterViewChecked {
   }
 
   pageTitle(): string {
+    if (this.activePage() === 'setup') {
+      return 'Your founder setup';
+    }
     if (this.activePage() === 'company') {
       return this.companyProfile()?.company.name || 'Company 360';
     }
@@ -1274,6 +1313,7 @@ class AppComponent implements AfterViewChecked {
 
   sectionQuestion(): string {
     const questions: Record<AppPage, string> = {
+      setup: 'What should InfoDJ know before it helps you decide?',
       dashboard: 'What is the next proof point for my company?',
       company: 'What should I understand about this company before making a decision?',
       'business-model': 'How does this company create, deliver, and capture value?',
@@ -1307,6 +1347,9 @@ class AppComponent implements AfterViewChecked {
   }
 
   pageDescription(): string {
+    if (this.activePage() === 'setup') {
+      return 'Tell us only what we need to make the next recommendation relevant to your company.';
+    }
     if (this.activePage() === 'company') {
       return 'Source-backed company structure, strategic priorities, recent changes, and evidence coverage.';
     }
@@ -1507,6 +1550,12 @@ class AppComponent implements AfterViewChecked {
       next: (response) => {
         this.currentUser.set(response.user);
         this.applyFounderContext(response.user.profile.founder_context);
+        if (this.hasCompleteFounderSetup(response.user.profile.founder_context)) {
+          this.setPage('dashboard', false);
+          this.loadDashboard();
+        } else {
+          this.setPage('setup', false);
+        }
         this.loadFounderContext();
         this.error.set('');
       },
@@ -3877,11 +3926,11 @@ class AppComponent implements AfterViewChecked {
     this.message.set(message);
     this.error.set('');
     this.initializeBrowserHistory();
-    this.setPage('dashboard');
+    this.setPage('setup');
     this.menuOpen.set(false);
     this.password = '';
     this.loadHistory();
-    this.loadDashboard();
+    this.loadMe();
   }
 
   private clearSession(message: string): void {
