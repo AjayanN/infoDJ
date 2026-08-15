@@ -36,7 +36,8 @@ services:
   main-backend:
     build:
       context: ../services/main/backend
-    command: python manage.py runserver 0.0.0.0:8100
+    command: >-
+      sh -c "python manage.py migrate --noinput && exec python manage.py runserver 0.0.0.0:8100"
     env_file:
       - ./env/main.env
     ports:
@@ -44,7 +45,8 @@ services:
     volumes:
       - main_media:/app/media
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   main-frontend:
     build:
@@ -65,6 +67,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U the_dj -d business"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   redis:
     image: redis:7
