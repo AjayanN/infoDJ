@@ -215,6 +215,7 @@ def founder_context(request):
     profile = ensure_profile(request.user)
     if request.method == "PATCH":
         allowed_fields = (
+            "company_name",
             "founder_sector",
             "founder_business_type",
             "founder_stage",
@@ -501,6 +502,7 @@ def serialize_user(user, profile: UserProfile, request=None) -> dict:
 
 def serialize_founder_context(profile: UserProfile) -> dict:
     return {
+        "company_name": profile.company_name,
         "sector": profile.founder_sector,
         "business_type": profile.founder_business_type,
         "stage": profile.founder_stage,

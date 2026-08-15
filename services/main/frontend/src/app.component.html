@@ -266,6 +266,42 @@
           <h2 id="section-question-heading">{{ sectionQuestion() }}</h2>
         </section>
         <ng-container [ngSwitch]="activePage()">
+          <section *ngSwitchCase="'setup'" class="founder-setup-page" aria-labelledby="founder-setup-heading">
+            <div class="founder-setup-intro">
+              <p class="section-kicker">Your starting point</p>
+              <h2 id="founder-setup-heading">Let’s make your next decision clearer.</h2>
+              <p>Answer five short questions. InfoDJ will use them to surface comparable moves, risks, and options—without dropping you into a research dashboard.</p>
+              <div class="founder-setup-steps" aria-label="Setup progress"><span class="is-active">1. Your company</span><span>2. Your focus</span><span>3. Your plan</span></div>
+            </div>
+            <form class="founder-setup-form founder-setup-wizard" (ngSubmit)="completeFounderSetup()">
+              <div class="founder-wizard-progress"><span [style.width.%]="(founderSetupStep() + 1) * 20"></span></div>
+              <div class="founder-wizard-count">Question {{ founderSetupStep() + 1 }} of 5</div>
+              <section class="founder-wizard-question" *ngIf="founderSetupStep() === 0" aria-live="polite">
+                <span>Start with the name</span><h3>What is your company called?</h3><p>This anchors your personal workspace. You can change it later.</p>
+                <label class="sr-only" for="founder-company-name">Company name</label><input id="founder-company-name" name="founder_company_name" [(ngModel)]="founderCompanyName" placeholder="e.g. Northstar Energy" autocomplete="organization" autofocus />
+              </section>
+              <section class="founder-wizard-question" *ngIf="founderSetupStep() === 1" aria-live="polite">
+                <span>Choose your field</span><h3>What world are you building in?</h3><p>We’ll use this to compare you with relevant companies and evidence.</p>
+                <label class="sr-only" for="founder-sector">Field</label><select id="founder-sector" name="founder_setup_sector" [(ngModel)]="founderSector"><option value="">Choose a field</option><option value="Information Technology">Technology</option><option value="Communication Services">Communication</option><option value="Energy">Energy</option><option value="Financials">Financial services</option><option value="Health Care">Health care</option><option value="Consumer Discretionary">Consumer</option><option value="Industrials">Industrials</option><option value="Materials">Materials</option><option value="Real Estate">Real estate</option><option value="Utilities">Utilities</option></select>
+              </section>
+              <section class="founder-wizard-question" *ngIf="founderSetupStep() === 2" aria-live="polite">
+                <span>Describe the work</span><h3>What are you building?</h3><p>Use a few simple words. This helps make the follow-up questions specific.</p>
+                <label class="sr-only" for="founder-business-type">Business type</label><input id="founder-business-type" name="founder_setup_business_type" [(ngModel)]="founderBusinessType" placeholder="e.g. software for industrial operators" />
+              </section>
+              <section class="founder-wizard-question" *ngIf="founderSetupStep() === 3" aria-live="polite">
+                <span>Set the stage</span><h3>Where are you right now?</h3><p>There is no perfect label—choose the decision that feels most immediate.</p>
+                <label class="sr-only" for="founder-stage">Company stage</label><select id="founder-stage" name="founder_setup_stage" [ngModel]="founderStage()" (ngModelChange)="founderStage.set($event)"><option value="">Choose a stage</option><option value="validate">Validating an idea</option><option value="build">Building the first product</option><option value="launch">Launching to customers</option><option value="grow">Growing repeat demand</option><option value="scale">Scaling operations</option></select>
+              </section>
+              <section class="founder-wizard-question" *ngIf="founderSetupStep() === 4" aria-live="polite">
+                <span>Choose one priority</span><h3>What needs to become true next?</h3><p>We’ll build your first decision view around this, not every possible question.</p>
+                <label class="sr-only" for="founder-objective">Immediate focus</label><select id="founder-objective" name="founder_setup_objective" [(ngModel)]="founderObjective"><option value="">Choose your focus</option><option value="find_demand">Prove demand</option><option value="build_product">Build the right product</option><option value="win_customers">Win first customers</option><option value="improve_retention">Improve retention</option><option value="scale_operations">Scale with focus</option></select>
+                <details class="founder-setup-optional"><summary>Add optional context</summary><div><label>Where are you operating?<input name="founder_setup_geography" [(ngModel)]="founderGeography" placeholder="e.g. United States" /></label><label>Who do you serve?<input name="founder_setup_customer" [(ngModel)]="founderTargetCustomer" placeholder="e.g. independent retailers" /></label><label>How might you earn?<input name="founder_setup_revenue" [(ngModel)]="founderRevenueModel" placeholder="e.g. subscription" /></label></div></details>
+              </section>
+              <div class="founder-wizard-actions"><button type="button" class="ghost-button" *ngIf="founderSetupStep() > 0" (click)="previousFounderSetupStep()">Back</button><span></span><button type="button" class="primary-button" *ngIf="founderSetupStep() < 4" (click)="nextFounderSetupStep()">Continue</button><button type="submit" class="primary-button founder-setup-submit" *ngIf="founderSetupStep() === 4" [disabled]="founderContextSaving()">{{ founderContextSaving() ? 'Building your plan…' : 'Create my focus plan' }}</button></div>
+              <button type="button" class="text-action founder-setup-research" (click)="setActivePage('dashboard')">I want to explore Company 360 research instead</button>
+            </form>
+          </section>
+
           <section *ngSwitchCase="'dashboard'" class="dashboard-grid" aria-labelledby="dashboard-heading">
             <ng-container *ngIf="dashboard() as dash; else dashboardEmpty">
               <section class="founder-command-board" *ngIf="dash.summary.company_count > 0" aria-labelledby="founder-command-heading">
