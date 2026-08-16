@@ -131,6 +131,7 @@ from apps.ingestion.services.market_price_client import (
 from apps.ingestion.services.sec_form4 import form4_sources, ingest_form4_sources, ownership_xml_url, parse_ownership_xml
 from apps.ingestion.management.commands.ingest_market_prices import build_market_client
 from apps.ingestion.management.commands.daily_company_update import Command as DailyCompanyUpdateCommand
+from apps.ingestion.management.commands.ingest_sec_form4 import Command as SecForm4Command
 from apps.ingestion.services.official_product_price import parse_official_prices
 from apps.ingestion.services.energy_source_quality import is_promotable_energy_candidate
 from apps.ingestion.services.energy_sector_enrichment import enrich_energy_disclosures
@@ -923,6 +924,21 @@ class IngestionSearchApiTests(TestCase):
         expected = {slugify(seed.name) for seed in CROSS_SECTOR_COMPANIES}
 
         self.assertEqual(set(REVIEWED_PROMISE_SPECS), expected)
+
+    def test_sec_form4_command_discovers_ownership_forms_before_parsing(self):
+        with patch(
+            "apps.ingestion.management.commands.ingest_sec_form4.discover_sec_filings_for_company",
+            return_value={"sources_found": 2, "sources_inserted": 2, "duplicates_skipped": 0},
+        ) as discover, patch(
+            "apps.ingestion.management.commands.ingest_sec_form4.form4_sources", return_value=[]
+        ), patch(
+            "apps.ingestion.management.commands.ingest_sec_form4.ingest_form4_sources",
+            return_value={"sources_seen": 0, "sources_parsed": 0, "sources_failed": 0, "transactions_found": 0, "transactions_inserted": 0, "transactions_updated": 0},
+        ):
+            SecForm4Command().handle(company="netflix", all=False, limit=10, offset=0, company_limit=0)
+
+        self.assertEqual(discover.call_args.kwargs["forms"], ("3", "3/A", "4", "4/A", "5", "5/A"))
+        self.assertEqual(discover.call_args.kwargs["ticker"], "NFLX")
 
     def test_reviewed_promise_builder_preserves_exact_filing_sentence_and_is_idempotent(self):
         ArticleExtraction.objects.create(

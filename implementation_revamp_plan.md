@@ -86,8 +86,11 @@ acceptance checks for the previous milestone pass.
   Only Amazon and Pfizer currently have market prices.
 - [ ] Implement and validate first-party product-price collection by sector;
   product-price observations are zero for all 20 companies.
-- [ ] Implement Form 4 ownership/insider backfill and source-linked contract
-  dependency extraction; both streams are zero for all 20 companies.
+- [x] Add scheduler-ready Form 3/4/5 discovery and parsing: the first pass
+  discovered 400 filings and stored 312 source-linked insider transactions.
+- [ ] Add SEC XML fallback handling for issuers whose discovered ownership
+  documents resolve to non-XML presentation pages, then implement source-linked
+  contract dependency extraction.
 
 **Priority 2 - source resilience**
 
