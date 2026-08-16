@@ -11,6 +11,7 @@
         <p class="entry-kicker">Your company’s next right move</p>
         <h1 id="entry-title">Build with clarity, not just momentum.</h1>
         <p>InfoDJ turns your company stage, risks, and goals into a focused action plan—grounded in what comparable companies actually changed.</p>
+        <p class="entry-motto"><strong>Evidence before ego.</strong> Progress before noise.</p>
       </div>
 
       <section class="entry-stage-map" aria-labelledby="stage-map-title">
@@ -36,6 +37,15 @@
             <option value="Consumer Discretionary">Consumer</option>
           </select>
         </label>
+      </section>
+
+      <section class="entry-why" aria-labelledby="entry-why-title">
+        <div class="entry-section-heading"><p class="entry-kicker">Why InfoDJ exists</p><h2 id="entry-why-title">Founders need fewer tabs and better questions.</h2></div>
+        <div class="entry-why-grid">
+          <article><span>01</span><strong>Start with your stage</strong><p>Your next decision is different when you are validating, launching, or scaling.</p></article>
+          <article><span>02</span><strong>Learn from what happened</strong><p>Explore dated, source-linked moves from comparable companies—not generic playbooks.</p></article>
+          <article><span>03</span><strong>Go deep only when needed</strong><p>Company 360 keeps the detail available without putting it in your way.</p></article>
+        </div>
       </section>
 
       <section class="entry-preview" aria-labelledby="preview-title">
@@ -65,6 +75,13 @@
         </div>
       </section>
 
+      <section class="entry-faq" aria-labelledby="entry-faq-title">
+        <div class="entry-section-heading"><p class="entry-kicker">Common questions</p><h2 id="entry-faq-title">Clear enough to begin.</h2></div>
+        <details open><summary>Is InfoDJ telling me what to do?</summary><p>No. It gives you evidence and sharper questions; you make the decision.</p></details>
+        <details><summary>Do I need to understand every dashboard?</summary><p>No. Start with your stage and focus. Company 360 is there when you want the underlying detail.</p></details>
+        <details><summary>Where do the examples come from?</summary><p>From the companies and source-linked events currently available in the InfoDJ research workspace.</p></details>
+      </section>
+
       <p class="entry-proof"><strong>From uncertainty to a plan.</strong> See the risks to address, the metrics to watch, and the decisions that moved similar companies forward.</p>
     </section>
 
@@ -74,6 +91,7 @@
         <h1 id="auth-title">{{ authTitle() }}</h1>
         <p id="auth-description">Start with your company stage. We’ll help you focus on the next decision, not every possible one.</p>
         <p class="auth-stage-context" *ngIf="founderStage()">Starting from: <strong>{{ founderStageLabel() }}</strong></p>
+        <p class="auth-product-promise"><span aria-hidden="true">✦</span> Your workspace stays focused: one stage, one question, then the companies worth studying.</p>
       </div>
 
       <section class="status-strip compact" *ngIf="message() || error()" aria-label="Authentication status">

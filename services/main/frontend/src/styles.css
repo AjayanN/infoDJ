@@ -6949,3 +6949,17 @@ th {
 .founder-stage-company dt { color: #8fadb9; font-size: 10px; font-weight: 800; text-transform: uppercase; }
 .founder-stage-company dd { color: #fff; font-size: 15px; font-weight: 800; margin: 0; }
 @media (max-width: 700px) { .founder-stage-workspace-heading { flex-direction: column; padding: 20px; } .founder-stage-workspace-heading .ghost-button { width: 100%; } .founder-stage-question, .founder-stage-moves { padding: 18px 20px; } .founder-stage-move-grid, .founder-stage-company-grid { grid-template-columns: 1fr; } }
+
+
+/* Product-led entry page: explain the promise before asking a founder to sign in. */
+.entry-copy, .entry-stage-map, .entry-why, .entry-preview, .entry-faq, .entry-proof, .founder-entry .auth-card { animation: entry-rise .65s both; }
+.entry-stage-map { animation-delay: .08s; }.entry-why { animation-delay: .14s; }.entry-preview { animation-delay: .2s; }.entry-faq { animation-delay: .26s; }.entry-proof { animation-delay: .32s; }.founder-entry .auth-card { animation-delay: .16s; }
+@keyframes entry-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+.entry-motto { color: #d2f7f0; font-size: 14px; margin: 18px 0 0; }.entry-motto strong { color: #78e0d1; }
+.entry-why { display: grid; gap: 14px; }.entry-why-grid { display: grid; gap: 10px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.entry-why article { background: rgba(39, 71, 99, .48); border: 1px solid rgba(157, 201, 218, .19); border-radius: 12px; display: grid; gap: 7px; min-height: 158px; padding: 15px; transition: border-color .2s ease, transform .2s ease; }
+.entry-why article:hover { border-color: #73d9ca; transform: translateY(-3px); }.entry-why article span { color: #80dfd2; font-size: 10px; font-weight: 900; letter-spacing: .1em; }.entry-why article strong { font-size: 14px; }.entry-why article p { color: #afc2d3; font-size: 12px; line-height: 1.45; margin: 0; }
+.entry-faq { display: grid; gap: 0; }.entry-faq .entry-section-heading { margin-bottom: 10px; }.entry-faq details { border-bottom: 1px solid rgba(159, 185, 211, .22); color: #c0d0df; padding: 13px 0; }.entry-faq summary { color: #f5fbff; cursor: pointer; font-size: 14px; font-weight: 750; list-style: none; }.entry-faq summary::after { color: #78ddcf; content: '+'; float: right; font-size: 19px; line-height: .8; }.entry-faq details[open] summary::after { content: '−'; }.entry-faq details p { color: #a9bdce; font-size: 13px; line-height: 1.5; margin: 9px 26px 0 0; }
+.auth-product-promise { align-items: flex-start; background: #f1faf8; border: 1px solid #d5ebe7; border-radius: 8px; color: #365f61; display: flex; font-size: 12px; gap: 7px; line-height: 1.45; margin: 15px 0 0; padding: 10px 11px; }.auth-product-promise span { color: #1b8a7d; font-weight: 900; }
+@media (max-width: 700px) { .entry-why-grid { grid-template-columns: 1fr; }.entry-why article { min-height: 0; }.entry-copy, .entry-stage-map, .entry-why, .entry-preview, .entry-faq, .entry-proof, .founder-entry .auth-card { animation-delay: 0s; } }
+@media (prefers-reduced-motion: reduce) { .entry-copy, .entry-stage-map, .entry-why, .entry-preview, .entry-faq, .entry-proof, .founder-entry .auth-card, .entry-why article { animation: none; transition: none; } }
