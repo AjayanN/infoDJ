@@ -940,7 +940,17 @@ class IngestionSearchApiTests(TestCase):
             "apps.ingestion.management.commands.ingest_sec_form4.form4_sources", return_value=[]
         ), patch(
             "apps.ingestion.management.commands.ingest_sec_form4.ingest_form4_sources",
-            return_value={"sources_seen": 0, "sources_parsed": 0, "sources_failed": 0, "transactions_found": 0, "transactions_inserted": 0, "transactions_updated": 0},
+            return_value={
+                "sources_seen": 0,
+                "sources_parsed": 0,
+                "sources_failed": 0,
+                "transactions_found": 0,
+                "transactions_inserted": 0,
+                "transactions_updated": 0,
+                "holdings_found": 1,
+                "holdings_inserted": 1,
+                "holdings_updated": 0,
+            },
         ):
             SecForm4Command().handle(company="netflix", all=False, limit=10, offset=0, company_limit=0)
 

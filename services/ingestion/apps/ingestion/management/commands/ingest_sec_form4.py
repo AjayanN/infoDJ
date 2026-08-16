@@ -12,7 +12,7 @@ OWNERSHIP_FORMS = ("3", "3/A", "4", "4/A", "5", "5/A")
 
 
 class Command(BaseCommand):
-    help = "Parse already discovered SEC Forms 3, 4, and 5 into auditable insider transactions."
+    help = "Parse already discovered SEC Forms 3, 4, and 5 into auditable insider transactions and reported holdings."
 
     def add_arguments(self, parser):
         parser.add_argument("--company", help="Company slug. Omit with --all.")
@@ -50,7 +50,7 @@ class Command(BaseCommand):
             result = ingest_form4_sources(company=company, sources=form4_sources(company, limit=options["limit"]))
             totals["companies"] += 1
             for key, value in result.items():
-                totals[key] += value
+                totals[key] = totals.get(key, 0) + value
             self.stdout.write(f"{company.slug}: {result}")
         self.stdout.write(self.style.SUCCESS(f"SEC ownership-form ingestion complete: {totals}"))
 
