@@ -82,9 +82,9 @@ acceptance checks for the previous milestone pass.
   profile contract.
 - [ ] Keep legacy `Company.country` as the configured domicile only; rename
   frontend labels to `Headquarters` until a migration can rename the field.
-- [ ] Build geographic extraction from annual-report segments and official
+- [x] Build geographic extraction from annual-report segments and official
   geographic disclosures.
-- [ ] Add Netflix fixture assertions for UCAN, EMEA, LATAM, and APAC when
+- [x] Add Netflix fixture assertions for UCAN, EMEA, LATAM, and APAC when
   directly supported by a source; do not fabricate country-level presence.
 - [ ] Add source freshness and missing-reason fields for every geography item.
 

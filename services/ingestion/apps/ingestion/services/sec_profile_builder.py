@@ -23,6 +23,8 @@ class SecProfileData:
     competitors: tuple[str, ...]
     strategic_priorities: tuple[str, ...]
     evidence_text: str
+    operating_regions: tuple[str, ...] = ()
+    revenue_geographies: tuple[str, ...] = ()
 
 
 def build_sec_company_profile(company) -> CompanyProfileSnapshot:
@@ -64,6 +66,9 @@ def build_sec_company_profile(company) -> CompanyProfileSnapshot:
             "products": list(data.products),
             "customer_groups": list(data.customer_groups),
             "revenue_sources": list(data.revenue_sources),
+            "geographies": unique_values([*data.operating_regions, *data.revenue_geographies]),
+            "operating_regions": list(data.operating_regions),
+            "revenue_geographies": list(data.revenue_geographies),
             "leadership": list(data.leadership),
             "competitors": list(data.competitors),
             "strategic_priorities": list(data.strategic_priorities),
@@ -97,6 +102,8 @@ def parse_sec_profile_text(text: str, company_name: str, *, priorities: tuple[st
 
     segments = extract_segments(business)
     revenue_sources = extract_revenue_sources(business)
+    operating_regions = extract_disclosed_regions(business, context="operating")
+    revenue_geographies = extract_disclosed_regions(business, context="revenue")
     products = extract_business_labels(business)
     customers = extract_customer_groups(business)
     subsidiaries = extract_owned_businesses(business)
@@ -117,6 +124,8 @@ def parse_sec_profile_text(text: str, company_name: str, *, priorities: tuple[st
         competitors=tuple(competitors),
         strategic_priorities=priorities,
         evidence_text=evidence,
+        operating_regions=tuple(operating_regions),
+        revenue_geographies=tuple(revenue_geographies),
     )
 
 
@@ -154,6 +163,35 @@ def extract_revenue_sources(text: str) -> list[str]:
             if re.search(rf"\b{re.escape(phrase)}\b", text, re.IGNORECASE):
                 values.append(phrase.title())
     return unique_values(values)[:12]
+
+
+REGION_LABELS = (
+    (r"\bUCAN\b", "UCAN"),
+    (r"\bEMEA\b", "EMEA"),
+    (r"\bLATAM\b", "LATAM"),
+    (r"\bAPAC\b", "APAC"),
+    (r"\bUnited States and Canada\b", "United States and Canada"),
+    (r"\bEurope,? Middle East (?:and|&) Africa\b", "Europe, Middle East and Africa"),
+    (r"\bLatin America\b", "Latin America"),
+    (r"\bAsia[- ]Pacific\b", "Asia-Pacific"),
+)
+
+
+def extract_disclosed_regions(text: str, *, context: str) -> list[str]:
+    context_pattern = {
+        "operating": r"\b(?:operate|operates|operating|operations?|markets?)\b",
+        "revenue": r"\b(?:revenue|revenues|net sales|sales)\b",
+    }[context]
+    regions = []
+    for sentence in re.split(r"(?<=[.!?])\s+", text):
+        if not re.search(context_pattern, sentence, re.IGNORECASE):
+            continue
+        regions.extend(
+            label
+            for pattern, label in REGION_LABELS
+            if re.search(pattern, sentence, re.IGNORECASE)
+        )
+    return unique_values(regions)
 
 
 def extract_business_labels(text: str) -> list[str]:
