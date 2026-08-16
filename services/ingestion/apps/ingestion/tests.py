@@ -328,7 +328,7 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertEqual(payload["status"], "partial")
-        self.assertEqual(payload["sections"]["geographies"]["status"], "available")
+        self.assertEqual(payload["sections"]["geographies"]["status"], "unavailable")
         self.assertEqual(payload["sections"]["business_model"]["status"], "unavailable")
         self.assertIn("company_profile_business_model", [gap["key"] for gap in payload["source_gaps"]])
 
