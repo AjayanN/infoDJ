@@ -3054,6 +3054,19 @@ class OfficialProductPriceTests(TestCase):
 
         self.assertEqual([(price.name, str(price.amount), price.currency) for price in prices], [("Example Team", "49", "USD")])
 
+    def test_parses_explicit_schema_org_offer_microdata(self):
+        prices = parse_official_prices(
+            '''<article itemscope itemtype="https://schema.org/Product">
+                <meta itemprop="name" content="Example Pro" />
+                <div itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+                  <meta itemprop="price" content="29.00" />
+                  <meta itemprop="priceCurrency" content="USD" />
+                </div>
+            </article>'''
+        )
+
+        self.assertEqual([(price.name, str(price.amount), price.currency) for price in prices], [("Example Pro", "29.00", "USD")])
+
 
 class SecForm4IngestionTests(TestCase):
     xml = """<?xml version=\"1.0\"?>

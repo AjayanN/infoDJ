@@ -23,7 +23,7 @@ class OfficialPrice:
 
 
 def parse_official_prices(html: str) -> list[OfficialPrice]:
-    """Return only prices explicitly supplied in JSON-LD Product/Offer records."""
+    """Return only prices explicitly supplied in first-party structured Product/Offer records."""
 
     soup = BeautifulSoup(html, "html.parser")
     rows: list[OfficialPrice] = []
@@ -40,7 +40,44 @@ def parse_official_prices(html: str) -> list[OfficialPrice]:
                 price = official_price(node, offer)
                 if price is not None:
                     rows.append(price)
+    rows.extend(parse_microdata_prices(soup))
     return unique_prices(rows)
+
+
+def parse_microdata_prices(soup: BeautifulSoup) -> list[OfficialPrice]:
+    """Read schema.org Offer microdata without treating visible price-like text as a price."""
+
+    rows = []
+    for offer in soup.select('[itemprop="offers"], [itemtype*="schema.org/Offer"]'):
+        amount = decimal_value(microdata_value(offer, "price"))
+        currency = microdata_value(offer, "priceCurrency").upper()
+        product = offer.find_parent(attrs={"itemtype": lambda value: value and "Product" in value})
+        name = microdata_value(product, "name") if product else ""
+        if amount is None or not currency or not name:
+            continue
+        rows.append(OfficialPrice(
+            name=name[:255],
+            amount=amount,
+            currency=currency[:16],
+            evidence_text=f"First-party schema.org Offer: {name} {amount} {currency}.",
+        ))
+    return rows
+
+
+def microdata_value(node, property_name: str) -> str:
+    if node is None:
+        return ""
+    field = node.select_one(f'[itemprop="{property_name}"]')
+    if field is None:
+        return ""
+    return str(field.get("content") or field.get("value") or field.get("href") or field.get_text(" ", strip=True) or "").strip()
+
+
+def decimal_value(value: str) -> Decimal | None:
+    try:
+        return Decimal(value) if value else None
+    except InvalidOperation:
+        return None
 
 
 def walk_jsonld(value: Any):
