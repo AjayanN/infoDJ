@@ -17,6 +17,7 @@ class Command(BaseCommand):
             "headquarters_country": seed.country,
             "aliases": [seed.ticker],
             "website": seed.website,
+            "sec_cik": seed.sec_cik,
             "is_active": True,
         }
 
@@ -29,6 +30,7 @@ class Command(BaseCommand):
             "headquarters_country": company.headquarters_country or seed.country,
             "aliases": list(dict.fromkeys([*(company.aliases or []), seed.ticker])),
             "website": company.website or seed.website,
+            "sec_cik": seed.sec_cik or company.sec_cik,
         }
         changed_fields = [
             field

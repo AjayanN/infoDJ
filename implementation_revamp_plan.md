@@ -46,6 +46,10 @@ acceptance checks for the previous milestone pass.
   completes and rebuilds the ledger.
 - [x] Refactor company-universe activation into declarative, idempotent
   metadata updates.
+- [x] Pin ExxonMobil's canonical SEC identifier so annual-report ingestion is
+  not redirected to a ticker-matched holding company.
+- [x] Refresh Company 360 profiles after SEC filing extraction in the daily
+  ingestion sequence.
 - [ ] Populate reviewed Company 360 profile dimensions from the new sources.
 
 ## Baseline: known gaps to fix

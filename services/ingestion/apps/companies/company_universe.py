@@ -12,6 +12,7 @@ class CompanySeed:
     sector: str
     country: str = "United States"
     website: str = ""
+    sec_cik: str = ""
 
 
 CROSS_SECTOR_COMPANIES: tuple[CompanySeed, ...] = (
@@ -23,7 +24,13 @@ CROSS_SECTOR_COMPANIES: tuple[CompanySeed, ...] = (
     CompanySeed("Pfizer", "PFE", "Health Care", website="https://www.pfizer.com/"),
     CompanySeed("Amazon", "AMZN", "Consumer Discretionary", website="https://www.aboutamazon.com/"),
     CompanySeed("Walmart", "WMT", "Consumer Staples", website="https://corporate.walmart.com/"),
-    CompanySeed("ExxonMobil", "XOM", "Energy", website="https://corporate.exxonmobil.com/"),
+    CompanySeed(
+        "ExxonMobil",
+        "XOM",
+        "Energy",
+        website="https://corporate.exxonmobil.com/",
+        sec_cik="0000034088",
+    ),
     CompanySeed("NextEra Energy", "NEE", "Utilities", website="https://www.nexteraenergy.com/"),
     CompanySeed("Ford Motor Company", "F", "Consumer Discretionary", website="https://corporate.ford.com/"),
     CompanySeed("Tesla", "TSLA", "Consumer Discretionary", website="https://www.tesla.com/"),
