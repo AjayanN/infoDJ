@@ -128,7 +128,14 @@ from apps.ingestion.services.market_price_client import (
     parse_alpha_vantage_daily_csv,
     parse_fmp_historical_prices,
 )
-from apps.ingestion.services.sec_form4 import form4_sources, ingest_form4_sources, ownership_xml_candidates, ownership_xml_url, parse_ownership_xml
+from apps.ingestion.services.sec_form4 import (
+    form4_sources,
+    ingest_form4_sources,
+    ownership_xml_candidates,
+    ownership_xml_url,
+    parse_ownership_holdings,
+    parse_ownership_xml,
+)
 from apps.ingestion.management.commands.ingest_market_prices import build_market_client
 from apps.ingestion.management.commands.daily_company_update import Command as DailyCompanyUpdateCommand
 from apps.ingestion.management.commands.ingest_sec_form4 import Command as SecForm4Command
@@ -3005,6 +3012,10 @@ class SecForm4IngestionTests(TestCase):
         <transactionAmounts><transactionShares><value>1250</value></transactionShares><transactionPricePerShare><value>99.50</value></transactionPricePerShare><transactionAcquiredDisposedCode><value>D</value></transactionAcquiredDisposedCode></transactionAmounts>
         <postTransactionAmounts><sharesOwnedFollowingTransaction><value>5000</value></sharesOwnedFollowingTransaction></postTransactionAmounts>
       </nonDerivativeTransaction></nonDerivativeTable>
+      <nonDerivativeTable><nonDerivativeHolding>
+        <securityTitle><value>Common Stock</value></securityTitle>
+        <postTransactionAmounts><sharesOwnedFollowingTransaction><value>5000</value></sharesOwnedFollowingTransaction></postTransactionAmounts>
+      </nonDerivativeHolding></nonDerivativeTable>
       <derivativeTable><derivativeTransaction>
         <transactionDate><value>2026-07-21</value></transactionDate>
         <transactionCoding><transactionCode>M</transactionCode></transactionCoding>
@@ -3033,6 +3044,15 @@ class SecForm4IngestionTests(TestCase):
         self.assertTrue(rows[0].planned_sale)
         self.assertEqual(str(rows[0].value), "124375.00")
         self.assertEqual(rows[1].transaction_type, "EXERCISE")
+
+    def test_parser_keeps_explicit_non_derivative_holdings(self):
+        holdings = parse_ownership_holdings(self.xml)
+
+        self.assertEqual(len(holdings), 1)
+        self.assertEqual(holdings[0].holder_name, "Jane Example")
+        self.assertEqual(holdings[0].holder_type, "EXECUTIVE")
+        self.assertEqual(str(holdings[0].shares_owned), "5000")
+        self.assertEqual(holdings[0].share_class, "Common Stock")
 
     def test_normalizes_edgar_xsl_url_to_the_original_xml(self):
         self.assertEqual(
@@ -3072,9 +3092,14 @@ class SecForm4IngestionTests(TestCase):
 
         self.assertEqual(first["transactions_inserted"], 2)
         self.assertEqual(second["transactions_updated"], 2)
+        self.assertEqual(first["holdings_inserted"], 1)
+        self.assertEqual(second["holdings_updated"], 1)
         self.assertEqual(row.filing_accession_number, "0000123456-26-000001")
         self.assertEqual(row.insider_role, "Director; Chief Executive Officer")
         self.assertEqual(row.source_document, self.source)
+        position = snapshot.positions.get(position_type="BENEFICIAL_OWNERSHIP")
+        self.assertEqual(str(position.shares_owned), "5000.000000")
+        self.assertEqual(position.share_class, "Common Stock")
 
 
 class FakeForm4Session:
