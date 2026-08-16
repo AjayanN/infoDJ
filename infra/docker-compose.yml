@@ -12,26 +12,32 @@ services:
   ingestion:
     build:
       context: ../services/ingestion
-    command: .venv/bin/python manage.py run_ingestion_api_with_scheduler --host 0.0.0.0 --port 8001 --scheduler-timezone UTC --limit 20 --batch-size 10 --include-gdelt --include-market-data --include-financial-facts --include-insider-transactions --insider-form-limit 5 --include-official-product-prices --include-company-profiles --include-macro-context --include-quality-scoring --split-batches
+    command: >-
+      sh -c ".venv/bin/python manage.py migrate --noinput && exec .venv/bin/python manage.py run_ingestion_api_with_scheduler --host 0.0.0.0 --port 8001 --scheduler-timezone UTC --limit 20 --batch-size 10 --include-gdelt --include-market-data --include-financial-facts --include-insider-transactions --insider-form-limit 5 --include-official-product-prices --include-company-profiles --include-macro-context --include-quality-scoring --split-batches"
     env_file:
       - ./env/ingestion.env
     ports:
       - "8001:8001"
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
   ingestion-daily:
     build:
       context: ../services/ingestion
-    command: .venv/bin/python manage.py daily_company_update --limit 20 --skip-gdelt --include-company-profiles
+    command: >-
+      sh -c ".venv/bin/python manage.py migrate --noinput && exec .venv/bin/python manage.py daily_company_update --limit 20 --skip-gdelt --include-company-profiles"
     env_file:
       - ./env/ingestion.env
     profiles:
       - jobs
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
   main-backend:
     build:
