@@ -94,6 +94,7 @@ from apps.ingestion.services.source_gap_resolver import resolve_source_gaps
 from apps.ingestion.services.source_gap_source_collector import forms_for_gap, ticker_for
 from apps.ingestion.services.source_gap_candidate_extractor import extract_source_gap_candidates, full_text_excerpt
 from apps.ingestion.services.source_gap_candidate_promoter import (
+    parse_dependency_contract_terms,
     parse_dependency_concentrations,
     parse_ownership_rows,
     promote_source_gap_candidates,
@@ -1591,6 +1592,43 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(payload["coverage"]["contract_term_count"], 1)
         self.assertEqual(payload["dependencies"][0]["counterparty_name"], "Customer Alpha")
         self.assertEqual(payload["dependencies"][0]["concentration_percent"], 12.5)
+
+    def test_source_gap_promotion_adds_named_contract_terms_to_dependency_dashboard(self):
+        gap = SourceGap.objects.create(
+            company=self.netflix,
+            dashboard="customer_supplier_dependency",
+            gap_type="dependency_contract_terms",
+            provider="customer-supplier-dependency",
+            reason="Need source-linked contract terms.",
+            next_ingestion_task="Extract named commercial agreements.",
+        )
+        SourceGapResolutionCandidate.objects.create(
+            company=self.netflix,
+            source_gap=gap,
+            dashboard="customer_supplier_dependency",
+            gap_type="dependency_contract_terms",
+            candidate_type="dependency_contract_source",
+            source_document=self.source,
+            evidence_text=(
+                "Pursuant to an agreement, the Company is the exclusive distributor of the Live TV service "
+                "for five years (renewable for an additional five-year term by mutual agreement) and pays "
+                "a wholesale fee to Fubo based on programming costs."
+            ),
+            confidence_score="0.900",
+            extraction_status="EXTRACTED",
+            review_status="NEEDS_REVIEW",
+        )
+
+        result = promote_source_gap_candidates(dashboard="customer_supplier_dependency", gap_type="dependency_contract_terms")
+
+        self.assertEqual(result.candidates_promoted, 1)
+        payload = self.client.get("/companies/netflix/customer-supplier-dependency").json()
+        dependency = next(item for item in payload["dependencies"] if item["counterparty_name"] == "Fubo")
+        self.assertEqual(dependency["dependency_type"], "DISTRIBUTOR")
+        self.assertEqual({term["term_type"] for term in dependency["contract_terms"]}, {"EXCLUSIVITY", "RENEWAL"})
+
+    def test_contract_term_parser_rejects_unnamed_or_generic_contract_language(self):
+        self.assertEqual(parse_dependency_contract_terms("Our agreements may expire, renew, or terminate."), [])
 
     def test_companyfacts_builder_creates_idempotent_annual_and_quarterly_series(self):
         for filed, accession, value in (
