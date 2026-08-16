@@ -48,6 +48,11 @@ createServer((request, response) => {
 
   response.setHeader('Cache-Control', 'no-cache');
   response.setHeader('Content-Type', contentTypes[extname(filePath)] || 'application/octet-stream');
+  response.setHeader('Content-Security-Policy', "default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self' data:; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; object-src 'none'; script-src 'self' https://checkout.razorpay.com; style-src 'self' 'unsafe-inline'");
+  response.setHeader('Permissions-Policy', 'camera=(), geolocation=(), microphone=()');
+  response.setHeader('Referrer-Policy', 'no-referrer');
+  response.setHeader('X-Content-Type-Options', 'nosniff');
+  response.setHeader('X-Frame-Options', 'DENY');
   createReadStream(filePath)
     .on('error', () => {
       response.statusCode = 404;

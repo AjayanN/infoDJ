@@ -1,20 +1,24 @@
 from __future__ import annotations
 
 from pathlib import Path
+from secrets import compare_digest, token_urlsafe
 from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.tokens import default_token_generator
+from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.shortcuts import redirect
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import status
 from rest_framework.authtoken.models import Token
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle
 
 from apps.accounts.founder_decision import build_founder_decision
 from apps.accounts.founder_playbooks import FOUNDER_OBJECTIVES, FOUNDER_STAGES, playbook_for
@@ -42,14 +46,30 @@ ALLOWED_AVATAR_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 ALLOWED_AVATAR_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
 
 
+class AuthenticationRateThrottle(AnonRateThrottle):
+    scope = "auth"
+
+
+def password_error_response(error: ValidationError) -> Response:
+    return Response(
+        {"error": "password does not meet security requirements", "details": error.messages},
+        status=status.HTTP_400_BAD_REQUEST,
+    )
+
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@throttle_classes([AuthenticationRateThrottle])
 def signup(request):
     username = (request.data.get("username") or "").strip()
     email = (request.data.get("email") or "").strip()
     password = request.data.get("password") or ""
     if not username or not email or not password:
         return Response({"error": "username, email, and password are required"}, status=400)
+    try:
+        validate_password(password, user=User(username=username, email=email))
+    except ValidationError as exc:
+        return password_error_response(exc)
     if User.objects.filter(username=username).exists():
         return Response({"error": "username already exists"}, status=400)
     if User.objects.filter(email=email).exists():
@@ -68,6 +88,7 @@ def signup(request):
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@throttle_classes([AuthenticationRateThrottle])
 def login(request):
     username = request.data.get("username") or request.data.get("email") or ""
     password = request.data.get("password") or ""
@@ -81,6 +102,7 @@ def login(request):
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@throttle_classes([AuthenticationRateThrottle])
 def password_reset_request(request):
     email = (request.data.get("email") or "").strip()
     if email:
@@ -105,6 +127,7 @@ def password_reset_request(request):
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@throttle_classes([AuthenticationRateThrottle])
 def password_reset_confirm(request):
     uid = request.data.get("uid") or ""
     token = request.data.get("token") or ""
@@ -118,6 +141,10 @@ def password_reset_confirm(request):
         return Response({"error": "invalid password reset link"}, status=400)
     if not default_token_generator.check_token(user, token):
         return Response({"error": "invalid password reset link"}, status=400)
+    try:
+        validate_password(password, user=user)
+    except ValidationError as exc:
+        return password_error_response(exc)
     user.set_password(password)
     user.save(update_fields=["password"])
     Token.objects.filter(user=user).delete()
@@ -128,7 +155,9 @@ def password_reset_confirm(request):
 @permission_classes([AllowAny])
 def google_auth_url(request):
     try:
-        return Response({"auth_url": build_google_oauth_url()})
+        state = token_urlsafe(32)
+        request.session["google_oauth_state"] = state
+        return Response({"auth_url": build_google_oauth_url(state)})
     except GoogleOAuthConfigurationError as exc:
         return Response({"error": str(exc)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
@@ -137,8 +166,12 @@ def google_auth_url(request):
 @permission_classes([AllowAny])
 def google_callback(request):
     code = request.query_params.get("code") or ""
+    state = request.query_params.get("state") or ""
+    expected_state = request.session.pop("google_oauth_state", "")
     if not code:
         return Response({"error": "Google authorization code is required"}, status=400)
+    if not expected_state or not state or not compare_digest(state, expected_state):
+        return Response({"error": "invalid Google OAuth state"}, status=400)
     try:
         google_profile = exchange_google_code_for_profile(code)
     except GoogleOAuthConfigurationError as exc:
@@ -162,7 +195,7 @@ def google_callback(request):
         profile.display_name = google_profile["name"][:255]
         profile.save(update_fields=["display_name"])
     token, _created = Token.objects.get_or_create(user=user)
-    redirect_url = f"{settings.FRONTEND_BASE_URL.rstrip('/')}/auth/callback?{urlencode({'token': token.key})}"
+    redirect_url = f"{settings.FRONTEND_BASE_URL.rstrip('/')}/auth/callback#{urlencode({'token': token.key})}"
     return redirect(redirect_url)
 
 

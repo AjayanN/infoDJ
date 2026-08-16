@@ -1,0 +1,26 @@
+services:
+  gateway:
+    ports: !override
+      - "127.0.0.1:8080:8000"
+      - "127.0.0.1:8002:8001"
+  ingestion:
+    ports: !override
+      - "127.0.0.1:8001:8001"
+  main-backend:
+    ports: !override
+      - "127.0.0.1:8100:8100"
+  main-frontend:
+    ports: !override
+      - "127.0.0.1:4200:4200"
+  postgres:
+    ports: !override
+      - "127.0.0.1:15432:5432"
+  redis:
+    ports: !override
+      - "127.0.0.1:16379:6379"
+  logging-loki:
+    ports: !override
+      - "127.0.0.1:3100:3100"
+  logging-grafana:
+    ports: !override
+      - "127.0.0.1:3000:3000"

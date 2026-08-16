@@ -4,6 +4,7 @@ import shutil
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
+from urllib.parse import parse_qs, urlparse
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
@@ -47,6 +48,16 @@ class AccountAuthApiTests(TestCase):
         self.assertEqual(response.data["user"]["subscription"]["tier"], SubscriptionTier.FREE)
         user = get_user_model().objects.get(username="founder1")
         self.assertEqual(user.profile.subscription_status, SubscriptionStatus.FREE)
+
+    def test_signup_rejects_weak_password(self):
+        response = self.client.post(
+            "/api/app/auth/signup",
+            {"username": "weak-password", "email": "weak@example.com", "password": "short"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data["error"], "password does not meet security requirements")
 
     def test_login_returns_token_and_me_requires_token(self):
         user = get_user_model().objects.create_user(
@@ -101,13 +112,13 @@ class PasswordResetApiTests(TestCase):
 
         response = self.client.post(
             "/api/app/auth/password-reset/confirm",
-            {"uid": uid, "token": token, "password": "NewPass123!"},
+            {"uid": uid, "token": token, "password": "NewSecurePass123!"},
             format="json",
         )
 
         self.assertEqual(response.status_code, 200)
         self.user.refresh_from_db()
-        self.assertTrue(self.user.check_password("NewPass123!"))
+        self.assertTrue(self.user.check_password("NewSecurePass123!"))
         self.assertEqual(Token.objects.filter(user=self.user).count(), 0)
 
 
@@ -137,12 +148,21 @@ class GoogleOAuthApiTests(TestCase):
             "family_name": "User",
         }
 
-        response = self.client.get("/api/app/auth/google/callback?code=test-code")
+        auth_response = self.client.get("/api/app/auth/google/url")
+        state = parse_qs(urlparse(auth_response.data["auth_url"]).query)["state"][0]
+        response = self.client.get(f"/api/app/auth/google/callback?code=test-code&state={state}")
 
         self.assertEqual(response.status_code, 302)
-        self.assertIn("http://localhost:4200/auth/callback?token=", response["Location"])
+        self.assertIn("http://localhost:4200/auth/callback#token=", response["Location"])
         user = get_user_model().objects.get(email="googleuser@example.com")
         self.assertEqual(user.profile.display_name, "Google User")
+
+    @override_settings(GOOGLE_OAUTH_CLIENT_ID="client-id", GOOGLE_OAUTH_CLIENT_SECRET="client-secret")
+    def test_google_callback_rejects_missing_or_invalid_state(self):
+        response = self.client.get("/api/app/auth/google/callback?code=test-code")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data["error"], "invalid Google OAuth state")
 
 
 class FounderContextApiTests(TestCase):

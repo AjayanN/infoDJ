@@ -82,7 +82,7 @@ def verify_razorpay_payment_signature(*, order_id: str, payment_id: str, signatu
     return hmac.compare_digest(digest, signature)
 
 
-def build_google_oauth_url() -> str:
+def build_google_oauth_url(state: str) -> str:
     if not settings.GOOGLE_OAUTH_CLIENT_ID or not settings.GOOGLE_OAUTH_CLIENT_SECRET:
         raise GoogleOAuthConfigurationError("Google OAuth credentials are not configured.")
     params = {
@@ -92,6 +92,7 @@ def build_google_oauth_url() -> str:
         "scope": "openid email profile",
         "access_type": "offline",
         "prompt": "select_account",
+        "state": state,
     }
     return f"https://accounts.google.com/o/oauth2/v2/auth?{urlencode(params)}"
 

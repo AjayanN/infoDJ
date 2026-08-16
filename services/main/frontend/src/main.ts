@@ -3895,7 +3895,7 @@ class AppComponent implements AfterViewChecked {
 
   private consumeAuthCallback(): void {
     const url = new URL(window.location.href);
-    const token = url.searchParams.get('token');
+    const token = new URLSearchParams(url.hash.replace(/^#/, '')).get('token');
     if (window.location.pathname === appBasePath() + 'auth/callback' && token) {
       localStorage.setItem('infodj_token', token);
       this.token.set(token);
