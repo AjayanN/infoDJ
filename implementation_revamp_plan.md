@@ -92,13 +92,18 @@ acceptance checks for the previous milestone pass.
   Prologis, and Newmont.
 - [ ] Implement and validate first-party product-price collection by sector;
   product-price observations are zero for all 20 companies.
-- [x] Add scheduler-ready Form 3/4/5 discovery and parsing: the first pass
-  discovered 400 filings and stored 312 source-linked insider transactions.
+- [x] Add scheduler-ready Form 3/4/5 discovery and parsing. The pipeline now
+  stores 668 source-linked insider transactions and, where the filing explicitly
+  reports them, 36 non-derivative beneficial-ownership holdings across 18
+  configured companies. It does not infer ownership percentages or voting power.
 - [x] Add SEC XML fallback handling for issuers whose discovered ownership
   documents resolve to non-XML presentation pages. The parser locates the
   accession's XML from the SEC index and uses 250ms fair-access pacing; the
   verified scheduler-sized all-company run parsed 100 of 100 filings and
   added 90 source-linked insider transactions.
+- [x] Preserve explicit non-derivative holdings from valid Forms 3/4/5 XML.
+  The scheduled command aggregates newly added evidence counters safely, and its
+  bounded all-company run created or refreshed the reported holding positions.
 - [ ] Implement source-linked contract dependency extraction.
 
 **Priority 2 - source resilience**
