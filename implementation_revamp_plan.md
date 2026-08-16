@@ -40,7 +40,11 @@ acceptance checks for the previous milestone pass.
   3,524 existing events, turns, and financial facts are indexed.
 - [x] Wire company activation and evidence-ledger rebuilding into the daily
   ingestion pipeline.
-- [ ] Backfill first-party sources for the ten newly activated companies.
+- [x] Backfill first-party sources for the ten newly activated companies:
+  287 sources, 111 events, 51 turns, and 1,486 additional financial facts.
+- [x] Make expected missing reviewed milestones non-fatal so the scheduler
+  completes and rebuilds the ledger.
+- [ ] Populate reviewed Company 360 profile dimensions from the new sources.
 
 ## Baseline: known gaps to fix
 

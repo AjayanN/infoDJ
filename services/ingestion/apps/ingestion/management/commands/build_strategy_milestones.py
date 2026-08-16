@@ -9,14 +9,23 @@ from apps.ingestion.services.reviewed_strategy_milestones import build_reviewed_
 class Command(BaseCommand):
     help = "Build the reviewed Strategy Milestone Tracker baseline."
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--strict",
+            action="store_true",
+            help="Fail when a configured company has no reviewed source-backed milestone.",
+        )
+
     def handle(self, *args, **options):
-        failures = []
+        skipped = []
         for seed in CROSS_SECTOR_COMPANIES:
             company = Company.objects.filter(slug=slugify(seed.name)).first()
             result = {"created": 0, "updated": 0, "skipped": 1, "reason": "company unavailable"} if company is None else build_reviewed_strategy_milestone(company)
             self.stdout.write(f"{seed.name}: {result}")
             if result["skipped"]:
-                failures.append(seed.name)
-        if failures:
-            raise CommandError(f"Strategy milestone build failed for: {', '.join(failures)}")
-        self.stdout.write(self.style.SUCCESS("Strategy milestone build passed for 20 companies."))
+                skipped.append(f"{seed.name} ({result['reason']})")
+        if skipped and options["strict"]:
+            raise CommandError(f"Strategy milestone build incomplete for: {', '.join(skipped)}")
+        if skipped:
+            self.stdout.write(self.style.WARNING(f"Strategy milestones skipped: {', '.join(skipped)}"))
+        self.stdout.write(self.style.SUCCESS("Strategy milestone build completed."))
