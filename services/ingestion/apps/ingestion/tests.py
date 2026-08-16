@@ -2981,6 +2981,17 @@ class OfficialProductPriceTests(TestCase):
         self.assertEqual(str(prices[0].amount), "19.99")
         self.assertEqual(prices[0].currency, "USD")
 
+    def test_parses_explicit_price_specification(self):
+        prices = parse_official_prices(
+            '''<script type="application/ld+json">{
+                "@type": "Product", "name": "Example Team", "offers": {
+                  "@type": "Offer", "priceSpecification": {"price": "49", "priceCurrency": "USD"}
+                }
+            }</script>'''
+        )
+
+        self.assertEqual([(price.name, str(price.amount), price.currency) for price in prices], [("Example Team", "49", "USD")])
+
 
 class SecForm4IngestionTests(TestCase):
     xml = """<?xml version=\"1.0\"?>

@@ -56,8 +56,11 @@ def walk_jsonld(value: Any):
 def official_price(product: dict[str, Any], offer: Any) -> OfficialPrice | None:
     if not isinstance(offer, dict):
         return None
-    raw_amount = offer.get("price") or offer.get("lowPrice")
-    currency = str(offer.get("priceCurrency") or "").strip().upper()
+    price_specification = offer.get("priceSpecification")
+    if not isinstance(price_specification, dict):
+        price_specification = {}
+    raw_amount = offer.get("price") or offer.get("lowPrice") or price_specification.get("price")
+    currency = str(offer.get("priceCurrency") or price_specification.get("priceCurrency") or "").strip().upper()
     name = str(product.get("name") or offer.get("name") or "").strip()
     if not raw_amount or not currency or not name:
         return None
