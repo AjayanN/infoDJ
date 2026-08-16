@@ -8,45 +8,49 @@ from apps.companies.models import Company
 class Command(BaseCommand):
     help = "Create or activate every configured cross-sector company without overwriting reviewed metadata."
 
+    @staticmethod
+    def _company_defaults(seed):
+        return {
+            "name": seed.name,
+            "industry": seed.sector,
+            "country": seed.country,
+            "headquarters_country": seed.country,
+            "aliases": [seed.ticker],
+            "website": seed.website,
+            "is_active": True,
+        }
+
+    @staticmethod
+    def _apply_missing_metadata(company, seed):
+        desired_values = {
+            "is_active": True,
+            "industry": company.industry or seed.sector,
+            "country": company.country or seed.country,
+            "headquarters_country": company.headquarters_country or seed.country,
+            "aliases": list(dict.fromkeys([*(company.aliases or []), seed.ticker])),
+            "website": company.website or seed.website,
+        }
+        changed_fields = [
+            field
+            for field, value in desired_values.items()
+            if getattr(company, field) != value
+        ]
+        for field in changed_fields:
+            setattr(company, field, desired_values[field])
+        if changed_fields:
+            company.save(update_fields=[*changed_fields, "updated_at"])
+        return "is_active" in changed_fields
+
     def handle(self, *args, **options):
         created = 0
         activated = 0
         for seed in CROSS_SECTOR_COMPANIES:
             company, was_created = Company.objects.get_or_create(
                 slug=slugify(seed.name),
-                defaults={
-                    "name": seed.name,
-                    "industry": seed.sector,
-                    "country": seed.country,
-                    "headquarters_country": seed.country,
-                    "aliases": [seed.ticker],
-                    "website": seed.website,
-                    "is_active": True,
-                },
+                defaults=self._company_defaults(seed),
             )
             if was_created:
                 created += 1
                 continue
-            changed_fields = []
-            if not company.is_active:
-                company.is_active = True
-                activated += 1
-                changed_fields.append("is_active")
-            if not company.industry:
-                company.industry = seed.sector
-                changed_fields.append("industry")
-            if not company.country:
-                company.country = seed.country
-                changed_fields.append("country")
-            if not company.headquarters_country:
-                company.headquarters_country = seed.country
-                changed_fields.append("headquarters_country")
-            if seed.ticker not in (company.aliases or []):
-                company.aliases = [*(company.aliases or []), seed.ticker]
-                changed_fields.append("aliases")
-            if not company.website and seed.website:
-                company.website = seed.website
-                changed_fields.append("website")
-            if changed_fields:
-                company.save(update_fields=[*changed_fields, "updated_at"])
+            activated += self._apply_missing_metadata(company, seed)
         self.stdout.write(self.style.SUCCESS(f"Company universe ready: created={created}, activated={activated}, active={Company.objects.filter(is_active=True).count()}"))
