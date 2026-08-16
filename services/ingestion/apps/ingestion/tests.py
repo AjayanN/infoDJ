@@ -1594,6 +1594,11 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(payload["dependencies"][0]["concentration_percent"], 12.5)
 
     def test_source_gap_promotion_adds_named_contract_terms_to_dependency_dashboard(self):
+        evidence = (
+            "Pursuant to an agreement, the Company is the exclusive distributor of the Live TV service "
+            "for five years (renewable for an additional five-year term by mutual agreement) and pays "
+            "a wholesale fee to Fubo based on programming costs."
+        )
         gap = SourceGap.objects.create(
             company=self.netflix,
             dashboard="customer_supplier_dependency",
@@ -1609,26 +1614,28 @@ class IngestionSearchApiTests(TestCase):
             gap_type="dependency_contract_terms",
             candidate_type="dependency_contract_source",
             source_document=self.source,
-            evidence_text=(
-                "Pursuant to an agreement, the Company is the exclusive distributor of the Live TV service "
-                "for five years (renewable for an additional five-year term by mutual agreement) and pays "
-                "a wholesale fee to Fubo based on programming costs."
-            ),
+            evidence_text=evidence,
             confidence_score="0.900",
             extraction_status="EXTRACTED",
             review_status="NEEDS_REVIEW",
         )
 
+        self.assertEqual(parse_dependency_contract_terms(evidence)[0]["counterparty_name"], "Fubo")
         result = promote_source_gap_candidates(dashboard="customer_supplier_dependency", gap_type="dependency_contract_terms")
 
         self.assertEqual(result.candidates_promoted, 1)
         payload = self.client.get("/companies/netflix/customer-supplier-dependency").json()
         dependency = next(item for item in payload["dependencies"] if item["counterparty_name"] == "Fubo")
         self.assertEqual(dependency["dependency_type"], "DISTRIBUTOR")
-        self.assertEqual({term["term_type"] for term in dependency["contract_terms"]}, {"EXCLUSIVITY", "RENEWAL"})
+        self.assertEqual(
+            {term["term_type"] for term in payload["contract_terms"] if term["counterparty_name"] == "Fubo"},
+            {"EXCLUSIVITY", "RENEWAL"},
+        )
 
     def test_contract_term_parser_rejects_unnamed_or_generic_contract_language(self):
         self.assertEqual(parse_dependency_contract_terms("Our agreements may expire, renew, or terminate."), [])
+        self.assertEqual(parse_dependency_contract_terms("The agreement with a counterparty terminates next year."), [])
+        self.assertEqual(parse_dependency_contract_terms("The agreement with Residual holder terminates next year."), [])
 
     def test_companyfacts_builder_creates_idempotent_annual_and_quarterly_series(self):
         for filed, accession, value in (
