@@ -33,8 +33,15 @@ class Command(BaseCommand):
         session = requests.Session()
         session.headers["User-Agent"] = DEFAULT_USER_AGENT
         for company in companies:
-            pages = SourceDocument.objects.filter(company=company, source_api="OFFICIAL_WEBSITE").order_by("-updated_at")[: options["limit"]]
-            for page in pages:
+            pages = list(
+                SourceDocument.objects.filter(company=company, source_api="OFFICIAL_WEBSITE")
+                .order_by("-updated_at")[: options["limit"]]
+            )
+            seen_urls = {page.url for page in pages}
+            page_index = 0
+            while page_index < len(pages) and page_index < options["limit"]:
+                page = pages[page_index]
+                page_index += 1
                 totals["pages_seen"] += 1
                 try:
                     if not robots_allows(page.url, session=session):
@@ -49,6 +56,9 @@ class Command(BaseCommand):
                             defaults={"company": company, "source_api": "OFFICIAL_WEBSITE", "url": link, "canonical_url": link, "title": f"{company.name} official product or pricing page", "publisher": company.name, "language": "en", "status": "DISCOVERED"},
                         )
                         totals["pages_discovered"] += 1 if created else 0
+                        if created and link not in seen_urls and len(pages) < options["limit"]:
+                            pages.append(_source)
+                            seen_urls.add(link)
                 except (requests.RequestException, PermissionError):
                     totals["pages_failed"] += 1
                     continue
