@@ -2594,6 +2594,22 @@ class CompanyProfileCollectorTests(TestCase):
         self.assertEqual(data.operating_regions, expected_regions)
         self.assertEqual(data.revenue_geographies, expected_regions)
 
+    def test_parse_sec_profile_text_reads_geographic_tables_outside_item_one(self):
+        text = """
+        ITEM 1. Business Example Energy produces energy products. ITEM 1A. Risk Factors
+        Geographic area reserves include the United States, Canada/Other Americas,
+        Europe, Africa, Asia, and Australia/Oceania. Net sales by geographic area
+        include the United States, Europe, and Asia.
+        """
+
+        data = parse_sec_profile_text(text, "Example Energy")
+
+        self.assertEqual(
+            data.operating_regions,
+            ("United States", "Canada/Other Americas", "Europe", "Africa", "Asia", "Australia/Oceania"),
+        )
+        self.assertEqual(data.revenue_geographies, ("United States", "Europe", "Asia"))
+
     def test_reviewed_company_fallbacks_replace_unvalidated_parser_fields(self):
         empty = SecProfileData("", (), (), (), (), (), (), (), (), (), "filing evidence")
 
