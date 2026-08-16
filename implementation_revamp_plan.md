@@ -50,6 +50,10 @@ acceptance checks for the previous milestone pass.
   not redirected to a ticker-matched holding company.
 - [x] Refresh Company 360 profiles after SEC filing extraction in the daily
   ingestion sequence.
+- [x] Add scheduler-compatible market-price fallback using Stooq when paid or
+  rate-limited providers cannot return data. The verified 2026-08-16 backfill
+  refreshed 16 of 20 companies; Caterpillar, NextEra Energy, Prologis, and
+  Newmont require a source-specific symbol/feed fallback.
 - [ ] Populate reviewed Company 360 profile dimensions from the new sources.
 
 ## Coverage audit - 2026-08-16
@@ -82,8 +86,10 @@ acceptance checks for the previous milestone pass.
 - [ ] Backfill SEC Company Facts for American Tower, Caterpillar, Disney,
   Ford, Freeport-McMoRan, and General Electric. Each has a valid CIK and a
   successfully extracted 10-K; the Company Facts task was not run for them.
-- [ ] Add a market-data provider configuration and backfill 18 companies.
-  Only Amazon and Pfizer currently have market prices.
+- [x] Add a scheduler-compatible market-data fallback and backfill 16
+  companies without treating unavailable quotes as evidence. Create a
+  source-specific symbol/feed fallback for Caterpillar, NextEra Energy,
+  Prologis, and Newmont.
 - [ ] Implement and validate first-party product-price collection by sector;
   product-price observations are zero for all 20 companies.
 - [x] Add scheduler-ready Form 3/4/5 discovery and parsing: the first pass

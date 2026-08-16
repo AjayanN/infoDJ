@@ -36,6 +36,8 @@ class MarketPriceBar:
 class StooqMarketPriceClient:
     """Small Stooq daily CSV client. Stooq requires no API key."""
 
+    provider = STOOQ_PROVIDER
+
     def __init__(
         self,
         *,
