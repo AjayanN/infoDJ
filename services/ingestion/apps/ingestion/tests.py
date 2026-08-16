@@ -47,6 +47,7 @@ from apps.companies.models import (
 from apps.curation.models import BusinessEvent, StrategicTurn, StrategicTurnSource
 from apps.ingestion.models import (
     ArticleExtraction,
+    EvidenceRecord,
     FinancialFact,
     MarketPrice,
     SourceDocument,
@@ -222,6 +223,26 @@ class IngestionSearchApiTests(TestCase):
             accession_number="0001065280-23-000017",
             raw={"fixture": True},
         )
+
+    def test_company_universe_activation_is_idempotent(self):
+        self.netflix.is_active = False
+        self.netflix.save(update_fields=["is_active"])
+
+        call_command("activate_company_universe")
+        call_command("activate_company_universe")
+
+        self.assertEqual(Company.objects.filter(is_active=True).count(), len(CROSS_SECTOR_COMPANIES))
+        self.assertTrue(Company.objects.get(slug="netflix").is_active)
+
+    def test_evidence_ledger_indexes_existing_curated_records_idempotently(self):
+        call_command("build_evidence_ledger", company="netflix")
+        call_command("build_evidence_ledger", company="netflix")
+
+        records = EvidenceRecord.objects.filter(company=self.netflix)
+        self.assertEqual(records.filter(record_type="BUSINESS_EVENT").count(), 1)
+        self.assertEqual(records.filter(record_type="STRATEGIC_TURN").count(), 2)
+        self.assertEqual(records.filter(record_type="FINANCIAL_FACT").count(), 1)
+        self.assertTrue(records.filter(source_document=self.source).exists())
 
     def test_search_requires_query(self):
         response = self.client.get("/search")

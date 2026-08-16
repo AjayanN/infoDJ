@@ -24,6 +24,24 @@ acceptance checks for the previous milestone pass.
 - [ ] Run targeted tests before Docker Compose rebuilds. Merge only after
   successful tests, deployment smoke checks, and mobile review.
 
+## Implementation progress
+
+- [x] Replaced the broad revamp plan with this execution runbook.
+- [x] Created, tested, merged, and deployed the first coverage foundation.
+- [x] Added `headquarters_country`, `operating_regions`, and
+  `revenue_geographies` schema fields.
+- [x] Added `GET /companies/{slug}/coverage` with dimension-level missing
+  reasons.
+- [x] Removed the profile fallback that treated headquarters country as the
+  operating geography.
+- [x] Added focused geography and coverage API tests; 85 ingestion tests pass.
+- [x] Activate the remaining 10 configured companies; all 20 are active.
+- [x] Add the retrieval-ready evidence ledger and its idempotent backfill;
+  3,524 existing events, turns, and financial facts are indexed.
+- [x] Wire company activation and evidence-ledger rebuilding into the daily
+  ingestion pipeline.
+- [ ] Backfill first-party sources for the ten newly activated companies.
+
 ## Baseline: known gaps to fix
 
 - [ ] 20 companies are configured but only 10 are active in the database.
@@ -53,7 +71,7 @@ acceptance checks for the previous milestone pass.
 
 ### 1.2 Correct geography semantics
 
-- [ ] Add `headquarters_country`, `operating_regions`,
+- [x] Add `headquarters_country`, `operating_regions`,
   `revenue_geographies`, and `market_footprint_status` to the Company 360
   profile contract.
 - [ ] Keep legacy `Company.country` as the configured domicile only; rename
@@ -69,7 +87,7 @@ acceptance checks for the previous milestone pass.
 - [ ] Define mandatory dimensions globally: identity, profile, business model,
   products/pricing, customers, revenue, geography, strategy, risks, sources.
 - [ ] Add sector-required dimensions through a new sector schema registry.
-- [ ] Implement `GET /companies/{slug}/coverage` in ingestion API.
+- [x] Implement `GET /companies/{slug}/coverage` in ingestion API.
 - [ ] Return each dimension's status, source count, freshness, missing reason,
   and last reviewed date.
 - [ ] Update `audit_company360_coverage` to calculate the same score used by
@@ -87,9 +105,9 @@ acceptance checks for the previous milestone pass.
 
 ### 2.1 Company universe activation
 
-- [ ] Add an idempotent command that creates/activates all records from
+- [x] Add an idempotent command that creates/activates all records from
   `company_universe.py` without overwriting reviewed data.
-- [ ] Seed the missing companies: Ford, Tesla, Caterpillar, General Electric,
+- [x] Seed the missing companies: Ford, Tesla, Caterpillar, General Electric,
   Disney, Netflix, Prologis, American Tower, Freeport-McMoRan, and Newmont.
 - [ ] Add a test that the active universe contains all configured companies.
 
@@ -266,7 +284,7 @@ acceptance checks for the previous milestone pass.
 
 ## Immediate execution sequence
 
-1. [ ] Create the `feature/evidence-first-foundation` branch.
+1. [x] Create the `feature/evidence-first-foundation` branch.
 2. [ ] Add the evidence/geography coverage contract and migration.
 3. [ ] Add API/CLI coverage parity tests for ExxonMobil and Netflix.
 4. [ ] Activate missing configured companies idempotently.
