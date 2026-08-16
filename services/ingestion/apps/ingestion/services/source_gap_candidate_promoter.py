@@ -316,15 +316,13 @@ def parse_dependency_concentrations(text: str) -> list[dict[str, object]]:
 
 
 EXCLUSIVE_DISTRIBUTION_PATTERN = re.compile(
-    r"(?:pursuant to|under)\s+(?:an|the)\s+(?:agreement|contract)\b.{0,260}?"
-    r"\b(?:the\s+company\s+)?is\s+the\s+exclusive\s+(?P<relationship>distributor|licensee)\s+of\s+"
+    r"(?:(?i:pursuant to)|(?i:under))\s+(?:(?i:an)|(?i:the))\s+(?:(?i:agreement)|(?i:contract))\b.{0,260}?"
+    r"\b(?:(?i:the)\s+(?i:company)\s+)?(?i:is)\s+(?i:the)\s+(?i:exclusive)\s+(?P<relationship>(?i:distributor)|(?i:licensee))\s+(?i:of)\s+"
     r"(?P<scope>.{1,180}?)\s+for\s+(?P<term>.{1,120}?)\s+and\s+(?:pays?|payable)\b.{0,160}?"
     r"\bto\s+(?P<counterparty>[A-Z][A-Za-z0-9&.'-]*(?:\s+[A-Z][A-Za-z0-9&.'-]*){0,4})(?=\s+(?:based|under|pursuant)\b|[,.])",
-    re.IGNORECASE,
 )
 CONTRACT_WITH_COUNTERPARTY_PATTERN = re.compile(
-    r"\b(?:agreement|contract)\b.{0,100}?\bwith\s+(?P<counterparty>[A-Z][A-Za-z0-9&.'-]*(?:\s+[A-Z][A-Za-z0-9&.'-]*){0,4})(?=\s+(?:that|which|provides|expires|terminates|is|was|will)\b|[,.])",
-    re.IGNORECASE,
+    r"\b(?:(?i:agreement)|(?i:contract))\b.{0,100}?\b(?i:with)\s+(?P<counterparty>[A-Z][A-Za-z0-9&.'-]*(?:\s+[A-Z][A-Za-z0-9&.'-]*){0,4})(?=\s+(?:(?i:that)|(?i:which)|(?i:provides)|(?i:expires)|(?i:terminates)|(?i:is)|(?i:was)|(?i:will))\b|[,.])",
 )
 
 
@@ -390,7 +388,18 @@ def contract_row(*, counterparty: str, dependency_type: str, scope: str, descrip
 
 def clean_counterparty(value: str) -> str:
     candidate = clean_name(value)
-    if candidate.lower() in {"the company", "company", "we", "our company"}:
+    if candidate.lower() in {
+        "the company",
+        "company",
+        "we",
+        "our company",
+        "a counterparty",
+        "the counterparty",
+        "counterparty",
+        "residual holder",
+        "a syndicate of banks",
+        "syndicate of banks",
+    }:
         return ""
     return candidate
 
