@@ -88,6 +88,8 @@ def promote_candidate(candidate: SourceGapResolutionCandidate) -> dict[str, obje
         return promote_ownership_candidate(candidate)
     if candidate.dashboard == "customer_supplier_dependency" and candidate.gap_type == "concentration_percentages":
         return promote_dependency_concentration_candidate(candidate)
+    if candidate.dashboard == "customer_supplier_dependency" and candidate.gap_type == "dependency_contract_terms":
+        return promote_dependency_contract_candidate(candidate)
     return {"promoted": False, "created": 0, "updated": 0, "reason": "unsupported gap type for deterministic promotion"}
 
 
@@ -161,6 +163,52 @@ def promote_dependency_concentration_candidate(candidate: SourceGapResolutionCan
                 "review_status": PromiseReviewStatus.REVIEWED,
             },
         )
+        created += 1 if was_created else 0
+        updated += 0 if was_created else 1
+    refresh_dependency_summary(snapshot)
+    return {"promoted": True, "created": created, "updated": updated, "reason": ""}
+
+
+def promote_dependency_contract_candidate(candidate: SourceGapResolutionCandidate) -> dict[str, object]:
+    rows = parse_dependency_contract_terms(source_text(candidate))
+    if not rows:
+        return {"promoted": False, "created": 0, "updated": 0, "reason": "no named counterparty with an explicit contract term found"}
+    snapshot = dependency_snapshot(candidate)
+    created = updated = 0
+    for row in rows[:4]:
+        dependency, was_created = CustomerSupplierDependency.objects.update_or_create(
+            snapshot=snapshot,
+            dependency_type=row["dependency_type"],
+            counterparty_name=row["counterparty_name"],
+            product_scope=row["product_scope"],
+            defaults={
+                "counterparty_company": None,
+                "is_named_counterparty": True,
+                "materiality_band": DependencyMaterialityBand.DISCLOSED_MATERIAL,
+                "disclosure_confidence": DependencyDisclosureConfidence.NAMED,
+                "concentration_percent": None,
+                "geography": "",
+                "relationship_summary": row["relationship_summary"],
+                "risk_summary": "Source-disclosed contract terms are shown without estimating commercial exposure.",
+                "evidence_text": row["evidence_text"],
+                "source_document": candidate.source_document,
+                "confidence_score": "0.880",
+            },
+        )
+        for term in row["terms"]:
+            DependencyContractTerm.objects.update_or_create(
+                dependency=dependency,
+                term_type=term,
+                description=row["description"],
+                defaults={
+                    "effective_date": source_date(candidate),
+                    "expiration_date": None,
+                    "evidence_text": row["evidence_text"],
+                    "source_document": candidate.source_document,
+                    "confidence_score": "0.880",
+                    "review_status": PromiseReviewStatus.REVIEWED,
+                },
+            )
         created += 1 if was_created else 0
         updated += 0 if was_created else 1
     refresh_dependency_summary(snapshot)
@@ -265,6 +313,97 @@ def parse_dependency_concentrations(text: str) -> list[dict[str, object]]:
                 "relationship_summary": f"{counterparty} accounted for {pct}% of {scope}.",
             })
     return rows
+
+
+EXCLUSIVE_DISTRIBUTION_PATTERN = re.compile(
+    r"(?:pursuant to|under)\s+(?:an|the)\s+(?:agreement|contract)\b.{0,260}?"
+    r"\b(?:the\s+company\s+)?is\s+the\s+exclusive\s+(?P<relationship>distributor|licensee)\s+of\s+"
+    r"(?P<scope>.{1,180}?)\s+for\s+(?P<term>.{1,120}?)\s+and\s+(?:pays?|payable)\b.{0,160}?"
+    r"\bto\s+(?P<counterparty>[A-Z][A-Za-z0-9&.'-]*(?:\s+[A-Z][A-Za-z0-9&.'-]*){0,4})(?=\s+(?:based|under|pursuant)\b|[,.])",
+    re.IGNORECASE,
+)
+CONTRACT_WITH_COUNTERPARTY_PATTERN = re.compile(
+    r"\b(?:agreement|contract)\b.{0,100}?\bwith\s+(?P<counterparty>[A-Z][A-Za-z0-9&.'-]*(?:\s+[A-Z][A-Za-z0-9&.'-]*){0,4})(?=\s+(?:that|which|provides|expires|terminates|is|was|will)\b|[,.])",
+    re.IGNORECASE,
+)
+
+
+def parse_dependency_contract_terms(text: str) -> list[dict[str, object]]:
+    """Return only named, explicit commercial contract terms from source text."""
+
+    normalized = normalize(text)
+    rows = []
+    for match in EXCLUSIVE_DISTRIBUTION_PATTERN.finditer(normalized):
+        terms = contract_term_types(match.group(0))
+        counterparty = clean_counterparty(match.group("counterparty"))
+        if counterparty and terms:
+            scope = clean_name(match.group("scope"))
+            rows.append(contract_row(
+                counterparty=counterparty,
+                dependency_type=DependencyType.DISTRIBUTOR,
+                scope=scope,
+                description=clean_name(match.group(0)),
+                terms=terms,
+            ))
+    for match in CONTRACT_WITH_COUNTERPARTY_PATTERN.finditer(normalized):
+        context = normalized[max(0, match.start() - 120): match.end() + 420]
+        terms = contract_term_types(context)
+        counterparty = clean_counterparty(match.group("counterparty"))
+        if counterparty and terms:
+            rows.append(contract_row(
+                counterparty=counterparty,
+                dependency_type=DependencyType.CONTRACT,
+                scope="Source-disclosed contract",
+                description=clean_name(context),
+                terms=terms,
+            ))
+    return unique_contract_rows(rows)
+
+
+def contract_term_types(text: str) -> list[str]:
+    terms = []
+    normalized = normalize(text)
+    if re.search(r"\bexclusive(?:ly|\s+(?:distributor|licensee|right))\b", normalized, re.IGNORECASE):
+        terms.append(DependencyContractTermType.EXCLUSIVITY)
+    if re.search(r"\brenew(?:al|able|ed)?\b", normalized, re.IGNORECASE):
+        terms.append(DependencyContractTermType.RENEWAL)
+    if re.search(r"\bexpires?|expiration\b", normalized, re.IGNORECASE):
+        terms.append(DependencyContractTermType.EXPIRATION)
+    if re.search(r"\bminimum\s+(?:purchase\s+)?commitment\b", normalized, re.IGNORECASE):
+        terms.append(DependencyContractTermType.MINIMUM_COMMITMENT)
+    if re.search(r"\bterminat(?:e|ed|ion)\b", normalized, re.IGNORECASE):
+        terms.append(DependencyContractTermType.TERMINATION)
+    return terms
+
+
+def contract_row(*, counterparty: str, dependency_type: str, scope: str, description: str, terms: list[str]) -> dict[str, object]:
+    return {
+        "counterparty_name": counterparty[:255],
+        "dependency_type": dependency_type,
+        "product_scope": scope[:255],
+        "relationship_summary": f"{counterparty} is named in a source-disclosed commercial agreement.",
+        "description": description[:2000],
+        "evidence_text": description[:4000],
+        "terms": terms,
+    }
+
+
+def clean_counterparty(value: str) -> str:
+    candidate = clean_name(value)
+    if candidate.lower() in {"the company", "company", "we", "our company"}:
+        return ""
+    return candidate
+
+
+def unique_contract_rows(rows: list[dict[str, object]]) -> list[dict[str, object]]:
+    unique = []
+    seen = set()
+    for row in rows:
+        key = (row["counterparty_name"].lower(), row["dependency_type"], row["product_scope"].lower(), tuple(row["terms"]))
+        if key not in seen:
+            seen.add(key)
+            unique.append(row)
+    return unique
 
 
 def ownership_snapshot(candidate: SourceGapResolutionCandidate) -> OwnershipInsiderSnapshot:
