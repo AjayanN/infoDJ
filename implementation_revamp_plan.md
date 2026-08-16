@@ -52,6 +52,49 @@ acceptance checks for the previous milestone pass.
   ingestion sequence.
 - [ ] Populate reviewed Company 360 profile dimensions from the new sources.
 
+## Coverage audit - 2026-08-16
+
+**Verified baseline**
+
+- [x] Audited all 20 active companies: 932 source documents, 145 successful
+  extractions, and at least one successfully extracted SEC 10-K plus one
+  SEC-backed profile snapshot for every company.
+- [x] Repaired ExxonMobil's canonical SEC identifier and backfilled five
+  annual reports, 14 events, 11 strategic turns, and its profile snapshot.
+
+**Priority 0 - coverage semantics and evidence quality**
+
+- [ ] Extract operating and revenue regions from financial-statement
+  geographic notes, not only Item 1 business text. Current gaps: operating
+  regions for 18 companies and revenue regions for 19 companies.
+- [ ] Build reviewed, source-linked management promises from earnings releases,
+  presentations, and filings. This is missing for all 20 companies.
+- [ ] Complete sparse profile dimensions: Microsoft and Walmart revenue
+  sources; Netflix subsidiaries, customer groups, payer/user model components;
+  Prologis strategic priorities; and incomplete Business Model Map components
+  for Microsoft, Walmart, and Netflix.
+
+**Priority 1 - missing reusable data streams**
+
+- [ ] Backfill SEC Company Facts for American Tower, Caterpillar, Disney,
+  Ford, Freeport-McMoRan, and General Electric. Each has a valid CIK and a
+  successfully extracted 10-K; the Company Facts task was not run for them.
+- [ ] Add a market-data provider configuration and backfill 18 companies.
+  Only Amazon and Pfizer currently have market prices.
+- [ ] Implement and validate first-party product-price collection by sector;
+  product-price observations are zero for all 20 companies.
+- [ ] Implement Form 4 ownership/insider backfill and source-linked contract
+  dependency extraction; both streams are zero for all 20 companies.
+
+**Priority 2 - source resilience**
+
+- [ ] Add source-specific retries/fallbacks for American Tower (robots denied)
+  and Caterpillar (official-site timeout), while respecting robots and using
+  first-party investor-relations sources where allowed.
+- [ ] Raise source depth for thin portfolios, starting with Ford (23 sources),
+  Disney (26), General Electric (30), American Tower (32), and Caterpillar
+  (32), before treating cross-company comparisons as representative.
+
 ## Baseline: known gaps to fix
 
 - [ ] 20 companies are configured but only 10 are active in the database.
