@@ -6926,3 +6926,26 @@ th {
 .founder-wizard-actions { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; margin-top: auto; }.founder-wizard-actions .primary-button { min-width: 124px; }.founder-wizard-actions .ghost-button { color: #4a6878; }
 @keyframes founder-question-in { from { opacity: 0; transform: translateY(10px); filter: blur(5px); } to { opacity: 1; transform: translateY(0); filter: blur(0); } }
 @media (max-width: 780px) { .founder-setup-wizard { min-height: 410px; }.founder-wizard-question { min-height: 250px; }.founder-wizard-question h3 { font-size: 27px; }.founder-wizard-question p { font-size: 13px; } }
+
+
+/* Founder stage workspace: only the next question and companies worth opening. */
+.founder-stage-workspace { background: linear-gradient(145deg, #0d2942, #123753); border: 1px solid #2f6279; border-radius: 20px; color: #effaff; margin-bottom: 24px; overflow: hidden; }
+.founder-stage-workspace-heading { align-items: flex-start; display: flex; gap: 24px; justify-content: space-between; padding: 28px; }
+.founder-stage-workspace-heading h2 { color: #f7fdff; font-size: clamp(25px, 3vw, 38px); letter-spacing: -.04em; line-height: 1.02; margin: 4px 0 10px; }
+.founder-stage-workspace-heading p:not(.section-kicker) { color: #b9d1df; line-height: 1.55; margin: 0; max-width: 650px; }
+.founder-stage-workspace-heading .ghost-button { border-color: #79cfc5; color: #c8fff7; flex: 0 0 auto; }
+.founder-stage-question { background: rgba(4, 24, 42, .42); border-block: 1px solid rgba(129, 198, 208, .22); padding: 22px 28px; }
+.founder-stage-question h3, .founder-stage-moves h3 { color: #f7fdff; font-size: 20px; letter-spacing: -.025em; margin: 3px 0 7px; }
+.founder-stage-question > p:last-child { color: #b8ceda; line-height: 1.5; margin: 0; }
+.founder-stage-moves { padding: 25px 28px 29px; }
+.founder-stage-move-grid, .founder-stage-company-grid { display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 16px; }
+.founder-stage-move, .founder-stage-company { align-content: start; background: rgba(17, 57, 79, .72); border: 1px solid #356b81; border-radius: 12px; color: #ecfbff; display: grid; gap: 9px; min-height: 154px; padding: 16px; text-align: left; transition: border-color .18s ease, transform .18s ease; }
+.founder-stage-move:hover, .founder-stage-company:hover { border-color: #82dfce; transform: translateY(-2px); }
+.founder-stage-move > span, .founder-stage-company > span { color: #83ddcf; font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+.founder-stage-move strong, .founder-stage-company strong { color: #fff; font-size: 16px; line-height: 1.25; }
+.founder-stage-move small, .founder-stage-company small { color: #b7ceda; font-size: 12px; line-height: 1.45; }
+.founder-stage-company dl { border-top: 1px solid rgba(159, 210, 218, .18); display: flex; gap: 18px; margin: auto 0 0; padding-top: 10px; }
+.founder-stage-company dl div { display: grid; gap: 2px; }
+.founder-stage-company dt { color: #8fadb9; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+.founder-stage-company dd { color: #fff; font-size: 15px; font-weight: 800; margin: 0; }
+@media (max-width: 700px) { .founder-stage-workspace-heading { flex-direction: column; padding: 20px; } .founder-stage-workspace-heading .ghost-button { width: 100%; } .founder-stage-question, .founder-stage-moves { padding: 18px 20px; } .founder-stage-move-grid, .founder-stage-company-grid { grid-template-columns: 1fr; } }

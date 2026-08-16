@@ -308,229 +308,44 @@
 
           <section *ngSwitchCase="'dashboard'" class="dashboard-grid" aria-labelledby="dashboard-heading">
             <ng-container *ngIf="dashboard() as dash; else dashboardEmpty">
-              <section class="founder-command-board" *ngIf="dash.summary.company_count > 0" aria-labelledby="founder-command-heading">
-                <header class="founder-command-heading">
+              <section class="founder-stage-workspace" *ngIf="dash.summary.company_count > 0" aria-labelledby="founder-stage-workspace-heading">
+                <header class="founder-stage-workspace-heading">
                   <div>
-                    <p class="section-kicker">Founder command center</p>
-                    <h2 id="founder-command-heading">Find your next proof point</h2>
+                    <p class="section-kicker">Your founder workspace</p>
+                    <h2 id="founder-stage-workspace-heading">See how companies moved through this stage</h2>
+                    <p>{{ founderStage() ? founderStageLabel() + ' is your starting point.' : 'Set your stage to make this view specific.' }} We show a small set of companies you can open and study—not a dashboard of everything.</p>
                   </div>
-                  <div class="founder-command-actions">
-                    <button type="button" class="primary-button" *ngIf="dash.top_companies.length > 0" (click)="openCompany(dash.top_companies[0].slug)">Open a Company 360</button>
-                  </div>
+                  <button type="button" class="ghost-button" (click)="setActivePage('setup')">Change my focus</button>
                 </header>
 
-                <div class="founder-command-grid">
-                  <section class="founder-context-panel" aria-labelledby="founder-context-heading">
-                    <div class="compact-panel-heading">
-                      <div><p class="section-kicker">Your context</p><h3 id="founder-context-heading">What are you building right now?</h3></div>
-                      <button type="button" class="text-action" (click)="saveFounderContext()" [disabled]="founderContextSaving()">{{ founderContextSaving() ? 'Saving...' : 'Save' }}</button>
-                    </div>
-                    <div class="founder-context-fields">
-                      <label>Field<select name="founder_sector" [(ngModel)]="founderSector"><option value="">Choose a field</option><option value="Information Technology">Technology</option><option value="Communication Services">Communication</option><option value="Energy">Energy</option><option value="Financials">Financial services</option><option value="Health Care">Health care</option><option value="Consumer Discretionary">Consumer</option></select></label>
-                      <label>Business type<input name="founder_business_type" [(ngModel)]="founderBusinessType" placeholder="e.g. carbon-management software" /></label>
-                      <label>Focus now<select name="founder_objective" [(ngModel)]="founderObjective"><option value="">Choose an outcome</option><option value="find_demand">Find demand</option><option value="build_product">Build product</option><option value="win_customers">Win customers</option><option value="improve_retention">Improve retention</option><option value="scale_operations">Scale operations</option></select></label>
-                    </div>
-                    <article class="founder-playbook-preview" *ngIf="founderPlaybook() as playbook">
-                      <span>{{ playbook.sector_label }} / {{ founderStageLabel() }}</span>
-                      <strong>{{ playbook.stage_question }}</strong>
-                      <small>Watch: {{ playbook.metrics.slice(0, 3).join(' / ') }}</small>
-                    </article>
-                  </section>
+                <section class="founder-stage-question" aria-labelledby="founder-stage-question-heading">
+                  <p class="section-kicker">The question to answer</p>
+                  <h3 id="founder-stage-question-heading">How did companies in {{ founderSector || 'your field' }} make progress while {{ founderStageLabel() | lowercase }}?</h3>
+                  <p *ngIf="founderDecision() as decision">{{ decision.coverage.comparable_event_count > 0 ? 'These are source-linked moves we have observed. Open any company to understand the context.' : 'Choose a company below to see the evidence we have today. Detailed risks, metrics, and sources stay inside Company 360.' }}</p>
+                </section>
 
-                  <section class="founder-decision-cockpit" *ngIf="founderDecision() as decision" aria-labelledby="founder-decision-heading">
-                    <header class="compact-panel-heading">
-                      <div><p class="section-kicker">Evidence-backed directions</p><h3 id="founder-decision-heading">What could you test next?</h3></div>
-                      <span>{{ decision.coverage.comparable_event_count }} comparable moves</span>
-                    </header>
-                    <p class="founder-decision-empty" *ngIf="decision.status !== 'available'">Evidence is not sufficient for this field yet. {{ decision.source_gaps[0]?.next_action || 'Choose a field with reviewed comparable company evidence.' }}</p>
-                    <div class="decision-path-grid" *ngIf="decision.status === 'available'">
-                      <article class="decision-path-card" *ngFor="let path of decision.directions">
-                        <span>{{ path.title }} <small>Hypothesis to test</small></span>
-                        <strong>{{ path.next_action }}</strong>
-                        <p>{{ path.why_now }}</p>
-                        <button type="button" *ngFor="let evidence of path.evidence.slice(0, 1)" (click)="openCompany(evidence.company_slug)">
-                          <b>{{ evidence.company }}</b><small>{{ evidence.event_date | date:'mediumDate' }} - {{ evidence.actual_change }}</small>
-                        </button>
-                        <em *ngIf="path.evidence.length === 0">No source-linked comparable move yet.</em>
-                      </article>
-                    </div>
-                    <section class="founder-coverage-passport" *ngIf="decision.coverage_passport.length > 0" aria-labelledby="founder-coverage-heading">
-                      <div><p class="section-kicker">Evidence passport</p><h4 id="founder-coverage-heading">What can you trust today?</h4></div>
-                      <article *ngFor="let item of decision.coverage_passport" [attr.data-status]="item.status">
-                        <header><strong>{{ item.label }}</strong><span>{{ item.status }}</span></header>
-                        <b>{{ item.count }} <small>{{ item.evidence_strength }} evidence</small></b>
-                        <p>{{ item.description }}</p>
-                        <time *ngIf="item.last_observed_on">Last observed {{ item.last_observed_on | date:'mediumDate' }}</time>
-                        <em *ngIf="item.status !== 'available'">{{ item.next_action }}</em>
-                      </article>
-                    </section>
-
-                    <div class="founder-journey" *ngIf="decision.journey.length > 0">
-                      <div><p class="section-kicker">Observed comparable journey</p><h4>What have similar companies actually changed?</h4></div>
-                      <ol>
-                        <li *ngFor="let event of decision.journey.slice(0, 5)">
-                          <time>{{ event.event_date | date:'MMM y' }}</time><i></i><button type="button" (click)="openCompany(event.company_slug)"><strong>{{ event.company }}</strong><span>{{ event.actual_change }}</span></button>
-                        </li>
-                      </ol>
-                    </div>
-                    <div class="founder-risk-bars" *ngIf="decision.risk_radar.length > 0">
-                      <div><p class="section-kicker">Reported risk signals</p><h4>What might change the plan?</h4></div>
-                      <article *ngFor="let risk of decision.risk_radar"><span>{{ risk.label }}</span><i [style.width.%]="risk.count * 20"></i><strong>{{ risk.count }}</strong></article>
-                    </div>
-                  </section>
-
-                  <section class="stage-compass" aria-label="Company stage progress">
-                    <ng-container *ngIf="founderStage(); else stageChooser">
-                      <div class="stage-compass-gauge" [style.--stage-progress.%]="stageProgress()" aria-hidden="true">
-                        <div><strong>{{ stageProgress() }}</strong><span>%</span></div>
-                      </div>
-                      <div class="stage-compass-copy">
-                        <span class="stage-chip">{{ founderStageLabel() }}</span>
-                        <h3>{{ stageCheckpoint() }}</h3>
-                        <p>Use the portfolio to see how established companies solved the same type of constraint.</p>
-                      </div>
-                    </ng-container>
-                    <ng-template #stageChooser>
-                      <div class="stage-choice">
-                        <span class="stage-chip">Set your starting point</span>
-                        <h3>Which stage best describes you?</h3>
-                        <div class="stage-choice-buttons">
-                          <button type="button" (click)="chooseFounderStage('validate')">Validate</button>
-                          <button type="button" (click)="chooseFounderStage('build')">Build</button>
-                          <button type="button" (click)="chooseFounderStage('launch')">Launch</button>
-                          <button type="button" (click)="chooseFounderStage('grow')">Grow</button>
-                          <button type="button" (click)="chooseFounderStage('scale')">Scale</button>
-                        </div>
-                      </div>
-                    </ng-template>
-                  </section>
-
-                  <section class="portfolio-landscape" aria-labelledby="portfolio-landscape-heading">
-                    <div class="compact-panel-heading">
-                      <div><p class="section-kicker">Learning landscape</p><h3 id="portfolio-landscape-heading">Where the evidence is</h3></div>
-                      <span>{{ dash.summary.sector_count }} sectors</span>
-                    </div>
-                    <div class="sector-orbit" *ngIf="dash.sector_counts.length > 0">
-                      <button
-                        type="button"
-                        *ngFor="let sector of dash.sector_counts.slice(0, 6); let index = index"
-                        [class]="'sector-orbit-node tone-' + (index % 4)"
-                        [style.--sector-size.%]="sectorShare(sector.event_count, dash)"
-                        (click)="searchQuery = sector.sector; runSearch()"
-                      >
-                        <strong>{{ sector.sector }}</strong>
-                        <span>{{ sector.company_count }} companies</span>
-                        <small>{{ sector.event_count }} signals</small>
-                      </button>
-                    </div>
-                  </section>
-                  <section class="founder-risk-radar" aria-labelledby="risk-radar-heading">
-                    <div class="compact-panel-heading">
-                      <div><p class="section-kicker">Risk pulse</p><h3 id="risk-radar-heading">What to watch</h3></div>
-                      <button type="button" class="text-action" (click)="setDashboardView('risk-signals')">View all</button>
-                    </div>
-                    <div class="risk-radar-graphic" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
-                    <div class="risk-radar-list">
-                      <button type="button" *ngFor="let group of riskSignalGroups(dash.dashboards.risk_signals).slice(0, 3)" (click)="setDashboardView('risk-signals')">
-                        <span>{{ group.label }}</span><strong>{{ group.events.length }}</strong>
-                      </button>
-                      <span class="risk-radar-empty" *ngIf="riskSignalGroups(dash.dashboards.risk_signals).length === 0">No risk signals yet</span>
-                    </div>
-                  </section>
-                </div>
-
-                <section class="company-signal-panel" aria-labelledby="company-signal-heading">
+                <section class="founder-stage-moves" *ngIf="founderDecision() as decision" aria-labelledby="founder-stage-moves-heading">
                   <div class="compact-panel-heading">
-                    <div><p class="section-kicker">Comparable companies</p><h3 id="company-signal-heading">Open a signal-rich company</h3></div>
-                    <span>{{ dash.summary.company_count }} in your portfolio</span>
+                    <div><p class="section-kicker">Observed moves</p><h3 id="founder-stage-moves-heading">What did they do next?</h3></div>
+                    <span *ngIf="decision.journey.length > 0">{{ decision.journey.length }} source-linked moves</span>
                   </div>
-                  <div class="company-signal-grid">
-                    <button type="button" class="company-signal-card" *ngFor="let company of dash.top_companies.slice(0, 6)" (click)="openCompany(company.slug)">
-                      <span class="company-signal-sector">{{ company.sector || 'Unclassified' }}</span>
-                      <strong>{{ company.name }}</strong>
-                      <div class="company-signal-meter" aria-hidden="true"><i [style.width.%]="companyShare(company.event_count, dash)"></i></div>
-                      <dl>
-                        <div><dt>Signals</dt><dd>{{ company.event_count }}</dd></div>
-                        <div><dt>Turns</dt><dd>{{ company.strategic_turn_count }}</dd></div>
-                        <div><dt>Sources</dt><dd>{{ company.source_count }}</dd></div>
-                      </dl>
+                  <div class="founder-stage-move-grid" *ngIf="decision.journey.length > 0; else companyEntryCards">
+                    <button type="button" class="founder-stage-move" *ngFor="let event of decision.journey.slice(0, 6)" (click)="openCompany(event.company_slug)">
+                      <span>{{ event.company }}</span>
+                      <strong>{{ event.actual_change }}</strong>
+                      <small>{{ event.event_date | date:'mediumDate' }} · Open Company 360</small>
                     </button>
                   </div>
-                </section>
-
-                <section class="founder-learning-loop" aria-labelledby="founder-learning-loop-heading">
-                  <header class="compact-panel-heading">
-                    <div><p class="section-kicker">How InfoDJ works</p><h3 id="founder-learning-loop-heading">Turn portfolio evidence into a company decision</h3></div>
-                    <span>Examples from your portfolio</span>
-                  </header>
-                  <div class="learning-loop-diagram">
-                    <article>
-                      <span class="learning-loop-icon evidence-icon" aria-hidden="true"></span>
-                      <strong>See the signal</strong>
-                      <small>{{ dash.summary.source_count }} source records become structured evidence.</small>
-                    </article>
-                    <i class="learning-loop-arrow" aria-hidden="true"></i>
-                    <article>
-                      <span class="learning-loop-icon pattern-icon" aria-hidden="true"></span>
-                      <strong>Compare the pattern</strong>
-                      <small>{{ dash.summary.strategic_turn_count }} strategic turns reveal comparable choices.</small>
-                    </article>
-                    <i class="learning-loop-arrow" aria-hidden="true"></i>
-                    <article>
-                      <span class="learning-loop-icon action-icon" aria-hidden="true"></span>
-                      <strong>Open the context</strong>
-                      <small>Use Company 360 to inspect the evidence behind each move.</small>
-                    </article>
-                  </div>
-                  <div class="portfolio-example-map" *ngIf="dash.top_companies.length > 0">
-                    <button type="button" *ngFor="let company of dash.top_companies.slice(0, 3); let index = index" [class]="'portfolio-example example-' + index" (click)="openCompany(company.slug)">
-                      <span>{{ company.sector || 'Portfolio' }}</span>
-                      <strong>{{ company.name }}</strong>
-                      <small>{{ company.event_count }} signals</small>
-                    </button>
-                    <button type="button" class="portfolio-example-map-action" (click)="openCompany(dash.top_companies[0].slug)">Explore Company 360</button>
-                  </div>
-                </section>
-
-                <section class="founder-workspace-tools" aria-label="Founder workspace controls">
-                  <form class="founder-inline-search" (ngSubmit)="runSearch()">
-                    <label for="founder-global-search">
-                      <span>Search the portfolio</span>
-                      <input
-                        id="founder-global-search"
-                        name="founder_global_search"
-                        [(ngModel)]="searchQuery"
-                        (input)="updateSearchSuggestions()"
-                        autocomplete="off"
-                        placeholder="Company, move, market, or risk"
-                      />
-                    </label>
-                    <button type="submit" class="primary-button" [disabled]="searchLoading()" [attr.aria-disabled]="searchLoading()">{{ searchLoading() ? 'Searching…' : 'Search' }}</button>
-                    <button type="button" class="founder-refresh-button" (click)="loadDashboard()" [disabled]="dashboardLoading()" [attr.aria-disabled]="dashboardLoading()">Refresh</button>
-                  </form>
-                  <div class="founder-inline-suggestions" *ngIf="suggestions().length > 0" aria-label="Quick company matches">
-                    <span>Quick matches</span>
-                    <button type="button" *ngFor="let suggestion of suggestions().slice(0, 5)" (click)="useSuggestion(suggestion)">
-                      <strong>{{ suggestion.label }}</strong>
-                      <small>{{ suggestion.sector || suggestion.description || 'Open Company 360' }}</small>
-                    </button>
-                  </div>
-                  <p class="founder-search-state" *ngIf="searchLoading() || searchError()" aria-live="polite" [class.error]="searchError()">
-                    {{ searchLoading() ? 'Searching the evidence base…' : searchError() }}
-                  </p>
-
-                  <dl class="founder-mini-metrics" aria-label="Portfolio totals">
-                    <div><dt>Companies</dt><dd>{{ dash.summary.company_count }}</dd></div>
-                    <div><dt>Sources</dt><dd>{{ dash.summary.source_count }}</dd></div>
-                    <div><dt>Signals</dt><dd>{{ dash.summary.event_count }}</dd></div>
-                    <div><dt>Turns</dt><dd>{{ dash.summary.strategic_turn_count }}</dd></div>
-                    <div><dt>Sectors</dt><dd>{{ dash.summary.sector_count }}</dd></div>
-                  </dl>
-
-                  <div class="founder-360-entry">
-                    <div><span>Deep research belongs in Company 360</span><strong>Open a company to see risks, milestones, metrics, and evidence.</strong></div>
-                    <button type="button" class="primary-button" *ngIf="dash.top_companies.length > 0" (click)="openCompany(dash.top_companies[0].slug)">Open Company 360</button>
-                  </div>
+                  <ng-template #companyEntryCards>
+                    <div class="founder-stage-company-grid">
+                      <button type="button" class="founder-stage-company" *ngFor="let company of founderPeerCompanies(dash)" (click)="openCompany(company.slug)">
+                        <span>{{ company.sector || 'Company profile' }}</span>
+                        <strong>{{ company.name }}</strong>
+                        <small>Open the Company 360 to explore its moves, products, pricing, and sources.</small>
+                        <dl><div><dt>Moves</dt><dd>{{ company.strategic_turn_count }}</dd></div><div><dt>Sources</dt><dd>{{ company.source_count }}</dd></div></dl>
+                      </button>
+                    </div>
+                  </ng-template>
                 </section>
               </section>
 

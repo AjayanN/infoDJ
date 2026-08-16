@@ -3752,6 +3752,13 @@ class AppComponent implements AfterViewChecked {
     return this.percentOf(eventCount, Math.max(...dash.top_companies.map((company) => company.event_count), 1));
   }
 
+  founderPeerCompanies(dash: DashboardResponse) {
+    const peers = this.founderSector
+      ? dash.top_companies.filter((company) => company.sector === this.founderSector)
+      : dash.top_companies;
+    return (peers.length ? peers : dash.top_companies).slice(0, 6);
+  }
+
   coverageShare(value: number, dash: DashboardResponse): number {
     const total = dash.summary.source_count + dash.summary.event_count + dash.summary.strategic_turn_count;
     return this.percentOf(value, total || 1);
