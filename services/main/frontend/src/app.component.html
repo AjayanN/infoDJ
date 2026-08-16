@@ -271,7 +271,11 @@
               <p class="section-kicker">Your starting point</p>
               <h2 id="founder-setup-heading">Let’s make your next decision clearer.</h2>
               <p>Answer five short questions. InfoDJ will use them to surface comparable moves, risks, and options—without dropping you into a research dashboard.</p>
-              <div class="founder-setup-steps" aria-label="Setup progress"><span class="is-active">1. Your company</span><span>2. Your focus</span><span>3. Your plan</span></div>
+              <div class="founder-setup-steps" aria-label="Setup progress">
+                <span [class.is-active]="founderSetupStep() < 2" [class.is-complete]="founderSetupStep() >= 2" [attr.aria-current]="founderSetupStep() < 2 ? 'step' : null">1. Your company</span>
+                <span [class.is-active]="founderSetupStep() >= 2 && founderSetupStep() < 4" [class.is-complete]="founderSetupStep() >= 4" [attr.aria-current]="founderSetupStep() >= 2 && founderSetupStep() < 4 ? 'step' : null">2. Your focus</span>
+                <span [class.is-active]="founderSetupStep() >= 4" [attr.aria-current]="founderSetupStep() >= 4 ? 'step' : null">3. Your plan</span>
+              </div>
             </div>
             <form class="founder-setup-form founder-setup-wizard" (ngSubmit)="completeFounderSetup()">
               <div class="founder-wizard-progress"><span [style.width.%]="(founderSetupStep() + 1) * 20"></span></div>
