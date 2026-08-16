@@ -140,6 +140,7 @@ from apps.ingestion.services.sec_profile_builder import (
     build_sec_company_profile,
     parse_sec_profile_text,
 )
+from apps.ingestion.services.sec_edgar_client import discover_sec_filings_for_company
 from apps.ingestion.services.wikidata_client import normalize_company_entity
 
 
@@ -233,6 +234,29 @@ class IngestionSearchApiTests(TestCase):
 
         self.assertEqual(Company.objects.filter(is_active=True).count(), len(CROSS_SECTOR_COMPANIES))
         self.assertTrue(Company.objects.get(slug="netflix").is_active)
+        self.assertEqual(Company.objects.get(slug="exxonmobil").sec_cik, "0000034088")
+
+    def test_sec_discovery_prefers_a_configured_cik_over_ticker_lookup(self):
+        company = Company.objects.create(name="Configured CIK Corp", sec_cik="34088")
+
+        class ConfiguredCikClient:
+            def all_filings(self, cik, **kwargs):
+                self.cik = cik
+                return []
+
+        client = ConfiguredCikClient()
+        discover_sec_filings_for_company(
+            company=company,
+            source_document_model=SourceDocument,
+            ticker="XOM",
+            forms=("10-K",),
+            full_history=True,
+            client=client,
+        )
+
+        self.assertEqual(client.cik, "0000034088")
+        company.refresh_from_db()
+        self.assertEqual(company.sec_cik, "0000034088")
 
     def test_evidence_ledger_indexes_existing_curated_records_idempotently(self):
         call_command("build_evidence_ledger", company="netflix")
@@ -2306,15 +2330,18 @@ class DailyCompanyUpdateTests(TestCase):
             "insider_form_limit": 5,
             "include_macro_context": False,
             "include_quality_scoring": False,
-            "include_company_profiles": False,
+            "include_company_profiles": True,
         }
         with patch("apps.ingestion.management.commands.daily_company_update.call_command") as call:
             DailyCompanyUpdateCommand().handle(**options)
 
         command_names = [call_args.args[0] for call_args in call.call_args_list]
         report_extraction = command_names.index("extract_report_filings")
+        profile_refresh = command_names.index("refresh_company_profiles")
         energy_enrichment = command_names.index("enrich_energy_disclosures")
         self.assertLess(report_extraction, energy_enrichment)
+        self.assertLess(report_extraction, profile_refresh)
+        self.assertLess(profile_refresh, command_names.index("build_earnings_intelligence"))
         self.assertLess(energy_enrichment, command_names.index("build_product_pricing_history"))
         self.assertLess(energy_enrichment, command_names.index("build_geographic_expansions"))
 

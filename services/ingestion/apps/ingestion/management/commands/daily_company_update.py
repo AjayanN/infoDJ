@@ -50,16 +50,6 @@ class Command(BaseCommand):
         }
         call_command("ingest_sector_companies", **ingest_args)
 
-        if options["include_company_profiles"]:
-            call_command(
-                "refresh_company_profiles",
-                limit=options["limit"],
-                offset=options["offset"],
-                batch_size=options["batch_size"],
-                daily_idempotent=True,
-                retry_failed_only=options["retry_failed_only"],
-            )
-
         if options["include_financial_facts"] and not options["retry_failed_only"]:
             call_command(
                 "ingest_sec_companyfacts",
@@ -120,6 +110,15 @@ class Command(BaseCommand):
             )
 
         call_command("extract_report_filings", limit=40)
+        if options["include_company_profiles"]:
+            call_command(
+                "refresh_company_profiles",
+                limit=options["limit"],
+                offset=options["offset"],
+                batch_size=options["batch_size"],
+                daily_idempotent=True,
+                retry_failed_only=options["retry_failed_only"],
+            )
         call_command("build_earnings_intelligence", collect_exhibits=True)
         call_command("build_strategy_milestones")
         call_command("build_competitive_positions", all=True)

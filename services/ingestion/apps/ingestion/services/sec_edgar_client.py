@@ -192,15 +192,20 @@ def discover_sec_filings_for_company(
     client = client or SecEdgarClient()
     _mark_job_running(job, source="SEC_EDGAR", query=f"{ticker}: {', '.join(forms)}")
     try:
-        edgar_company = client.lookup_company_by_ticker(ticker)
-        if edgar_company is None:
-            raise LookupError(f"No SEC company found for ticker {ticker!r}")
-        company.sec_cik = edgar_company.cik
+        configured_cik = str(getattr(company, "sec_cik", "")).strip()
+        if configured_cik:
+            resolved_cik = pad_cik(configured_cik)
+        else:
+            edgar_company = client.lookup_company_by_ticker(ticker)
+            if edgar_company is None:
+                raise LookupError(f"No SEC company found for ticker {ticker!r}")
+            resolved_cik = edgar_company.cik
+        company.sec_cik = resolved_cik
         if hasattr(company, "save"):
             company.save(update_fields=["sec_cik", "updated_at"])
         filing_loader = client.all_filings if full_history else client.recent_filings
         filings = filing_loader(
-            edgar_company.cik,
+            resolved_cik,
             company_name=company.name,
             forms=forms,
             limit=limit,

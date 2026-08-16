@@ -62,6 +62,7 @@ class Command(BaseCommand):
                     "country": seed.country,
                     "aliases": [seed.ticker],
                     "website": seed.website,
+                    "sec_cik": seed.sec_cik,
                 },
             )
             if seed.ticker not in (company.aliases or []):
@@ -70,6 +71,8 @@ class Command(BaseCommand):
                 company.industry = seed.sector
             if not company.country:
                 company.country = seed.country
+            if seed.sec_cik:
+                company.sec_cik = seed.sec_cik
             company.save()
             totals["companies"] += 1
 
