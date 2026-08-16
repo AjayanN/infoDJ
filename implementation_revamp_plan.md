@@ -44,6 +44,8 @@ acceptance checks for the previous milestone pass.
   287 sources, 111 events, 51 turns, and 1,486 additional financial facts.
 - [x] Make expected missing reviewed milestones non-fatal so the scheduler
   completes and rebuilds the ledger.
+- [x] Refactor company-universe activation into declarative, idempotent
+  metadata updates.
 - [ ] Populate reviewed Company 360 profile dimensions from the new sources.
 
 ## Baseline: known gaps to fix
