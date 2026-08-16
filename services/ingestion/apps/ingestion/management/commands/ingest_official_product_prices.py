@@ -35,7 +35,7 @@ class Command(BaseCommand):
         for company in companies:
             pages = list(
                 SourceDocument.objects.filter(company=company, source_api="OFFICIAL_WEBSITE")
-                .order_by("-updated_at")[: options["limit"]]
+                .order_by("-updated_at")[: 1 if options["limit"] else 0]
             )
             seen_urls = {page.url for page in pages}
             page_index = 0
