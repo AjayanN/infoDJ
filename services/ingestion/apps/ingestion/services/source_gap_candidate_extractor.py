@@ -24,7 +24,10 @@ def extract_source_gap_candidates(
     timeout: float = 10.0,
     retry_failed: bool = False,
 ) -> CandidateExtractionResult:
-    candidates = SourceGapResolutionCandidate.objects.filter(review_status="NEEDS_REVIEW").select_related("source_document")
+    candidates = SourceGapResolutionCandidate.objects.filter(
+        review_status="NEEDS_REVIEW",
+        extraction_status="FAILED" if retry_failed else "CANDIDATE",
+    ).select_related("source_document")
     if dashboard:
         candidates = candidates.filter(dashboard=dashboard)
     if gap_type:
