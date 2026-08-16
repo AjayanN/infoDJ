@@ -1,4 +1,5 @@
 export const environment = {
   production: true,
-  apiBaseUrl: '/api/app'
+  apiBaseUrl: '/infodj/api/app',
+  appBasePath: '/infodj/'
 };

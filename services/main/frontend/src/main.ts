@@ -71,11 +71,16 @@ import {
   managementPromiseLabel,
   sourceLensWhyUsed
 } from './app/company-profile.utils';
+import { environment } from './environments/environment';
 
 declare global {
   interface Window {
     Razorpay?: new (options: RazorpayCheckoutOptions) => { open: () => void };
   }
+}
+
+function appBasePath(): string {
+  return environment.appBasePath;
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
@@ -1482,7 +1487,7 @@ class AppComponent implements AfterViewChecked {
           this.password = '';
           this.authView.set('login');
           this.message.set('Password updated. Login with the new password.');
-          window.history.replaceState({}, document.title, '/');
+          window.history.replaceState({}, document.title, appBasePath());
         },
         error: (response) => this.showError(response)
       })
@@ -3884,10 +3889,10 @@ class AppComponent implements AfterViewChecked {
   private consumeAuthCallback(): void {
     const url = new URL(window.location.href);
     const token = url.searchParams.get('token');
-    if (window.location.pathname === '/auth/callback' && token) {
+    if (window.location.pathname === appBasePath() + 'auth/callback' && token) {
       localStorage.setItem('infodj_token', token);
       this.token.set(token);
-      window.history.replaceState({}, document.title, '/');
+      window.history.replaceState({}, document.title, appBasePath());
       this.message.set('Google login confirmed.');
     }
   }
@@ -3896,7 +3901,7 @@ class AppComponent implements AfterViewChecked {
     const url = new URL(window.location.href);
     const uid = url.searchParams.get('uid') || '';
     const token = url.searchParams.get('token') || '';
-    if (window.location.pathname === '/reset-password' && uid && token) {
+    if (window.location.pathname === appBasePath() + 'reset-password' && uid && token) {
       this.resetUid = uid;
       this.resetToken = token;
       this.authView.set('reset');

@@ -21,6 +21,7 @@
           },
           "configurations": {
             "production": {
+              "baseHref": "/infodj/",
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
