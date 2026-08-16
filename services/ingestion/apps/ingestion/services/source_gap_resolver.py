@@ -309,12 +309,17 @@ def candidate_documents(gap: SourceGap, rule: dict[str, object]) -> list[SourceD
     query = Q()
     for keyword in keywords:
         query |= Q(title__icontains=keyword) | Q(snippet__icontains=keyword) | Q(url__icontains=keyword)
-    documents = (
+    documents = list(
         SourceDocument.objects.filter(company=gap.company, source_api__in=rule["sources"])
         .filter(query)
         .order_by("-published_date", "-updated_at")[:8]
     )
-    return list(documents)
+    if documents:
+        return documents
+    return list(
+        SourceDocument.objects.filter(company=gap.company, source_api__in=rule["sources"])
+        .order_by("-published_date", "-updated_at")[:8]
+    )
 
 
 def evidence_excerpt(document: SourceDocument, keywords: tuple[str, ...]) -> str:
