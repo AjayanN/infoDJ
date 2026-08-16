@@ -122,6 +122,68 @@ class ArticleExtraction(models.Model):
         return f"{self.source_document} ({self.extraction_status})"
 
 
+class EvidenceRecordType(models.TextChoices):
+    BUSINESS_EVENT = "BUSINESS_EVENT", "Business event"
+    STRATEGIC_TURN = "STRATEGIC_TURN", "Strategic turn"
+    FINANCIAL_FACT = "FINANCIAL_FACT", "Financial fact"
+
+
+class EvidenceReviewStatus(models.TextChoices):
+    NEEDS_REVIEW = "NEEDS_REVIEW", "Needs review"
+    REVIEWED = "REVIEWED", "Reviewed"
+    REJECTED = "REJECTED", "Rejected"
+    SUPERSEDED = "SUPERSEDED", "Superseded"
+
+
+class EvidenceRecord(models.Model):
+    company = models.ForeignKey(
+        "companies.Company",
+        on_delete=models.CASCADE,
+        related_name="evidence_records",
+    )
+    source_document = models.ForeignKey(
+        SourceDocument,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="evidence_records",
+    )
+    record_type = models.CharField(max_length=32, choices=EvidenceRecordType.choices, db_index=True)
+    claim_type = models.CharField(max_length=32, default="reported_fact", db_index=True)
+    sector = models.CharField(max_length=255, blank=True, db_index=True)
+    event_date = models.DateField(null=True, blank=True, db_index=True)
+    published_date = models.DateTimeField(null=True, blank=True, db_index=True)
+    title = models.CharField(max_length=512)
+    summary = models.TextField(blank=True)
+    source_excerpt = models.TextField(blank=True)
+    geography = models.JSONField(default=list, blank=True)
+    entities = models.JSONField(default=list, blank=True)
+    tags = models.JSONField(default=list, blank=True)
+    metrics = models.JSONField(default=dict, blank=True)
+    confidence_score = models.DecimalField(max_digits=4, decimal_places=3, default=0)
+    review_status = models.CharField(
+        max_length=32,
+        choices=EvidenceReviewStatus.choices,
+        default=EvidenceReviewStatus.NEEDS_REVIEW,
+        db_index=True,
+    )
+    source_fingerprint = models.CharField(max_length=128, unique=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-event_date", "-published_date", "-updated_at"]
+        indexes = [
+            models.Index(fields=["company", "record_type", "event_date"]),
+            models.Index(fields=["sector", "record_type", "event_date"]),
+            models.Index(fields=["review_status", "record_type"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.company}: {self.title}"
+
+
 class IngestionJob(models.Model):
     job_type = models.CharField(max_length=64, choices=IngestionJobType.choices)
     company = models.ForeignKey(

@@ -31,6 +31,7 @@ class Command(BaseCommand):
         parser.add_argument("--include-company-profiles", action="store_true")
 
     def handle(self, *args, **options):
+        call_command("activate_company_universe")
         ingest_args = {
             "limit": options["limit"],
             "offset": options["offset"],
@@ -137,6 +138,7 @@ class Command(BaseCommand):
         call_command("resolve_source_gaps", limit=500)
         call_command("extract_source_gap_candidates", limit=500)
         call_command("promote_source_gap_candidates", limit=500)
+        call_command("build_evidence_ledger")
 
         if options["include_quality_scoring"]:
             self.stdout.write(
