@@ -33,10 +33,7 @@ class Command(BaseCommand):
         session = requests.Session()
         session.headers["User-Agent"] = DEFAULT_USER_AGENT
         for company in companies:
-            pages = list(
-                SourceDocument.objects.filter(company=company, source_api="OFFICIAL_WEBSITE")
-                .order_by("-updated_at")[: 1 if options["limit"] else 0]
-            )
+            pages = prioritized_official_pages(company, limit=options["limit"])
             seen_urls = {page.url for page in pages}
             page_index = 0
             while page_index < len(pages) and page_index < options["limit"]:
@@ -65,3 +62,23 @@ class Command(BaseCommand):
                 for key in ("prices_found", "prices_inserted", "prices_updated", "skipped"):
                     totals[key] += result[key]
         self.stdout.write(self.style.SUCCESS(f"Official product-price ingestion complete: {totals}"))
+
+
+def prioritized_official_pages(company: Company, *, limit: int) -> list[SourceDocument]:
+    """Prefer discovered product or pricing URLs before falling back to general first-party pages."""
+
+    if limit <= 0:
+        return []
+    pages = list(
+        SourceDocument.objects.filter(company=company, source_api="OFFICIAL_WEBSITE")
+        .order_by("-updated_at", "-id")
+    )
+    price_words = ("pricing", "prices", "price", "plans", "products", "product", "store", "shop", "buy")
+    return sorted(
+        pages,
+        key=lambda page: (
+            not any(word in f"{page.title} {page.url}".lower() for word in price_words),
+            -page.updated_at.timestamp(),
+            -page.id,
+        ),
+    )[:limit]
