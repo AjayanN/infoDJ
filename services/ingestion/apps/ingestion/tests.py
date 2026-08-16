@@ -963,6 +963,30 @@ class IngestionSearchApiTests(TestCase):
         self.assertFalse(ManagementPromise.objects.filter(company=self.netflix).exists())
         self.assertEqual(management_promise_quality_issues(self.netflix), ["no reviewed published management promise"])
 
+    def test_reviewed_promise_builder_matches_updated_general_electric_filing_language(self):
+        company = Company.objects.create(name="General Electric", slug="general-electric")
+        source = SourceDocument.objects.create(
+            company=company,
+            source_api="SEC_EDGAR",
+            url="https://example.com/general-electric-10k",
+            title="General Electric 10-K filing",
+            publisher="SEC EDGAR",
+        )
+        ArticleExtraction.objects.create(
+            source_document=source,
+            clean_text=(
+                "We are committed to investing and developing technologies that improve safety, durability, "
+                "reliability and efficiency for our current engine products over their lifecycle and for the future of flight."
+            ),
+            word_count=24,
+            extraction_status="SUCCEEDED",
+        )
+
+        result = build_reviewed_management_promise(company)
+
+        self.assertEqual(result["created"], 1)
+        self.assertTrue(ManagementPromise.objects.filter(company=company, is_published=True).exists())
+
     def test_reviewed_milestone_catalog_covers_every_configured_company(self):
         expected = {slugify(seed.name) for seed in CROSS_SECTOR_COMPANIES}
 
