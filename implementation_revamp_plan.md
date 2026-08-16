@@ -104,7 +104,11 @@ acceptance checks for the previous milestone pass.
 - [x] Preserve explicit non-derivative holdings from valid Forms 3/4/5 XML.
   The scheduled command aggregates newly added evidence counters safely, and its
   bounded all-company run created or refreshed the reported holding positions.
-- [ ] Implement source-linked contract dependency extraction.
+- [x] Implement scheduler-driven source-linked contract dependency extraction.
+  Promotion requires a specific named counterparty, a direct commercial-agreement
+  relationship, and an explicit term; generic mentions of contracts, expiry, or
+  termination remain review candidates. The initial verified result is Disney’s
+  Fubo distribution agreement with exclusivity and renewal terms.
 
 **Priority 2 - source resilience**
 
@@ -119,8 +123,9 @@ acceptance checks for the previous milestone pass.
 
 - [ ] 20 companies are configured but only 10 are active in the database.
 - [ ] All current Company 360 semantic profile validations fail.
-- [ ] Product-price observations, dependency contract terms, and insider
-  transactions are currently empty.
+- [ ] Product-price observations are currently empty. Dependency contract terms
+  and insider transactions are now source-linked where filings explicitly
+  disclose them; missing disclosure remains visible as a source gap.
 - [ ] 573 source documents exist but only 55 successful extractions exist.
 - [ ] Existing turns/events include generic wording and need evidence gating.
 - [ ] `Company.country` means company domicile/headquarters and must not be
