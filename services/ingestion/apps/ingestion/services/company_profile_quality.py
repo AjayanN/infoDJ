@@ -16,6 +16,8 @@ PROFILE_LIST_FIELDS = (
     "customer_groups",
     "revenue_sources",
     "geographies",
+    "operating_regions",
+    "revenue_geographies",
     "leadership",
     "competitors",
     "strategic_priorities",
@@ -35,11 +37,7 @@ BLOCKED_SUMMARY_MARKERS = (
 
 
 def profile_snapshot_has_content(snapshot: CompanyProfileSnapshot) -> bool:
-    return bool(
-        snapshot.summary
-        or snapshot.business_model
-        or any(getattr(snapshot, field) for field in PROFILE_LIST_FIELDS)
-    )
+    return bool(snapshot.summary or snapshot.business_model or any(getattr(snapshot, field) for field in PROFILE_LIST_FIELDS))
 
 
 def reviewed_profile_snapshot_window(company, *, as_of=None) -> list[CompanyProfileSnapshot]:

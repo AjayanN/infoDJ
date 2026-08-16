@@ -123,6 +123,7 @@ def companies(_request: HttpRequest) -> JsonResponse:
                 "slug": company.slug,
                 "sector": company.industry,
                 "country": company.country,
+                "headquarters_country": company.headquarters_country or company.country,
                 "wikidata_id": company.wikidata_id,
                 "sec_cik": company.sec_cik,
                 "source_count": source_counts.get(company.id, 0),
@@ -132,6 +133,58 @@ def companies(_request: HttpRequest) -> JsonResponse:
             }
         )
     return JsonResponse({"companies": rows})
+
+
+@require_GET
+def company_coverage(_request: HttpRequest, slug: str) -> JsonResponse:
+    company = get_company(slug)
+    snapshots = reviewed_profile_snapshot_window(company)
+    business_model_snapshot = (
+        BusinessModelSnapshot.objects.filter(company=company, status__in=["PUBLISHED", "REVIEWED"])
+        .order_by("-effective_date", "-updated_at")
+        .first()
+    )
+    sections = profile_section_values_from_snapshots(company, snapshots, business_model_snapshot)
+    dimensions = []
+    for key, value in sections.items():
+        available = bool(value)
+        dimensions.append(
+            {
+                "key": key,
+                "label": key.replace("_", " ").title(),
+                "status": "available" if available else "missing",
+                "source_count": len(snapshots) if available else 0,
+                "missing_reason": "" if available else f"No reviewed, source-backed {key.replace('_', ' ')} is available.",
+            }
+        )
+    headquarters_country = company.headquarters_country or company.country
+    dimensions.insert(
+        0,
+        {
+            "key": "headquarters_country",
+            "label": "Headquarters",
+            "status": "available" if headquarters_country else "missing",
+            "source_count": 1 if headquarters_country else 0,
+            "missing_reason": "" if headquarters_country else "Company headquarters country has not been configured.",
+        },
+    )
+    available_count = sum(1 for dimension in dimensions if dimension["status"] == "available")
+    last_updated = max(
+        [company.updated_at, *[snapshot.updated_at for snapshot in snapshots]],
+        default=company.updated_at,
+    )
+    return JsonResponse(
+        {
+            "company": serialize_company_detail(company),
+            "coverage": {
+                "completeness_percent": round((available_count / len(dimensions)) * 100) if dimensions else 0,
+                "available_dimensions": available_count,
+                "total_dimensions": len(dimensions),
+                "last_updated": last_updated.isoformat(),
+                "dimensions": dimensions,
+            },
+        }
+    )
 
 
 @require_GET
@@ -4486,6 +4539,7 @@ def serialize_company(company: Company) -> dict[str, object]:
         "slug": company.slug,
         "sector": company.industry,
         "country": company.country,
+        "headquarters_country": company.headquarters_country or company.country,
         "wikidata_id": company.wikidata_id,
         "sec_cik": company.sec_cik,
         "source_count": getattr(company, "source_count", 0),
@@ -4522,7 +4576,9 @@ def profile_section_values(
         "products": snapshot.products if snapshot else [],
         "customer_groups": snapshot.customer_groups if snapshot else [],
         "revenue_sources": snapshot.revenue_sources if snapshot else [],
-        "geographies": snapshot.geographies if snapshot and snapshot.geographies else ([company.country] if company.country else []),
+        "geographies": snapshot.geographies if snapshot else [],
+        "operating_regions": snapshot.operating_regions if snapshot else [],
+        "revenue_geographies": snapshot.revenue_geographies if snapshot else [],
         "leadership": snapshot.leadership if snapshot else [],
         "competitors": snapshot.competitors if snapshot else [],
         "strategic_priorities": snapshot.strategic_priorities if snapshot else [],

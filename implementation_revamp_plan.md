@@ -1,142 +1,275 @@
-# Founder Experience Revamp - Implementation Plan
+# InfoDJ Evidence-First Revamp - Execution TODO
 
-## Product outcome
+## Purpose
 
-InfoDJ becomes a founder decision cockpit. A founder selects sector, business type, current stage, and immediate objective. InfoDJ presents a small set of evidence-backed directions, risks, comparable company journeys, and monetisation options. Company 360 remains the source-level drill-down instead of the first screen.
+Make InfoDJ a fast, trustworthy founder decision product. The default experience
+must answer one current founder question from prepared, source-backed company
+evidence. Company 360 remains the detailed research surface.
 
-## Guardrails
+This runbook is ordered. Do not begin a later milestone until the listed
+acceptance checks for the previous milestone pass.
 
-- [ ] Mark every statement as reported fact, observed pattern, founder hypothesis, or unavailable.
-- [ ] Retain source URL, publication date, extraction date, and confidence for every chart point and recommendation.
-- [ ] Never infer values, lifecycle transitions, prices, or geographic differences without evidence.
-- [ ] Show insufficient evidence plainly rather than fabricating an answer.
-- [ ] Treat mobile layouts and accessible text alternatives as first-class requirements.
+## Non-negotiable rules
 
-## Milestone 0 - Baseline and delivery controls
+- [ ] Work on a dedicated branch named `feature/evidence-first-foundation`.
+- [ ] Keep all facts source-backed: source URL, publisher, publication date,
+  extraction time, company, sector, and review state.
+- [ ] Label all output as `reported_fact`, `observed_pattern`,
+  `founder_hypothesis`, or `unavailable`.
+- [ ] Never represent headquarters country as operating geography.
+- [ ] Preserve numeric values with unit/currency/period; do not flatten them
+  into prose.
+- [ ] Keep ordinary founder requests deterministic and fast. Runtime AI may
+  improve cached wording but cannot be the only path to an answer.
+- [ ] Run targeted tests before Docker Compose rebuilds. Merge only after
+  successful tests, deployment smoke checks, and mobile review.
 
-- [ ] Create and maintain a feature branch for each independently deployable milestone.
-- [ ] Establish fixture companies across Technology, Communication, and Energy.
-- [ ] Record baseline API payloads, coverage, and UI screenshots for fixture companies.
-- [ ] Add CI commands for frontend typecheck/tests and ingestion tests.
-- [ ] Require Docker Compose rebuild, smoke test, and public tunnel verification before merge.
-- [ ] Push merged main to the configured remote after each accepted milestone.
+## Baseline: known gaps to fix
 
-**Acceptance:** a repeatable deployment checklist exists and a regression run validates the pilot companies.
+- [ ] 20 companies are configured but only 10 are active in the database.
+- [ ] All current Company 360 semantic profile validations fail.
+- [ ] Product-price observations, dependency contract terms, and insider
+  transactions are currently empty.
+- [ ] 573 source documents exist but only 55 successful extractions exist.
+- [ ] Existing turns/events include generic wording and need evidence gating.
+- [ ] `Company.country` means company domicile/headquarters and must not be
+  shown as operating footprint (for example, Netflix is not US-only).
 
-## Milestone 1 - Canonical coverage and evidence contract
+## Milestone 1 - Canonical evidence and geography contract
 
-### Coverage model
+### 1.1 Add a retrieval-ready evidence ledger
 
-- [ ] Define profile completeness for the 12 Company 360 profile fields.
-- [ ] Define decision readiness separately: product/pricing, customer, competitor, market, risks, strategic moves, and evidence freshness.
-- [ ] Define first-party-source coverage and source confidence.
-- [ ] Define freshness rules per data type and show a last-reviewed date.
-- [ ] Return field-level missing reasons and source counts through an API contract.
-- [ ] Use the same current snapshot window as Company 360 when calculating coverage.
-- [ ] Prevent historic snapshots from satisfying a current-profile field.
-- [ ] Correct country metadata where a US company is incorrectly excluded.
+- [ ] Add an `EvidenceRecord` model in
+  `services/ingestion/apps/ingestion/models.py`.
+- [ ] Include: company, sector, evidence type, event date, published date,
+  source document, source excerpt, title, summary, geography, entities, tags,
+  numeric metrics, confidence, review status, and extraction metadata.
+- [ ] Keep the existing specialised Company 360 models. `EvidenceRecord` is an
+  indexed read model, not a replacement for authoritative source objects.
+- [ ] Add a unique source/claim fingerprint to make scheduler backfills
+  idempotent.
+- [ ] Add a migration and model tests for uniqueness, required provenance, and
+  numeric metric preservation.
 
-### Evidence model
+### 1.2 Correct geography semantics
 
-- [ ] Store source URL, publisher, publication date, excerpt/location, ingestion time, and confidence for every claim.
-- [ ] Add claim type: reported fact, observed pattern, founder hypothesis, unavailable.
-- [ ] Add evidence strength: strong, moderate, weak, missing.
-- [ ] Add provenance tests for APIs and visualisations.
+- [ ] Add `headquarters_country`, `operating_regions`,
+  `revenue_geographies`, and `market_footprint_status` to the Company 360
+  profile contract.
+- [ ] Keep legacy `Company.country` as the configured domicile only; rename
+  frontend labels to `Headquarters` until a migration can rename the field.
+- [ ] Build geographic extraction from annual-report segments and official
+  geographic disclosures.
+- [ ] Add Netflix fixture assertions for UCAN, EMEA, LATAM, and APAC when
+  directly supported by a source; do not fabricate country-level presence.
+- [ ] Add source freshness and missing-reason fields for every geography item.
 
-**Acceptance:** Exxon's displayed coverage and its API score agree exactly, with explicit missing-field reasons.
+### 1.3 Coverage contract and API
 
-## Milestone 2 - Sector and stage playbook model
+- [ ] Define mandatory dimensions globally: identity, profile, business model,
+  products/pricing, customers, revenue, geography, strategy, risks, sources.
+- [ ] Add sector-required dimensions through a new sector schema registry.
+- [ ] Implement `GET /companies/{slug}/coverage` in ingestion API.
+- [ ] Return each dimension's status, source count, freshness, missing reason,
+  and last reviewed date.
+- [ ] Update `audit_company360_coverage` to calculate the same score used by
+  the API; no separate UI-only calculation.
 
-- [ ] Create a configurable sector-playbook schema: founder questions, metrics, milestones, risks, pricing models, and source requirements.
-- [ ] Create stage definitions: Validate, Build, Launch, Grow, and Scale.
-- [ ] Support business-type refinements within a sector.
-- [ ] Map strategic events to observed milestones; do not claim unobserved startup stages.
-- [ ] Build pilot playbooks:
-  - [ ] Technology: adoption, retention, pricing, cloud/AI economics, defensibility.
-  - [ ] Communication: audience, subscription, advertising, distribution, content economics.
-  - [ ] Energy: assets, projects, commodity exposure, permits, capex, geography.
-- [ ] Define reusable templates for Financials, Healthcare, Consumer, Industrials, Materials, Real Estate, and Utilities.
+**Acceptance**
 
-**Acceptance:** each pilot sector returns relevant founder questions without generic metric overload.
+- [ ] Netflix shows `Headquarters: United States` separately from sourced
+  operating/revenue regions.
+- [ ] API and CLI coverage scores agree exactly for ExxonMobil and Netflix.
+- [ ] Every coverage result explains missing data instead of returning a vague
+  percentage.
 
-## Milestone 3 - Founder onboarding and context
+## Milestone 2 - Activate and baseline all 20 US companies
 
-- [ ] Add onboarding for sector, business type, stage, and immediate objective.
-- [ ] Add optional geography, target customer, revenue model, and constraints.
-- [ ] Persist and allow editing founder context.
-- [ ] Generate a question-led start screen, not a data-heavy dashboard.
-- [ ] Provide clear loading, empty, and error states.
-- [ ] Reset page scroll on navigation and preserve expected back-navigation behaviour.
-- [ ] Verify mobile, tablet, and desktop layouts.
+### 2.1 Company universe activation
 
-**Acceptance:** a new founder reaches a relevant cockpit in under one minute on a phone.
+- [ ] Add an idempotent command that creates/activates all records from
+  `company_universe.py` without overwriting reviewed data.
+- [ ] Seed the missing companies: Ford, Tesla, Caterpillar, General Electric,
+  Disney, Netflix, Prologis, American Tower, Freeport-McMoRan, and Newmont.
+- [ ] Add a test that the active universe contains all configured companies.
 
-## Milestone 4 - Evidence-backed decision engine
+### 2.2 First-party source baseline
 
-- [ ] Create a deterministic, evidence-first response layer before any generative summary.
-- [ ] Return at most three directions: fastest learning, lowest risk, highest upside.
-- [ ] For each direction show next action, rationale, comparable examples, trade-offs, risks, required evidence, and source links.
-- [ ] Return monetisation/pricing models only when source-backed or labelled as a pattern.
-- [ ] Generate concise human-readable synthesis from structured facts, never raw ingestion dumps.
-- [ ] Add abstention behaviour for missing or conflicting evidence.
-- [ ] Add reviewer tooling to correct claim classification or confidence.
+- [ ] For every company ingest annual reports, 10-K/10-Q filings, earnings
+  releases, investor presentations, official newsroom pages, product pages,
+  and official pricing pages where available.
+- [ ] Store source authority and collection reason.
+- [ ] Deduplicate source documents by canonical URL and content fingerprint.
+- [ ] Add a retry queue with error category, retry time, and visible source gap.
 
-**Acceptance:** every recommendation is traceable to evidence or visibly labelled as a hypothesis.
+### 2.3 Structured profile baseline
 
-## Milestone 5 - Founder-first visual cockpit
+- [ ] Populate the profile fields: segments, products, customers, revenue
+  sources, geographies, leadership, competitors, and priorities.
+- [ ] Build all Business Model Map component types: payer, user, offer,
+  delivery, revenue, key costs, and relationships.
+- [ ] Require a reviewed management-promise record only when the source basis
+  supports it; otherwise expose a transparent source gap.
 
-- [ ] Build a stage/milestone journey showing comparable company events chronologically.
-- [ ] Build a three-path decision comparison instead of long dashboard tabs.
-- [ ] Build a risk radar with category, severity, confidence, and source count.
-- [ ] Build a business-model and monetisation canvas for the selected sector.
-- [ ] Build a peer landscape with sector, geography, evidence strength, and similarity filters.
-- [ ] Build a coverage passport showing known, stale, and missing data.
-- [ ] Move detailed company metrics, sources, and raw event lists into Company 360 drill-downs.
-- [ ] Provide accessible text alternatives and no-data states for all visualisations.
+**Acceptance**
 
-**Acceptance:** the dashboard answers where am I, what should I do next, and why without tab-by-tab reading.
+- [ ] All 20 companies exist and are active.
+- [ ] Every company has a current profile, Business Model Map, and direct
+  source links.
+- [ ] `validate_company_profiles --limit 20` reports only explicit, actionable
+  missing dimensions; no parser fragments or filing boilerplate.
 
-## Milestone 6 - Reusable ingestion enrichment
+## Milestone 3 - Sector-specific enrichment modules
 
-- [ ] Convert enrichment into sector modules invoked by the scheduler.
-- [ ] Define source authority, relevance, freshness, and deduplication gates.
-- [ ] Capture products, pricing, geographic variation, revenue streams, milestones, competitors, risks, and strategic changes.
-- [ ] Preserve direct-source links and extraction metadata for every record.
-- [ ] Add product/pricing history builders that distinguish disclosed prices from product-only evidence.
-- [ ] Expand Energy coverage for Exxon and peers using official filings, investor materials, and regulator sources.
-- [ ] Add rerunnable backfill commands and idempotency checks.
-- [ ] Add per-company data-gap reports to guide future collectors.
+### 3.1 Create a sector module interface
 
-**Acceptance:** scheduled ingestion improves the structured datasets used by the cockpit; no manual-only data path is required.
+- [ ] Add a registry keyed by sector in
+  `services/ingestion/apps/ingestion/services/`.
+- [ ] Each module declares source collectors, required dimensions, extraction
+  normalisers, freshness windows, quality gates, and fixture companies.
+- [ ] Invoke modules from `daily_company_update` and
+  `scheduled_daily_update`; no manual-only path is acceptable.
 
-## Milestone 7 - Quality, rollout, and feedback
+### 3.2 Implement Energy first
 
-- [ ] Add unit tests for scoring, stage mapping, playbook selection, decision responses, and provenance.
-- [ ] Add API contract and frontend interaction tests.
-- [ ] Add mobile visual regression coverage for onboarding, cockpit, and Company 360.
-- [ ] Add ingestion fixture tests and scheduler-order tests.
-- [ ] Conduct pilot review with Technology, Communication, and Energy fixtures.
-- [ ] Track unanswered founder questions, missing evidence, stale sources, and failed collectors.
-- [ ] Prioritise the next sector from measured coverage and founder demand.
-- [ ] Document ingestion, rebuild, tests, deployment, and rollback runbooks.
+- [ ] Collect ExxonMobil and NextEra official annual reports, earnings
+  materials, project updates, regulator material, and investor presentations.
+- [ ] Extract assets/projects, production/capacity, realised prices, capex,
+  reserves where disclosed, operating regions, permits/regulatory matters,
+  and commodity sensitivity.
+- [ ] Create source-backed price/contract data only where an official source
+  publishes it; otherwise show `unavailable`.
+- [ ] Add Energy fixture tests, including a complete ExxonMobil gap report.
 
-**Acceptance:** pilot releases are traceable, responsive, repeatable to deploy, and ready to expand sector by sector.
+### 3.3 Implement remaining sector modules
 
-## Recommended sequence
+- [ ] Communication: audience, subscribers, advertising, licensing, content,
+  distribution, regional revenue.
+- [ ] Technology: offering, packaging, pricing, adoption, usage, customer
+  segment, cost-to-serve.
+- [ ] Financials, Health Care, Consumer, Consumer Staples, Industrials,
+  Materials, Real Estate, and Utilities: implement the schema declared in the
+  sector playbook and source it from first-party/regulator evidence.
 
-1. Baseline and canonical coverage contract.
-2. Sector/stage schema and three pilot playbooks.
-3. Founder onboarding and a read-only cockpit shell.
-4. Structured decision engine with evidence traces.
-5. Visualisations and Company 360 drill-down handoff.
-6. Scheduled ingestion enrichment and data-gap feedback loop.
-7. Pilot validation, merge, deployment, and expansion.
+**Acceptance**
 
-## Definition of done
+- [ ] Scheduled ingestion improves or preserves coverage on rerun.
+- [ ] At least two companies per active sector have comparable sourced facts.
+- [ ] No sector-specific value appears without a dated source and unit where
+  relevant.
 
-- [ ] A founder can state their context and receive concise, sector-relevant answers with visual comparisons.
-- [ ] Each displayed insight has an evidence state, confidence, and drill-down source.
-- [ ] Existing Company 360 coverage is accurate and explains what is missing.
-- [ ] The UI works on mobile and does not overload the initial view with raw detail.
-- [ ] Ingestion is scheduled, idempotent, tested, and reusable across companies in the same sector.
-- [ ] Tests pass, Docker Compose is rebuilt, the public tunnel is smoke-tested, changes are merged to main, and main is pushed to remote.
+## Milestone 4 - Quality, review, and fast retrieval
+
+### 4.1 Evidence quality gates
+
+- [ ] Reject generic event/turn phrasing from founder-visible datasets.
+- [ ] Require a specific company action, event date, direct source, and
+  confidence threshold for decision-case eligibility.
+- [ ] Add conflict detection when reputable sources disagree.
+- [ ] Add reviewer states: queued, approved, rejected, superseded.
+
+### 4.2 Retrieval indexes and precomputation
+
+- [ ] Enable PostgreSQL full-text search and `pgvector` extension.
+- [ ] Create indexes for company, sector, evidence type, tags, event date,
+  geography, review state, and embedding.
+- [ ] Precompute `ComparableDecisionCase` records by sector, founder stage,
+  decision topic, and evidence version.
+- [ ] Precompute chart-ready series for revenue, price, geography, milestones,
+  and sector-specific metrics.
+- [ ] Add cache keys based on founder context plus evidence version.
+
+### 4.3 APIs
+
+- [ ] Implement `GET /companies/{slug}/coverage`.
+- [ ] Implement `GET /companies/{slug}/decision-cases`.
+- [ ] Implement `GET /sectors/{sector}/decision-cases?stage=&objective=`.
+- [ ] Implement `GET /sectors/{sector}/evidence-summary`.
+- [ ] Return source links, evidence state, confidence, freshness, and
+  deterministic fallback content in every response.
+
+**Acceptance**
+
+- [ ] Normal founder response needs no runtime AI call.
+- [ ] Founder API returns within a defined target under warm cache.
+- [ ] Every displayed decision case opens its original supporting source.
+
+## Milestone 5 - Founder decision experience
+
+### 5.1 Guided context
+
+- [ ] Keep one question per screen: company name, sector, business type,
+  current stage, immediate objective.
+- [ ] Ask geography, customer, revenue model, and constraints only when they
+  improve the selected sector/stage decision.
+- [ ] Save context incrementally and restore it safely.
+- [ ] Provide a stable progress animation plus loading/error/empty states.
+
+### 5.2 Decision home
+
+- [ ] Replace initial dashboard overload with one question: `What should you
+  prove next?`.
+- [ ] Show at most three comparable decision paths.
+- [ ] Each path contains a specific action, comparable cases, trade-off, risk,
+  success metric, evidence confidence, and source drawer.
+- [ ] Show a concise stage journey visual: current proof -> test -> learning ->
+  next stage.
+- [ ] Keep Company 360 behind an intentional `Research company` action.
+
+### 5.3 Experiment loop
+
+- [ ] Add `FounderExperiment`: selected path, hypothesis, test, metric,
+  threshold, owner, due date, result, and next decision.
+- [ ] Add a weekly check-in and progress timeline.
+- [ ] Capture unanswered questions and missing evidence as ingestion backlog.
+
+**Acceptance**
+
+- [ ] A new founder reaches a source-backed next action in under one minute on
+  a phone.
+- [ ] No initial page renders raw Company 360 sections, source passports, or
+  long data tables.
+- [ ] Founder can open Company 360 only when they want deeper research.
+
+## Milestone 6 - Test, deploy, and measure product-market fit
+
+### 6.1 Required tests
+
+- [ ] Ingestion unit tests for each collector, parser, dedupe rule, source
+  gap, geography rule, and sector module.
+- [ ] API contract tests for coverage, evidence, decision cases, and cache
+  invalidation.
+- [ ] Backend tests for provenance, permissions, and deterministic fallbacks.
+- [ ] Frontend tests for onboarding, decision-home loading/empty states, source
+  drawers, mobile layout, and Company 360 routing.
+- [ ] Docker Compose smoke tests for migrations, scheduler, ingestion API,
+  backend API, and public web path.
+
+### 6.2 Release process
+
+- [ ] Create a feature branch per deployable milestone.
+- [ ] Run focused tests, then full relevant test suite.
+- [ ] Rebuild with Docker Compose.
+- [ ] Verify `https://ajayan.tech/infodj/` and API health.
+- [ ] Merge to `main` only after acceptance checks pass.
+- [ ] Push `main` to the configured remote once repository credentials exist.
+
+### 6.3 PMF measurements
+
+- [ ] Measure onboarding completion and time to first decision.
+- [ ] Measure decision-path selection, experiment creation, weekly check-in,
+  source-drawer open rate, and return rate.
+- [ ] Ask one feedback question after the first decision: `Was this useful for
+  your next action?`.
+- [ ] Start with Energy pilot founders; only broaden once the evidence quality
+  and repeat-use metrics are good.
+
+## Immediate execution sequence
+
+1. [ ] Create the `feature/evidence-first-foundation` branch.
+2. [ ] Add the evidence/geography coverage contract and migration.
+3. [ ] Add API/CLI coverage parity tests for ExxonMobil and Netflix.
+4. [ ] Activate missing configured companies idempotently.
+5. [ ] Implement Energy enrichment and run a source-backed ExxonMobil backfill.
+6. [ ] Validate data quality before changing the founder home again.
+7. [ ] Build precomputed decision cases, then the minimal decision home.
