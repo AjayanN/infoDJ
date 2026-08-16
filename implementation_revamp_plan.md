@@ -69,8 +69,9 @@ acceptance checks for the previous milestone pass.
 
 - [ ] Extend the remaining geography parser coverage for Microsoft, Prologis,
   and the five companies without an explicit revenue-region disclosure.
-- [ ] Build reviewed, source-linked management promises from earnings releases,
-  presentations, and filings. This is missing for all 20 companies.
+- [x] Build reviewed, source-linked management promises from filings for 19
+  companies. Prologis still needs an earnings or investor source containing a
+  qualifying forward-looking statement.
 - [ ] Complete sparse profile dimensions: Microsoft and Walmart revenue
   sources; Netflix subsidiaries, customer groups, payer/user model components;
   Prologis strategic priorities; and incomplete Business Model Map components

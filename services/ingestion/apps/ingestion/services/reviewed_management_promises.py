@@ -100,14 +100,14 @@ REVIEWED_PROMISE_SPECS: dict[str, ReviewedPromiseSpec] = {
     ),
     "general-electric": ReviewedPromiseSpec(
         "Invest in technologies for a more sustainable future of flight",
-        r"committed to investing in developing and maturing technologies",
+        r"committed to investing and developing technologies that improve safety, durability, reliability and efficiency",
         "GE Aerospace technology portfolio",
         PromiseType.COMMITMENT,
     ),
     "disney": ReviewedPromiseSpec(
-        "Launch an ESPN-branded tile on Disney+ in the United States",
-        r"plans to launch an ESPN branded tile on Disney\+",
-        "Disney+ in the United States",
+        "Launch four additional Disney Cruise Line ships",
+        r"Disney Cruise Line plans to launch four additional cruise ships",
+        "Disney Cruise Line fleet expansion",
         PromiseType.COMMITMENT,
     ),
     "netflix": ReviewedPromiseSpec(
