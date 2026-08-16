@@ -13,7 +13,16 @@ from xml.etree import ElementTree
 import requests
 from django.utils import timezone
 
-from apps.companies.models import Company, CompanyProfileStatus, InsiderTransaction, InsiderTransactionType, OwnershipInsiderSnapshot
+from apps.companies.models import (
+    Company,
+    CompanyProfileStatus,
+    InsiderTransaction,
+    InsiderTransactionType,
+    OwnershipHolderType,
+    OwnershipInsiderSnapshot,
+    OwnershipPosition,
+    OwnershipPositionType,
+)
 from apps.ingestion.models import SourceDocument
 
 
@@ -34,6 +43,7 @@ class Form4Transaction:
     ownership_after: Decimal | None
     planned_sale: bool
     plan_reference: str
+    share_class: str = ""
 
     @property
     def value(self) -> Decimal | None:
@@ -42,12 +52,20 @@ class Form4Transaction:
         return self.shares * self.price
 
 
+@dataclass(frozen=True)
+class OwnershipHolding:
+    holder_name: str
+    holder_role: str
+    holder_type: str
+    shares_owned: Decimal
+    share_class: str
+    evidence_text: str
+
+
 def parse_ownership_xml(xml_text: str) -> list[Form4Transaction]:
     """Parse non-derivative Form 3/4/5 transactions without inferring omissions."""
 
-    root = ElementTree.fromstring(xml_text)
-    if local_name(root.tag) != "ownershipDocument":
-        raise ValueError("SEC filing response is not an ownership XML document.")
+    root = ownership_root(xml_text)
     owner_name = text_at(root, "reportingOwner/reportingOwnerId/rptOwnerName")
     role = owner_role(root)
     footnotes = {
@@ -79,9 +97,39 @@ def parse_ownership_xml(xml_text: str) -> list[Form4Transaction]:
                 plan_reference=(references or "Issuer marked this filing as Rule 10b5-1 planned.")[:255]
                 if form_plan_flag or "10b5-1" in references.lower()
                 else "",
+                share_class=text_at(node, "securityTitle/value")[:128],
             )
         )
     return rows
+
+
+def parse_ownership_holdings(xml_text: str) -> list[OwnershipHolding]:
+    """Parse explicitly reported non-derivative share holdings from an SEC ownership filing."""
+
+    root = ownership_root(xml_text)
+    owner_name = text_at(root, "reportingOwner/reportingOwnerId/rptOwnerName")[:255] or "Undisclosed reporting owner"
+    role = owner_role(root)[:255]
+    holder_type = ownership_holder_type(role)
+    holdings: list[OwnershipHolding] = []
+    for node in root.iter():
+        if local_name(node.tag) != "nonDerivativeHolding":
+            continue
+        shares_owned = decimal_at(node, "postTransactionAmounts/sharesOwnedFollowingTransaction/value")
+        if shares_owned is None:
+            continue
+        share_class = text_at(node, "securityTitle/value")[:128]
+        holdings.append(
+            OwnershipHolding(
+                holder_name=owner_name,
+                holder_role=role,
+                holder_type=holder_type,
+                shares_owned=shares_owned,
+                share_class=share_class,
+                evidence_text="SEC ownership filing reports a non-derivative holding."
+                + (f" Share class: {share_class}." if share_class else ""),
+            )
+        )
+    return holdings
 
 
 def ingest_form4_sources(
@@ -96,17 +144,29 @@ def ingest_form4_sources(
 
     session = session or requests.Session()
     session.headers.update({"User-Agent": SEC_USER_AGENT, "Accept-Encoding": "gzip, deflate"})
-    counters = {"sources_seen": 0, "sources_parsed": 0, "sources_failed": 0, "transactions_found": 0, "transactions_inserted": 0, "transactions_updated": 0}
+    counters = {
+        "sources_seen": 0,
+        "sources_parsed": 0,
+        "sources_failed": 0,
+        "transactions_found": 0,
+        "transactions_inserted": 0,
+        "transactions_updated": 0,
+        "holdings_found": 0,
+        "holdings_inserted": 0,
+        "holdings_updated": 0,
+    }
     for source in sources:
         counters["sources_seen"] += 1
         try:
-            transactions = parse_ownership_response(session, ownership_xml_url(source.url), timeout=timeout, request_delay=request_delay)
+            xml_text = ownership_response_text(session, ownership_xml_url(source.url), timeout=timeout, request_delay=request_delay)
         except (requests.RequestException, ElementTree.ParseError, ValueError):
             try:
-                transactions = parse_ownership_fallback(session, source.url, timeout=timeout, request_delay=request_delay)
+                xml_text = ownership_fallback_text(session, source.url, timeout=timeout, request_delay=request_delay)
             except (requests.RequestException, ElementTree.ParseError, ValueError):
                 counters["sources_failed"] += 1
                 continue
+        transactions = parse_ownership_xml(xml_text)
+        holdings = parse_ownership_holdings(xml_text)
         counters["sources_parsed"] += 1
         snapshot = snapshot_for_source(company, source)
         accession = accession_from_url(source.url)
@@ -134,6 +194,28 @@ def ingest_form4_sources(
                 },
             )
             counters["transactions_inserted" if created else "transactions_updated"] += 1
+        for holding in holdings:
+            counters["holdings_found"] += 1
+            _, created = OwnershipPosition.objects.update_or_create(
+                snapshot=snapshot,
+                holder_name=holding.holder_name,
+                holder_type=holding.holder_type,
+                position_type=OwnershipPositionType.BENEFICIAL_OWNERSHIP,
+                defaults={
+                    "economic_ownership_pct": None,
+                    "voting_power_pct": None,
+                    "shares_owned": holding.shares_owned,
+                    "share_class": holding.share_class,
+                    "filing_date": source.published_date.date() if source.published_date else None,
+                    "report_period": "",
+                    "disclosure_form": source.title[:64],
+                    "evidence_text": holding.evidence_text,
+                    "source_document": source,
+                    "confidence_score": "0.980",
+                    "review_status": "REVIEWED",
+                },
+            )
+            counters["holdings_inserted" if created else "holdings_updated"] += 1
     return counters
 
 
@@ -190,6 +272,16 @@ def owner_role(root: ElementTree.Element) -> str:
     return "; ".join(roles)
 
 
+def ownership_holder_type(role: str) -> str:
+    if "Officer" in role or any(title in role for title in ("Chief", "President", "Executive")):
+        return OwnershipHolderType.EXECUTIVE
+    if "Director" in role:
+        return OwnershipHolderType.DIRECTOR
+    if "10% owner" in role:
+        return OwnershipHolderType.STRATEGIC
+    return OwnershipHolderType.UNKNOWN
+
+
 def evidence_text(transaction: Form4Transaction, source: SourceDocument) -> str:
     details = [f"SEC ownership filing: {source.title}"]
     if transaction.transaction_code:
@@ -213,20 +305,21 @@ def ownership_xml_url(url: str) -> str:
     return re.sub(r"/(?:xslF345X\d+)/", "/", url, flags=re.IGNORECASE)
 
 
-def parse_ownership_response(session: requests.Session, url: str, *, timeout: float, request_delay: float) -> list[Form4Transaction]:
+def ownership_response_text(session: requests.Session, url: str, *, timeout: float, request_delay: float) -> str:
     sleep(request_delay)
     response = session.get(url, timeout=timeout)
     response.raise_for_status()
-    return parse_ownership_xml(response.text)
+    ownership_root(response.text)
+    return response.text
 
 
-def parse_ownership_fallback(
+def ownership_fallback_text(
     session: requests.Session,
     source_url: str,
     *,
     timeout: float,
     request_delay: float,
-) -> list[Form4Transaction]:
+) -> str:
     """Find the actual ownership XML through the SEC filing accession index."""
 
     sleep(request_delay)
@@ -234,10 +327,17 @@ def parse_ownership_fallback(
     index_response.raise_for_status()
     for candidate_url in ownership_xml_candidates(source_url, index_response.json()):
         try:
-            return parse_ownership_response(session, candidate_url, timeout=timeout, request_delay=request_delay)
+            return ownership_response_text(session, candidate_url, timeout=timeout, request_delay=request_delay)
         except (requests.RequestException, ElementTree.ParseError, ValueError):
             continue
     raise ValueError("No parseable ownership XML is listed in the SEC filing index.")
+
+
+def ownership_root(xml_text: str) -> ElementTree.Element:
+    root = ElementTree.fromstring(xml_text)
+    if local_name(root.tag) != "ownershipDocument":
+        raise ValueError("SEC filing response is not an ownership XML document.")
+    return root
 
 
 def ownership_index_url(url: str) -> str:
