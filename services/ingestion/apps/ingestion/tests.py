@@ -2959,10 +2959,11 @@ class MarketPriceClientTests(TestCase):
         self.assertEqual(bars[0].provider, "ALPHA_VANTAGE")
         self.assertEqual(str(bars[0].close_price), "8.25")
 
-    def test_auto_provider_requires_configured_authenticated_feed(self):
+    def test_auto_provider_falls_back_to_stooq_without_api_keys(self):
         with patch.dict(os.environ, {"FMP_API_KEY": "", "ALPHA_VANTAGE_API_KEY": ""}, clear=False):
-            with self.assertRaisesMessage(CommandError, "No automatic market-data provider is configured"):
-                build_market_client({"provider": "auto", "fmp_api_key": "", "alpha_vantage_api_key": ""})
+            client = build_market_client({"provider": "auto", "fmp_api_key": "", "alpha_vantage_api_key": ""})
+
+        self.assertEqual(client.provider, "STOOQ")
 
 
 class OfficialProductPriceTests(TestCase):

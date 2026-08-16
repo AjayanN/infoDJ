@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import os
-
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 
@@ -60,15 +58,7 @@ class Command(BaseCommand):
             )
 
         if options["include_market_data"]:
-            if os.getenv("FMP_API_KEY") or os.getenv("ALPHA_VANTAGE_API_KEY"):
-                call_command("ingest_market_prices", days=30)
-            else:
-                self.stdout.write(
-                    self.style.WARNING(
-                        "Market-data refresh skipped: configure FMP_API_KEY or ALPHA_VANTAGE_API_KEY. "
-                        "The unauthenticated Stooq endpoint is not used automatically."
-                    )
-                )
+            call_command("ingest_market_prices", days=30)
 
         if options["include_insider_transactions"] and not options["retry_failed_only"]:
             call_command(
