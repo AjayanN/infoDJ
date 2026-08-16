@@ -2555,6 +2555,18 @@ class CompanyProfileCollectorTests(TestCase):
         self.assertIn("Jane Doe, Chief Executive Officer", data.leadership)
         self.assertEqual(data.strategic_priorities, ("Expand direct-to-consumer services.",))
 
+    def test_parse_sec_profile_text_extracts_explicit_operating_and_revenue_regions(self):
+        text = """
+        ITEM 1. Business Netflix operates through UCAN, EMEA, LATAM, and APAC regions.
+        Revenue is reported for UCAN, EMEA, LATAM, and APAC. ITEM 1A. Risk Factors
+        """
+
+        data = parse_sec_profile_text(text, "Netflix")
+
+        expected_regions = ("UCAN", "EMEA", "LATAM", "APAC")
+        self.assertEqual(data.operating_regions, expected_regions)
+        self.assertEqual(data.revenue_geographies, expected_regions)
+
     def test_reviewed_company_fallbacks_replace_unvalidated_parser_fields(self):
         empty = SecProfileData("", (), (), (), (), (), (), (), (), (), "filing evidence")
 
