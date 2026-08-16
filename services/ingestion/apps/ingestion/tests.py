@@ -244,6 +244,12 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(records.filter(record_type="FINANCIAL_FACT").count(), 1)
         self.assertTrue(records.filter(source_document=self.source).exists())
 
+    def test_strategy_milestone_build_treats_missing_reviewed_evidence_as_a_skip(self):
+        call_command("build_strategy_milestones")
+
+        with self.assertRaises(CommandError):
+            call_command("build_strategy_milestones", strict=True)
+
     def test_search_requires_query(self):
         response = self.client.get("/search")
 
