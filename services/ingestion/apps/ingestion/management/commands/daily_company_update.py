@@ -116,6 +116,7 @@ class Command(BaseCommand):
         call_command("build_product_pricing_history", all=True)
         call_command("build_acquisition_lifecycles", all=True)
         call_command("build_customer_supplier_dependencies", all=True)
+        call_command("persist_dependency_source_gaps", all=True)
         call_command("build_geographic_expansions", all=True)
         call_command("build_leadership_decision_records", all=True)
         call_command("build_ownership_insider_activity", all=True)
