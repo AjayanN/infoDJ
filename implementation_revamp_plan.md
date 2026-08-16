@@ -61,12 +61,14 @@ acceptance checks for the previous milestone pass.
   SEC-backed profile snapshot for every company.
 - [x] Repaired ExxonMobil's canonical SEC identifier and backfilled five
   annual reports, 14 events, 11 strategic turns, and its profile snapshot.
+- [x] Parse geographic disclosures across the full SEC filing and refresh all
+  Company 360 profiles; operating-region gaps fell from 18 to 2 and
+  revenue-region gaps from 19 to 5.
 
 **Priority 0 - coverage semantics and evidence quality**
 
-- [ ] Extract operating and revenue regions from financial-statement
-  geographic notes, not only Item 1 business text. Current gaps: operating
-  regions for 18 companies and revenue regions for 19 companies.
+- [ ] Extend the remaining geography parser coverage for Microsoft, Prologis,
+  and the five companies without an explicit revenue-region disclosure.
 - [ ] Build reviewed, source-linked management promises from earnings releases,
   presentations, and filings. This is missing for all 20 companies.
 - [ ] Complete sparse profile dimensions: Microsoft and Walmart revenue

@@ -102,8 +102,8 @@ def parse_sec_profile_text(text: str, company_name: str, *, priorities: tuple[st
 
     segments = extract_segments(business)
     revenue_sources = extract_revenue_sources(business)
-    operating_regions = extract_disclosed_regions(business, context="operating")
-    revenue_geographies = extract_disclosed_regions(business, context="revenue")
+    operating_regions = extract_disclosed_regions(normalized, context="operating")
+    revenue_geographies = extract_disclosed_regions(normalized, context="revenue")
     products = extract_business_labels(business)
     customers = extract_customer_groups(business)
     subsidiaries = extract_owned_businesses(business)
@@ -171,15 +171,23 @@ REGION_LABELS = (
     (r"\bLATAM\b", "LATAM"),
     (r"\bAPAC\b", "APAC"),
     (r"\bUnited States and Canada\b", "United States and Canada"),
+    (r"\bUnited States\b", "United States"),
+    (r"\bCanada/Other Americas\b", "Canada/Other Americas"),
+    (r"\bCanada\b(?!/Other Americas)", "Canada"),
+    (r"\bAustralia/Oceania\b", "Australia/Oceania"),
     (r"\bEurope,? Middle East (?:and|&) Africa\b", "Europe, Middle East and Africa"),
+    (r"\bMiddle East\b", "Middle East"),
     (r"\bLatin America\b", "Latin America"),
     (r"\bAsia[- ]Pacific\b", "Asia-Pacific"),
+    (r"\bEurope\b", "Europe"),
+    (r"\bAfrica\b", "Africa"),
+    (r"\bAsia\b", "Asia"),
 )
 
 
 def extract_disclosed_regions(text: str, *, context: str) -> list[str]:
     context_pattern = {
-        "operating": r"\b(?:operate|operates|operating|operations?|markets?)\b",
+        "operating": r"\b(?:operate|operates|operating|operations?|markets?|geographic areas?|geographic regions?)\b",
         "revenue": r"\b(?:revenue|revenues|net sales|sales)\b",
     }[context]
     regions = []
