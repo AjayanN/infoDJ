@@ -128,7 +128,7 @@ from apps.ingestion.services.market_price_client import (
     parse_alpha_vantage_daily_csv,
     parse_fmp_historical_prices,
 )
-from apps.ingestion.services.sec_form4 import form4_sources, ingest_form4_sources, ownership_xml_url, parse_ownership_xml
+from apps.ingestion.services.sec_form4 import form4_sources, ingest_form4_sources, ownership_xml_candidates, ownership_xml_url, parse_ownership_xml
 from apps.ingestion.management.commands.ingest_market_prices import build_market_client
 from apps.ingestion.management.commands.daily_company_update import Command as DailyCompanyUpdateCommand
 from apps.ingestion.management.commands.ingest_sec_form4 import Command as SecForm4Command
@@ -3029,6 +3029,28 @@ class SecForm4IngestionTests(TestCase):
             "https://www.sec.gov/Archives/edgar/data/1/000012345626000001/form4.xml",
         )
 
+    def test_fallback_candidates_use_the_accession_index_xml_files(self):
+        source_url = "https://www.sec.gov/Archives/edgar/data/1/000012345626000001/xslF345X06/presentation.xml"
+
+        candidates = ownership_xml_candidates(
+            source_url,
+            {"directory": {"item": [{"name": "presentation.xml"}, {"name": "ownership.xml"}, {"name": "primary.htm"}]}},
+        )
+
+        self.assertEqual(candidates, ["https://www.sec.gov/Archives/edgar/data/1/000012345626000001/ownership.xml"])
+
+    def test_ingestion_falls_back_to_accession_index_for_presentation_html(self):
+        presentation_url = self.source.url
+        index_url = "https://www.sec.gov/Archives/edgar/data/1/000012345626000001/index.json"
+        ownership_url = "https://www.sec.gov/Archives/edgar/data/1/000012345626000001/ownership.xml"
+        session = FakeForm4FallbackSession(self.xml, presentation_url, index_url, ownership_url)
+
+        result = ingest_form4_sources(company=self.company, sources=form4_sources(self.company), session=session)
+
+        self.assertEqual(result["sources_parsed"], 1)
+        self.assertEqual(result["transactions_inserted"], 2)
+        self.assertEqual(session.calls, [presentation_url, index_url, ownership_url])
+
     def test_ingestion_uses_existing_form4_source_and_is_idempotent(self):
         session = FakeForm4Session(self.xml)
 
@@ -3051,3 +3073,28 @@ class FakeForm4Session:
 
     def get(self, url, timeout):
         return FakeProfileResponse(url=url, text=self.xml)
+
+
+class FakeForm4FallbackSession:
+    def __init__(self, xml, presentation_url, index_url, ownership_url):
+        self.xml = xml
+        self.presentation_url = presentation_url
+        self.index_url = index_url
+        self.ownership_url = ownership_url
+        self.headers = {}
+        self.calls = []
+
+    def get(self, url, timeout):
+        self.calls.append(url)
+        if url == self.presentation_url:
+            return FakeProfileResponse(url=url, text="<html><body>Presentation page</body></html>")
+        if url == self.index_url:
+            return FakeForm4IndexResponse(url=url, text='{"directory": {"item": [{"name": "ownership.xml"}]}}')
+        if url == self.ownership_url:
+            return FakeProfileResponse(url=url, text=self.xml)
+        raise AssertionError(f"Unexpected URL: {url}")
+
+
+class FakeForm4IndexResponse(FakeProfileResponse):
+    def json(self):
+        return {"directory": {"item": [{"name": "ownership.xml"}]}}

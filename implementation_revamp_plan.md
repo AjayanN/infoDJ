@@ -95,8 +95,10 @@ acceptance checks for the previous milestone pass.
 - [x] Add scheduler-ready Form 3/4/5 discovery and parsing: the first pass
   discovered 400 filings and stored 312 source-linked insider transactions.
 - [ ] Add SEC XML fallback handling for issuers whose discovered ownership
-  documents resolve to non-XML presentation pages, then implement source-linked
-  contract dependency extraction.
+  documents resolve to non-XML presentation pages. The parser now locates the
+  accession's XML from the SEC index and uses 250ms fair-access pacing; rerun
+  after the temporary SEC 429 cooldown, then implement source-linked contract
+  dependency extraction.
 
 **Priority 2 - source resilience**
 

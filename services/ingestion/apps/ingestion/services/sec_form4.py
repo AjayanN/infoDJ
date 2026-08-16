@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal, InvalidOperation
 import re
+from time import sleep
 from typing import Iterable
 from xml.etree import ElementTree
 
@@ -18,6 +19,7 @@ from apps.ingestion.models import SourceDocument
 
 SEC_USER_AGENT = "InfoDJ/0.1 business-event-research contact local-dev@example.com"
 OWNERSHIP_FORMS = ("3", "3/A", "4", "4/A", "5", "5/A")
+SEC_REQUEST_DELAY = 0.25
 
 
 @dataclass(frozen=True)
@@ -44,6 +46,8 @@ def parse_ownership_xml(xml_text: str) -> list[Form4Transaction]:
     """Parse non-derivative Form 3/4/5 transactions without inferring omissions."""
 
     root = ElementTree.fromstring(xml_text)
+    if local_name(root.tag) != "ownershipDocument":
+        raise ValueError("SEC filing response is not an ownership XML document.")
     owner_name = text_at(root, "reportingOwner/reportingOwnerId/rptOwnerName")
     role = owner_role(root)
     footnotes = {
@@ -86,6 +90,7 @@ def ingest_form4_sources(
     sources: Iterable[SourceDocument],
     session: requests.Session | None = None,
     timeout: float = 20.0,
+    request_delay: float = SEC_REQUEST_DELAY,
 ) -> dict[str, int]:
     """Fetch Form 3/4/5 XML already discovered in EDGAR and upsert transactions."""
 
@@ -95,12 +100,13 @@ def ingest_form4_sources(
     for source in sources:
         counters["sources_seen"] += 1
         try:
-            response = session.get(ownership_xml_url(source.url), timeout=timeout)
-            response.raise_for_status()
-            transactions = parse_ownership_xml(response.text)
+            transactions = parse_ownership_response(session, ownership_xml_url(source.url), timeout=timeout, request_delay=request_delay)
         except (requests.RequestException, ElementTree.ParseError, ValueError):
-            counters["sources_failed"] += 1
-            continue
+            try:
+                transactions = parse_ownership_fallback(session, source.url, timeout=timeout, request_delay=request_delay)
+            except (requests.RequestException, ElementTree.ParseError, ValueError):
+                counters["sources_failed"] += 1
+                continue
         counters["sources_parsed"] += 1
         snapshot = snapshot_for_source(company, source)
         accession = accession_from_url(source.url)
@@ -205,6 +211,59 @@ def ownership_xml_url(url: str) -> str:
     """Remove the EDGAR XSL presentation path to request the original XML."""
 
     return re.sub(r"/(?:xslF345X\d+)/", "/", url, flags=re.IGNORECASE)
+
+
+def parse_ownership_response(session: requests.Session, url: str, *, timeout: float, request_delay: float) -> list[Form4Transaction]:
+    sleep(request_delay)
+    response = session.get(url, timeout=timeout)
+    response.raise_for_status()
+    return parse_ownership_xml(response.text)
+
+
+def parse_ownership_fallback(
+    session: requests.Session,
+    source_url: str,
+    *,
+    timeout: float,
+    request_delay: float,
+) -> list[Form4Transaction]:
+    """Find the actual ownership XML through the SEC filing accession index."""
+
+    sleep(request_delay)
+    index_response = session.get(ownership_index_url(source_url), timeout=timeout)
+    index_response.raise_for_status()
+    for candidate_url in ownership_xml_candidates(source_url, index_response.json()):
+        try:
+            return parse_ownership_response(session, candidate_url, timeout=timeout, request_delay=request_delay)
+        except (requests.RequestException, ElementTree.ParseError, ValueError):
+            continue
+    raise ValueError("No parseable ownership XML is listed in the SEC filing index.")
+
+
+def ownership_index_url(url: str) -> str:
+    match = re.search(r"^(https?://[^/]+/Archives/edgar/data/\d+/\d{18})/", url, flags=re.IGNORECASE)
+    if not match:
+        raise ValueError("SEC ownership filing URL does not include an accession directory.")
+    return f"{match.group(1)}/index.json"
+
+
+def ownership_xml_candidates(source_url: str, payload: dict) -> list[str]:
+    """Return XML files listed by SEC for the same accession, excluding the first attempt."""
+
+    items = payload.get("directory", {}).get("item", [])
+    if not isinstance(items, list):
+        raise ValueError("SEC filing index does not contain directory items.")
+    base_url = ownership_index_url(source_url).removesuffix("index.json")
+    primary_url = ownership_xml_url(source_url)
+    candidates = []
+    for item in items:
+        name = item.get("name") if isinstance(item, dict) else ""
+        if not isinstance(name, str) or not name.lower().endswith(".xml"):
+            continue
+        candidate = f"{base_url}{name}"
+        if candidate != primary_url:
+            candidates.append(candidate)
+    return candidates
 
 
 def footnote_ids(node: ElementTree.Element) -> list[str]:
