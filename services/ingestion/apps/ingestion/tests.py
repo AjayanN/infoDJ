@@ -268,6 +268,8 @@ class IngestionSearchApiTests(TestCase):
             customer_groups=["Consumers", "Advertisers"],
             revenue_sources=["Subscriptions", "Advertising"],
             geographies=["United States", "International"],
+            operating_regions=["UCAN", "EMEA", "LATAM", "APAC"],
+            revenue_geographies=["UCAN", "EMEA", "LATAM", "APAC"],
             leadership=[{"name": "Executive team", "role": "Management"}],
             competitors=["Disney+", "Prime Video"],
             strategic_priorities=["Grow advertising", "Improve member value"],
@@ -297,6 +299,28 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(coverage["scoring_contract"]["eligible_snapshot_count"], 0)
         self.assertIn("business_model", coverage["missing_sections"])
         self.assertEqual(coverage["section_statuses"]["business_model"], "unavailable")
+
+    def test_company_coverage_separates_headquarters_from_operating_regions(self):
+        self.netflix.headquarters_country = "United States"
+        self.netflix.save(update_fields=["headquarters_country"])
+        CompanyProfileSnapshot.objects.create(
+            company=self.netflix,
+            effective_date=date(2024, 12, 31),
+            source_document=self.source,
+            status="REVIEWED",
+            operating_regions=["UCAN", "EMEA", "LATAM", "APAC"],
+            revenue_geographies=["UCAN", "EMEA", "LATAM", "APAC"],
+        )
+
+        response = self.client.get("/companies/netflix/coverage")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["company"]["headquarters_country"], "United States")
+        dimensions = {item["key"]: item for item in payload["coverage"]["dimensions"]}
+        self.assertEqual(dimensions["headquarters_country"]["status"], "available")
+        self.assertEqual(dimensions["operating_regions"]["status"], "available")
+        self.assertEqual(dimensions["revenue_geographies"]["status"], "available")
 
     def test_company_profile_reports_partial_section_gaps(self):
         response = self.client.get("/companies/netflix/profile")
