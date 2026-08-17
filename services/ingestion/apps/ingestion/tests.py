@@ -2413,6 +2413,35 @@ class IngestionSearchApiTests(TestCase):
 
 
 class DailyCompanyUpdateTests(TestCase):
+    def test_uses_current_annual_quarterly_and_current_report_filings_for_events(self):
+        options = {
+            "limit": 20,
+            "offset": 0,
+            "batch_size": 0,
+            "sec_limit": 30,
+            "wikipedia_limit": 10,
+            "gdelt_records_per_query": 5,
+            "gdelt_query_limit": 3,
+            "skip_gdelt": True,
+            "skip_event_extraction": False,
+            "event_filing_limit": 8,
+            "retry_failed_only": False,
+            "include_market_data": False,
+            "include_financial_facts": False,
+            "include_insider_transactions": False,
+            "include_official_product_prices": False,
+            "insider_form_limit": 5,
+            "include_macro_context": False,
+            "include_quality_scoring": False,
+            "include_company_profiles": False,
+        }
+        with patch("apps.ingestion.management.commands.daily_company_update.call_command") as call:
+            DailyCompanyUpdateCommand().handle(**options)
+
+        event_call = next(call_args for call_args in call.call_args_list if call_args.args[0] == "extract_sector_events")
+        self.assertEqual(event_call.kwargs["forms"], "10-K,10-Q,8-K")
+        self.assertTrue(event_call.kwargs["reuse_extractions"])
+
     def test_extracts_reports_and_enriches_energy_before_dashboard_builders(self):
         options = {
             "limit": 20,

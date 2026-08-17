@@ -18,6 +18,11 @@ class Command(BaseCommand):
         parser.add_argument("--skip-gdelt", action="store_true")
         parser.add_argument("--skip-event-extraction", action="store_true")
         parser.add_argument("--event-filing-limit", type=int, default=8)
+        parser.add_argument(
+            "--event-forms",
+            default="10-K,10-Q,8-K",
+            help="Comma-separated SEC forms used for scheduled event extraction.",
+        )
         parser.add_argument("--retry-failed-only", action="store_true")
         parser.add_argument("--include-market-data", action="store_true")
         parser.add_argument("--include-financial-facts", action="store_true")
@@ -98,7 +103,7 @@ class Command(BaseCommand):
                 limit=options["limit"],
                 offset=extraction_offset,
                 batch_size=extraction_batch_size,
-                forms="10-K",
+                forms=options.get("event_forms", "10-K,10-Q,8-K"),
                 filing_limit=options["event_filing_limit"],
                 reuse_extractions=True,
             )

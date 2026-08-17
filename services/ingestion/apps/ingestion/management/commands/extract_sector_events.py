@@ -19,6 +19,11 @@ class Command(BaseCommand):
         parser.add_argument("--batch-size", type=int, default=0)
         parser.add_argument("--forms", default="10-K")
         parser.add_argument("--filing-limit", type=int, default=30)
+        parser.add_argument(
+            "--oldest-first",
+            action="store_true",
+            help="Process the oldest eligible filings first instead of the latest disclosures.",
+        )
         parser.add_argument("--skip-existing", action="store_true")
         parser.add_argument("--reuse-extractions", action="store_true")
 
@@ -70,7 +75,7 @@ class Command(BaseCommand):
                     company=company.slug,
                     forms=options["forms"],
                     limit=options["filing_limit"],
-                    oldest_first=True,
+                    oldest_first=options.get("oldest_first", False),
                     reuse_extractions=options["reuse_extractions"],
                     verbosity=0,
                 )
