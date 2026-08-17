@@ -342,6 +342,29 @@
                   <p *ngIf="founderDecision() as decision">{{ decision.coverage.comparable_event_count > 0 ? 'These are source-linked moves we have observed. Open any company to understand the context.' : 'Choose a company below to see the evidence we have today. Detailed risks, metrics, and sources stay inside Company 360.' }}</p>
                 </section>
 
+                <section class="founder-focus-plan" *ngIf="founderDecision() as decision" aria-labelledby="founder-focus-plan-heading">
+                  <ng-container *ngIf="decision.directions[0] as direction">
+                    <div class="founder-focus-plan-copy">
+                      <p class="section-kicker">Your focused plan</p>
+                      <h3 id="founder-focus-plan-heading">What should you prove next?</h3>
+                      <strong>{{ direction.next_action }}</strong>
+                      <p>{{ direction.reasoning }}</p>
+                      <span *ngIf="direction.company_names.length">Observed at {{ direction.company_names.join(', ') }}</span>
+                    </div>
+                    <div class="founder-focus-evidence" *ngIf="direction.evidence.length; else focusPlanEmpty">
+                      <article *ngFor="let event of direction.evidence">
+                        <button type="button" (click)="openCompany(event.company_slug)">
+                          <small>{{ event.company }} · {{ event.event_date | date:'mediumDate' }}</small>
+                          <strong>{{ event.actual_change }}</strong>
+                          <span>Open {{ event.company }} Company 360</span>
+                        </button>
+                        <a *ngIf="event.source.url" [href]="event.source.url" target="_blank" rel="noopener noreferrer">{{ event.source.title || 'Open original source' }}</a>
+                      </article>
+                    </div>
+                    <ng-template #focusPlanEmpty><p class="founder-focus-empty">We need more reviewed comparable evidence before making this plan evidence-backed.</p></ng-template>
+                  </ng-container>
+                </section>
+
                 <section class="founder-stage-moves" *ngIf="founderDecision() as decision" aria-labelledby="founder-stage-moves-heading">
                   <div class="compact-panel-heading">
                     <div><p class="section-kicker">Observed moves</p><h3 id="founder-stage-moves-heading">What did they do next?</h3></div>

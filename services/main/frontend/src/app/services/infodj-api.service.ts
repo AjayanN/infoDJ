@@ -43,6 +43,8 @@ export type FounderDecisionPath = {
   claim_type: 'founder_hypothesis';
   next_action: string;
   why_now: string;
+  reasoning: string;
+  company_names: string[];
   evidence_status: 'observed_pattern' | 'unavailable';
   evidence: FounderDecisionEvidence[];
 };

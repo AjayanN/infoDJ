@@ -284,6 +284,8 @@ class FounderDecisionApiTests(TestCase):
         self.assertEqual(response.data["journey"][0]["company_slug"], "exxonmobil")
         self.assertEqual(response.data["directions"][0]["claim_type"], "founder_hypothesis")
         self.assertEqual(response.data["directions"][0]["evidence"][0]["claim_type"], "reported_fact")
+        self.assertEqual(response.data["directions"][0]["company_names"], ["ExxonMobil"])
+        self.assertIn("source-linked moves", response.data["directions"][0]["reasoning"])
         passport = {item["label"]: item for item in response.data["coverage_passport"]}
         self.assertEqual(passport["Comparable moves"]["count"], 1)
         self.assertEqual(passport["Comparable moves"]["last_observed_on"], "2026-02-18")
