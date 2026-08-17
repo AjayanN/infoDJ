@@ -84,7 +84,7 @@ function appBasePath(): string {
 }
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
-type AppPage = 'setup' | 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider' | 'valuation-context' | 'regulatory-litigation' | 'sector-themes' | 'macro-sensitivity' | 'strategy-theses' | 'watchlists' | 'briefings' | 'scenarios' | 'contradictions' | 'strategy-failures' | 'foundations' | 'profile' | 'subscription';
+type AppPage = 'setup' | 'focus-plan' | 'dashboard' | 'company' | 'business-model' | 'operating-kpis' | 'management-promises' | 'strategy-milestones' | 'earnings' | 'capital-allocation' | 'competitive-position' | 'product-pricing' | 'acquisition-lifecycle' | 'customer-supplier-dependency' | 'geographic-expansion' | 'leadership-decisions' | 'ownership-insider' | 'valuation-context' | 'regulatory-litigation' | 'sector-themes' | 'macro-sensitivity' | 'strategy-theses' | 'watchlists' | 'briefings' | 'scenarios' | 'contradictions' | 'strategy-failures' | 'foundations' | 'profile' | 'subscription';
 type DashboardViewId =
   | 'company-intelligence'
   | 'turn-impact'
@@ -785,7 +785,7 @@ class AppComponent implements AfterViewChecked {
         this.message.set(openCockpit ? 'Your focus plan is ready.' : 'Founder context saved.');
         this.founderContextSaving.set(false);
         if (openCockpit) {
-          this.setPage('dashboard');
+          this.setPage('focus-plan');
           this.loadDashboard();
         }
       },
@@ -813,6 +813,7 @@ class AppComponent implements AfterViewChecked {
     if (playbook) {
       this.founderPlaybook.set(playbook);
     }
+    this.syncFounderSetupStep();
   }
 
   founderStageLabel(): string {
@@ -913,6 +914,17 @@ class AppComponent implements AfterViewChecked {
     return Boolean(context.company_name && context.sector && context.business_type && context.stage && context.objective);
   }
 
+  private syncFounderSetupStep(): void {
+    const answers = [this.founderCompanyName, this.founderSector, this.founderBusinessType, this.founderStage(), this.founderObjective];
+    const firstMissingStep = answers.findIndex((answer) => !String(answer || '').trim());
+    this.founderSetupStep.set(firstMissingStep === -1 ? 0 : firstMissingStep);
+  }
+
+  openFounderHome(): void {
+    const context = this.founderContext();
+    this.setActivePage(context && this.hasCompleteFounderSetup(context) ? 'focus-plan' : 'setup');
+  }
+
   private setPage(page: AppPage, recordHistory = true): void {
     const changed = this.activePage() !== page;
     this.activePage.set(page);
@@ -970,6 +982,9 @@ class AppComponent implements AfterViewChecked {
     if (page === 'dashboard') {
       this.dashboardCompanySlug.set('');
       this.loadDashboard();
+    }
+    if (page === 'focus-plan') {
+      this.loadFounderDecision();
     }
   }
 
@@ -1307,6 +1322,9 @@ class AppComponent implements AfterViewChecked {
     if (this.activePage() === 'leadership-decisions') {
       return `${this.leadershipDecisions()?.company.name || 'Company'} Leadership Decision Record`;
     }
+    if (this.activePage() === 'focus-plan') {
+      return 'My Focus Plan';
+    }
     if (this.activePage() === 'profile') {
       return 'Profile';
     }
@@ -1319,6 +1337,7 @@ class AppComponent implements AfterViewChecked {
   sectionQuestion(): string {
     const questions: Record<AppPage, string> = {
       setup: 'What should InfoDJ know before it helps you decide?',
+      'focus-plan': 'What should I prove next, based on what comparable companies actually did?',
       dashboard: 'What is the next proof point for my company?',
       company: 'What should I understand about this company before making a decision?',
       'business-model': 'How does this company create, deliver, and capture value?',
@@ -1354,6 +1373,9 @@ class AppComponent implements AfterViewChecked {
   pageDescription(): string {
     if (this.activePage() === 'setup') {
       return 'Tell us only what we need to make the next recommendation relevant to your company.';
+    }
+    if (this.activePage() === 'focus-plan') {
+      return 'A focused next action with dated, source-linked evidence from comparable companies.';
     }
     if (this.activePage() === 'company') {
       return 'Source-backed company structure, strategic priorities, recent changes, and evidence coverage.';
@@ -1556,9 +1578,10 @@ class AppComponent implements AfterViewChecked {
         this.currentUser.set(response.user);
         this.applyFounderContext(response.user.profile.founder_context);
         if (this.hasCompleteFounderSetup(response.user.profile.founder_context)) {
-          this.setPage('dashboard', false);
+          this.setPage('focus-plan', false);
           this.loadDashboard();
         } else {
+          this.syncFounderSetupStep();
           this.setPage('setup', false);
         }
         this.loadFounderContext();

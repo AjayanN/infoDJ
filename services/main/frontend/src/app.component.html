@@ -165,7 +165,7 @@
         <strong>Business intelligence</strong>
       </div>
       <nav class="side-nav" aria-label="Main menu">
-        <button type="button" [class.active]="activePage() === 'dashboard'" [attr.aria-current]="activePage() === 'dashboard' ? 'page' : null" (click)="setActivePage('dashboard')">Home</button>
+        <button type="button" [class.active]="activePage() === 'focus-plan' || activePage() === 'setup'" [attr.aria-current]="activePage() === 'focus-plan' || activePage() === 'setup' ? 'page' : null" (click)="openFounderHome()">My focus</button>
         <button type="button" class="research-menu-trigger" [class.active]="researchMenuOpen()" [attr.aria-expanded]="researchMenuOpen()" (click)="toggleResearchMenu()">Research workspace <span aria-hidden="true">{{ researchMenuOpen() ? '' : '+' }}</span></button>
         <button type="button" [class.active]="activePage() === 'profile'" [attr.aria-current]="activePage() === 'profile' ? 'page' : null" (click)="setActivePage('profile')">Profile</button>
         <button type="button" [class.active]="activePage() === 'subscription'" [attr.aria-current]="activePage() === 'subscription' ? 'page' : null" (click)="setActivePage('subscription')">Subscription</button>
@@ -287,6 +287,43 @@
               <div class="founder-wizard-actions"><button type="button" class="ghost-button" *ngIf="founderSetupStep() > 0" (click)="previousFounderSetupStep()">Back</button><span></span><button type="button" class="primary-button" *ngIf="founderSetupStep() < 4" (click)="nextFounderSetupStep()">Continue</button><button type="submit" class="primary-button founder-setup-submit" *ngIf="founderSetupStep() === 4" [disabled]="founderContextSaving()">{{ founderContextSaving() ? 'Building your plan…' : 'Create my focus plan' }}</button></div>
               <button type="button" class="text-action founder-setup-research" (click)="setActivePage('dashboard')">I want to explore Company 360 research instead</button>
             </form>
+          </section>
+
+          <section *ngSwitchCase="'focus-plan'" class="founder-focus-destination" aria-labelledby="focus-plan-page-heading">
+            <header class="founder-focus-destination-header">
+              <div>
+                <p class="section-kicker">Your evidence-backed focus</p>
+                <h2 id="focus-plan-page-heading">What should you prove next?</h2>
+                <p>We use your stage, field, and immediate goal to select a focused next action—not another dashboard.</p>
+              </div>
+              <button type="button" class="ghost-button" (click)="setActivePage('setup')">Change my focus</button>
+            </header>
+
+            <ng-container *ngIf="founderDecision() as decision; else focusPlanLoading">
+              <ng-container *ngIf="decision.directions[0] as direction; else focusPlanUnavailable">
+                <section class="founder-focus-recommendation">
+                  <p class="section-kicker">Your next proof point</p>
+                  <strong>{{ direction.next_action }}</strong>
+                  <p>{{ direction.reasoning }}</p>
+                  <span *ngIf="direction.company_names.length">Learn from {{ direction.company_names.join(', ') }}</span>
+                </section>
+
+                <section class="founder-focus-sources" aria-labelledby="focus-plan-sources-heading">
+                  <div class="compact-panel-heading"><div><p class="section-kicker">Comparable evidence</p><h3 id="focus-plan-sources-heading">What did similar companies do?</h3></div><span *ngIf="direction.evidence.length">{{ direction.evidence.length }} dated moves</span></div>
+                  <div class="founder-focus-source-grid" *ngIf="direction.evidence.length; else focusPlanEvidenceEmpty">
+                    <article *ngFor="let event of direction.evidence">
+                      <small>{{ event.company }} · {{ event.event_date | date:'mediumDate' }}</small>
+                      <strong>{{ event.actual_change }}</strong>
+                      <div><button type="button" class="ghost-button" (click)="openCompany(event.company_slug)">Open Company 360</button><a *ngIf="event.source.url" [href]="event.source.url" target="_blank" rel="noopener noreferrer">Original source</a></div>
+                    </article>
+                  </div>
+                  <ng-template #focusPlanEvidenceEmpty><p class="founder-focus-empty">We do not yet have reviewed comparable moves for this exact focus. You can adjust your field or open Company 360 research while we enrich coverage.</p></ng-template>
+                </section>
+              </ng-container>
+            </ng-container>
+
+            <ng-template #focusPlanLoading><section class="panel founder-focus-loading" role="status" aria-live="polite"><p class="section-kicker">Preparing your plan</p><h3>Matching your focus to comparable moves.</h3><p>Loading source-linked evidence from companies in your field.</p></section></ng-template>
+            <ng-template #focusPlanUnavailable><section class="panel founder-focus-loading"><p class="section-kicker">Your focus needs evidence</p><h3>We are preparing the first comparable path.</h3><p>Choose another focus or open Company 360 research while the evidence base is enriched.</p></section></ng-template>
           </section>
 
           <section *ngSwitchCase="'dashboard'" class="dashboard-grid" aria-labelledby="dashboard-heading">
