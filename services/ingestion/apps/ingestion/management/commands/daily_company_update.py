@@ -21,6 +21,7 @@ class Command(BaseCommand):
         parser.add_argument("--retry-failed-only", action="store_true")
         parser.add_argument("--include-market-data", action="store_true")
         parser.add_argument("--include-financial-facts", action="store_true")
+        parser.add_argument("--include-fmp-fundamentals", action="store_true")
         parser.add_argument("--include-insider-transactions", action="store_true")
         parser.add_argument("--include-official-product-prices", action="store_true")
         parser.add_argument("--insider-form-limit", type=int, default=5)
@@ -56,6 +57,9 @@ class Command(BaseCommand):
                 offset=options["offset"],
                 company_limit=options["batch_size"] or options["limit"],
             )
+
+        if options.get("include_fmp_fundamentals", False) and not options["retry_failed_only"]:
+            call_command("ingest_fmp_fundamentals")
 
         if options["include_market_data"]:
             call_command("ingest_market_prices", days=30)

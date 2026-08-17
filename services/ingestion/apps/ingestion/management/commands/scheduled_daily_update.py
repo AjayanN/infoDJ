@@ -36,6 +36,7 @@ class Command(BaseCommand):
         parser.add_argument("--include-gdelt", action="store_true")
         parser.add_argument("--include-market-data", action="store_true")
         parser.add_argument("--include-financial-facts", action="store_true")
+        parser.add_argument("--include-fmp-fundamentals", action="store_true")
         parser.add_argument("--include-insider-transactions", action="store_true")
         parser.add_argument("--include-official-product-prices", action="store_true")
         parser.add_argument("--insider-form-limit", type=int, default=5)
@@ -101,6 +102,7 @@ class Command(BaseCommand):
             "skip_gdelt": not options["include_gdelt"],
             "include_market_data": options["include_market_data"],
             "include_financial_facts": options["include_financial_facts"],
+            "include_fmp_fundamentals": options["include_fmp_fundamentals"],
             "include_insider_transactions": options["include_insider_transactions"],
             "include_official_product_prices": options["include_official_product_prices"],
             "insider_form_limit": options["insider_form_limit"],
