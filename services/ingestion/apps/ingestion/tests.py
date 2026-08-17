@@ -129,6 +129,7 @@ from apps.ingestion.services.market_price_client import (
     parse_alpha_vantage_daily_csv,
     parse_fmp_historical_prices,
 )
+from apps.ingestion.services.fmp_fundamentals import FUNDAMENTAL_SERIES, parse_fmp_fundamental_facts
 from apps.ingestion.services.sec_form4 import (
     form4_sources,
     ingest_form4_sources,
@@ -3026,6 +3027,35 @@ class MarketPriceClientTests(TestCase):
             client = build_market_client({"provider": "auto", "fmp_api_key": "", "alpha_vantage_api_key": ""})
 
         self.assertEqual(client.provider, "STOOQ")
+
+
+class FmpFundamentalsTests(TestCase):
+    def test_parses_only_curated_numeric_fields_with_a_period(self):
+        facts = parse_fmp_fundamental_facts(
+            [
+                {"date": "2025-12-31", "calendarYear": "2025", "period": "FY", "revenue": 1000, "netIncome": "125", "eps": "2.5"},
+                {"date": "not-a-date", "calendarYear": "2024", "period": "FY", "revenue": 900},
+            ],
+            endpoint="income-statement",
+            concepts=FUNDAMENTAL_SERIES["income-statement"],
+        )
+
+        self.assertEqual([(fact.concept, str(fact.value)) for fact in facts], [
+            ("income-statement:revenue", "1000"),
+            ("income-statement:netIncome", "125"),
+            ("income-statement:eps", "2.5"),
+        ])
+        self.assertEqual(facts[0].period_end.isoformat(), "2025-12-31")
+        self.assertEqual(facts[0].fiscal_year, 2025)
+
+    def test_ignores_non_list_payloads_and_invalid_values(self):
+        facts = parse_fmp_fundamental_facts(
+            {"error": "not entitled"},
+            endpoint="ratios",
+            concepts=FUNDAMENTAL_SERIES["ratios"],
+        )
+
+        self.assertEqual(facts, [])
 
 
 class OfficialProductPriceTests(TestCase):

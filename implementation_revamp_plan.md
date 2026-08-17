@@ -369,3 +369,13 @@ acceptance checks for the previous milestone pass.
 5. [ ] Implement Energy enrichment and run a source-backed ExxonMobil backfill.
 6. [ ] Validate data quality before changing the founder home again.
 7. [ ] Build precomputed decision cases, then the minimal decision home.
+
+## Implementation log
+
+- [x] Added FMP fundamentals ingestion for all active companies: curated income,
+  balance-sheet, cash-flow, key-metric, and ratio facts are stored separately
+  from primary SEC facts with endpoint-level provenance.
+- [x] Added focused parser tests, live ExxonMobil validation, and scheduler
+  propagation through Docker Compose, the scheduler launcher, and daily update.
+- [ ] Add an entitled historical-price provider before claiming complete market
+  history coverage; the current FMP plan returns `402` for historical EOD data.

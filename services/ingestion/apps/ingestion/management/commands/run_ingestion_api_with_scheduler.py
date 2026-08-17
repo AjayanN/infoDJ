@@ -21,6 +21,7 @@ class Command(BaseCommand):
         parser.add_argument("--include-gdelt", action="store_true")
         parser.add_argument("--include-market-data", action="store_true")
         parser.add_argument("--include-financial-facts", action="store_true")
+        parser.add_argument("--include-fmp-fundamentals", action="store_true")
         parser.add_argument("--include-insider-transactions", action="store_true")
         parser.add_argument("--include-official-product-prices", action="store_true")
         parser.add_argument("--insider-form-limit", type=int, default=5)
@@ -49,6 +50,8 @@ class Command(BaseCommand):
             scheduler_command.append("--include-market-data")
         if options["include_financial_facts"]:
             scheduler_command.append("--include-financial-facts")
+        if options["include_fmp_fundamentals"]:
+            scheduler_command.append("--include-fmp-fundamentals")
         if options["include_insider_transactions"]:
             scheduler_command.extend(["--include-insider-transactions", "--insider-form-limit", str(options["insider_form_limit"])])
         if options["include_official_product_prices"]:
