@@ -51,7 +51,13 @@ def build_founder_decision(context: dict, companies: list[dict], dashboard: dict
                     else default_action
                 ),
                 "why_now": playbook["stage_question"],
+                "reasoning": direction_reasoning(
+                    stage_question=playbook["stage_question"],
+                    action=(playbook[playbook_key][0] if playbook.get(playbook_key) else default_action),
+                    evidence=evidence,
+                ),
                 "evidence": [serialize_event(event) for event in evidence],
+                "company_names": sorted({str(event.get("company") or "") for event in evidence if event.get("company")}),
                 "evidence_status": "observed_pattern" if evidence else "unavailable",
             }
         )
@@ -115,6 +121,20 @@ def build_coverage_passport(comparable_events: list[dict], risk_events: list[dic
 def passport_item(label: str, status: str, count: int, last_observed_on: str | None, description: str, next_action: str) -> dict:
     strength = "strong" if count >= 6 else "moderate" if count >= 3 else "weak" if count else "missing"
     return {"label": label, "status": status, "evidence_strength": strength, "count": count, "last_observed_on": last_observed_on, "claim_type": "reported_fact", "description": description, "next_action": next_action}
+
+
+def direction_reasoning(*, stage_question: str, action: str, evidence: list[dict]) -> str:
+    """Explain the recommendation without presenting the hypothesis as a reported fact."""
+
+    if not evidence:
+        return f"This is a focused starting hypothesis for the question: {stage_question}"
+    companies = sorted({str(event.get("company") or "") for event in evidence if event.get("company")})
+    company_text = ", ".join(companies[:3])
+    return (
+        f"At this stage, the decision to make is: {stage_question} "
+        f"The suggested next action is {action.lower()} "
+        f"because InfoDJ has dated, source-linked moves from {company_text} that you can inspect before deciding."
+    )
 
 
 def parse_event_date(value: object) -> date | None:
