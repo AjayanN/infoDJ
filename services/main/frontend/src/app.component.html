@@ -1,88 +1,48 @@
 <ng-container *ngIf="!token(); else authenticatedApp">
   <a class="skip-link" href="#auth-content">Skip to authentication form</a>
   <main id="entry-content" class="auth-page founder-entry">
-    <section class="entry-story" aria-labelledby="entry-title">
+    <section class="entry-story market-entry" aria-labelledby="entry-title">
       <div class="entry-brand" aria-label="InfoDJ">
         <span class="entry-brand-mark" aria-hidden="true">i</span>
         <span>InfoDJ</span>
       </div>
 
-      <div class="entry-copy">
-        <p class="entry-kicker">Your company’s next right move</p>
-        <h1 id="entry-title">Build with clarity, not just momentum.</h1>
-        <p>InfoDJ turns your company stage, risks, and goals into a focused action plan—grounded in what comparable companies actually changed.</p>
-        <p class="entry-motto"><strong>Evidence before ego.</strong> Progress before noise.</p>
+      <div class="market-copy">
+        <p class="entry-kicker">Evidence before ego</p>
+        <h1 id="entry-title">See the signal.<br />Make the next move.</h1>
+        <p>InfoDJ turns the moves comparable companies made into a focused question for your company—before you add another tab, dashboard, or opinion.</p>
       </div>
 
-      <section class="entry-stage-map" aria-labelledby="stage-map-title">
-        <div class="entry-section-heading">
-          <p class="entry-kicker">Start where you are</p>
-          <h2 id="stage-map-title">Your company journey</h2>
-        </div>
-        <div class="stage-rail" aria-label="Company stages">
-          <button type="button" [class.stage-highlight]="founderStage() === 'validate'" (click)="chooseFounderStage('validate')"><span>01</span>Validate</button>
-          <button type="button" [class.stage-highlight]="founderStage() === 'build'" (click)="chooseFounderStage('build')"><span>02</span>Build</button>
-          <button type="button" [class.stage-highlight]="founderStage() === 'launch'" (click)="chooseFounderStage('launch')"><span>03</span>Launch</button>
-          <button type="button" [class.stage-highlight]="founderStage() === 'grow'" (click)="chooseFounderStage('grow')"><span>04</span>Grow</button>
-          <button type="button" [class.stage-highlight]="founderStage() === 'scale'" (click)="chooseFounderStage('scale')"><span>05</span>Scale</button>
-        </div>
-        <label class="entry-sector-choice">What field are you building in?
-          <select name="entry_founder_sector" [(ngModel)]="founderSector">
-            <option value="">Choose your field</option>
-            <option value="Information Technology">Technology</option>
-            <option value="Communication Services">Communication</option>
-            <option value="Energy">Energy</option>
-            <option value="Financials">Financial services</option>
-            <option value="Health Care">Health care</option>
-            <option value="Consumer Discretionary">Consumer</option>
-          </select>
-        </label>
-      </section>
-
-      <section class="entry-why" aria-labelledby="entry-why-title">
-        <div class="entry-section-heading"><p class="entry-kicker">Why InfoDJ exists</p><h2 id="entry-why-title">Founders need fewer tabs and better questions.</h2></div>
-        <div class="entry-why-grid">
-          <article><span>01</span><strong>Start with your stage</strong><p>Your next decision is different when you are validating, launching, or scaling.</p></article>
-          <article><span>02</span><strong>Learn from what happened</strong><p>Explore dated, source-linked moves from comparable companies—not generic playbooks.</p></article>
-          <article><span>03</span><strong>Go deep only when needed</strong><p>Company 360 keeps the detail available without putting it in your way.</p></article>
-        </div>
-      </section>
-
-      <section class="entry-preview" aria-labelledby="preview-title">
-        <div class="entry-preview-heading">
-          <div>
-            <p class="entry-kicker">A clear starting point</p>
-            <h2 id="preview-title">Your decision cockpit</h2>
+      <div class="market-storyboard" role="img" aria-label="An animated market signal rises, a founder studies the evidence, and a focused plan appears.">
+        <article class="market-scene market-chart-scene">
+          <p><span>01</span> Notice the signal</p>
+          <div class="market-chart" aria-hidden="true">
+            <i class="market-grid grid-one"></i><i class="market-grid grid-two"></i><i class="market-grid grid-three"></i>
+            <svg viewBox="0 0 340 150" focusable="false"><path class="market-path-shadow" d="M12 130 L60 112 L96 120 L138 82 L176 94 L218 50 L258 65 L326 15"></path><path class="market-path" d="M12 130 L60 112 L96 120 L138 82 L176 94 L218 50 L258 65 L326 15"></path></svg>
+            <span class="market-value">+26.4%</span>
+            <b class="market-node node-one"></b><b class="market-node node-two"></b><b class="market-node node-three"></b>
           </div>
-          <span class="preview-status">Sample plan</span>
-        </div>
-        <div class="preview-grid">
-          <article class="preview-priorities">
-            <p>Next best actions</p>
-            <ol>
-              <li><span>1</span><div><strong>Validate customer demand</strong><small>Talk to 15 target customers</small></div></li>
-              <li><span>2</span><div><strong>Define your ideal customer</strong><small>Turn patterns into a clear ICP</small></div></li>
-              <li><span>3</span><div><strong>Test the value proposition</strong><small>Measure which message earns interest</small></div></li>
-            </ol>
-          </article>
-          <article class="preview-risks">
-            <p>Risk radar</p>
-            <div class="risk-radar" role="img" aria-label="Sample risk radar">
-              <span class="radar-ring ring-one"></span><span class="radar-ring ring-two"></span><span class="radar-axis axis-one"></span><span class="radar-axis axis-two"></span><span class="radar-shape"></span><span class="radar-dot dot-one"></span><span class="radar-dot dot-two"></span>
-            </div>
-            <div class="risk-legend"><span><i class="risk-high"></i>Demand</span><span><i class="risk-medium"></i>Go-to-market</span><span><i class="risk-low"></i>Execution</span></div>
-          </article>
-        </div>
-      </section>
+          <small>Something changed. The chart is only the start.</small>
+        </article>
 
-      <section class="entry-faq" aria-labelledby="entry-faq-title">
-        <div class="entry-section-heading"><p class="entry-kicker">Common questions</p><h2 id="entry-faq-title">Clear enough to begin.</h2></div>
-        <details open><summary>Is InfoDJ telling me what to do?</summary><p>No. It gives you evidence and sharper questions; you make the decision.</p></details>
-        <details><summary>Do I need to understand every dashboard?</summary><p>No. Start with your stage and focus. Company 360 is there when you want the underlying detail.</p></details>
-        <details><summary>Where do the examples come from?</summary><p>From the companies and source-linked events currently available in the InfoDJ research workspace.</p></details>
-      </section>
+        <article class="market-scene market-research-scene">
+          <p><span>02</span> Understand why</p>
+          <div class="research-desk" aria-hidden="true">
+            <div class="research-reader"><i></i><i></i><i></i><b></b></div>
+            <div class="research-screen"><span>COMPANY NOTE</span><strong>Pricing shift</strong><i></i><i></i><i></i></div>
+            <div class="research-lamp"></div>
+          </div>
+          <small>Read the dated move, company context, and original source.</small>
+        </article>
 
-      <p class="entry-proof"><strong>From uncertainty to a plan.</strong> See the risks to address, the metrics to watch, and the decisions that moved similar companies forward.</p>
+        <article class="market-scene market-plan-scene">
+          <p><span>03</span> Choose your proof point</p>
+          <div class="plan-note" aria-hidden="true"><span>YOUR NEXT QUESTION</span><strong>What must you prove before you grow?</strong><i></i><i></i><b>Source-linked evidence</b></div>
+          <small>Leave with one useful next question—not more noise.</small>
+        </article>
+      </div>
+
+      <p class="market-proof"><strong>Built for founders who want clarity.</strong> Your Company 360 remains available whenever you need to inspect the details.</p>
     </section>
 
     <section id="auth-content" class="auth-card" aria-labelledby="auth-title" [attr.aria-busy]="loading()" tabindex="-1">
