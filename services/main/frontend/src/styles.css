@@ -7027,7 +7027,6 @@ th {
 .market-proof { border-left: 2px solid #68d5c0; color: #b6ccd7; font-size: 13px; line-height: 1.5; margin: 28px 0 0; max-width: 600px; padding-left: 13px; }.market-proof strong { color: #e6f6f7; }
 
 .founder-entry .auth-card { align-self: center; animation: entry-rise .65s .22s both; background: rgba(250, 253, 253, .98); border: 1px solid rgba(255,255,255,.75); border-radius: 20px; box-shadow: 0 24px 60px rgba(0, 0, 0, .3); max-width: 450px; padding: clamp(24px, 3vw, 38px); position: relative; width: min(100%, 450px); }
-.founder-entry .auth-card::before { background: linear-gradient(90deg, #71d8c3, #a9deee); border-radius: 20px 20px 0 0; content: ''; height: 4px; left: 0; position: absolute; right: 0; top: 0; }
 .founder-entry .auth-brand h1 { color: #10263a; font-size: clamp(30px, 3vw, 40px); letter-spacing: -.05em; line-height: 1; }.founder-entry .auth-brand > p:not(.eyebrow):not(.auth-stage-context):not(.auth-product-promise) { color: #557082; line-height: 1.5; }.founder-entry .auth-product-promise { display: none; }
 .founder-entry .auth-tabs { background: #e9f1f4; border-radius: 9px; padding: 4px; }.founder-entry .auth-tabs button { border-radius: 6px; }.founder-entry .primary-button { background: #0d6c80; }.founder-entry .primary-button:hover:not(:disabled) { background: #09576a; }
 

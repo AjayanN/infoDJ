@@ -14,5 +14,6 @@ test('public login presents a progressive market-to-plan story before authentica
   assert.match(template, /Build my focused plan/);
   assert.match(styles, /\.scroll-scene/);
   assert.match(styles, /@keyframes market-draw/);
+  assert.doesNotMatch(styles, /\.founder-entry \.auth-card::before/);
   assert.match(styles, /prefers-reduced-motion: reduce/);
 });
