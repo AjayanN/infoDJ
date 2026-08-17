@@ -305,6 +305,27 @@ class FounderDecisionApiTests(TestCase):
         self.assertEqual(response.data["directions"][0]["evidence_status"], "unavailable")
         self.assertTrue(response.data["source_gaps"])
 
+    def test_founder_context_accepts_frontend_field_names(self):
+        response = self.client.patch(
+            "/api/app/founder-context",
+            {
+                "company_name": "Northstar Energy",
+                "sector": "Energy",
+                "business_type": "Carbon management software",
+                "stage": "build",
+                "objective": "build_product",
+                "geography": "United States",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["founder_context"]["sector"], "Energy")
+        self.assertEqual(response.data["founder_context"]["stage"], "build")
+        self.assertEqual(response.data["founder_context"]["objective"], "build_product")
+        profile = UserProfile.objects.get(user=self.user)
+        self.assertEqual(profile.founder_business_type, "Carbon management software")
+
 
 class ProfileAvatarApiTests(TestCase):
     def setUp(self):

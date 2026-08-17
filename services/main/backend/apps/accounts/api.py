@@ -247,21 +247,23 @@ def founder_decision(request):
 def founder_context(request):
     profile = ensure_profile(request.user)
     if request.method == "PATCH":
-        allowed_fields = (
-            "company_name",
-            "founder_sector",
-            "founder_business_type",
-            "founder_stage",
-            "founder_objective",
-            "founder_geography",
-            "founder_target_customer",
-            "founder_revenue_model",
-            "founder_constraints",
-        )
+        context_fields = {
+            "company_name": ("company_name",),
+            "founder_sector": ("sector", "founder_sector"),
+            "founder_business_type": ("business_type", "founder_business_type"),
+            "founder_stage": ("stage", "founder_stage"),
+            "founder_objective": ("objective", "founder_objective"),
+            "founder_geography": ("geography", "founder_geography"),
+            "founder_target_customer": ("target_customer", "founder_target_customer"),
+            "founder_revenue_model": ("revenue_model", "founder_revenue_model"),
+            "founder_constraints": ("constraints", "founder_constraints"),
+        }
         updates = {}
-        for field in allowed_fields:
-            if field in request.data:
-                updates[field] = str(request.data.get(field) or "").strip()
+        for profile_field, request_fields in context_fields.items():
+            for request_field in request_fields:
+                if request_field in request.data:
+                    updates[profile_field] = str(request.data.get(request_field) or "").strip()
+                    break
         if updates.get("founder_stage") and updates["founder_stage"] not in FOUNDER_STAGES:
             return Response({"error": "invalid founder_stage"}, status=400)
         if updates.get("founder_objective") and updates["founder_objective"] not in FOUNDER_OBJECTIVES:
