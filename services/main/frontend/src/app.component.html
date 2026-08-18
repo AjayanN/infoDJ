@@ -1,51 +1,66 @@
 <ng-container *ngIf="!token(); else authenticatedApp">
   <a class="skip-link" href="#auth-content">Skip to authentication form</a>
   <main id="entry-content" class="auth-page founder-entry">
-    <section class="entry-story market-entry" aria-labelledby="entry-title">
-      <section class="scroll-scene signal-scene">
-        <div class="entry-brand" aria-label="InfoDJ">
-          <span class="entry-brand-mark" aria-hidden="true">i</span>
-          <span>InfoDJ</span>
+    <section class="entry-story boardroom-entry" aria-labelledby="entry-title">
+      <section class="scroll-scene boardroom-problem-scene">
+        <div class="entry-brand" aria-label="InfoDJ"><span class="entry-brand-mark" aria-hidden="true">i</span><span>InfoDJ</span></div>
+        <div class="scene-copy boardroom-copy">
+          <p class="entry-kicker">01 — The hard meeting</p>
+          <h1 id="entry-title">The boardroom has questions.<br />Your next move needs evidence.</h1>
+          <p>Founders are asked to explain what to do next—before the answer is obvious. The team sees problems. You need a clear way forward.</p>
         </div>
-        <div class="scene-copy signal-copy">
-          <p class="entry-kicker">01 — Notice the signal</p>
-          <h1 id="entry-title">See the signal.<br />Make the next move.</h1>
-          <p>Every great company has a moment when a decision changes its trajectory. InfoDJ helps you find the moments worth studying.</p>
+        <div class="boardroom-visual" role="img" aria-label="A founder and team discuss difficult company questions around a boardroom table.">
+          <div class="window-grid" aria-hidden="true"><i></i><i></i><i></i></div>
+          <div class="issue-note issue-demand">Is demand real?</div><div class="issue-note issue-price">Will this price work?</div><div class="issue-note issue-risk">What could go wrong?</div>
+          <div class="boardroom-table"><span></span><span></span></div>
+          <div class="boardroom-avatar avatar-founder"><i></i><b></b></div><div class="boardroom-avatar avatar-advisor"><i></i><b></b></div><div class="boardroom-avatar avatar-operator"><i></i><b></b></div>
         </div>
-        <div class="signal-visual" role="img" aria-label="An animated stock chart rises as a company signal becomes clear.">
-          <span class="signal-label label-early">Market noise</span><span class="signal-label label-late">A move worth studying</span>
-          <div class="market-chart market-chart-large" aria-hidden="true">
-            <i class="market-grid grid-one"></i><i class="market-grid grid-two"></i><i class="market-grid grid-three"></i>
-            <svg viewBox="0 0 680 300" focusable="false"><path class="market-path-shadow" d="M22 262 L110 231 L191 245 L278 164 L356 190 L436 95 L522 132 L650 26"></path><path class="market-path" d="M22 262 L110 231 L191 245 L278 164 L356 190 L436 95 L522 132 L650 26"></path></svg>
-            <span class="market-value">+26.4%</span><b class="market-node node-one"></b><b class="market-node node-two"></b><b class="market-node node-three"></b>
-          </div>
-          <p><strong>A chart tells you that something changed.</strong> It cannot tell you the decision behind it.</p>
-        </div>
-        <a class="scroll-cue" href="#story-research">Scroll to follow the evidence <span aria-hidden="true">↓</span></a>
+        <a class="scroll-cue" href="#story-discover">Follow the founder’s journey <span aria-hidden="true">↓</span></a>
       </section>
 
-      <section id="story-research" class="scroll-scene research-scene">
-        <div class="scene-copy research-copy">
-          <p class="entry-kicker">02 — Understand why</p>
-          <h2>Go behind the chart.</h2>
-          <p>Read the actual move, when it happened, who made it, and the source behind it. Comparable companies become useful only with context.</p>
-          <ul class="research-points"><li><span>01</span> Company and sector context</li><li><span>02</span> Dated strategic move</li><li><span>03</span> Original, reviewable source</li></ul>
+      <section id="story-discover" class="scroll-scene discovery-scene">
+        <div class="scene-copy discovery-copy">
+          <p class="entry-kicker">02 — Find the right question</p>
+          <h2>Discover InfoDJ.</h2>
+          <p>Start with your field, stage, and immediate decision. Instead of another dashboard, InfoDJ turns uncertainty into one useful proof point.</p>
+          <p class="scene-callout"><strong>Your company. Your focus. Your plan.</strong> The path becomes clearer when the question is specific.</p>
         </div>
-        <div class="research-visual" role="img" aria-label="A founder studies a company report beside an evidence screen.">
-          <div class="research-halo"></div><div class="research-desk"><div class="research-reader"><i></i><i></i><i></i><b></b></div><div class="research-screen"><span>COMPANY NOTE</span><strong>Pricing shift</strong><i></i><i></i><i></i></div><div class="research-lamp"></div></div>
-          <div class="evidence-ticket"><span>DATED MOVE</span><strong>Changed the model before entering a new market.</strong><small>Source linked · Reviewed</small></div>
+        <div class="discovery-visual" role="img" aria-label="A founder discovers InfoDJ on a tablet while a focused question appears.">
+          <div class="discovery-glow"></div><div class="discovery-person"><i></i><b></b></div>
+          <div class="infodj-screen"><span>INFO DJ</span><strong>What should you prove next?</strong><i></i><i></i><b>Start with your stage</b></div>
+          <div class="discovery-spark spark-one">✦</div><div class="discovery-spark spark-two">✦</div>
         </div>
-        <a class="scroll-cue" href="#story-plan">See what that means for you <span aria-hidden="true">↓</span></a>
+        <a class="scroll-cue" href="#story-evidence">See how the answer is grounded <span aria-hidden="true">↓</span></a>
       </section>
 
-      <section id="story-plan" class="scroll-scene plan-scene">
-        <div class="plan-visual" role="img" aria-label="A focused founder plan appears from comparable company evidence."><div class="plan-orbit orbit-one"></div><div class="plan-orbit orbit-two"></div><div class="plan-note"><span>YOUR NEXT QUESTION</span><strong>What must you prove before you grow?</strong><i></i><i></i><b>Source-linked evidence</b></div><span class="plan-chip chip-one">Comparable moves</span><span class="plan-chip chip-two">Risk context</span><span class="plan-chip chip-three">Company 360</span></div>
-        <div class="scene-copy plan-copy">
-          <p class="entry-kicker">03 — Make it useful</p>
-          <h2>Leave with one proof point.</h2>
-          <p>Not a dashboard full of noise. One clear question, evidence from relevant companies, and a useful place to start.</p>
-          <p class="market-proof"><strong>Evidence before ego.</strong> Your Company 360 is always there when you want the detail.</p>
-          <a class="scene-cta" href="#auth-content">Build my focused plan <span aria-hidden="true">→</span></a>
+      <section id="story-evidence" class="scroll-scene evidence-story-scene">
+        <div class="evidence-visual" role="img" aria-label="Comparable company cards connect to a source-linked action plan.">
+          <div class="evidence-line line-one"></div><div class="evidence-line line-two"></div><div class="evidence-line line-three"></div>
+          <article class="comparable-card card-netflix"><span>COMPARABLE COMPANY</span><strong>Netflix</strong><small>Dated, source-linked move</small></article>
+          <article class="comparable-card card-disney"><span>COMPARABLE COMPANY</span><strong>Disney</strong><small>Dated, source-linked move</small></article>
+          <article class="comparable-card card-exxon"><span>COMPARABLE COMPANY</span><strong>ExxonMobil</strong><small>Dated, source-linked move</small></article>
+          <div class="evidence-answer"><span>YOUR QUESTION</span><strong>What did similar companies do when they faced this stage?</strong><b>Review the original source</b></div>
+        </div>
+        <div class="scene-copy evidence-copy">
+          <p class="entry-kicker">03 — Learn from the moves</p>
+          <h2>See what comparable companies did.</h2>
+          <p>Study the decision, timing, context, and original source. You keep the judgment—InfoDJ gives you evidence that is useful in the room.</p>
+          <p class="market-proof"><strong>Not generic advice.</strong> A focused comparison you can question and verify.</p>
+        </div>
+        <a class="scroll-cue" href="#story-meeting">Bring a plan back to the table <span aria-hidden="true">↓</span></a>
+      </section>
+
+      <section id="story-meeting" class="scroll-scene meeting-outcome-scene">
+        <div class="scene-copy meeting-copy">
+          <p class="entry-kicker">04 — Return with confidence</p>
+          <h2>Bring one clear next step to the next meeting.</h2>
+          <p>Leave with the proof to build, the risk to watch, and the task worth doing now—so progress is a decision, not a guess.</p>
+          <a class="scene-cta" href="#auth-content">Build my focus plan <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="meeting-visual" role="img" aria-label="A confident boardroom team reviews a focused plan with completed next steps.">
+          <div class="meeting-sun"></div><div class="meeting-window"><i></i><i></i><i></i></div>
+          <div class="meeting-task-card"><span>YOUR NEXT PROOF POINT</span><strong>Validate customer demand</strong><p>Talk to 10 target customers</p><b>✓ Evidence linked</b></div>
+          <div class="meeting-person person-one"><i></i><b></b></div><div class="meeting-person person-two"><i></i><b></b></div><div class="meeting-person person-three"><i></i><b></b></div>
         </div>
       </section>
     </section>
