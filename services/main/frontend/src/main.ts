@@ -203,7 +203,10 @@ class AppComponent implements AfterViewChecked {
   founderContextSaving = signal(false);
   founderSetupStep = signal(0);
   storySceneIndex = signal(0);
+  storyTransitioning = signal(false);
+  storyDirection = signal<'forward' | 'backward'>('forward');
   private storySceneObserver: IntersectionObserver | null = null;
+  private storyTouchStartY = 0;
   founderCompanyName = '';
   founderSector = '';
   founderBusinessType = '';
@@ -724,6 +727,50 @@ class AppComponent implements AfterViewChecked {
       { root: storyRoot, threshold: [0.55, 0.75] }
     );
     scenes.forEach((scene) => this.storySceneObserver?.observe(scene));
+    storyRoot.addEventListener('wheel', (event) => {
+      if (event.deltaY === 0 || (event.target as HTMLElement).closest('input, select, textarea, button')) {
+        return;
+      }
+      event.preventDefault();
+      this.moveStoryPage(storyRoot, scenes, event.deltaY > 0 ? 'forward' : 'backward');
+    }, { passive: false });
+    storyRoot.addEventListener('touchstart', (event) => {
+      this.storyTouchStartY = event.changedTouches[0]?.clientY || 0;
+    }, { passive: true });
+    storyRoot.addEventListener('touchend', (event) => {
+      const distance = this.storyTouchStartY - (event.changedTouches[0]?.clientY || 0);
+      if (Math.abs(distance) > 48) {
+        this.moveStoryPage(storyRoot, scenes, distance > 0 ? 'forward' : 'backward');
+      }
+    }, { passive: true });
+    storyRoot.addEventListener('click', (event) => {
+      const link = (event.target as HTMLElement).closest<HTMLAnchorElement>('.scroll-cue');
+      const targetId = link?.getAttribute('href')?.slice(1);
+      const targetIndex = targetId ? scenes.findIndex((scene) => scene.id === targetId) : -1;
+      if (targetIndex >= 0) {
+        event.preventDefault();
+        this.moveStoryPage(storyRoot, scenes, 'forward', targetIndex);
+      }
+    });
+  }
+
+  private moveStoryPage(storyRoot: HTMLElement, scenes: HTMLElement[], direction: 'forward' | 'backward', targetIndex?: number): void {
+    if (this.storyTransitioning()) {
+      return;
+    }
+    const authCard = storyRoot.querySelector<HTMLElement>(':scope > .auth-card');
+    const pages = authCard ? [...scenes, authCard] : scenes;
+    const currentIndex = pages.reduce((closest, page, index) =>
+      Math.abs(page.offsetTop - storyRoot.scrollTop) < Math.abs(pages[closest].offsetTop - storyRoot.scrollTop) ? index : closest, 0);
+    const nextIndex = targetIndex ?? Math.max(0, Math.min(pages.length - 1, currentIndex + (direction === 'forward' ? 1 : -1)));
+    if (nextIndex === currentIndex) {
+      return;
+    }
+    this.storyDirection.set(direction);
+    this.storyTransitioning.set(true);
+    this.storySceneIndex.set(Math.min(nextIndex, scenes.length - 1));
+    storyRoot.scrollTo({ top: pages[nextIndex].offsetTop, behavior: 'smooth' });
+    window.setTimeout(() => this.storyTransitioning.set(false), 760);
   }
 
   private subtitleQuestion(title: string): string {
