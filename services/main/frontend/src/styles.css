@@ -7090,3 +7090,12 @@ th {
 .founder-entry { height: 100dvh; overflow-y: auto; overscroll-behavior-y: contain; scroll-behavior: smooth; scroll-snap-type: y mandatory; }
 .boardroom-entry .scroll-scene, .founder-entry > .auth-card { min-height: 100dvh; scroll-snap-align: start; scroll-snap-stop: always; }
 @media (max-width: 850px) { .boardroom-entry .scroll-scene { min-height: 100dvh; } }
+
+.founder-entry.auth-page { box-sizing: border-box; grid-template-columns: none; max-width: none; min-width: 0; width: 100%; }
+.boardroom-entry { width: 100%; }
+.boardroom-entry .scroll-scene { opacity: .28; transform: scale(.972); transition: opacity .55s ease, transform .7s cubic-bezier(.2, .8, .2, 1); }
+.boardroom-entry .scroll-scene.is-active { opacity: 1; transform: scale(1); }
+.boardroom-entry .scroll-scene .scene-copy, .boardroom-entry .scroll-scene .boardroom-visual, .boardroom-entry .scroll-scene .discovery-visual, .boardroom-entry .scroll-scene .evidence-visual, .boardroom-entry .scroll-scene .meeting-visual { opacity: 0; transition: opacity .55s ease .08s, transform .7s cubic-bezier(.2, .8, .2, 1) .08s; }
+.boardroom-entry .scroll-scene .scene-copy { transform: translateX(-42px); }.boardroom-entry .scroll-scene .boardroom-visual, .boardroom-entry .scroll-scene .discovery-visual, .boardroom-entry .scroll-scene .evidence-visual, .boardroom-entry .scroll-scene .meeting-visual { transform: translateX(42px) scale(.95); }
+.boardroom-entry .scroll-scene.is-active .scene-copy, .boardroom-entry .scroll-scene.is-active .boardroom-visual, .boardroom-entry .scroll-scene.is-active .discovery-visual, .boardroom-entry .scroll-scene.is-active .evidence-visual, .boardroom-entry .scroll-scene.is-active .meeting-visual { opacity: 1; transform: translateX(0) scale(1); }
+@media (prefers-reduced-motion: reduce) { .boardroom-entry .scroll-scene, .boardroom-entry .scroll-scene .scene-copy, .boardroom-entry .scroll-scene .boardroom-visual, .boardroom-entry .scroll-scene .discovery-visual, .boardroom-entry .scroll-scene .evidence-visual, .boardroom-entry .scroll-scene .meeting-visual { opacity: 1; transform: none; transition: none; } }
