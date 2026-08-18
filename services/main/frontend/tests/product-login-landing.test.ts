@@ -14,6 +14,8 @@ test('public login tells a founder boardroom-to-plan story before authentication
   assert.match(template, /Bring one clear next step to the next meeting/);
   assert.match(template, /Build my focus plan/);
   assert.match(styles, /\.boardroom-problem-scene/);
+  assert.match(styles, /scroll-snap-type: y mandatory/);
+  assert.match(styles, /scroll-snap-stop: always/);
   assert.doesNotMatch(styles, /\.founder-entry \.auth-card::before/);
   assert.match(styles, /prefers-reduced-motion: reduce/);
 });
