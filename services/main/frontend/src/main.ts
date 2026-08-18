@@ -766,11 +766,19 @@ class AppComponent implements AfterViewChecked {
     if (nextIndex === currentIndex) {
       return;
     }
+    const currentPage = pages[currentIndex];
+    const nextPage = pages[nextIndex];
     this.storyDirection.set(direction);
     this.storyTransitioning.set(true);
+    currentPage.classList.add('story-page-leaving');
+    nextPage.classList.add('story-page-entering');
     this.storySceneIndex.set(Math.min(nextIndex, scenes.length - 1));
-    storyRoot.scrollTo({ top: pages[nextIndex].offsetTop, behavior: 'smooth' });
-    window.setTimeout(() => this.storyTransitioning.set(false), 760);
+    storyRoot.scrollTo({ top: nextPage.offsetTop, behavior: 'smooth' });
+    window.setTimeout(() => {
+      currentPage.classList.remove('story-page-leaving');
+      nextPage.classList.remove('story-page-entering');
+      this.storyTransitioning.set(false);
+    }, 760);
   }
 
   private subtitleQuestion(title: string): string {

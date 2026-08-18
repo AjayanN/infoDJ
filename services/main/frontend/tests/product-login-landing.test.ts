@@ -19,7 +19,7 @@ test('public login tells a founder boardroom-to-plan story before authentication
   assert.match(styles, /scroll-snap-stop: always/);
   assert.match(styles, /\.scroll-scene\.is-active/);
   assert.match(styles, /@keyframes comparable-card-arrive/);
-  assert.match(styles, /@keyframes story-page-forward/);
+  assert.match(styles, /@keyframes story-camera-arrive/);
   assert.match(styles, /@media \(pointer: coarse\) and \(min-width: 700px\)/);
   assert.match(component, /IntersectionObserver/);
   assert.match(component, /moveStoryPage/);
