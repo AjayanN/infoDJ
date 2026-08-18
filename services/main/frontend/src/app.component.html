@@ -2,7 +2,7 @@
   <a class="skip-link" href="#auth-content">Skip to authentication form</a>
   <main id="entry-content" class="auth-page founder-entry">
     <section class="entry-story boardroom-entry" aria-labelledby="entry-title">
-      <section class="scroll-scene boardroom-problem-scene">
+      <section class="scroll-scene boardroom-problem-scene" [class.is-active]="storySceneIndex() === 0">
         <div class="entry-brand" aria-label="InfoDJ"><span class="entry-brand-mark" aria-hidden="true">i</span><span>InfoDJ</span></div>
         <div class="scene-copy boardroom-copy">
           <p class="entry-kicker">01 — The hard meeting</p>
@@ -18,7 +18,7 @@
         <a class="scroll-cue" href="#story-discover">Follow the founder’s journey</a>
       </section>
 
-      <section id="story-discover" class="scroll-scene discovery-scene">
+      <section id="story-discover" class="scroll-scene discovery-scene" [class.is-active]="storySceneIndex() === 1">
         <div class="scene-copy discovery-copy">
           <p class="entry-kicker">02 — Find the right question</p>
           <h2>Discover InfoDJ.</h2>
@@ -33,7 +33,7 @@
         <a class="scroll-cue" href="#story-evidence">See how the answer is grounded</a>
       </section>
 
-      <section id="story-evidence" class="scroll-scene evidence-story-scene">
+      <section id="story-evidence" class="scroll-scene evidence-story-scene" [class.is-active]="storySceneIndex() === 2">
         <div class="evidence-visual" role="img" aria-label="Comparable company cards connect to a source-linked action plan.">
           <div class="evidence-line line-one"></div><div class="evidence-line line-two"></div><div class="evidence-line line-three"></div>
           <article class="comparable-card card-netflix"><span>COMPARABLE COMPANY</span><strong>Netflix</strong><small>Dated, source-linked move</small></article>
@@ -50,7 +50,7 @@
         <a class="scroll-cue" href="#story-meeting">Bring a plan back to the table</a>
       </section>
 
-      <section id="story-meeting" class="scroll-scene meeting-outcome-scene">
+      <section id="story-meeting" class="scroll-scene meeting-outcome-scene" [class.is-active]="storySceneIndex() === 3">
         <div class="scene-copy meeting-copy">
           <p class="entry-kicker">04 — Return with confidence</p>
           <h2>Bring one clear next step to the next meeting.</h2>

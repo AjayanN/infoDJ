@@ -202,6 +202,8 @@ class AppComponent implements AfterViewChecked {
   founderDecisionLoading = signal(false);
   founderContextSaving = signal(false);
   founderSetupStep = signal(0);
+  storySceneIndex = signal(0);
+  private storySceneObserver: IntersectionObserver | null = null;
   founderCompanyName = '';
   founderSector = '';
   founderBusinessType = '';
@@ -676,6 +678,7 @@ class AppComponent implements AfterViewChecked {
   ];
 
   ngAfterViewChecked(): void {
+    this.setupStorySceneTransitions();
     const headings = document.querySelectorAll<HTMLElement>(
       '.panel-header h2, .panel-header h3, .compact-panel-heading h3, .research-briefing > header h2, .briefing-evidence-strip > header h3'
     );
@@ -698,6 +701,29 @@ class AppComponent implements AfterViewChecked {
       question.textContent = this.subtitleQuestion(title);
       heading.insertAdjacentElement('afterend', question);
     });
+  }
+
+  private setupStorySceneTransitions(): void {
+    if (this.token() || this.storySceneObserver || typeof IntersectionObserver === 'undefined') {
+      return;
+    }
+    const storyRoot = document.querySelector<HTMLElement>('.founder-entry');
+    const scenes = Array.from(document.querySelectorAll<HTMLElement>('.boardroom-entry .scroll-scene'));
+    if (!storyRoot || scenes.length === 0) {
+      return;
+    }
+    this.storySceneObserver = new IntersectionObserver(
+      (entries) => {
+        const activeEntry = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((first, second) => second.intersectionRatio - first.intersectionRatio)[0];
+        if (activeEntry) {
+          this.storySceneIndex.set(scenes.indexOf(activeEntry.target as HTMLElement));
+        }
+      },
+      { root: storyRoot, threshold: [0.55, 0.75] }
+    );
+    scenes.forEach((scene) => this.storySceneObserver?.observe(scene));
   }
 
   private subtitleQuestion(title: string): string {
