@@ -4,7 +4,7 @@ import test from 'node:test';
 
 const root = new URL('..', import.meta.url);
 
-test('public login transforms one founder decision map from boardroom question to action plan', () => {
+test('public login transforms its existing founder visuals from boardroom question to action plan', () => {
   const template = readFileSync(new URL('src/app.component.html', root), 'utf8');
   const styles = readFileSync(new URL('src/styles.css', root), 'utf8');
   const component = readFileSync(new URL('src/main.ts', root), 'utf8');
@@ -14,17 +14,18 @@ test('public login transforms one founder decision map from boardroom question t
   assert.match(template, /See what comparable companies did/);
   assert.match(template, /Bring one clear next step to the next meeting/);
   assert.match(template, /Build my focus plan/);
-  assert.match(template, /story-journey-map/);
-  assert.match(template, /What should you prove next\?/);
-  assert.match(template, /COMPARABLE MOVE/);
-  assert.match(template, /NEXT MEETING/);
+  assert.match(template, /boardroom-visual/);
+  assert.match(template, /infodj-screen/);
+  assert.match(template, /comparable-card/);
+  assert.match(template, /meeting-task-card/);
   assert.match(styles, /\.boardroom-problem-scene/);
-  assert.match(styles, /\.story-journey-map/);
-  assert.match(styles, /data-story-stage="1"/);
-  assert.match(styles, /data-story-stage="2"/);
-  assert.match(styles, /data-story-stage="3"/);
-  assert.match(styles, /data-story-stage="4"/);
-  assert.match(styles, /\.journey-link/);
+  assert.match(styles, /\.boardroom-problem-scene\.story-page-leaving \.issue-note/);
+  assert.match(styles, /\.discovery-scene\.story-page-entering \.infodj-screen/);
+  assert.match(styles, /\.evidence-story-scene\.story-page-entering \.comparable-card/);
+  assert.match(styles, /\.meeting-outcome-scene\.story-page-entering \.meeting-task-card/);
+  assert.match(styles, /@keyframes question-note-to-screen/);
+  assert.doesNotMatch(template, /story-journey-map/);
+  assert.doesNotMatch(styles, /\.legacy-story-visual/);
   assert.match(styles, /scroll-snap-type: y mandatory/);
   assert.match(styles, /scroll-snap-stop: always/);
   assert.match(styles, /\.scroll-scene\.is-active/);
