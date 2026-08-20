@@ -39,4 +39,15 @@ test('public login uses continuous cinematic scrolling through the existing foun
   assert.doesNotMatch(component, /storyRoot\.addEventListener\('wheel'/);
   assert.doesNotMatch(styles, /\.founder-entry \.auth-card::before/);
   assert.match(styles, /prefers-reduced-motion: reduce/);
+  assert.match(template, /cinematic-story/);
+  assert.match(template, /cinematic-stage/);
+  assert.match(template, /cinematic-founder/);
+  assert.match(template, /cinematic-question/);
+  assert.match(template, /cinematic-evidence/);
+  assert.match(template, /cinematic-plan/);
+  assert.match(template, /cinematic-login-gateway/);
+  assert.match(styles, /\.cinematic-story/);
+  assert.match(styles, /position: sticky/);
+  assert.match(styles, /--cinematic-progress/);
+  assert.match(component, /updateCinematicStory/);
 });

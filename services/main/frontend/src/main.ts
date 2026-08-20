@@ -205,6 +205,10 @@ class AppComponent implements AfterViewChecked {
   storySceneIndex = signal(0);
   storyTransitioning = signal(false);
   storyDirection = signal<'forward' | 'backward'>('forward');
+  cinematicProgress = signal(0);
+  cinematicChapter = signal(0);
+  private cinematicStoryBound = false;
+  private cinematicStoryFrame = 0;
   private storySceneObserver: IntersectionObserver | null = null;
   private storyTouchStartY = 0;
   founderCompanyName = '';
@@ -682,6 +686,7 @@ class AppComponent implements AfterViewChecked {
 
   ngAfterViewChecked(): void {
     this.setupStorySceneTransitions();
+    this.setupCinematicStory();
     const headings = document.querySelectorAll<HTMLElement>(
       '.panel-header h2, .panel-header h3, .compact-panel-heading h3, .research-briefing > header h2, .briefing-evidence-strip > header h3'
     );
@@ -4119,6 +4124,49 @@ class AppComponent implements AfterViewChecked {
       script.onerror = () => reject(new Error('Unable to load Razorpay Checkout.'));
       document.body.appendChild(script);
     });
+  }
+  private setupCinematicStory(): void {
+    if (this.token() || this.cinematicStoryBound) return;
+    const root = document.querySelector<HTMLElement>('.founder-entry');
+    const story = document.querySelector<HTMLElement>('.cinematic-story');
+    if (!root || !story) return;
+    const update = () => {
+      if (this.cinematicStoryFrame) return;
+      this.cinematicStoryFrame = requestAnimationFrame(() => {
+        this.cinematicStoryFrame = 0;
+        const travel = Math.max(1, story.offsetHeight - root.clientHeight);
+        const progress = Math.min(1, Math.max(0, (root.scrollTop - story.offsetTop) / travel));
+        this.updateCinematicStory(story, progress);
+      });
+    };
+    root.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update, { passive: true });
+    this.cinematicStoryBound = true;
+    update();
+  }
+
+  private updateCinematicStory(story: HTMLElement, progress: number): void {
+    const phase = (start: number, end: number) => Math.min(1, Math.max(0, (progress - start) / (end - start)));
+    const questionIn = phase(.1, .3);
+    const questionOut = phase(.3, .43);
+    const evidence = phase(.4, .68);
+    const plan = phase(.64, .86);
+    const login = phase(.84, 1);
+    const setObject = (selector: string, transform: string, opacity: number) => {
+      const element = story.querySelector<HTMLElement>(selector);
+      if (!element) return;
+      element.style.transform = transform;
+      element.style.opacity = `${Math.min(1, Math.max(0, opacity))}`;
+    };
+    this.cinematicProgress.set(Number(progress.toFixed(4)));
+    this.cinematicChapter.set(progress < .22 ? 0 : progress < .43 ? 1 : progress < .68 ? 2 : progress < .86 ? 3 : 4);
+    setObject('.cinematic-boardroom', `translate3d(${-22 * questionOut}%, ${-6 * questionOut}%, 0) scale(${1 + .62 * questionOut})`, 1 - .92 * questionOut);
+    setObject('.cinematic-founder', `translate3d(${14 + 54 * questionIn - 38 * plan}%, ${4 - 18 * questionIn + 8 * plan}%, 0) scale(${1 + .58 * questionIn - .22 * plan})`, 1 - .78 * Math.max(questionOut, evidence));
+    setObject('.cinematic-question', `translate3d(${38 - 38 * questionIn - 68 * questionOut}%, ${8 - 8 * questionIn - 38 * questionOut}%, 0) scale(${.52 + .62 * questionIn + 2.7 * questionOut})`, questionIn * (1 - questionOut));
+    setObject('.cinematic-discovery', `translate3d(${38 - 38 * phase(.22, .45)}%, ${22 - 22 * phase(.22, .45)}%, 0) scale(${.54 + .62 * phase(.22, .45) - .18 * evidence})`, phase(.2, .42) * (1 - .88 * evidence));
+    setObject('.cinematic-evidence', `translate3d(${44 - 44 * evidence - 18 * plan}%, ${16 - 16 * evidence}%, 0) scale(${.45 + .6 * evidence - .25 * plan})`, evidence * (1 - .75 * plan));
+    setObject('.cinematic-plan', `translate3d(${42 - 42 * plan}%, ${18 - 18 * plan}%, 0) scale(${.4 + .72 * plan + .12 * login})`, plan * (1 - .72 * login));
+    setObject('.cinematic-login-gateway', `translate3d(${34 - 34 * login}%, ${24 - 24 * login}%, 0) scale(${.54 + .46 * login})`, login);
   }
 }
 
