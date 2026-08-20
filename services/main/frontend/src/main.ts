@@ -4134,12 +4134,13 @@ class AppComponent implements AfterViewChecked {
       if (this.cinematicStoryFrame) return;
       this.cinematicStoryFrame = requestAnimationFrame(() => {
         this.cinematicStoryFrame = 0;
-        const travel = Math.max(1, story.offsetHeight - root.clientHeight);
-        const progress = Math.min(1, Math.max(0, (root.scrollTop - story.offsetTop) / travel));
+        const travel = Math.max(1, story.offsetHeight - window.innerHeight);
+        const progress = Math.min(1, Math.max(0, -story.getBoundingClientRect().top / travel));
         this.updateCinematicStory(story, progress);
       });
     };
     root.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('scroll', update, { passive: true });
     window.addEventListener('resize', update, { passive: true });
     this.cinematicStoryBound = true;
     update();
