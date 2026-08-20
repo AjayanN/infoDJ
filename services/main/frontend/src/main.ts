@@ -772,7 +772,7 @@ class AppComponent implements AfterViewChecked {
     this.storyTransitioning.set(true);
     currentPage.classList.add('story-page-leaving');
     nextPage.classList.add('story-page-entering');
-    this.storySceneIndex.set(Math.min(nextIndex, scenes.length - 1));
+    this.storySceneIndex.set(nextIndex);
     storyRoot.scrollTo({ top: nextPage.offsetTop, behavior: 'smooth' });
     window.setTimeout(() => {
       currentPage.classList.remove('story-page-leaving');

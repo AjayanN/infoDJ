@@ -1,15 +1,25 @@
 <ng-container *ngIf="!token(); else authenticatedApp">
   <a class="skip-link" href="#auth-content">Skip to authentication form</a>
-  <main id="entry-content" class="auth-page founder-entry" [class.story-transitioning]="storyTransitioning()" [attr.data-story-direction]="storyDirection()">
+  <main id="entry-content" class="auth-page founder-entry" [class.story-transitioning]="storyTransitioning()" [attr.data-story-direction]="storyDirection()" [attr.data-story-stage]="storySceneIndex()">
     <section class="entry-story boardroom-entry" aria-labelledby="entry-title">
+      <div class="story-journey-map" aria-hidden="true">
+        <div class="journey-orbit"></div>
+        <div class="journey-link journey-link-one"></div><div class="journey-link journey-link-two"></div><div class="journey-link journey-link-three"></div>
+        <div class="journey-node journey-room"><span>BOARDROOM</span><strong>Open questions</strong></div>
+        <div class="journey-node journey-question"><span>PROOF POINT</span><strong>What should you prove next?</strong></div>
+        <div class="journey-node journey-evidence journey-evidence-one"><span>COMPARABLE MOVE</span><strong>Context</strong></div>
+        <div class="journey-node journey-evidence journey-evidence-two"><span>COMPARABLE MOVE</span><strong>Timing</strong></div>
+        <div class="journey-node journey-evidence journey-evidence-three"><span>COMPARABLE MOVE</span><strong>Evidence</strong></div>
+        <div class="journey-node journey-action"><span>NEXT MEETING</span><strong>One clear action</strong><small>Source-linked proof</small></div>
+      </div>
       <section class="scroll-scene boardroom-problem-scene" [class.is-active]="storySceneIndex() === 0">
         <div class="entry-brand" aria-label="InfoDJ"><span class="entry-brand-mark" aria-hidden="true">i</span><span>InfoDJ</span></div>
         <div class="scene-copy boardroom-copy">
-          <p class="entry-kicker">01 — The hard meeting</p>
+          <p class="entry-kicker">01 — The boardroom question</p>
           <h1 id="entry-title">The boardroom has questions.<br />Your next move needs evidence.</h1>
           <p>Founders are asked to explain what to do next—before the answer is obvious. The team sees problems. You need a clear way forward.</p>
         </div>
-        <div class="boardroom-visual" role="img" aria-label="A founder and team discuss difficult company questions around a boardroom table.">
+        <div class="boardroom-visual legacy-story-visual" aria-hidden="true">
           <div class="window-grid" aria-hidden="true"><i></i><i></i><i></i></div>
           <div class="issue-note issue-demand">Is demand real?</div><div class="issue-note issue-price">Will this price work?</div><div class="issue-note issue-risk">What could go wrong?</div>
           <div class="boardroom-table"><span></span><span></span></div>
@@ -20,12 +30,12 @@
 
       <section id="story-discover" class="scroll-scene discovery-scene" [class.is-active]="storySceneIndex() === 1">
         <div class="scene-copy discovery-copy">
-          <p class="entry-kicker">02 — Find the right question</p>
+          <p class="entry-kicker">02 — Define the proof point</p>
           <h2>Discover InfoDJ.</h2>
           <p>Start with your field, stage, and immediate decision. Instead of another dashboard, InfoDJ turns uncertainty into one useful proof point.</p>
           <p class="scene-callout"><strong>Your company. Your focus. Your plan.</strong> The path becomes clearer when the question is specific.</p>
         </div>
-        <div class="discovery-visual" role="img" aria-label="A founder discovers InfoDJ on a tablet while a focused question appears.">
+        <div class="discovery-visual legacy-story-visual" aria-hidden="true">
           <div class="discovery-glow"></div><div class="discovery-person"><i></i><b></b></div>
           <div class="infodj-screen"><span>INFO DJ</span><strong>What should you prove next?</strong><i></i><i></i><b>Start with your stage</b></div>
           <div class="discovery-spark spark-one">✦</div><div class="discovery-spark spark-two">✦</div>
@@ -34,7 +44,7 @@
       </section>
 
       <section id="story-evidence" class="scroll-scene evidence-story-scene" [class.is-active]="storySceneIndex() === 2">
-        <div class="evidence-visual" role="img" aria-label="Comparable company cards connect to a source-linked action plan.">
+        <div class="evidence-visual legacy-story-visual" aria-hidden="true">
           <div class="evidence-line line-one"></div><div class="evidence-line line-two"></div><div class="evidence-line line-three"></div>
           <article class="comparable-card card-netflix"><span>COMPARABLE COMPANY</span><strong>Netflix</strong><small>Dated, source-linked move</small></article>
           <article class="comparable-card card-disney"><span>COMPARABLE COMPANY</span><strong>Disney</strong><small>Dated, source-linked move</small></article>
@@ -57,7 +67,7 @@
           <p>Leave with the proof to build, the risk to watch, and the task worth doing now—so progress is a decision, not a guess.</p>
           <a class="scene-cta" href="#auth-content">Build my focus plan <span aria-hidden="true">→</span></a>
         </div>
-        <div class="meeting-visual" role="img" aria-label="A confident boardroom team reviews a focused plan with completed next steps.">
+        <div class="meeting-visual legacy-story-visual" aria-hidden="true">
           <div class="meeting-sun"></div><div class="meeting-window"><i></i><i></i><i></i></div>
           <div class="meeting-task-card"><span>YOUR NEXT PROOF POINT</span><strong>Validate customer demand</strong><p>Talk to 10 target customers</p><b>✓ Evidence linked</b></div>
           <div class="meeting-person person-one"><i></i><b></b></div><div class="meeting-person person-two"><i></i><b></b></div><div class="meeting-person person-three"><i></i><b></b></div>
