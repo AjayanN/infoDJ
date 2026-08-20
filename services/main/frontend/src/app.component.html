@@ -1,6 +1,42 @@
 <ng-container *ngIf="!token(); else authenticatedApp">
   <a class="skip-link" href="#auth-content">Skip to authentication form</a>
   <main id="entry-content" class="auth-page founder-entry" [class.story-transitioning]="storyTransitioning()" [attr.data-story-direction]="storyDirection()">
+    <section class="cinematic-story" aria-labelledby="entry-title" [style.--cinematic-progress]="cinematicProgress()" [attr.data-cinematic-chapter]="cinematicChapter()">
+      <div class="cinematic-stage">
+        <div class="cinematic-camera" aria-hidden="true">
+          <div class="cinematic-atmosphere"></div>
+          <div class="cinematic-boardroom boardroom-visual" role="img" aria-label="A founder and team discuss difficult company questions around a boardroom table.">
+            <div class="window-grid"><i></i><i></i><i></i></div>
+            <div class="boardroom-table"><span></span><span></span></div>
+            <div class="boardroom-avatar avatar-advisor"><i></i><b></b></div>
+            <div class="boardroom-avatar avatar-operator"><i></i><b></b></div>
+          </div>
+          <div class="cinematic-founder"><i></i><b></b><span>Founder</span></div>
+          <div class="cinematic-question issue-note"><span>BOARDROOM QUESTION</span><strong>Is demand real?</strong><small>Move closer</small></div>
+          <div class="cinematic-question question-secondary"><strong>Will this price work?</strong></div>
+          <div class="cinematic-question question-tertiary"><strong>What could go wrong?</strong></div>
+          <div class="cinematic-discovery discovery-visual" role="img" aria-label="The boardroom question becomes the InfoDJ proof question.">
+            <div class="discovery-glow"></div>
+            <div class="infodj-screen"><span>INFO DJ</span><strong>What should you prove next?</strong><i></i><i></i><b>Start with your stage</b></div>
+          </div>
+          <div class="cinematic-evidence evidence-visual" role="img" aria-label="Comparable company evidence emerges from the proof question.">
+            <div class="evidence-line line-one"></div><div class="evidence-line line-two"></div><div class="evidence-line line-three"></div>
+            <article class="comparable-card card-netflix"><span>COMPARABLE COMPANY</span><strong>Netflix</strong><small>Demand signal</small></article>
+            <article class="comparable-card card-disney"><span>COMPARABLE COMPANY</span><strong>Disney</strong><small>Pricing move</small></article>
+            <article class="comparable-card card-exxon"><span>COMPARABLE COMPANY</span><strong>ExxonMobil</strong><small>Execution proof</small></article>
+          </div>
+          <div class="cinematic-plan meeting-task-card"><span>YOUR NEXT PROOF POINT</span><strong>Validate customer demand</strong><p>Talk to 10 target customers</p><b>Evidence linked</b></div>
+          <div class="cinematic-login-gateway"><span>INFO DJ</span><strong>Your plan starts here.</strong><a href="#auth-content">Build my focus plan <b aria-hidden="true">&rarr;</b></a></div>
+        </div>
+        <div class="cinematic-copy" aria-live="polite">
+          <article [class.active]="cinematicChapter() === 0"><p>01 &mdash; The boardroom question</p><h1 id="entry-title">The boardroom has questions.<br />Your next move needs evidence.</h1><span>Scroll to move into the question.</span></article>
+          <article [class.active]="cinematicChapter() === 1"><p>02 &mdash; Find the proof point</p><h2>What should you prove next?</h2><span>InfoDJ turns uncertainty into one focused question.</span></article>
+          <article [class.active]="cinematicChapter() === 2"><p>03 &mdash; See the evidence</p><h2>Watch comparable moves take shape.</h2><span>Context, timing, and source-linked proof stay connected.</span></article>
+          <article [class.active]="cinematicChapter() === 3"><p>04 &mdash; Return prepared</p><h2>Bring one clear next step to the next meeting.</h2><span>Your evidence becomes a plan worth presenting.</span></article>
+          <article [class.active]="cinematicChapter() === 4"><p>05 &mdash; Start the work</p><h2>Turn the next meeting into momentum.</h2><span>Build your focus plan with InfoDJ.</span></article>
+        </div>
+      </div>
+    </section>
     <section class="entry-story boardroom-entry" aria-labelledby="entry-title">
       <section class="scroll-scene boardroom-problem-scene" [class.is-active]="storySceneIndex() === 0">
         <div class="entry-brand" aria-label="InfoDJ"><span class="entry-brand-mark" aria-hidden="true">i</span><span>InfoDJ</span></div>
@@ -4033,39 +4069,3 @@
     </div>
   </div>
 </ng-template>
-    <section class="cinematic-story" aria-labelledby="entry-title" [style.--cinematic-progress]="cinematicProgress()" [attr.data-cinematic-chapter]="cinematicChapter()">
-      <div class="cinematic-stage">
-        <div class="cinematic-camera" aria-hidden="true">
-          <div class="cinematic-atmosphere"></div>
-          <div class="cinematic-boardroom boardroom-visual" role="img" aria-label="A founder and team discuss difficult company questions around a boardroom table.">
-            <div class="window-grid"><i></i><i></i><i></i></div>
-            <div class="boardroom-table"><span></span><span></span></div>
-            <div class="boardroom-avatar avatar-advisor"><i></i><b></b></div>
-            <div class="boardroom-avatar avatar-operator"><i></i><b></b></div>
-          </div>
-          <div class="cinematic-founder"><i></i><b></b><span>Founder</span></div>
-          <div class="cinematic-question issue-note"><span>BOARDROOM QUESTION</span><strong>Is demand real?</strong><small>Move closer</small></div>
-          <div class="cinematic-question question-secondary"><strong>Will this price work?</strong></div>
-          <div class="cinematic-question question-tertiary"><strong>What could go wrong?</strong></div>
-          <div class="cinematic-discovery discovery-visual" role="img" aria-label="The boardroom question becomes the InfoDJ proof question.">
-            <div class="discovery-glow"></div>
-            <div class="infodj-screen"><span>INFO DJ</span><strong>What should you prove next?</strong><i></i><i></i><b>Start with your stage</b></div>
-          </div>
-          <div class="cinematic-evidence evidence-visual" role="img" aria-label="Comparable company evidence emerges from the proof question.">
-            <div class="evidence-line line-one"></div><div class="evidence-line line-two"></div><div class="evidence-line line-three"></div>
-            <article class="comparable-card card-netflix"><span>COMPARABLE COMPANY</span><strong>Netflix</strong><small>Demand signal</small></article>
-            <article class="comparable-card card-disney"><span>COMPARABLE COMPANY</span><strong>Disney</strong><small>Pricing move</small></article>
-            <article class="comparable-card card-exxon"><span>COMPARABLE COMPANY</span><strong>ExxonMobil</strong><small>Execution proof</small></article>
-          </div>
-          <div class="cinematic-plan meeting-task-card"><span>YOUR NEXT PROOF POINT</span><strong>Validate customer demand</strong><p>Talk to 10 target customers</p><b>Evidence linked</b></div>
-          <div class="cinematic-login-gateway"><span>INFO DJ</span><strong>Your plan starts here.</strong><a href="#auth-content">Build my focus plan <b aria-hidden="true">&rarr;</b></a></div>
-        </div>
-        <div class="cinematic-copy" aria-live="polite">
-          <article [class.active]="cinematicChapter() === 0"><p>01 &mdash; The boardroom question</p><h1 id="entry-title">The boardroom has questions.<br />Your next move needs evidence.</h1><span>Scroll to move into the question.</span></article>
-          <article [class.active]="cinematicChapter() === 1"><p>02 &mdash; Find the proof point</p><h2>What should you prove next?</h2><span>InfoDJ turns uncertainty into one focused question.</span></article>
-          <article [class.active]="cinematicChapter() === 2"><p>03 &mdash; See the evidence</p><h2>Watch comparable moves take shape.</h2><span>Context, timing, and source-linked proof stay connected.</span></article>
-          <article [class.active]="cinematicChapter() === 3"><p>04 &mdash; Return prepared</p><h2>Bring one clear next step to the next meeting.</h2><span>Your evidence becomes a plan worth presenting.</span></article>
-          <article [class.active]="cinematicChapter() === 4"><p>05 &mdash; Start the work</p><h2>Turn the next meeting into momentum.</h2><span>Build your focus plan with InfoDJ.</span></article>
-        </div>
-      </div>
-    </section>
