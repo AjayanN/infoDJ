@@ -4,7 +4,7 @@ import test from 'node:test';
 
 const root = new URL('..', import.meta.url);
 
-test('public login transforms its existing founder visuals from boardroom question to action plan', () => {
+test('public login uses continuous cinematic scrolling through the existing founder visuals', () => {
   const template = readFileSync(new URL('src/app.component.html', root), 'utf8');
   const styles = readFileSync(new URL('src/styles.css', root), 'utf8');
   const component = readFileSync(new URL('src/main.ts', root), 'utf8');
@@ -26,15 +26,17 @@ test('public login transforms its existing founder visuals from boardroom questi
   assert.match(styles, /@keyframes question-note-to-screen/);
   assert.doesNotMatch(template, /story-journey-map/);
   assert.doesNotMatch(styles, /\.legacy-story-visual/);
-  assert.match(styles, /scroll-snap-type: y mandatory/);
-  assert.match(styles, /scroll-snap-stop: always/);
+  assert.match(styles, /scroll-snap-type: none/);
+  assert.match(styles, /animation-timeline: view\(\)/);
+  assert.match(styles, /@supports \(animation-timeline: view\(\)\)/);
+  assert.match(styles, /@keyframes cinematic-founder-zoom/);
   assert.match(styles, /\.scroll-scene\.is-active/);
   assert.match(styles, /@keyframes comparable-card-arrive/);
   assert.doesNotMatch(styles, /@keyframes story-camera-arrive/);
   assert.doesNotMatch(styles, /@keyframes story-camera-away/);
   assert.match(styles, /@media \(pointer: coarse\) and \(min-width: 700px\)/);
   assert.match(component, /IntersectionObserver/);
-  assert.match(component, /moveStoryPage/);
+  assert.doesNotMatch(component, /storyRoot\.addEventListener\('wheel'/);
   assert.doesNotMatch(styles, /\.founder-entry \.auth-card::before/);
   assert.match(styles, /prefers-reduced-motion: reduce/);
 });
