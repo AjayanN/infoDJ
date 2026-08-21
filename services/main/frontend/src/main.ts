@@ -4148,19 +4148,22 @@ class AppComponent implements AfterViewChecked {
 
   private updateCinematicStory(story: HTMLElement, progress: number): void {
     const phase = (start: number, end: number) => Math.min(1, Math.max(0, (progress - start) / (end - start)));
-    const questionIn = phase(.1, .3);
-    const questionOut = phase(.3, .43);
-    const evidence = phase(.4, .68);
-    const plan = phase(.64, .86);
-    const login = phase(.84, 1);
+    const questionIn = phase(.18, .3);
+    const questionOut = phase(.34, .43);
+    const evidence = phase(.58, .76);
+    const plan = phase(.76, .89);
+    const login = phase(.94, 1);
     const setObject = (selector: string, transform: string, opacity: number) => {
       const element = story.querySelector<HTMLElement>(selector);
       if (!element) return;
+      const visible = Math.min(1, Math.max(0, opacity));
       element.style.transform = transform;
-      element.style.opacity = `${Math.min(1, Math.max(0, opacity))}`;
+      element.style.opacity = `${visible}`;
+      element.style.filter = `blur(${Math.round((1 - visible) * 18)}px) saturate(${.45 + visible * .55})`;
+      element.style.zIndex = `${Math.round(20 + visible * 80)}`;
     };
     this.cinematicProgress.set(Number(progress.toFixed(4)));
-    this.cinematicChapter.set(progress < .22 ? 0 : progress < .43 ? 1 : progress < .68 ? 2 : progress < .86 ? 3 : 4);
+    this.cinematicChapter.set(progress < .18 ? 0 : progress < .48 ? 1 : progress < .77 ? 2 : progress < .93 ? 3 : 4);
     setObject('.cinematic-boardroom', `translate3d(${-22 * questionOut}%, ${-6 * questionOut}%, 0) scale(${1 + .62 * questionOut})`, 1 - .92 * questionOut);
     setObject('.cinematic-founder', `translate3d(${14 + 54 * questionIn - 38 * plan}%, ${4 - 18 * questionIn + 8 * plan}%, 0) scale(${1 + .58 * questionIn - .22 * plan})`, 1 - .78 * Math.max(questionOut, evidence));
     setObject('.cinematic-question', `translate3d(${38 - 38 * questionIn - 68 * questionOut}%, ${8 - 8 * questionIn - 38 * questionOut}%, 0) scale(${.52 + .62 * questionIn + 2.7 * questionOut})`, questionIn * (1 - questionOut));

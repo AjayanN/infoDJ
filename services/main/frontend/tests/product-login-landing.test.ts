@@ -50,4 +50,7 @@ test('public login uses continuous cinematic scrolling through the existing foun
   assert.match(styles, /position: sticky/);
   assert.match(styles, /--cinematic-progress/);
   assert.match(component, /updateCinematicStory/);
+  assert.match(component, /getBoundingClientRect\(\)\.top/);
+  assert.match(component, /blur\(\$\{Math\.round/);
+  assert.match(styles, /Depth-of-field staging/);
 });

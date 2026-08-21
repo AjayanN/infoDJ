@@ -7128,3 +7128,6 @@ th {
 /* Keep the opening frame clean until the scroll camera takes control. */
 .cinematic-discovery, .cinematic-evidence, .cinematic-plan, .cinematic-login-gateway, .cinematic-question { opacity: 0; }
 .cinematic-boardroom, .cinematic-founder { opacity: 1; }
+
+/* Depth-of-field staging keeps non-focused scenes recessed. */
+.cinematic-boardroom, .cinematic-founder, .cinematic-question, .cinematic-discovery, .cinematic-evidence, .cinematic-plan, .cinematic-login-gateway { transition: filter .18s linear, opacity .18s linear; }
