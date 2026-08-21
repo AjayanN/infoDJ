@@ -7131,3 +7131,14 @@ th {
 
 /* Depth-of-field staging keeps non-focused scenes recessed. */
 .cinematic-boardroom, .cinematic-founder, .cinematic-question, .cinematic-discovery, .cinematic-evidence, .cinematic-plan, .cinematic-login-gateway { transition: filter .18s linear, opacity .18s linear; }
+
+/* Mobile: reserve distinct caption and subject zones. */
+@media (max-width: 850px) {
+  .cinematic-copy { background: linear-gradient(180deg, rgba(7, 24, 39, .98) 0%, rgba(7, 24, 39, .88) 75%, rgba(7, 24, 39, 0) 100%); left: 0; min-height: 42vh; padding: 8vh 24px 9vh; right: 0; top: 0; z-index: 30; }
+  .cinematic-copy h1, .cinematic-copy h2 { font-size: clamp(34px, 9vw, 48px); max-width: 9ch; }
+  .cinematic-copy span { font-size: 14px; max-width: 30ch; }
+  .cinematic-boardroom, .cinematic-discovery, .cinematic-evidence { height: 34vh; right: 0; top: 57vh; width: 100%; }
+  .cinematic-founder { bottom: 5vh; }
+  .cinematic-question { top: 61vh; }
+  .cinematic-plan, .cinematic-login-gateway { top: 61vh; }
+}
