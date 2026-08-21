@@ -4169,7 +4169,13 @@ class AppComponent implements AfterViewChecked {
         if (!element) return;
         element.style.visibility = isActive ? 'visible' : 'hidden';
         element.style.pointerEvents = 'none';
-        if (!isActive) element.style.opacity = '0';
+        if (isActive) {
+          element.style.opacity = '1';
+          element.style.filter = 'blur(0) saturate(1)';
+          element.style.zIndex = '100';
+        } else {
+          element.style.opacity = '0';
+        }
       });
     };
     this.cinematicChapter.set(progress < .18 ? 0 : progress < .43 ? 1 : progress < .62 ? 2 : progress < .78 ? 3 : 4);
