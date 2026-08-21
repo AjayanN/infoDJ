@@ -4163,7 +4163,16 @@ class AppComponent implements AfterViewChecked {
       element.style.zIndex = `${Math.round(20 + visible * 80)}`;
     };
     this.cinematicProgress.set(Number(progress.toFixed(4)));
-    this.cinematicChapter.set(progress < .18 ? 0 : progress < .48 ? 1 : progress < .77 ? 2 : progress < .93 ? 3 : 4);
+    const setSceneVisibility = (selectors: string[], isActive: boolean) => {
+      selectors.forEach((selector) => {
+        const element = story.querySelector<HTMLElement>(selector);
+        if (!element) return;
+        element.style.visibility = isActive ? 'visible' : 'hidden';
+        element.style.pointerEvents = 'none';
+        if (!isActive) element.style.opacity = '0';
+      });
+    };
+    this.cinematicChapter.set(progress < .18 ? 0 : progress < .43 ? 1 : progress < .62 ? 2 : progress < .78 ? 3 : 4);
     setObject('.cinematic-boardroom', `translate3d(${-22 * questionOut}%, ${-6 * questionOut}%, 0) scale(${1 + .62 * questionOut})`, 1 - .92 * questionOut);
     setObject('.cinematic-founder', `translate3d(${14 + 54 * questionIn - 38 * plan}%, ${4 - 18 * questionIn + 8 * plan}%, 0) scale(${1 + .58 * questionIn - .22 * plan})`, 1 - .78 * Math.max(questionOut, evidence));
     setObject('.cinematic-question', `translate3d(${38 - 38 * questionIn - 68 * questionOut}%, ${8 - 8 * questionIn - 38 * questionOut}%, 0) scale(${.52 + .62 * questionIn + 2.7 * questionOut})`, questionIn * (1 - questionOut));
@@ -4171,6 +4180,12 @@ class AppComponent implements AfterViewChecked {
     setObject('.cinematic-evidence', `translate3d(${44 - 44 * evidence - 18 * plan}%, ${16 - 16 * evidence}%, 0) scale(${.45 + .6 * evidence - .25 * plan})`, evidence * (1 - .75 * plan));
     setObject('.cinematic-plan', `translate3d(${42 - 42 * plan}%, ${18 - 18 * plan}%, 0) scale(${.4 + .72 * plan + .12 * login})`, plan * (1 - .72 * login));
     setObject('.cinematic-login-gateway', `translate3d(${34 - 34 * login}%, ${24 - 24 * login}%, 0) scale(${.54 + .46 * login})`, login);
+    setSceneVisibility(['.cinematic-boardroom', '.cinematic-founder'], progress < .18);
+    setSceneVisibility(['.cinematic-question'], progress >= .18 && progress < .43);
+    setSceneVisibility(['.cinematic-discovery'], progress >= .43 && progress < .62);
+    setSceneVisibility(['.cinematic-evidence'], progress >= .62 && progress < .78);
+    setSceneVisibility(['.cinematic-plan'], progress >= .78 && progress < .94);
+    setSceneVisibility(['.cinematic-login-gateway'], progress >= .94);
   }
 }
 
