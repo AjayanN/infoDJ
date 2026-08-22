@@ -7154,3 +7154,9 @@ th {
 .cinematic-atmosphere { background: radial-gradient(circle at 72% 30%, rgba(73,197,180,.16), transparent 38%), linear-gradient(90deg, rgba(2,12,20,.42), transparent); z-index: 2; }
 .cinematic-copy { z-index: 5; }
 @media (min-width: 851px) { .cinematic-copy { max-width: min(46vw, 680px); top: 23vh; } .cinematic-copy h1, .cinematic-copy h2 { font-size: clamp(58px, 5.5vw, 96px); } .cinematic-copy span { font-size: 20px; } }
+
+.cinematic-camera > .cinematic-photo { display: block; height: 100%; inset: 0; object-fit: cover; opacity: 0; position: absolute; transition: opacity .32s ease, transform 1s cubic-bezier(.2,.8,.2,1); width: 100%; z-index: 1; }
+.cinematic-camera > .photo-boardroom { opacity: 1; transform: scale(1.02); }
+.cinematic-story[data-cinematic-chapter="1"] .photo-boardroom, .cinematic-story[data-cinematic-chapter="2"] .photo-boardroom, .cinematic-story[data-cinematic-chapter="3"] .photo-boardroom, .cinematic-story[data-cinematic-chapter="4"] .photo-boardroom { opacity: 0; }
+.cinematic-story[data-cinematic-chapter="1"] .photo-discovery { opacity: 1; transform: scale(1.08); }
+.cinematic-story[data-cinematic-chapter="2"] .photo-evidence, .cinematic-story[data-cinematic-chapter="3"] .photo-evidence, .cinematic-story[data-cinematic-chapter="4"] .photo-evidence { opacity: 1; transform: scale(1.12); }
