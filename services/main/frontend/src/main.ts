@@ -4180,7 +4180,7 @@ class AppComponent implements AfterViewChecked {
     };
     this.cinematicChapter.set(progress < .18 ? 0 : progress < .43 ? 1 : progress < .62 ? 2 : progress < .78 ? 3 : 4);
     setObject('.cinematic-boardroom', `translate3d(${-22 * questionOut}%, ${-6 * questionOut}%, 0) scale(${1 + .62 * questionOut})`, 1 - .92 * questionOut);
-    setObject('.cinematic-founder', `translate3d(${14 + 54 * questionIn - 38 * plan}%, ${4 - 18 * questionIn + 8 * plan}%, 0) scale(${1 + .58 * questionIn - .22 * plan})`, 1 - .78 * Math.max(questionOut, evidence));
+    setObject('.cinematic-founder', `translate3d(${14 + 54 * questionIn - 38 * plan}%, ${4 - 18 * questionIn + 8 * plan}%, 0) scale(${.58 + .58 * questionIn - .22 * plan})`, 1 - .78 * Math.max(questionOut, evidence));
     setObject('.cinematic-question', `translate3d(${38 - 38 * questionIn - 68 * questionOut}%, ${8 - 8 * questionIn - 38 * questionOut}%, 0) scale(${.52 + .62 * questionIn + 2.7 * questionOut})`, questionIn * (1 - questionOut));
     setObject('.cinematic-discovery', `translate3d(${38 - 38 * phase(.22, .45)}%, ${22 - 22 * phase(.22, .45)}%, 0) scale(${.54 + .62 * phase(.22, .45) - .18 * evidence})`, phase(.2, .42) * (1 - .88 * evidence));
     setObject('.cinematic-evidence', `translate3d(${44 - 44 * evidence - 18 * plan}%, ${16 - 16 * evidence}%, 0) scale(${.45 + .6 * evidence - .25 * plan})`, evidence * (1 - .75 * plan));

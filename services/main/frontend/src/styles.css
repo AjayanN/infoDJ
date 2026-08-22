@@ -7142,3 +7142,6 @@ th {
   .cinematic-question { top: 61vh; }
   .cinematic-plan, .cinematic-login-gateway { top: 61vh; }
 }
+
+/* Mobile boardroom: founder is seated in the scene, not in front of it. */
+@media (max-width: 850px) { .cinematic-founder { bottom: 8vh; left: 62%; z-index: 3; } }
