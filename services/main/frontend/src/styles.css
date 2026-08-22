@@ -7145,3 +7145,12 @@ th {
 
 /* Mobile boardroom: founder is seated in the scene, not in front of it. */
 @media (max-width: 850px) { .cinematic-founder { bottom: 8vh; left: 62%; z-index: 3; } }
+
+/* Photographic cinematic direction: a single real founder story, not layered avatar shapes. */
+.cinematic-camera::before { background: linear-gradient(90deg, rgba(3,14,24,.8) 0%, rgba(3,14,24,.32) 48%, rgba(3,14,24,.04) 100%), url('/assets/cinematic/boardroom-founder.png') center / cover no-repeat; content: ''; inset: 0; position: absolute; transform: scale(1.02); transition: background-image .4s ease, transform 1.2s cubic-bezier(.2,.8,.2,1); z-index: 1; }
+.cinematic-story[data-cinematic-chapter="1"] .cinematic-camera::before { background-image: linear-gradient(90deg, rgba(3,14,24,.84) 0%, rgba(3,14,24,.34) 50%, rgba(3,14,24,.06) 100%), url('/assets/cinematic/infodj-discovery.png'); transform: scale(1.1); }
+.cinematic-story[data-cinematic-chapter="2"] .cinematic-camera::before, .cinematic-story[data-cinematic-chapter="3"] .cinematic-camera::before, .cinematic-story[data-cinematic-chapter="4"] .cinematic-camera::before { background-image: linear-gradient(90deg, rgba(3,14,24,.86) 0%, rgba(3,14,24,.35) 52%, rgba(3,14,24,.06) 100%), url('/assets/cinematic/evidence-plan.png'); transform: scale(1.14); }
+.cinematic-camera > :not(.cinematic-atmosphere) { display: none; }
+.cinematic-atmosphere { background: radial-gradient(circle at 72% 30%, rgba(73,197,180,.16), transparent 38%), linear-gradient(90deg, rgba(2,12,20,.42), transparent); z-index: 2; }
+.cinematic-copy { z-index: 5; }
+@media (min-width: 851px) { .cinematic-copy { max-width: min(46vw, 680px); top: 23vh; } .cinematic-copy h1, .cinematic-copy h2 { font-size: clamp(58px, 5.5vw, 96px); } .cinematic-copy span { font-size: 20px; } }
