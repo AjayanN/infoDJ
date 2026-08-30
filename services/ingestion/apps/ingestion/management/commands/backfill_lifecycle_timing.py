@@ -39,9 +39,9 @@ class Command(BaseCommand):
             if options["limit"] and counts["scanned"] > options["limit"]:
                 break
             parsed = exact_action_date_from_evidence(event.evidence_text or "")
-            if not event.company.founded_date:
+            if not self._has_verified_founding_anchor(event.company):
                 counts["no_founding_anchor"] += 1
-                self._mark_pending(event, "missing_founding_anchor", options["dry_run"])
+                self._mark_pending(event, "missing_verified_founding_anchor", options["dry_run"])
                 continue
             if not parsed:
                 counts["no_exact_date"] += 1

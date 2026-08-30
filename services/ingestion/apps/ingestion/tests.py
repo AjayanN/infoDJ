@@ -3361,3 +3361,20 @@ class LifecycleTimingSourceGapTests(TestCase):
         )
         self.assertEqual(gap.status, "OPEN")
         self.assertEqual(gap.metadata["missing"], ["founding_anchor"])
+
+class LifecycleBackfillAdmissionTests(TestCase):
+    def test_backfill_requires_a_verified_founding_anchor(self):
+        from apps.ingestion.management.commands.backfill_lifecycle_timing import Command
+
+        pending = SimpleNamespace(
+            founded_date=date(1994, 7, 5), founded_date_precision="DAY",
+            founded_date_evidence="Candidate source", founded_date_source_url="https://example.com",
+            founding_anchor_status="PENDING",
+        )
+        verified = SimpleNamespace(
+            founded_date=date(1994, 7, 5), founded_date_precision="DAY",
+            founded_date_evidence="Official history", founded_date_source_url="https://example.com",
+            founding_anchor_status="VERIFIED",
+        )
+        self.assertFalse(Command._has_verified_founding_anchor(pending))
+        self.assertTrue(Command._has_verified_founding_anchor(verified))
