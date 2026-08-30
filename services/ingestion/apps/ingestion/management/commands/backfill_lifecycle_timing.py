@@ -76,6 +76,16 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"{mode}: {counts}"))
 
     @staticmethod
+    def _has_verified_founding_anchor(company) -> bool:
+        return bool(
+            company.founded_date
+            and company.founded_date_precision == "DAY"
+            and company.founding_anchor_status == "VERIFIED"
+            and company.founded_date_evidence.strip()
+            and company.founded_date_source_url.strip()
+        )
+
+    @staticmethod
     def _mark_pending(event, reason: str, dry_run: bool) -> None:
         if dry_run:
             return

@@ -2,6 +2,19 @@ from django.db import models
 from django.utils.text import slugify
 
 
+class DatePrecision(models.TextChoices):
+    DAY = "DAY", "Exact day"
+    MONTH = "MONTH", "Month"
+    YEAR = "YEAR", "Year"
+
+
+class FoundingAnchorStatus(models.TextChoices):
+    PENDING = "PENDING", "Pending primary-source verification"
+    STRUCTURED = "STRUCTURED", "Structured-source candidate"
+    VERIFIED = "VERIFIED", "Verified primary source"
+    REJECTED = "REJECTED", "Rejected"
+
+
 class Company(models.Model):
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True, blank=True)
@@ -12,7 +25,18 @@ class Company(models.Model):
     wikidata_id = models.CharField(max_length=64, blank=True, db_index=True)
     sec_cik = models.CharField(max_length=32, blank=True, db_index=True)
     website = models.URLField(blank=True)
+    # A date without its original precision/source must never be treated as an exact
+    # founding day in lifecycle calculations.
     founded_date = models.DateField(null=True, blank=True)
+    founded_date_precision = models.CharField(max_length=16, choices=DatePrecision.choices, blank=True)
+    founded_date_evidence = models.TextField(blank=True)
+    founded_date_source_url = models.URLField(max_length=2048, blank=True)
+    founding_anchor_status = models.CharField(
+        max_length=16,
+        choices=FoundingAnchorStatus.choices,
+        default=FoundingAnchorStatus.PENDING,
+        db_index=True,
+    )
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -2576,7 +2576,7 @@ class WikidataCompanyProfileTests(TestCase):
                 "P1056": [{"mainsnak": {"datavalue": {"value": {"id": "Q300"}}}}],
                 "P1716": [{"mainsnak": {"datavalue": {"value": {"id": "Q400"}}}}],
                 "P169": [{"mainsnak": {"datavalue": {"value": {"id": "Q500"}}}}],
-                "P571": [{"mainsnak": {"datavalue": {"value": {"time": "+1999-01-15T00:00:00Z"}}}}],
+                "P571": [{"mainsnak": {"datavalue": {"value": {"time": "+1999-01-15T00:00:00Z", "precision": 11}}}}],
                 "P856": [{"mainsnak": {"datavalue": {"value": "https://example.com"}}}],
             },
         }
@@ -2592,6 +2592,7 @@ class WikidataCompanyProfileTests(TestCase):
         company = normalize_company_entity(entity, claim_labels=labels)
 
         self.assertEqual(company.founded_date, date(1999, 1, 15))
+        self.assertEqual(company.founded_date_precision, "DAY")
         self.assertEqual(company.subsidiaries, ("Example Subsidiary",))
         self.assertEqual(company.products, ("Example Product",))
         self.assertEqual(company.brands, ("Example Brand",))
@@ -3273,7 +3274,13 @@ class LifecycleTimingEligibilityTests(TestCase):
             action_date_precision="DAY",
             action_date_evidence="The company announced the action on April 3, 2014.",
             lifecycle_context_json={"as_of_date": "2014-12-31", "source_url": "https://example.com/primary", "metrics": [{"label": "Revenue", "value": "$394bn"}]},
-            company=SimpleNamespace(founded_date=date(1882, 8, 5)),
+            company=SimpleNamespace(
+                founded_date=date(1882, 8, 5),
+                founded_date_precision="DAY",
+                founded_date_evidence="Official founding record.",
+                founded_date_source_url="https://example.com/founding",
+                founding_anchor_status="VERIFIED",
+            ),
         )
 
     def test_verified_lifecycle_timing_requires_an_auditable_evidence_chain(self):
@@ -3309,3 +3316,21 @@ class LifecycleTimingBackfillTests(TestCase):
         )
         self.assertEqual(context["as_of_date"], "2018-12-31")
         self.assertIn("sec.gov/Archives/edgar/data/320193/", context["source_url"])
+
+class FoundingAnchorEligibilityTests(TestCase):
+    def test_rejects_structured_or_imprecise_founding_anchor(self):
+        event = SimpleNamespace(
+            lifecycle_timing_status="VERIFIED",
+            action_date=date(2014, 4, 3),
+            action_date_precision="DAY",
+            action_date_evidence="The project began on April 3, 2014.",
+            lifecycle_context_json={"as_of_date": "2014-03-31", "source_url": "https://sec.gov/example", "metrics": [{"label": "Revenue", "value": "$1B"}]},
+            company=SimpleNamespace(
+                founded_date=date(1990, 1, 1), founded_date_precision="YEAR",
+                founded_date_evidence="Structured source", founded_date_source_url="https://wikidata.org/wiki/Q1",
+                founding_anchor_status="STRUCTURED",
+            ),
+        )
+        result = lifecycle_timing_eligibility(event)
+        self.assertFalse(result.eligible)
+        self.assertIn("founding_anchor_must_be_exact_day", result.reasons)

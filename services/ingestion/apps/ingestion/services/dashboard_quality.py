@@ -176,8 +176,16 @@ def lifecycle_timing_eligibility(event: Any) -> EligibilityResult:
         score += 0.10
     if clean(getattr(event, "action_date_evidence", "")): score += 0.15
     else: reasons.append("missing_action_date_evidence")
-    if getattr(company, "founded_date", None): score += 0.15
-    else: reasons.append("missing_founding_anchor")
+    if not getattr(company, "founded_date", None):
+        reasons.append("missing_founding_anchor")
+    elif getattr(company, "founded_date_precision", "") != "DAY":
+        reasons.append("founding_anchor_must_be_exact_day")
+    elif getattr(company, "founding_anchor_status", "") != "VERIFIED":
+        reasons.append("founding_anchor_not_verified")
+    elif not getattr(company, "founded_date_evidence", "").strip() or not getattr(company, "founded_date_source_url", "").strip():
+        reasons.append("missing_founding_anchor_evidence")
+    else:
+        score += 0.15
     if isinstance(context, dict) and context.get("as_of_date") and context.get("source_url") and isinstance(metrics, list) and metrics:
         score += 0.20
     else:

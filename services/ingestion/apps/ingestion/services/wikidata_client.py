@@ -24,6 +24,7 @@ class WikidataCompany:
     country: str = ""
     industry: str = ""
     founded_date: date | None = None
+    founded_date_precision: str = ""
     subsidiaries: tuple[str, ...] = ()
     brands: tuple[str, ...] = ()
     products: tuple[str, ...] = ()
@@ -143,6 +144,7 @@ def normalize_company_entity(
         country=_first_label(country_ids, claim_labels),
         industry=_first_label(industry_ids, claim_labels),
         founded_date=_claim_date(entity, "P571"),
+        founded_date_precision=_claim_date_precision(entity, "P571"),
         subsidiaries=tuple(_labels_for_claim(entity, "P355", claim_labels)),
         brands=tuple(_labels_for_claim(entity, "P1716", claim_labels)),
         products=tuple(_labels_for_claim(entity, "P1056", claim_labels)),
@@ -176,7 +178,15 @@ def _apply_company_details(company: Any, details: WikidataCompany, *, save: bool
     company.website = details.website or getattr(company, "website", "")
     company.country = details.country or getattr(company, "country", "")
     company.industry = details.industry or getattr(company, "industry", "")
-    company.founded_date = details.founded_date or getattr(company, "founded_date", None)
+    if details.founded_date:
+        company.founded_date = details.founded_date
+        company.founded_date_precision = details.founded_date_precision
+        company.founded_date_evidence = f"Wikidata P571 inception claim for {details.wikidata_id}."
+        company.founded_date_source_url = f"https://www.wikidata.org/wiki/{details.wikidata_id}"
+        # Structured data is useful discovery evidence, but not a verified primary
+        # founding anchor for founder-comparison timing.
+        if getattr(company, "founding_anchor_status", "") != "VERIFIED":
+            company.founding_anchor_status = "STRUCTURED"
     if details.aliases:
         company.aliases = list(details.aliases)
 
@@ -284,6 +294,15 @@ def _claim_string(entity: Mapping[str, Any], prop: str) -> str:
         return ""
     value = claims[0].get("mainsnak", {}).get("datavalue", {}).get("value", "")
     return str(value or "")
+
+
+def _claim_date_precision(entity: Mapping[str, Any], prop: str) -> str:
+    claims = entity.get("claims", {}).get(prop, [])
+    if not claims:
+        return ""
+    value = claims[0].get("mainsnak", {}).get("datavalue", {}).get("value", {})
+    precision = value.get("precision") if isinstance(value, Mapping) else None
+    return {11: "DAY", 10: "MONTH", 9: "YEAR"}.get(precision, "")
 
 
 def _claim_date(entity: Mapping[str, Any], prop: str) -> date | None:
