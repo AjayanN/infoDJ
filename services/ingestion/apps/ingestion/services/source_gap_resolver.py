@@ -10,6 +10,15 @@ from apps.ingestion.models import SourceDocument, SourceGap, SourceGapResolution
 
 
 SOURCE_RULES = {
+    ("FOUNDER_DECISION", "LIFECYCLE_TIMING"): {
+        "candidate_type": "lifecycle_timing_primary_source",
+        "keywords": (
+            "effective", "completed", "closed", "entered into", "acquired", "launched",
+            "introduced", "announced", "began", "commenced", "restructured", "invested",
+        ),
+        "sources": ("SEC_EDGAR", "SEC_EDGAR_EXHIBIT", "OFFICIAL_WEBSITE"),
+        "next_action": "Verify an explicit actual-action date in full source text; attach the exact sentence and a contemporaneous SEC financial fact before marking the lifecycle event verified.",
+    },
     ("acquisition_lifecycle", "acquisition_deals"): {
         "candidate_type": "acquisition_source",
         "keywords": (

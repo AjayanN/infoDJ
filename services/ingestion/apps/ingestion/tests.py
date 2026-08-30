@@ -93,7 +93,7 @@ from apps.ingestion.services.valuation_context import build_valuation_context, v
 from apps.ingestion.services.regulatory_litigation import build_regulatory_litigation_calendar, regulatory_litigation_quality_issues
 from apps.ingestion.services.sector_theme_intelligence import build_sector_theme_intelligence, sector_theme_quality_issues
 from apps.ingestion.services.macro_sensitivity_profile import build_macro_sensitivity_profile, macro_sensitivity_quality_issues
-from apps.ingestion.services.source_gap_resolver import resolve_source_gaps
+from apps.ingestion.services.source_gap_resolver import SOURCE_RULES, resolve_source_gaps
 from apps.ingestion.services.source_gap_source_collector import forms_for_gap, ticker_for
 from apps.ingestion.services.source_gap_candidate_extractor import extract_source_gap_candidates, full_text_excerpt
 from apps.ingestion.services.source_gap_candidate_promoter import (
@@ -1839,6 +1839,7 @@ class IngestionSearchApiTests(TestCase):
         self.assertIn("8-K", forms_for_gap("leadership_decision_record", "transition_events"))
         self.assertIn("10-Q", forms_for_gap("geographic_expansion", "revenue_contribution"))
         self.assertIn("S-4", forms_for_gap("FOUNDER_DECISION", "LIFECYCLE_TIMING"))
+        self.assertIn(("FOUNDER_DECISION", "LIFECYCLE_TIMING"), SOURCE_RULES)
         self.assertEqual(forms_for_gap("unknown", "missing"), ("10-K", "10-Q", "8-K"))
 
     def test_source_gap_collector_uses_company_ticker_alias(self):
