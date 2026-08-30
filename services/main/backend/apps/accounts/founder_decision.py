@@ -156,6 +156,12 @@ def serialize_event(event: dict) -> dict:
         "event_type": event.get("event_type"),
         "actual_change": event.get("actual_change"),
         "confidence_score": event.get("confidence_score"),
+        "comparison_context": {
+            "event_date_label": "Observed move date",
+            "source_published_date": source.get("published_date"),
+            "lifecycle_alignment": "unverified",
+            "lifecycle_note": "Lifecycle context has not yet been verified. This date shows when the move was observed, not an equivalent stage in your company lifecycle.",
+        },
         "source": {
             "title": source.get("title"),
             "url": source.get("url"),

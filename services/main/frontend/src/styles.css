@@ -7160,3 +7160,5 @@ th {
 .cinematic-story[data-cinematic-chapter="1"] .photo-boardroom, .cinematic-story[data-cinematic-chapter="2"] .photo-boardroom, .cinematic-story[data-cinematic-chapter="3"] .photo-boardroom, .cinematic-story[data-cinematic-chapter="4"] .photo-boardroom { opacity: 0; }
 .cinematic-story[data-cinematic-chapter="1"] .photo-discovery { opacity: 1; transform: scale(1.08); }
 .cinematic-story[data-cinematic-chapter="2"] .photo-evidence, .cinematic-story[data-cinematic-chapter="3"] .photo-evidence, .cinematic-story[data-cinematic-chapter="4"] .photo-evidence { opacity: 1; transform: scale(1.12); }
+/* Lifecycle alignment guardrail: an event date is not a stage-equivalence claim. */
+.comparison-context-note { display: block; margin-top: .42rem; color: var(--muted-text, #93a8b3); font-size: .72rem; line-height: 1.35; }

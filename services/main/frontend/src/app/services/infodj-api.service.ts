@@ -33,6 +33,7 @@ export type FounderDecisionEvidence = {
   event_type: string;
   actual_change: string;
   confidence_score: number | null;
+  comparison_context: { event_date_label: string; source_published_date: string | null; lifecycle_alignment: 'unverified'; lifecycle_note: string };
   claim_type: 'reported_fact';
   source: { title: string; url: string; published_date: string | null };
 };
