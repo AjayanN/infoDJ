@@ -264,9 +264,19 @@ class FounderDecisionApiTests(TestCase):
                     "confidence_score": 0.9,
                     "source": {"title": "ExxonMobil 10-K", "url": "https://example.com/exxon", "published_date": "2026-02-18"},
                     "quality": {"eligible": True},
+                    "lifecycle_timing": {"eligible": True, "action_date": "2014-04-03", "action_date_precision": "DAY", "action_date_evidence": "The project began on April 3, 2014.", "founded_date": "1882-08-05", "company_age_days": 48166, "context": {"as_of_date": "2014-12-31", "source_url": "https://example.com/exxon", "metrics": [{"label": "Revenue", "value": "$394bn"}]}},
                 },
                 {
-                    "id": 2, "company": "Netflix", "company_slug": "netflix",
+                    "id": 2, "company": "Chevron", "company_slug": "chevron",
+                    "event_date": "2026-02-18", "event_type": "PRODUCT_EXPANSION",
+                    "actual_change": "Same-sector event without lifecycle proof.",
+                    "confidence_score": 0.9,
+                    "source": {"title": "Chevron 10-K", "url": "https://example.com/chevron", "published_date": "2026-02-18"},
+                    "quality": {"eligible": True},
+                    "lifecycle_timing": {"eligible": False, "reasons": ["missing_actual_action_date"]},
+                },
+                {
+                    "id": 3, "company": "Netflix", "company_slug": "netflix",
                     "event_date": "2026-02-18", "event_type": "REVENUE_MODEL_EXPANSION",
                     "actual_change": "Irrelevant sector event.",
                     "confidence_score": 0.9,
@@ -282,9 +292,9 @@ class FounderDecisionApiTests(TestCase):
         self.assertEqual(response.data["status"], "available")
         self.assertEqual(response.data["coverage"]["comparable_event_count"], 1)
         self.assertEqual(response.data["journey"][0]["company_slug"], "exxonmobil")
-        self.assertEqual(response.data["journey"][0]["comparison_context"]["event_date_label"], "Observed move date")
-        self.assertEqual(response.data["journey"][0]["comparison_context"]["lifecycle_alignment"], "unverified")
-        self.assertIn("not yet been verified", response.data["journey"][0]["comparison_context"]["lifecycle_note"])
+        self.assertEqual(response.data["journey"][0]["lifecycle_timing"]["action_date"], "2014-04-03")
+        self.assertEqual(response.data["journey"][0]["lifecycle_timing"]["action_date_precision"], "DAY")
+        self.assertEqual(response.data["journey"][0]["lifecycle_timing"]["company_age_days"], 48166)
         self.assertEqual(response.data["directions"][0]["claim_type"], "founder_hypothesis")
         self.assertEqual(response.data["directions"][0]["evidence"][0]["claim_type"], "reported_fact")
         self.assertEqual(response.data["directions"][0]["company_names"], ["ExxonMobil"])

@@ -95,6 +95,7 @@ from apps.ingestion.services.company_profile_quality import (
 from apps.ingestion.services.dashboard_quality import (
     RISK_EVENT_TYPES,
     event_eligibility,
+    lifecycle_timing_eligibility,
     event_source_count,
     risk_event_eligibility,
     section_payload,
@@ -126,6 +127,7 @@ def companies(_request: HttpRequest) -> JsonResponse:
                 "headquarters_country": company.headquarters_country or company.country,
                 "wikidata_id": company.wikidata_id,
                 "sec_cik": company.sec_cik,
+        "founded_date": company.founded_date.isoformat() if company.founded_date else None,
                 "source_count": source_counts.get(company.id, 0),
                 "event_count": event_counts.get(company.id, 0),
                 "strategic_turn_count": turn_counts.get(company.id, 0),
@@ -4542,6 +4544,7 @@ def serialize_company(company: Company) -> dict[str, object]:
         "headquarters_country": company.headquarters_country or company.country,
         "wikidata_id": company.wikidata_id,
         "sec_cik": company.sec_cik,
+        "founded_date": company.founded_date.isoformat() if company.founded_date else None,
         "source_count": getattr(company, "source_count", 0),
         "event_count": getattr(company, "event_count", 0),
         "strategic_turn_count": getattr(company, "turn_count", 0),
@@ -5869,11 +5872,25 @@ def serialize_business_event(event: BusinessEvent) -> dict[str, object]:
     raw = event.raw_extraction_json or {}
     source_count = event_source_count(event)
     eligibility = event_eligibility(event)
+    lifecycle_timing = lifecycle_timing_eligibility(event)
+    founded_date = event.company.founded_date
+    company_age_days = (event.action_date - founded_date).days if event.action_date and founded_date else None
     return {
         "id": event.id,
         "company": event.company.name,
         "company_slug": event.company.slug,
         "event_date": event.event_date.isoformat() if event.event_date else None,
+        "lifecycle_timing": {
+            "action_date": event.action_date.isoformat() if event.action_date else None,
+            "action_date_precision": event.action_date_precision,
+            "action_date_evidence": event.action_date_evidence,
+            "founded_date": founded_date.isoformat() if founded_date else None,
+            "company_age_days": company_age_days,
+            "context": event.lifecycle_context_json or {},
+            "eligible": lifecycle_timing.eligible,
+            "status": lifecycle_timing.status,
+            "reasons": list(lifecycle_timing.reasons),
+        },
         "event_type": event.event_type,
         "decision_theme": event.decision_theme,
         "actual_change": event.actual_change,

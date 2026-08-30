@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 
 
@@ -40,6 +41,19 @@ class ReviewStatus(models.TextChoices):
     MERGED = "MERGED", "Merged"
 
 
+class ActionDatePrecision(models.TextChoices):
+    DAY = "DAY", "Exact day"
+    MONTH = "MONTH", "Month"
+    QUARTER = "QUARTER", "Quarter"
+    YEAR = "YEAR", "Year"
+
+
+class LifecycleTimingStatus(models.TextChoices):
+    PENDING = "PENDING", "Pending verification"
+    VERIFIED = "VERIFIED", "Verified"
+    REJECTED = "REJECTED", "Rejected"
+
+
 class BusinessEvent(models.Model):
     company = models.ForeignKey(
         "companies.Company",
@@ -60,7 +74,19 @@ class BusinessEvent(models.Model):
         on_delete=models.SET_NULL,
         related_name="business_events",
     )
+    # event_date is retained as the source-document observation date. Founder comparisons
+    # must use the separately sourced action_date fields below.
     event_date = models.DateField(null=True, blank=True, db_index=True)
+    action_date = models.DateField(null=True, blank=True, db_index=True)
+    action_date_precision = models.CharField(max_length=16, choices=ActionDatePrecision.choices, blank=True)
+    action_date_evidence = models.TextField(blank=True)
+    lifecycle_context_json = models.JSONField(default=dict, blank=True)
+    lifecycle_timing_status = models.CharField(
+        max_length=16,
+        choices=LifecycleTimingStatus.choices,
+        default=LifecycleTimingStatus.PENDING,
+        db_index=True,
+    )
     event_type = models.CharField(max_length=64, choices=EventType.choices, db_index=True)
     lifecycle_stage = models.CharField(
         max_length=32,
@@ -94,6 +120,27 @@ class BusinessEvent(models.Model):
             models.Index(fields=["company", "event_type"]),
             models.Index(fields=["company", "review_status"]),
         ]
+
+    def clean(self) -> None:
+        super().clean()
+        if self.lifecycle_timing_status != LifecycleTimingStatus.VERIFIED:
+            return
+        missing = []
+        if not self.action_date:
+            missing.append("action_date")
+        if not self.action_date_precision:
+            missing.append("action_date_precision")
+        if not self.action_date_evidence.strip():
+            missing.append("action_date_evidence")
+        context = self.lifecycle_context_json if isinstance(self.lifecycle_context_json, dict) else {}
+        if not getattr(self.company, "founded_date", None):
+            missing.append("company.founded_date")
+        if not context.get("as_of_date") or not context.get("source_url") or not context.get("metrics"):
+            missing.append("lifecycle_context_json")
+        if missing:
+            raise ValidationError(
+                {"lifecycle_timing_status": "Verified lifecycle timing requires: " + ", ".join(missing)}
+            )
 
     def __str__(self) -> str:
         return f"{self.company} - {self.event_type}"

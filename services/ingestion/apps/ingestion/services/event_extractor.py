@@ -437,6 +437,15 @@ def extract_business_events_from_sec_filing(
                     "source_title": source_document.title,
                     "first_observed_source_id": source_document.id,
                     "first_observed_filing_date": event_date.isoformat() if event_date else None,
+                    "lifecycle_timing_admission": {
+                        "status": "PENDING_PRIMARY_SOURCE_RESEARCH",
+                        "reason": "A filing observation date is not an action date.",
+                        "required": [
+                            "explicit actual-action day in source text",
+                            "founding anchor",
+                            "contemporaneous primary financial fact",
+                        ],
+                    },
                     "additional_source_ids": [],
                 },
             },

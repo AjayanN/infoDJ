@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import date
 import os
 from unittest.mock import patch
+from types import SimpleNamespace
 
 from django.core.management import call_command
 from django.core.management.base import CommandError
@@ -54,6 +55,8 @@ from apps.ingestion.models import (
     SourceGap,
     SourceGapResolutionCandidate,
 )
+from apps.ingestion.services.dashboard_quality import lifecycle_timing_eligibility
+from apps.ingestion.services.lifecycle_timing import exact_action_date_from_evidence, lifecycle_context_from_financial_facts
 from apps.ingestion.services.capital_allocation import (
     build_capital_allocation_periods,
     capital_allocation_quality_issues,
@@ -3261,3 +3264,48 @@ class FakeForm4FallbackSession:
 class FakeForm4IndexResponse(FakeProfileResponse):
     def json(self):
         return {"directory": {"item": [{"name": "ownership.xml"}]}}
+
+class LifecycleTimingEligibilityTests(TestCase):
+    def valid_event(self):
+        return SimpleNamespace(
+            lifecycle_timing_status="VERIFIED",
+            action_date=date(2014, 4, 3),
+            action_date_precision="DAY",
+            action_date_evidence="The company announced the action on April 3, 2014.",
+            lifecycle_context_json={"as_of_date": "2014-12-31", "source_url": "https://example.com/primary", "metrics": [{"label": "Revenue", "value": "$394bn"}]},
+            company=SimpleNamespace(founded_date=date(1882, 8, 5)),
+        )
+
+    def test_verified_lifecycle_timing_requires_an_auditable_evidence_chain(self):
+        result = lifecycle_timing_eligibility(self.valid_event())
+        self.assertTrue(result.eligible)
+        self.assertEqual(result.status, "ELIGIBLE")
+
+    def test_source_publication_date_cannot_substitute_for_actual_action_timing(self):
+        event = self.valid_event()
+        event.action_date = None
+        event.lifecycle_timing_status = "PENDING"
+        result = lifecycle_timing_eligibility(event)
+        self.assertFalse(result.eligible)
+        self.assertIn("missing_actual_action_date", result.reasons)
+        self.assertIn("lifecycle_timing_not_verified", result.reasons)
+
+class LifecycleTimingBackfillTests(TestCase):
+    def test_extracts_only_explicit_action_day_not_publication_day(self):
+        extracted = exact_action_date_from_evidence(
+            "The company announced on March 14, 2019 that the platform would launch."
+        )
+        self.assertEqual(extracted[0].isoformat(), "2019-03-14")
+        self.assertIsNone(exact_action_date_from_evidence("The company announced a platform launch in 2019."))
+
+    def test_uses_only_financial_fact_known_at_the_action_date(self):
+        company = SimpleNamespace(sec_cik="0000320193")
+        fact = SimpleNamespace(
+            concept="Revenues", label="Revenue", value="1000000000", unit="USD",
+            accession_number="0000320193-19-000010", filed=date(2019, 2, 1), raw={"end": "2018-12-31"},
+        )
+        context = lifecycle_context_from_financial_facts(
+            company=company, action_date=date(2019, 3, 14), financial_facts=[fact]
+        )
+        self.assertEqual(context["as_of_date"], "2018-12-31")
+        self.assertIn("sec.gov/Archives/edgar/data/320193/", context["source_url"])

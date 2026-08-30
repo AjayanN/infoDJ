@@ -156,6 +156,37 @@ def event_eligibility(event: Any, *, require_specific_action: bool = True) -> El
     )
 
 
+def lifecycle_timing_eligibility(event: Any) -> EligibilityResult:
+    """Strict admission rule for founder-comparison evidence."""
+    reasons: list[str] = []
+    score = 0.0
+    context = getattr(event, "lifecycle_context_json", None) or {}
+    company = getattr(event, "company", None)
+    metrics = context.get("metrics") if isinstance(context, dict) else None
+
+    if getattr(event, "lifecycle_timing_status", "") == "VERIFIED": score += 0.20
+    else: reasons.append("lifecycle_timing_not_verified")
+    if getattr(event, "action_date", None): score += 0.20
+    else: reasons.append("missing_actual_action_date")
+    if not getattr(event, "action_date_precision", ""):
+        reasons.append("missing_action_date_precision")
+    elif getattr(event, "action_date_precision") != "DAY":
+        reasons.append("actual_action_date_must_be_exact_day")
+    else:
+        score += 0.10
+    if clean(getattr(event, "action_date_evidence", "")): score += 0.15
+    else: reasons.append("missing_action_date_evidence")
+    if getattr(company, "founded_date", None): score += 0.15
+    else: reasons.append("missing_founding_anchor")
+    if isinstance(context, dict) and context.get("as_of_date") and context.get("source_url") and isinstance(metrics, list) and metrics:
+        score += 0.20
+    else:
+        reasons.append("missing_contemporaneous_scale")
+
+    eligible = not reasons
+    return EligibilityResult(eligible=eligible, status="ELIGIBLE" if eligible else "INELIGIBLE", score=round(score, 3), reasons=tuple(reasons))
+
+
 def risk_event_eligibility(event: Any) -> EligibilityResult:
     result = event_eligibility(event, require_specific_action=False)
     reasons = list(result.reasons)

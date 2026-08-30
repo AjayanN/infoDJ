@@ -25,6 +25,7 @@ def build_founder_decision(context: dict, companies: list[dict], dashboard: dict
         if company_sectors.get(str(event.get("company_slug") or "")) == sector
         and event.get("source")
         and event.get("quality", {}).get("eligible")
+        and event.get("lifecycle_timing", {}).get("eligible")
     ]
     risk_events = [
         event
@@ -82,7 +83,7 @@ def build_founder_decision(context: dict, companies: list[dict], dashboard: dict
             "comparable_event_count": len(comparable_events),
             "risk_event_count": len(risk_events),
             "sector_company_count": sum(1 for row in companies if row.get("sector") == sector),
-            "evidence_policy": "Only dated eligible events with a linked source are used as comparable evidence.",
+            "evidence_policy": "Only source-linked, verified actual-action dates with a founding anchor and contemporaneous scale evidence are used as founder comparable evidence.",
         },
         "coverage_passport": coverage_passport,
         "source_gaps": (
@@ -156,12 +157,7 @@ def serialize_event(event: dict) -> dict:
         "event_type": event.get("event_type"),
         "actual_change": event.get("actual_change"),
         "confidence_score": event.get("confidence_score"),
-        "comparison_context": {
-            "event_date_label": "Observed move date",
-            "source_published_date": source.get("published_date"),
-            "lifecycle_alignment": "unverified",
-            "lifecycle_note": "Lifecycle context has not yet been verified. This date shows when the move was observed, not an equivalent stage in your company lifecycle.",
-        },
+        "lifecycle_timing": event.get("lifecycle_timing") or {},
         "source": {
             "title": source.get("title"),
             "url": source.get("url"),

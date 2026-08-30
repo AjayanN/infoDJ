@@ -15,7 +15,7 @@ test('founder workspace focuses on comparable companies and Company 360', () => 
   assert.match(template, /Open the Company 360 to explore its moves/);
   assert.doesNotMatch(template, /Evidence passport/);
   assert.match(source, /founderPeerCompanies\(dash: DashboardResponse\)/);
-  assert.match(template, /comparison_context\.event_date_label/);
-  assert.match(template, /comparison_context\.lifecycle_note/);
-  assert.match(api, /comparison_context: { event_date_label: string/);
+  assert.match(template, /lifecycle_timing\.action_date/);
+  assert.match(template, /lifecycle_timing\.company_age_days/);
+  assert.match(api, /lifecycle_timing: { action_date: string/);
 });
