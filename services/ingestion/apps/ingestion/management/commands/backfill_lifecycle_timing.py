@@ -7,7 +7,7 @@ from django.db.models import Q
 from django.utils.text import slugify
 
 from apps.curation.models import BusinessEvent, LifecycleTimingStatus
-from apps.ingestion.models import FinancialFact
+from apps.ingestion.models import FinancialFact, SourceGap, SourceGapStatus
 from apps.ingestion.services.lifecycle_timing import (
     exact_action_date_from_evidence,
     lifecycle_context_from_financial_facts,
@@ -72,8 +72,45 @@ class Command(BaseCommand):
                 ])
 
         counts["pending"] = counts["scanned"] - counts["verified"]
+        companies = {event.company for event in events}
+        self._reconcile_company_source_gaps(companies, dry_run=options["dry_run"])
         mode = "Dry run" if options["dry_run"] else "Backfill"
         self.stdout.write(self.style.SUCCESS(f"{mode}: {counts}"))
+
+    def _reconcile_company_source_gaps(self, companies, *, dry_run: bool) -> None:
+        """Create/resolve the single actionable lifecycle gap for every company.
+
+        The public eligibility gate prevents bad evidence from rendering; this gap
+        makes the required remediation durable and discoverable by source tooling.
+        """
+        for company in companies:
+            if not self._has_verified_founding_anchor(company):
+                reason = "A source-backed founding anchor with disclosed precision has not been verified."
+                task = "Collect an issuer history, charter, or archived primary record for the founding anchor; preserve its stated precision."
+                metadata = {"missing": ["founding_anchor"], "required_sources": ["issuer history", "charter or incorporation record"]}
+            elif not BusinessEvent.objects.filter(company=company, lifecycle_timing_status=LifecycleTimingStatus.VERIFIED).exists():
+                reason = "No founder-comparison event has an exact action day, direct evidence sentence, and contemporaneous primary scale fact."
+                task = "Collect issuer or SEC primary documents that state the action's effective date, then attach a financial fact known on or before that day."
+                metadata = {"missing": ["actual_action_date", "contemporaneous_scale"], "required_sources": ["SEC EDGAR filing text", "issuer investor-relations release"]}
+            else:
+                if not dry_run:
+                    SourceGap.objects.filter(
+                        company=company, dashboard="FOUNDER_DECISION", gap_type="LIFECYCLE_TIMING", provider="PRIMARY_SOURCE"
+                    ).update(status=SourceGapStatus.RESOLVED)
+                continue
+            if not dry_run:
+                SourceGap.objects.update_or_create(
+                    company=company,
+                    dashboard="FOUNDER_DECISION",
+                    gap_type="LIFECYCLE_TIMING",
+                    provider="PRIMARY_SOURCE",
+                    defaults={
+                        "reason": reason,
+                        "next_ingestion_task": task,
+                        "status": SourceGapStatus.OPEN,
+                        "metadata": metadata,
+                    },
+                )
 
     @staticmethod
     def _has_verified_founding_anchor(company) -> bool:

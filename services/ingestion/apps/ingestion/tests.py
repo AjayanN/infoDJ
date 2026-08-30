@@ -3348,3 +3348,16 @@ class FoundingAnchorPrecisionTests(TestCase):
             ),
         )
         self.assertTrue(lifecycle_timing_eligibility(event).eligible)
+
+class LifecycleTimingSourceGapTests(TestCase):
+    def test_records_a_company_level_gap_when_founding_anchor_is_missing(self):
+        from apps.ingestion.management.commands.backfill_lifecycle_timing import Command
+
+        company = Company.objects.create(name="Lifecycle Gap Co")
+        Command()._reconcile_company_source_gaps({company}, dry_run=False)
+
+        gap = SourceGap.objects.get(
+            company=company, dashboard="FOUNDER_DECISION", gap_type="LIFECYCLE_TIMING", provider="PRIMARY_SOURCE"
+        )
+        self.assertEqual(gap.status, "OPEN")
+        self.assertEqual(gap.metadata["missing"], ["founding_anchor"])
