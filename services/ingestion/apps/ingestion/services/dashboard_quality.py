@@ -178,8 +178,8 @@ def lifecycle_timing_eligibility(event: Any) -> EligibilityResult:
     else: reasons.append("missing_action_date_evidence")
     if not getattr(company, "founded_date", None):
         reasons.append("missing_founding_anchor")
-    elif getattr(company, "founded_date_precision", "") != "DAY":
-        reasons.append("founding_anchor_must_be_exact_day")
+    elif not getattr(company, "founded_date_precision", ""):
+        reasons.append("missing_founding_anchor_precision")
     elif getattr(company, "founding_anchor_status", "") != "VERIFIED":
         reasons.append("founding_anchor_not_verified")
     elif not getattr(company, "founded_date_evidence", "").strip() or not getattr(company, "founded_date_source_url", "").strip():

@@ -135,7 +135,7 @@ class BusinessEvent(models.Model):
         context = self.lifecycle_context_json if isinstance(self.lifecycle_context_json, dict) else {}
         if not getattr(self.company, "founded_date", None):
             missing.append("company.founded_date")
-        if getattr(self.company, "founded_date_precision", "") != "DAY":
+        if not getattr(self.company, "founded_date_precision", ""):
             missing.append("company.founded_date_precision")
         if getattr(self.company, "founding_anchor_status", "") != "VERIFIED":
             missing.append("company.founding_anchor_status")

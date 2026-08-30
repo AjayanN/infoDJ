@@ -3318,7 +3318,7 @@ class LifecycleTimingBackfillTests(TestCase):
         self.assertIn("sec.gov/Archives/edgar/data/320193/", context["source_url"])
 
 class FoundingAnchorEligibilityTests(TestCase):
-    def test_rejects_structured_or_imprecise_founding_anchor(self):
+    def test_rejects_structured_but_accepts_precisely_disclosed_year_anchor(self):
         event = SimpleNamespace(
             lifecycle_timing_status="VERIFIED",
             action_date=date(2014, 4, 3),
@@ -3333,4 +3333,18 @@ class FoundingAnchorEligibilityTests(TestCase):
         )
         result = lifecycle_timing_eligibility(event)
         self.assertFalse(result.eligible)
-        self.assertIn("founding_anchor_must_be_exact_day", result.reasons)
+        self.assertIn("founding_anchor_not_verified", result.reasons)
+
+class FoundingAnchorPrecisionTests(TestCase):
+    def test_accepts_verified_year_precision_without_fabricating_a_day(self):
+        event = SimpleNamespace(
+            lifecycle_timing_status="VERIFIED", action_date=date(2014, 4, 3), action_date_precision="DAY",
+            action_date_evidence="The project began on April 3, 2014.",
+            lifecycle_context_json={"as_of_date": "2014-03-31", "source_url": "https://sec.gov/example", "metrics": [{"label": "Revenue", "value": "$1B"}]},
+            company=SimpleNamespace(
+                founded_date=date(1849, 1, 1), founded_date_precision="YEAR",
+                founded_date_evidence="Company history says it was founded in 1849.",
+                founded_date_source_url="https://example.com/history", founding_anchor_status="VERIFIED",
+            ),
+        )
+        self.assertTrue(lifecycle_timing_eligibility(event).eligible)

@@ -366,7 +366,7 @@
                   <div class="compact-panel-heading"><div><p class="section-kicker">Comparable evidence</p><h3 id="focus-plan-sources-heading">What did similar companies do?</h3></div><span *ngIf="direction.evidence.length">{{ direction.evidence.length }} dated moves</span></div>
                   <div class="founder-focus-source-grid" *ngIf="direction.evidence.length; else focusPlanEvidenceEmpty">
                     <article *ngFor="let event of direction.evidence">
-                      <small>{{ event.company }} · Actual action: {{ event.lifecycle_timing.action_date | date:'mediumDate' }} · {{ event.lifecycle_timing.company_age_days | number }} days after founding</small><small class="comparison-context-note">{{ event.lifecycle_timing.context.metrics[0].label }}: {{ event.lifecycle_timing.context.metrics[0].value }} as of {{ event.lifecycle_timing.context.as_of_date | date:'mediumDate' }}</small>
+                      <small>{{ event.company }} · Actual action: {{ event.lifecycle_timing.action_date | date:'mediumDate' }} @if (event.lifecycle_timing.company_age_days !== null) { · {{ event.lifecycle_timing.company_age_days | number }} days after founding } @else { · Founded {{ event.lifecycle_timing.founding_anchor.date | date:'yyyy' }} ({{ event.lifecycle_timing.founding_anchor.precision | lowercase }} precision) }</small><small class="comparison-context-note">{{ event.lifecycle_timing.context.metrics[0].label }}: {{ event.lifecycle_timing.context.metrics[0].value }} as of {{ event.lifecycle_timing.context.as_of_date | date:'mediumDate' }}</small>
                       <strong>{{ event.actual_change }}</strong>
                       <div><button type="button" class="ghost-button" (click)="openCompany(event.company_slug)">Open Company 360</button><a *ngIf="event.source.url" [href]="event.source.url" target="_blank" rel="noopener noreferrer">Original source</a></div>
                     </article>
@@ -410,7 +410,7 @@
                     <div class="founder-focus-evidence" *ngIf="direction.evidence.length; else focusPlanEmpty">
                       <article *ngFor="let event of direction.evidence">
                         <button type="button" (click)="openCompany(event.company_slug)">
-                          <small>{{ event.company }} · Actual action: {{ event.lifecycle_timing.action_date | date:'mediumDate' }} · {{ event.lifecycle_timing.company_age_days | number }} days after founding</small><small class="comparison-context-note">{{ event.lifecycle_timing.context.metrics[0].label }}: {{ event.lifecycle_timing.context.metrics[0].value }} as of {{ event.lifecycle_timing.context.as_of_date | date:'mediumDate' }}</small>
+                          <small>{{ event.company }} · Actual action: {{ event.lifecycle_timing.action_date | date:'mediumDate' }} @if (event.lifecycle_timing.company_age_days !== null) { · {{ event.lifecycle_timing.company_age_days | number }} days after founding } @else { · Founded {{ event.lifecycle_timing.founding_anchor.date | date:'yyyy' }} ({{ event.lifecycle_timing.founding_anchor.precision | lowercase }} precision) }</small><small class="comparison-context-note">{{ event.lifecycle_timing.context.metrics[0].label }}: {{ event.lifecycle_timing.context.metrics[0].value }} as of {{ event.lifecycle_timing.context.as_of_date | date:'mediumDate' }}</small>
                           <strong>{{ event.actual_change }}</strong>
                           <span>Open {{ event.company }} Company 360</span>
                         </button>
@@ -430,7 +430,7 @@
                     <button type="button" class="founder-stage-move" *ngFor="let event of decision.journey.slice(0, 6)" (click)="openCompany(event.company_slug)">
                       <span>{{ event.company }}</span>
                       <strong>{{ event.actual_change }}</strong>
-                      <small>Actual action: {{ event.lifecycle_timing.action_date | date:'mediumDate' }} · {{ event.lifecycle_timing.company_age_days | number }} days after founding</small><small class="comparison-context-note">{{ event.lifecycle_timing.context.metrics[0].label }}: {{ event.lifecycle_timing.context.metrics[0].value }} as of {{ event.lifecycle_timing.context.as_of_date | date:'mediumDate' }}</small>
+                      <small>Actual action: {{ event.lifecycle_timing.action_date | date:'mediumDate' }} @if (event.lifecycle_timing.company_age_days !== null) { · {{ event.lifecycle_timing.company_age_days | number }} days after founding } @else { · Founded {{ event.lifecycle_timing.founding_anchor.date | date:'yyyy' }} ({{ event.lifecycle_timing.founding_anchor.precision | lowercase }} precision) }</small><small class="comparison-context-note">{{ event.lifecycle_timing.context.metrics[0].label }}: {{ event.lifecycle_timing.context.metrics[0].value }} as of {{ event.lifecycle_timing.context.as_of_date | date:'mediumDate' }}</small>
                     </button>
                   </div>
                   <ng-template #companyEntryCards>

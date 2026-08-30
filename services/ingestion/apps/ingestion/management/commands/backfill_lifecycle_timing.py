@@ -79,7 +79,7 @@ class Command(BaseCommand):
     def _has_verified_founding_anchor(company) -> bool:
         return bool(
             company.founded_date
-            and company.founded_date_precision == "DAY"
+            and company.founded_date_precision
             and company.founding_anchor_status == "VERIFIED"
             and company.founded_date_evidence.strip()
             and company.founded_date_source_url.strip()

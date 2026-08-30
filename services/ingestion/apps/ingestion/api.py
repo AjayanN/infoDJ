@@ -5880,7 +5880,11 @@ def serialize_business_event(event: BusinessEvent) -> dict[str, object]:
     eligibility = event_eligibility(event)
     lifecycle_timing = lifecycle_timing_eligibility(event)
     founded_date = event.company.founded_date
-    company_age_days = (event.action_date - founded_date).days if event.action_date and founded_date else None
+    company_age_days = (
+        (event.action_date - founded_date).days
+        if event.action_date and founded_date and event.company.founded_date_precision == "DAY"
+        else None
+    )
     return {
         "id": event.id,
         "company": event.company.name,
