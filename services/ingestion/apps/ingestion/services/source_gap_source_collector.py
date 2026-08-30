@@ -11,6 +11,9 @@ from apps.ingestion.services.sec_edgar_client import discover_sec_filings_for_co
 
 
 SOURCE_GAP_FORM_RULES: dict[tuple[str, str], tuple[str, ...]] = {
+    # Lifecycle evidence needs the action itself, not merely current disclosure.
+    # Include transaction forms to reach historical effective dates and definitive terms.
+    ("FOUNDER_DECISION", "LIFECYCLE_TIMING"): ("8-K", "10-K", "10-Q", "S-4", "DEFM14A"),
     ("earnings", "management_explanation"): ("10-Q", "10-K", "8-K"),
     ("earnings", "guidance_comparison"): ("8-K", "10-Q", "10-K"),
     ("capital_allocation", "capital_deployment_categories"): ("10-K", "10-Q", "8-K"),

@@ -1838,6 +1838,7 @@ class IngestionSearchApiTests(TestCase):
         self.assertIn("4", forms_for_gap("ownership_insider_activity", "insider_transactions"))
         self.assertIn("8-K", forms_for_gap("leadership_decision_record", "transition_events"))
         self.assertIn("10-Q", forms_for_gap("geographic_expansion", "revenue_contribution"))
+        self.assertIn("S-4", forms_for_gap("FOUNDER_DECISION", "LIFECYCLE_TIMING"))
         self.assertEqual(forms_for_gap("unknown", "missing"), ("10-K", "10-Q", "8-K"))
 
     def test_source_gap_collector_uses_company_ticker_alias(self):
