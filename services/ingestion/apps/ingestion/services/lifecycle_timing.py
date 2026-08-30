@@ -15,6 +15,17 @@ EXACT_DAY_PATTERN = re.compile(
     rf"({MONTH_NAMES})\s+(\d{{1,2}}),\s*(\d{{4}})\b",
     re.IGNORECASE,
 )
+ACTION_THEN_DAY_PATTERN = re.compile(
+    rf"\b(?:acquired|acquire|completed|closed|launched|introduced|entered\s+into|"
+    rf"commenced|began|restructured|invested|announced|formed|merged)\b[^.{{}}]{{0,180}}?"
+    rf"(?:on\s+)?({MONTH_NAMES})\s+(\d{{1,2}}),\s*(\d{{4}})\b",
+    re.IGNORECASE,
+)
+ACTION_MARKERS = (
+    "acquired", "acquire", "completed", "closed", "launched", "introduced",
+    "entered into", "commenced", "began", "restructured", "invested", "announced",
+    "formed", "merged",
+)
 
 
 def exact_action_date_from_evidence(text: str) -> tuple[date, str] | None:
@@ -25,8 +36,8 @@ def exact_action_date_from_evidence(text: str) -> tuple[date, str] | None:
     if not text:
         return None
     for sentence in re.split(r"(?<=[.!?])\s+", text.strip()):
-        match = EXACT_DAY_PATTERN.search(sentence)
-        if not match:
+        match = EXACT_DAY_PATTERN.search(sentence) or ACTION_THEN_DAY_PATTERN.search(sentence)
+        if not match or not _has_action_marker(sentence):
             continue
         try:
             action_date = date.fromisoformat(
@@ -123,6 +134,11 @@ def _fact_as_of_date(fact: Any) -> date:
             except ValueError:
                 pass
     return getattr(fact, "filed")
+
+
+def _has_action_marker(sentence: str) -> bool:
+    normalized = sentence.lower()
+    return any(marker in normalized for marker in ACTION_MARKERS)
 
 
 def _month_number(name: str) -> int:

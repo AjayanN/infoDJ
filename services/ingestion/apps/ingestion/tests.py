@@ -3305,6 +3305,11 @@ class LifecycleTimingBackfillTests(TestCase):
             "The company announced on March 14, 2019 that the platform would launch."
         )
         self.assertEqual(extracted[0].isoformat(), "2019-03-14")
+        self.assertEqual(
+            exact_action_date_from_evidence("The acquisition closed August 5, 2019.")[0].isoformat(),
+            "2019-08-05",
+        )
+        self.assertIsNone(exact_action_date_from_evidence("On March 14, 2019, the company received a notice."))
         self.assertIsNone(exact_action_date_from_evidence("The company announced a platform launch in 2019."))
 
     def test_uses_only_financial_fact_known_at_the_action_date(self):
