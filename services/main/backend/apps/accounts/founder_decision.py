@@ -13,6 +13,27 @@ DIRECTION_SPECS = (
 )
 
 FRESH_EVIDENCE_WINDOW = timedelta(days=365)
+# A founder stage is a company-lifecycle claim, not a topic label.
+# The bands are deliberately conservative: abstain when the corpus cannot establish
+# a same-stage comparison instead of borrowing a mature-company move.
+FOUNDER_STAGE_COMPARISON_RULES = {
+    "validate": ({"IDEA", "LAUNCH"}, 0, 730),
+    "build": ({"IDEA", "LAUNCH"}, 0, 1095),
+    "launch": ({"LAUNCH", "EARLY_GROWTH"}, 90, 1460),
+    "grow": ({"EARLY_GROWTH", "SCALE"}, 180, 2920),
+    "scale": ({"SCALE"}, 730, None),
+}
+
+
+def is_stage_comparable(event: dict, founder_stage: str) -> bool:
+    allowed_stages, min_age_days, max_age_days = FOUNDER_STAGE_COMPARISON_RULES.get(founder_stage, (set(), 0, -1))
+    timing = event.get("lifecycle_timing") or {}
+    lifecycle_stage = str(timing.get("company_lifecycle_stage") or "")
+    company_age_days = timing.get("company_age_days")
+    if lifecycle_stage not in allowed_stages or not isinstance(company_age_days, int):
+        return False
+    return company_age_days >= min_age_days and (max_age_days is None or company_age_days <= max_age_days)
+
 
 
 def build_founder_decision(context: dict, companies: list[dict], dashboard: dict) -> dict:
@@ -24,6 +45,7 @@ def build_founder_decision(context: dict, companies: list[dict], dashboard: dict
         for event in dashboard.get("latest_events", [])
         if company_sectors.get(str(event.get("company_slug") or "")) == sector
         and event.get("source")
+        and is_stage_comparable(event, str(context.get("stage") or ""))
         and event.get("quality", {}).get("eligible")
         and event.get("lifecycle_timing", {}).get("eligible")
     ]
@@ -83,7 +105,7 @@ def build_founder_decision(context: dict, companies: list[dict], dashboard: dict
             "comparable_event_count": len(comparable_events),
             "risk_event_count": len(risk_events),
             "sector_company_count": sum(1 for row in companies if row.get("sector") == sector),
-            "evidence_policy": "Only source-linked, verified actual-action dates with a founding anchor and contemporaneous scale evidence are used as founder comparable evidence.",
+            "evidence_policy": "Founder comparisons require a source-linked, exact action date, a verified founding anchor, contemporaneous scale, and source-backed lifecycle stage at a matching company age.",
         },
         "coverage_passport": coverage_passport,
         "source_gaps": (
@@ -92,8 +114,8 @@ def build_founder_decision(context: dict, companies: list[dict], dashboard: dict
             else [
                 {
                     "key": "founder_decision_evidence",
-                    "reason": f"No eligible, source-linked comparable events are available for {sector or 'the selected sector'}.",
-                    "next_action": "Run sector ingestion and review eligible events before relying on a decision path.",
+                    "reason": f"No stage-matched, source-linked comparable moves are available for {sector or 'the selected sector'} at the selected lifecycle stage.",
+                    "next_action": "Backfill historical primary sources with company age and source-backed stage-at-action evidence before relying on a decision path.",
                 }
             ]
         ),

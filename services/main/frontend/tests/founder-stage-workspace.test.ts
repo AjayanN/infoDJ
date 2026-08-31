@@ -17,5 +17,7 @@ test('founder workspace focuses on comparable companies and Company 360', () => 
   assert.match(source, /founderPeerCompanies\(dash: DashboardResponse\)/);
   assert.match(template, /lifecycle_timing\.action_date/);
   assert.match(template, /lifecycle_timing\.company_age_days/);
+  assert.match(template, /decision\.status === 'available'/);
+  assert.match(template, /We won’t call a generic recommendation evidence-backed/);
   assert.match(api, /lifecycle_timing: { action_date: string/);
 });

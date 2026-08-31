@@ -372,7 +372,7 @@
             </header>
 
             <ng-container *ngIf="founderDecision() as decision; else focusPlanLoading">
-              <ng-container *ngIf="decision.directions[0] as direction; else focusPlanUnavailable">
+              <ng-container *ngIf="decision.status === 'available' && decision.directions[0] as direction; else focusPlanUnavailable">
                 <section class="founder-focus-recommendation">
                   <p class="section-kicker">Your next proof point</p>
                   <strong>{{ direction.next_action }}</strong>
@@ -395,7 +395,7 @@
             </ng-container>
 
             <ng-template #focusPlanLoading><section class="panel founder-focus-loading" role="status" aria-live="polite"><p class="section-kicker">Preparing your plan</p><h3>Matching your focus to comparable moves.</h3><p>Loading source-linked evidence from companies in your field.</p></section></ng-template>
-            <ng-template #focusPlanUnavailable><section class="panel founder-focus-loading"><p class="section-kicker">Your focus needs evidence</p><h3>We are preparing the first comparable path.</h3><p>Choose another focus or open Company 360 research while the evidence base is enriched.</p></section></ng-template>
+            <ng-template #focusPlanUnavailable><section class="panel founder-focus-loading"><p class="section-kicker">Your focus needs stage-matched evidence</p><h3>We do not have a comparable path we can defend yet.</h3><p>We won’t call a generic recommendation evidence-backed. We need source-linked historical moves from companies in your field at the same lifecycle stage and company age.</p></section></ng-template>
           </section>
 
           <section *ngSwitchCase="'dashboard'" class="dashboard-grid" aria-labelledby="dashboard-heading">
@@ -417,7 +417,7 @@
                 </section>
 
                 <section class="founder-focus-plan" *ngIf="founderDecision() as decision" aria-labelledby="founder-focus-plan-heading">
-                  <ng-container *ngIf="decision.directions[0] as direction">
+                  <ng-container *ngIf="decision.status === 'available' && decision.directions[0] as direction">
                     <div class="founder-focus-plan-copy">
                       <p class="section-kicker">Your focused plan</p>
                       <h3 id="founder-focus-plan-heading">What should you prove next?</h3>

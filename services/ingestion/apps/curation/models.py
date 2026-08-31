@@ -142,7 +142,13 @@ class BusinessEvent(models.Model):
         if not getattr(self.company, "founded_date_evidence", "").strip() or not getattr(self.company, "founded_date_source_url", "").strip():
             missing.append("company.founding_anchor_evidence")
         if not context.get("as_of_date") or not context.get("source_url") or not context.get("metrics"):
-            missing.append("lifecycle_context_json")
+            missing.append("contemporaneous_scale_context")
+        if context.get("company_lifecycle_stage") not in set(LifecycleStage.values):
+            missing.append("company_lifecycle_stage")
+        if not str(context.get("company_lifecycle_stage_evidence") or "").strip():
+            missing.append("company_lifecycle_stage_evidence")
+        if not str(context.get("company_lifecycle_stage_source_url") or "").strip():
+            missing.append("company_lifecycle_stage_source_url")
         if missing:
             raise ValidationError(
                 {"lifecycle_timing_status": "Verified lifecycle timing requires: " + ", ".join(missing)}

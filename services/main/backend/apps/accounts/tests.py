@@ -264,7 +264,7 @@ class FounderDecisionApiTests(TestCase):
                     "confidence_score": 0.9,
                     "source": {"title": "ExxonMobil 10-K", "url": "https://example.com/exxon", "published_date": "2026-02-18"},
                     "quality": {"eligible": True},
-                    "lifecycle_timing": {"eligible": True, "action_date": "2014-04-03", "action_date_precision": "DAY", "action_date_evidence": "The project began on April 3, 2014.", "founded_date": "1882-08-05", "company_age_days": 48166, "context": {"as_of_date": "2014-12-31", "source_url": "https://example.com/exxon", "metrics": [{"label": "Revenue", "value": "$394bn"}]}},
+                    "lifecycle_timing": {"eligible": True, "action_date": "2014-04-03", "action_date_precision": "DAY", "action_date_evidence": "The project began on April 3, 2014.", "founded_date": "2013-07-01", "company_age_days": 276, "company_lifecycle_stage": "LAUNCH", "company_lifecycle_stage_evidence": "The project launched in its first year.", "company_lifecycle_stage_source_url": "https://example.com/exxon", "context": {"as_of_date": "2014-12-31", "source_url": "https://example.com/exxon", "metrics": [{"label": "Revenue", "value": "$394bn"}]}},
                 },
                 {
                     "id": 2, "company": "Chevron", "company_slug": "chevron",
@@ -294,7 +294,7 @@ class FounderDecisionApiTests(TestCase):
         self.assertEqual(response.data["journey"][0]["company_slug"], "exxonmobil")
         self.assertEqual(response.data["journey"][0]["lifecycle_timing"]["action_date"], "2014-04-03")
         self.assertEqual(response.data["journey"][0]["lifecycle_timing"]["action_date_precision"], "DAY")
-        self.assertEqual(response.data["journey"][0]["lifecycle_timing"]["company_age_days"], 48166)
+        self.assertEqual(response.data["journey"][0]["lifecycle_timing"]["company_age_days"], 276)
         self.assertEqual(response.data["directions"][0]["claim_type"], "founder_hypothesis")
         self.assertEqual(response.data["directions"][0]["evidence"][0]["claim_type"], "reported_fact")
         self.assertEqual(response.data["directions"][0]["company_names"], ["ExxonMobil"])
@@ -303,6 +303,33 @@ class FounderDecisionApiTests(TestCase):
         self.assertEqual(passport["Comparable moves"]["count"], 1)
         self.assertEqual(passport["Comparable moves"]["last_observed_on"], "2026-02-18")
         self.assertEqual(passport["Source diversity"]["evidence_strength"], "weak")
+    @patch("apps.accounts.api.ingestion_get")
+    def test_founder_decision_rejects_a_mature_company_move_for_build_stage(self, ingestion_get):
+        ingestion_get.side_effect = [
+            ({"companies": [{"slug": "microsoft", "sector": "Energy"}]}, ""),
+            ({"latest_events": [{
+                "id": 9, "company": "Microsoft", "company_slug": "microsoft",
+                "event_date": "2026-07-21", "event_type": "PARTNERSHIP",
+                "actual_change": "Expanded a strategic partnership.",
+                "source": {"title": "Microsoft announcement", "url": "https://example.com/microsoft"},
+                "quality": {"eligible": True},
+                "lifecycle_timing": {
+                    "eligible": True, "action_date": "2026-07-21", "company_age_days": 18736,
+                    "company_lifecycle_stage": "MATURITY",
+                    "company_lifecycle_stage_evidence": "The company was an established global business.",
+                    "company_lifecycle_stage_source_url": "https://example.com/microsoft",
+                    "context": {"as_of_date": "2026-06-30", "source_url": "https://example.com/microsoft", "metrics": [{"label": "Revenue", "value": "$241.8bn"}]},
+                },
+            }], "risk_signals": []}, ""),
+        ]
+
+        response = self.client.get("/api/app/founder-decision")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status"], "insufficient_evidence")
+        self.assertEqual(response.data["coverage"]["comparable_event_count"], 0)
+        self.assertIn("stage-matched", response.data["source_gaps"][0]["reason"])
+
 
     @patch("apps.accounts.api.ingestion_get")
     def test_founder_decision_abstains_when_sector_evidence_is_missing(self, ingestion_get):

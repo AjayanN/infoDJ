@@ -3285,7 +3285,7 @@ class LifecycleTimingEligibilityTests(TestCase):
             action_date=date(2014, 4, 3),
             action_date_precision="DAY",
             action_date_evidence="The company announced the action on April 3, 2014.",
-            lifecycle_context_json={"as_of_date": "2014-12-31", "source_url": "https://example.com/primary", "metrics": [{"label": "Revenue", "value": "$394bn"}]},
+            lifecycle_context_json={"as_of_date": "2014-12-31", "source_url": "https://example.com/primary", "metrics": [{"label": "Revenue", "value": "$394bn"}], "company_lifecycle_stage": "MATURITY", "company_lifecycle_stage_evidence": "The company was an established operator.", "company_lifecycle_stage_source_url": "https://example.com/primary"},
             company=SimpleNamespace(
                 founded_date=date(1882, 8, 5),
                 founded_date_precision="DAY",
@@ -3341,7 +3341,7 @@ class FoundingAnchorEligibilityTests(TestCase):
             action_date=date(2014, 4, 3),
             action_date_precision="DAY",
             action_date_evidence="The project began on April 3, 2014.",
-            lifecycle_context_json={"as_of_date": "2014-03-31", "source_url": "https://sec.gov/example", "metrics": [{"label": "Revenue", "value": "$1B"}]},
+            lifecycle_context_json={"as_of_date": "2014-03-31", "source_url": "https://sec.gov/example", "metrics": [{"label": "Revenue", "value": "$1B"}], "company_lifecycle_stage": "MATURITY", "company_lifecycle_stage_evidence": "The company was an established operator.", "company_lifecycle_stage_source_url": "https://sec.gov/example"},
             company=SimpleNamespace(
                 founded_date=date(1990, 1, 1), founded_date_precision="YEAR",
                 founded_date_evidence="Structured source", founded_date_source_url="https://wikidata.org/wiki/Q1",
@@ -3357,7 +3357,7 @@ class FoundingAnchorPrecisionTests(TestCase):
         event = SimpleNamespace(
             lifecycle_timing_status="VERIFIED", action_date=date(2014, 4, 3), action_date_precision="DAY",
             action_date_evidence="The project began on April 3, 2014.",
-            lifecycle_context_json={"as_of_date": "2014-03-31", "source_url": "https://sec.gov/example", "metrics": [{"label": "Revenue", "value": "$1B"}]},
+            lifecycle_context_json={"as_of_date": "2014-03-31", "source_url": "https://sec.gov/example", "metrics": [{"label": "Revenue", "value": "$1B"}], "company_lifecycle_stage": "MATURITY", "company_lifecycle_stage_evidence": "The company was an established operator.", "company_lifecycle_stage_source_url": "https://sec.gov/example"},
             company=SimpleNamespace(
                 founded_date=date(1849, 1, 1), founded_date_precision="YEAR",
                 founded_date_evidence="Company history says it was founded in 1849.",
@@ -3417,7 +3417,7 @@ class LifecycleTimingModelGuardTests(TestCase):
             company=company, event_type="ACQUISITION", event_date=date(2020, 1, 2),
             action_date=date(2020, 1, 2), action_date_precision="DAY",
             action_date_evidence="On January 2, 2020, the company acquired Example Co.",
-            lifecycle_context_json={"as_of_date": "2019-12-31", "source_url": "https://sec.gov/example", "metrics": [{"label": "Revenue", "value": "$1B"}]},
+            lifecycle_context_json={"as_of_date": "2019-12-31", "source_url": "https://sec.gov/example", "metrics": [{"label": "Revenue", "value": "$1B"}], "company_lifecycle_stage": "SCALE", "company_lifecycle_stage_evidence": "The company had repeated multi-market operations.", "company_lifecycle_stage_source_url": "https://sec.gov/example"},
             lifecycle_timing_status="VERIFIED",
         )
         event.save()
