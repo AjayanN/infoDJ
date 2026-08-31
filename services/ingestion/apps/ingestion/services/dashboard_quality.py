@@ -190,10 +190,15 @@ def lifecycle_timing_eligibility(event: Any) -> EligibilityResult:
         score += 0.20
     else:
         reasons.append("missing_contemporaneous_scale")
-    if isinstance(context, dict) and context.get("company_lifecycle_stage") and clean(context.get("company_lifecycle_stage_evidence", "")) and context.get("company_lifecycle_stage_source_url"):
+    episode = getattr(event, "lifecycle_episode", None)
+    if (
+        episode
+        and getattr(episode, "verification_status", "") == "VERIFIED"
+        and getattr(episode, "company_id", None) == getattr(company, "id", None)
+        and episode.contains(getattr(event, "action_date", None))
+    ):
         score += 0.20
     else:
-
         reasons.append("missing_source_backed_lifecycle_stage")
     eligible = not reasons
     return EligibilityResult(eligible=eligible, status="ELIGIBLE" if eligible else "INELIGIBLE", score=round(score, 3), reasons=tuple(reasons))

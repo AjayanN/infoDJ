@@ -5880,6 +5880,7 @@ def serialize_business_event(event: BusinessEvent) -> dict[str, object]:
     eligibility = event_eligibility(event)
     lifecycle_timing = lifecycle_timing_eligibility(event)
     founded_date = event.company.founded_date
+    episode = event.lifecycle_episode
     company_age_days = (
         (event.action_date - founded_date).days
         if event.action_date and founded_date and event.company.founded_date_precision == "DAY"
@@ -5901,9 +5902,9 @@ def serialize_business_event(event: BusinessEvent) -> dict[str, object]:
                 "source_url": event.company.founded_date_source_url,
                 "status": event.company.founding_anchor_status,
             },
-            "company_lifecycle_stage": (event.lifecycle_context_json or {}).get("company_lifecycle_stage"),
-            "company_lifecycle_stage_evidence": (event.lifecycle_context_json or {}).get("company_lifecycle_stage_evidence"),
-            "company_lifecycle_stage_source_url": (event.lifecycle_context_json or {}).get("company_lifecycle_stage_source_url"),
+            "company_lifecycle_stage": episode.stage if episode else None,
+            "company_lifecycle_stage_evidence": episode.evidence_text if episode else None,
+            "company_lifecycle_stage_source_url": episode.source_url if episode else None,
             "company_age_days": company_age_days,
             "context": event.lifecycle_context_json or {},
             "eligible": lifecycle_timing.eligible,

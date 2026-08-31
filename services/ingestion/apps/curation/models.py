@@ -54,6 +54,92 @@ class LifecycleTimingStatus(models.TextChoices):
     REJECTED = "REJECTED", "Rejected"
 
 
+class LifecycleEpisodeScope(models.TextChoices):
+    COMPANY = "COMPANY", "Company lifecycle"
+    PRODUCT = "PRODUCT", "Product lifecycle"
+    BUSINESS_LINE = "BUSINESS_LINE", "Business-line lifecycle"
+
+
+class LifecycleEpisodeStatus(models.TextChoices):
+    PENDING = "PENDING", "Pending verification"
+    VERIFIED = "VERIFIED", "Verified"
+    REJECTED = "REJECTED", "Rejected"
+
+
+class LifecycleEpisode(models.Model):
+    """A sourced lifecycle state for a company or named product at a real point in time."""
+
+    company = models.ForeignKey(
+        "companies.Company",
+        on_delete=models.CASCADE,
+        related_name="lifecycle_episodes",
+    )
+    source_document = models.ForeignKey(
+        "ingestion.SourceDocument",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="lifecycle_episodes",
+    )
+    scope = models.CharField(max_length=32, choices=LifecycleEpisodeScope.choices, default=LifecycleEpisodeScope.COMPANY)
+    subject_name = models.CharField(max_length=255, blank=True)
+    stage = models.CharField(max_length=32, choices=LifecycleStage.choices, db_index=True)
+    start_date = models.DateField(db_index=True)
+    start_date_precision = models.CharField(max_length=16, choices=ActionDatePrecision.choices)
+    end_date = models.DateField(null=True, blank=True)
+    evidence_text = models.TextField()
+    source_url = models.URLField(max_length=2048)
+    verification_status = models.CharField(
+        max_length=16,
+        choices=LifecycleEpisodeStatus.choices,
+        default=LifecycleEpisodeStatus.PENDING,
+        db_index=True,
+    )
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["company_id", "start_date", "id"]
+        indexes = [
+            models.Index(fields=["company", "stage", "start_date"]),
+            models.Index(fields=["verification_status", "stage"]),
+        ]
+
+    def clean(self) -> None:
+        super().clean()
+        if self.verification_status != LifecycleEpisodeStatus.VERIFIED:
+            return
+        missing = []
+        if not self.start_date:
+            missing.append("start_date")
+        if self.start_date_precision != ActionDatePrecision.DAY:
+            missing.append("start_date_precision_day")
+        if not self.evidence_text.strip():
+            missing.append("evidence_text")
+        if not self.source_url.strip():
+            missing.append("source_url")
+        if self.scope != LifecycleEpisodeScope.COMPANY and not self.subject_name.strip():
+            missing.append("subject_name")
+        if missing:
+            raise ValidationError({"verification_status": "Verified lifecycle episode requires: " + ", ".join(missing)})
+
+    def save(self, *args, **kwargs):
+        if self.verification_status == LifecycleEpisodeStatus.VERIFIED:
+            self.full_clean()
+        super().save(*args, **kwargs)
+
+    def contains(self, action_date) -> bool:
+        return bool(
+            action_date
+            and self.start_date <= action_date
+            and (self.end_date is None or action_date <= self.end_date)
+        )
+
+    def __str__(self) -> str:
+        subject = self.subject_name or self.company.name
+        return f"{subject}: {self.stage} from {self.start_date}"
+
 class BusinessEvent(models.Model):
     company = models.ForeignKey(
         "companies.Company",
@@ -88,6 +174,13 @@ class BusinessEvent(models.Model):
         db_index=True,
     )
     event_type = models.CharField(max_length=64, choices=EventType.choices, db_index=True)
+    lifecycle_episode = models.ForeignKey(
+        LifecycleEpisode,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="business_events",
+    )
     lifecycle_stage = models.CharField(
         max_length=32,
         choices=LifecycleStage.choices,
@@ -143,12 +236,15 @@ class BusinessEvent(models.Model):
             missing.append("company.founding_anchor_evidence")
         if not context.get("as_of_date") or not context.get("source_url") or not context.get("metrics"):
             missing.append("contemporaneous_scale_context")
-        if context.get("company_lifecycle_stage") not in set(LifecycleStage.values):
-            missing.append("company_lifecycle_stage")
-        if not str(context.get("company_lifecycle_stage_evidence") or "").strip():
-            missing.append("company_lifecycle_stage_evidence")
-        if not str(context.get("company_lifecycle_stage_source_url") or "").strip():
-            missing.append("company_lifecycle_stage_source_url")
+        episode = self.lifecycle_episode
+        if not episode:
+            missing.append("lifecycle_episode")
+        elif episode.verification_status != LifecycleEpisodeStatus.VERIFIED:
+            missing.append("lifecycle_episode_not_verified")
+        elif episode.company_id != self.company_id:
+            missing.append("lifecycle_episode_company_mismatch")
+        elif not episode.contains(self.action_date):
+            missing.append("lifecycle_episode_does_not_cover_action_date")
         if missing:
             raise ValidationError(
                 {"lifecycle_timing_status": "Verified lifecycle timing requires: " + ", ".join(missing)}

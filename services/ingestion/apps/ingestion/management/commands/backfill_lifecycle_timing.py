@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand
 from django.db.models import Q
 from django.utils.text import slugify
 
-from apps.curation.models import BusinessEvent, LifecycleTimingStatus
+from apps.curation.models import BusinessEvent, LifecycleEpisode, LifecycleEpisodeStatus, LifecycleTimingStatus
 from apps.ingestion.models import FinancialFact, SourceGap, SourceGapStatus
 from apps.ingestion.services.lifecycle_timing import (
     exact_action_date_from_evidence,
@@ -33,7 +33,7 @@ class Command(BaseCommand):
         elif options["limit"]:
             events = events[: options["limit"]]
 
-        counts = {"scanned": 0, "verified": 0, "pending": 0, "no_founding_anchor": 0, "no_exact_date": 0, "no_scale_context": 0}
+        counts = {"scanned": 0, "verified": 0, "pending": 0, "no_founding_anchor": 0, "no_exact_date": 0, "no_scale_context": 0, "no_lifecycle_episode": 0}
         for event in events:
             counts["scanned"] += 1
             if options["limit"] and counts["scanned"] > options["limit"]:
@@ -49,6 +49,11 @@ class Command(BaseCommand):
                 continue
             action_date, evidence = parsed
             facts = FinancialFact.objects.filter(company=event.company).filter(Q(filed__lte=action_date)).order_by("-filed")
+            episode = self._episode_for(event.company, action_date)
+            if not episode:
+                counts["no_lifecycle_episode"] += 1
+                self._mark_pending(event, "missing_verified_lifecycle_episode_at_action_date", options["dry_run"])
+                continue
             context = lifecycle_context_from_financial_facts(
                 company=event.company,
                 action_date=action_date,
@@ -65,10 +70,14 @@ class Command(BaseCommand):
                 event.action_date_evidence = evidence
                 event.lifecycle_context_json = context
                 event.lifecycle_timing_status = LifecycleTimingStatus.VERIFIED
+                context["company_lifecycle_stage"] = episode.stage
+                context["company_lifecycle_stage_evidence"] = episode.evidence_text
+                context["company_lifecycle_stage_source_url"] = episode.source_url
+                event.lifecycle_episode = episode
                 event.full_clean()
                 event.save(update_fields=[
                     "action_date", "action_date_precision", "action_date_evidence",
-                    "lifecycle_context_json", "lifecycle_timing_status", "updated_at",
+                    "lifecycle_context_json", "lifecycle_episode", "lifecycle_timing_status", "updated_at",
                 ])
 
         counts["pending"] = counts["scanned"] - counts["verified"]
@@ -76,6 +85,19 @@ class Command(BaseCommand):
         self._reconcile_company_source_gaps(companies, dry_run=options["dry_run"])
         mode = "Dry run" if options["dry_run"] else "Backfill"
         self.stdout.write(self.style.SUCCESS(f"{mode}: {counts}"))
+
+    @staticmethod
+    def _episode_for(company, action_date):
+        return (
+            LifecycleEpisode.objects.filter(
+                company=company,
+                verification_status=LifecycleEpisodeStatus.VERIFIED,
+                start_date__lte=action_date,
+            )
+            .filter(Q(end_date__isnull=True) | Q(end_date__gte=action_date))
+            .order_by("-start_date")
+            .first()
+        )
 
     def _reconcile_company_source_gaps(self, companies, *, dry_run: bool) -> None:
         """Create/resolve the single actionable lifecycle gap for every company.

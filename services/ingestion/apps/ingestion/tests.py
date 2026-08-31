@@ -6,6 +6,7 @@ from unittest.mock import patch
 from types import SimpleNamespace
 
 from django.core.management import call_command
+from django.core.exceptions import ValidationError
 from django.core.management.base import CommandError
 from django.test import Client, TestCase
 from django.utils.text import slugify
@@ -45,7 +46,7 @@ from apps.companies.models import (
     ValuationContextSnapshot,
     ValuationEventSnapshot,
 )
-from apps.curation.models import BusinessEvent, StrategicTurn, StrategicTurnSource
+from apps.curation.models import BusinessEvent, LifecycleEpisode, StrategicTurn, StrategicTurnSource
 from apps.ingestion.models import (
     ArticleExtraction,
     EvidenceRecord,
@@ -3288,11 +3289,13 @@ class LifecycleTimingEligibilityTests(TestCase):
             lifecycle_context_json={"as_of_date": "2014-12-31", "source_url": "https://example.com/primary", "metrics": [{"label": "Revenue", "value": "$394bn"}], "company_lifecycle_stage": "MATURITY", "company_lifecycle_stage_evidence": "The company was an established operator.", "company_lifecycle_stage_source_url": "https://example.com/primary"},
             company=SimpleNamespace(
                 founded_date=date(1882, 8, 5),
+                id=1,
                 founded_date_precision="DAY",
                 founded_date_evidence="Official founding record.",
                 founded_date_source_url="https://example.com/founding",
                 founding_anchor_status="VERIFIED",
             ),
+            lifecycle_episode=SimpleNamespace(verification_status="VERIFIED", company_id=1, contains=lambda action_date: True),
         )
 
     def test_verified_lifecycle_timing_requires_an_auditable_evidence_chain(self):
@@ -3359,10 +3362,12 @@ class FoundingAnchorPrecisionTests(TestCase):
             action_date_evidence="The project began on April 3, 2014.",
             lifecycle_context_json={"as_of_date": "2014-03-31", "source_url": "https://sec.gov/example", "metrics": [{"label": "Revenue", "value": "$1B"}], "company_lifecycle_stage": "MATURITY", "company_lifecycle_stage_evidence": "The company was an established operator.", "company_lifecycle_stage_source_url": "https://sec.gov/example"},
             company=SimpleNamespace(
+                id=1,
                 founded_date=date(1849, 1, 1), founded_date_precision="YEAR",
                 founded_date_evidence="Company history says it was founded in 1849.",
                 founded_date_source_url="https://example.com/history", founding_anchor_status="VERIFIED",
             ),
+            lifecycle_episode=SimpleNamespace(verification_status="VERIFIED", company_id=1, contains=lambda action_date: True),
         )
         self.assertTrue(lifecycle_timing_eligibility(event).eligible)
 
@@ -3396,7 +3401,38 @@ class LifecycleBackfillAdmissionTests(TestCase):
         self.assertFalse(Command._has_verified_founding_anchor(pending))
         self.assertTrue(Command._has_verified_founding_anchor(verified))
 
-class LifecycleTimingModelGuardTests(TestCase):
+class LifecycleEpisodeModelGuardTests(TestCase):
+    def test_verified_episode_requires_primary_source_evidence(self):
+        company = Company.objects.create(name="Episode Guard Co")
+        episode = LifecycleEpisode(
+            company=company,
+            scope="COMPANY",
+            stage="LAUNCH",
+            start_date=date(2014, 4, 3),
+            start_date_precision="DAY",
+            verification_status="VERIFIED",
+        )
+
+        with self.assertRaises(ValidationError):
+            episode.save()
+
+    def test_verified_event_requires_a_verified_episode_for_its_company(self):
+        company = Company.objects.create(
+            name="Episode Event Co", founded_date=date(2013, 1, 1),
+            founded_date_precision="DAY", founded_date_evidence="Official record.",
+            founded_date_source_url="https://example.com/founding", founding_anchor_status="VERIFIED",
+        )
+        event = BusinessEvent(
+            company=company, event_type="PRODUCT_EXPANSION", event_date=date(2014, 4, 3),
+            action_date=date(2014, 4, 3), action_date_precision="DAY",
+            action_date_evidence="On April 3, 2014, the company launched the product.",
+            lifecycle_context_json={"as_of_date": "2014-03-31", "source_url": "https://example.com/filing", "metrics": [{"label": "Revenue", "value": "$1M"}]},
+            lifecycle_timing_status="VERIFIED",
+        )
+
+        with self.assertRaises(ValidationError):
+            event.save()
+
     def test_verified_event_cannot_bypass_lifecycle_validation(self):
         from django.core.exceptions import ValidationError
 
@@ -3413,11 +3449,17 @@ class LifecycleTimingModelGuardTests(TestCase):
             founded_date_precision="DAY", founded_date_evidence="Official record.",
             founded_date_source_url="https://example.com/founding", founding_anchor_status="VERIFIED",
         )
+        episode = LifecycleEpisode.objects.create(
+            company=company, scope="COMPANY", stage="SCALE", start_date=date(2020, 1, 2),
+            start_date_precision="DAY", evidence_text="The company had repeated multi-market operations.",
+            source_url="https://example.com/lifecycle", verification_status="VERIFIED",
+        )
         event = BusinessEvent(
             company=company, event_type="ACQUISITION", event_date=date(2020, 1, 2),
             action_date=date(2020, 1, 2), action_date_precision="DAY",
             action_date_evidence="On January 2, 2020, the company acquired Example Co.",
             lifecycle_context_json={"as_of_date": "2019-12-31", "source_url": "https://sec.gov/example", "metrics": [{"label": "Revenue", "value": "$1B"}], "company_lifecycle_stage": "SCALE", "company_lifecycle_stage_evidence": "The company had repeated multi-market operations.", "company_lifecycle_stage_source_url": "https://sec.gov/example"},
+            lifecycle_episode=episode,
             lifecycle_timing_status="VERIFIED",
         )
         event.save()
