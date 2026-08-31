@@ -54,3 +54,16 @@ test('public login uses continuous cinematic scrolling through the existing foun
   assert.match(component, /blur\(\$\{Math\.round/);
   assert.match(styles, /Depth-of-field staging/);
 });
+
+test('login is a final story chapter with a distinct narrative panel beside the form', () => {
+  const template = readFileSync(new URL('src/app.component.html', root), 'utf8');
+  const styles = readFileSync(new URL('src/styles.css', root), 'utf8');
+
+  assert.match(template, /class="entry-login-scene"/);
+  assert.match(template, /class="entry-login-story"/);
+  assert.match(template, /Let’s log in/);
+  assert.match(template, /class="auth-card"/);
+  assert.match(styles, /\.entry-login-scene/);
+  assert.match(styles, /grid-template-columns: minmax\(0, 1\.08fr\) minmax\(360px, \.72fr\)/);
+  assert.match(styles, /\.entry-login-story/);
+});

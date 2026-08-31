@@ -104,8 +104,25 @@
       </section>
     </section>
 
-    <section id="auth-content" class="auth-card" aria-labelledby="auth-title" [attr.aria-busy]="loading()" tabindex="-1">
-      <div class="auth-brand">
+    <section id="auth-content" class="entry-login-scene" aria-labelledby="auth-title" [attr.aria-busy]="loading()" tabindex="-1">
+      <div class="entry-login-story">
+        <p class="entry-kicker">05 — Let’s find out</p>
+        <h2>Let’s log in<br />and find out.</h2>
+        <p class="entry-login-intro">Bring your company stage into focus. InfoDJ turns the next boardroom question into evidence you can use in the meeting.</p>
+        <ol class="entry-login-path" aria-label="What happens next">
+          <li><span>01</span><strong>Your stage</strong><small>Name the decision in front of you.</small></li>
+          <li><span>02</span><strong>The evidence</strong><small>Study the moves that matter.</small></li>
+          <li><span>03</span><strong>Your next step</strong><small>Leave with a plan you can act on.</small></li>
+        </ol>
+        <div class="entry-login-proof">
+          <span>Your next view</span>
+          <strong>One question.<br />Evidence behind it.</strong>
+          <small>Not another dashboard.</small>
+        </div>
+      </div>
+
+      <section class="auth-card" aria-labelledby="auth-title">
+        <div class="auth-brand">
         <p class="eyebrow">Get your starting plan</p>
         <h1 id="auth-title">{{ authTitle() }}</h1>
         <p id="auth-description">Start with your company stage. We’ll help you focus on the next decision, not every possible one.</p>
@@ -206,6 +223,7 @@
         </label>
         <button type="submit" class="primary-button" [disabled]="loading()" [attr.aria-disabled]="loading()">Update password</button>
       </form>
+      </section>
     </section>
   </main>
 </ng-container>
