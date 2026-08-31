@@ -6,6 +6,7 @@ import re
 from apps.ingestion.models import ArticleExtraction, SourceGapResolutionCandidate
 from apps.ingestion.services.article_extractor import ArticleExtractor, extract_source_document
 from apps.ingestion.services.source_gap_resolver import SOURCE_RULES, confidence_for
+from apps.ingestion.services.lifecycle_timing import exact_action_date_from_evidence
 
 
 @dataclass(frozen=True)
@@ -23,10 +24,14 @@ def extract_source_gap_candidates(
     gap_type: str = "",
     timeout: float = 10.0,
     retry_failed: bool = False,
+    refresh_extracted: bool = False,
 ) -> CandidateExtractionResult:
+    extraction_statuses = ["FAILED"] if retry_failed else ["CANDIDATE"]
+    if refresh_extracted and not retry_failed:
+        extraction_statuses.append("EXTRACTED")
     candidates = SourceGapResolutionCandidate.objects.filter(
         review_status="NEEDS_REVIEW",
-        extraction_status="FAILED" if retry_failed else "CANDIDATE",
+        extraction_status__in=extraction_statuses,
     ).select_related("source_document")
     if dashboard:
         candidates = candidates.filter(dashboard=dashboard)
@@ -71,7 +76,11 @@ def extract_source_gap_candidates(
             continue
         rule = SOURCE_RULES.get((candidate.dashboard, candidate.gap_type), {})
         keywords = tuple(str(keyword) for keyword in rule.get("keywords", ()))
-        evidence = full_text_excerpt(extraction.clean_text, keywords) or candidate.evidence_text
+        evidence = (
+            lifecycle_timing_excerpt(extraction.clean_text)
+            if (candidate.dashboard, candidate.gap_type) == ("FOUNDER_DECISION", "LIFECYCLE_TIMING")
+            else full_text_excerpt(extraction.clean_text, keywords)
+        ) or candidate.evidence_text
         confidence = confidence_for(
             candidate.source_document,
             evidence,
@@ -96,6 +105,16 @@ def extract_source_gap_candidates(
         candidates_updated=updated,
         candidates_failed=failed,
     )
+
+
+def lifecycle_timing_excerpt(text: str) -> str:
+    """Return the precise source sentence that qualifies as a dated action candidate."""
+    normalized = re.sub(r"\s+", " ", text or "").strip()
+    for sentence in re.split(r"(?<=[.!?])\s+", normalized):
+        parsed = exact_action_date_from_evidence(sentence)
+        if parsed:
+            return parsed[1]
+    return ""
 
 
 def full_text_excerpt(text: str, keywords: tuple[str, ...], *, window: int = 900) -> str:

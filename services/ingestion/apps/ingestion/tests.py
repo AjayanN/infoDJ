@@ -95,7 +95,7 @@ from apps.ingestion.services.sector_theme_intelligence import build_sector_theme
 from apps.ingestion.services.macro_sensitivity_profile import build_macro_sensitivity_profile, macro_sensitivity_quality_issues
 from apps.ingestion.services.source_gap_resolver import SOURCE_RULES, resolve_source_gaps
 from apps.ingestion.services.source_gap_source_collector import forms_for_gap, ticker_for
-from apps.ingestion.services.source_gap_candidate_extractor import extract_source_gap_candidates, full_text_excerpt
+from apps.ingestion.services.source_gap_candidate_extractor import extract_source_gap_candidates, full_text_excerpt, lifecycle_timing_excerpt
 from apps.ingestion.services.source_gap_candidate_promoter import (
     parse_dependency_contract_terms,
     parse_dependency_concentrations,
@@ -1895,6 +1895,16 @@ class IngestionSearchApiTests(TestCase):
         self.assertEqual(candidate.extraction_status, "EXTRACTED")
         self.assertIn("beneficial ownership", candidate.evidence_text)
         self.assertTrue(candidate.metadata["full_text_evidence"])
+
+    def test_lifecycle_timing_excerpt_returns_the_dated_action_sentence(self):
+        text = (
+            "Introductory filing text. On August 4, 2026, the Company entered into a co-operation agreement "
+            "with SEGRO. Unrelated financial statement text."
+        )
+        self.assertEqual(
+            lifecycle_timing_excerpt(text),
+            "On August 4, 2026, the Company entered into a co-operation agreement with SEGRO.",
+        )
 
     def test_full_text_excerpt_prefers_keyword_window(self):
         text = "A " * 200 + "Form 4 shows an insider transaction sale under a trading plan." + " Z" * 200

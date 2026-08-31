@@ -21,6 +21,11 @@ class Command(BaseCommand):
             action="store_true",
             help="Retry documents with a previously recorded extraction failure.",
         )
+        parser.add_argument(
+            "--refresh-extracted",
+            action="store_true",
+            help="Rebuild evidence excerpts for candidates whose full text already exists.",
+        )
 
     def handle(self, *args, **options):
         result = extract_source_gap_candidates(
@@ -29,6 +34,7 @@ class Command(BaseCommand):
             gap_type=options["gap_type"],
             timeout=options["timeout"],
             retry_failed=options["retry_failed"],
+            refresh_extracted=options["refresh_extracted"],
         )
         self.stdout.write(
             self.style.SUCCESS(
