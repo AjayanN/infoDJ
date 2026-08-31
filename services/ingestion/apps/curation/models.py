@@ -148,6 +148,13 @@ class BusinessEvent(models.Model):
                 {"lifecycle_timing_status": "Verified lifecycle timing requires: " + ", ".join(missing)}
             )
 
+    def save(self, *args, **kwargs):
+        # Do not allow a caller to bypass lifecycle admission by setting VERIFIED
+        # directly and calling save() without an explicit full_clean().
+        if self.lifecycle_timing_status == LifecycleTimingStatus.VERIFIED:
+            self.full_clean()
+        super().save(*args, **kwargs)
+
     def __str__(self) -> str:
         return f"{self.company} - {self.event_type}"
 

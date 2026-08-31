@@ -3395,3 +3395,30 @@ class LifecycleBackfillAdmissionTests(TestCase):
         )
         self.assertFalse(Command._has_verified_founding_anchor(pending))
         self.assertTrue(Command._has_verified_founding_anchor(verified))
+
+class LifecycleTimingModelGuardTests(TestCase):
+    def test_verified_event_cannot_bypass_lifecycle_validation(self):
+        from django.core.exceptions import ValidationError
+
+        company = Company.objects.create(name="Guarded Lifecycle Co")
+        event = BusinessEvent(
+            company=company, event_type="ACQUISITION", lifecycle_timing_status="VERIFIED",
+        )
+        with self.assertRaises(ValidationError):
+            event.save()
+
+    def test_complete_verified_event_saves(self):
+        company = Company.objects.create(
+            name="Verified Lifecycle Co", founded_date=date(2000, 1, 1),
+            founded_date_precision="DAY", founded_date_evidence="Official record.",
+            founded_date_source_url="https://example.com/founding", founding_anchor_status="VERIFIED",
+        )
+        event = BusinessEvent(
+            company=company, event_type="ACQUISITION", event_date=date(2020, 1, 2),
+            action_date=date(2020, 1, 2), action_date_precision="DAY",
+            action_date_evidence="On January 2, 2020, the company acquired Example Co.",
+            lifecycle_context_json={"as_of_date": "2019-12-31", "source_url": "https://sec.gov/example", "metrics": [{"label": "Revenue", "value": "$1B"}]},
+            lifecycle_timing_status="VERIFIED",
+        )
+        event.save()
+        self.assertEqual(event.lifecycle_timing_status, "VERIFIED")
