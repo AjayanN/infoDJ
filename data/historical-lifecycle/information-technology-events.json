@@ -182,5 +182,42 @@
     "after_state": "Customers could rent or buy DVDs online with delivery.",
     "trigger": "Need for wider DVD selection and online convenience.",
     "outcome": "Netflix created online DVD-rental retail category."
+  },
+  {
+    "company_slug": "tesla",
+    "event_type": "PRODUCT_EXPANSION",
+    "action_date": "2008-03-17",
+    "episode_scope": "PRODUCT",
+    "episode_subject_name": "Tesla Roadster",
+    "episode_start_date": "2008-03-17",
+    "source_url": "https://ir.tesla.com/press-release/tesla-motors-begins-regular-production-2008-tesla-roadster",
+    "source_title": "Tesla Motors Begins Regular Production of 2008 Tesla Roadster",
+    "source_publisher": "Tesla",
+    "evidence_text": "Tesla states regular production of the 2008 Tesla Roadster commenced on March 17, 2008.",
+    "decision_theme": "FIRST_PRODUCTION_VEHICLE",
+    "decision": "Begin regular production of Tesla Roadster.",
+    "actual_change": "Tesla commenced regular production of the 2008 Roadster.",
+    "before_state": "Tesla had a Roadster prototype and reservations.",
+    "after_state": "Tesla had begun regular production of a production electric vehicle.",
+    "trigger": "Validated demand and completed regulatory approvals.",
+    "outcome": "Tesla converted Roadster concept into production vehicle."
+  },
+  {
+    "company_slug": "amazon",
+    "event_type": "FUNDING_EVENT",
+    "action_date": "1997-05-15",
+    "episode_scope": "COMPANY",
+    "episode_start_date": "1997-05-15",
+    "source_url": "https://ir.aboutamazon.com/faqs/default.aspx/1000/",
+    "source_title": "Amazon.com FAQs",
+    "source_publisher": "Amazon",
+    "evidence_text": "Amazon states it went public on May 15, 1997.",
+    "decision_theme": "INITIAL_PUBLIC_OFFERING",
+    "decision": "Complete initial public offering.",
+    "actual_change": "Amazon went public at an IPO price of $18.00.",
+    "before_state": "Amazon operated as a private online retailer.",
+    "after_state": "Amazon had public-market financing and listed common stock.",
+    "trigger": "Need capital to support growth of online retail operations.",
+    "outcome": "Amazon completed its initial public offering."
   }
 ]
