@@ -178,15 +178,14 @@ def _apply_company_details(company: Any, details: WikidataCompany, *, save: bool
     company.website = details.website or getattr(company, "website", "")
     company.country = details.country or getattr(company, "country", "")
     company.industry = details.industry or getattr(company, "industry", "")
-    if details.founded_date:
+    # A verified primary/authoritative anchor is curated evidence. Wikidata may
+    # enrich discovery metadata but must never replace that anchor.
+    if details.founded_date and getattr(company, "founding_anchor_status", "") != "VERIFIED":
         company.founded_date = details.founded_date
         company.founded_date_precision = details.founded_date_precision
         company.founded_date_evidence = f"Wikidata P571 inception claim for {details.wikidata_id}."
         company.founded_date_source_url = f"https://www.wikidata.org/wiki/{details.wikidata_id}"
-        # Structured data is useful discovery evidence, but not a verified primary
-        # founding anchor for founder-comparison timing.
-        if getattr(company, "founding_anchor_status", "") != "VERIFIED":
-            company.founding_anchor_status = "STRUCTURED"
+        company.founding_anchor_status = "STRUCTURED"
     if details.aliases:
         company.aliases = list(details.aliases)
 

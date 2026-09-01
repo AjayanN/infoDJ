@@ -155,7 +155,7 @@ from apps.ingestion.services.sec_profile_builder import (
     parse_sec_profile_text,
 )
 from apps.ingestion.services.sec_edgar_client import discover_sec_filings_for_company
-from apps.ingestion.services.wikidata_client import normalize_company_entity
+from apps.ingestion.services.wikidata_client import WikidataCompany, _apply_company_details, normalize_company_entity
 
 
 class IngestionSearchApiTests(TestCase):
@@ -2610,6 +2610,32 @@ class WikidataCompanyProfileTests(TestCase):
         self.assertEqual(company.products, ("Example Product",))
         self.assertEqual(company.brands, ("Example Brand",))
         self.assertEqual(company.leadership, ("Example CEO",))
+
+    def test_verified_primary_founding_anchor_survives_wikidata_refresh(self):
+        company = Company.objects.create(
+            name="Anchor Guard Corp",
+            founded_date=date(2000, 1, 1),
+            founded_date_precision="DAY",
+            founded_date_evidence="Official charter records January 1, 2000.",
+            founded_date_source_url="https://example.com/charter",
+            founding_anchor_status="VERIFIED",
+        )
+
+        _apply_company_details(
+            company,
+            WikidataCompany(
+                wikidata_id="Q1",
+                name="Anchor Guard Corp",
+                founded_date=date(1999, 1, 15),
+                founded_date_precision="DAY",
+            ),
+            save=True,
+        )
+        company.refresh_from_db()
+
+        self.assertEqual(company.founded_date, date(2000, 1, 1))
+        self.assertEqual(company.founded_date_source_url, "https://example.com/charter")
+        self.assertEqual(company.founding_anchor_status, "VERIFIED")
 
 
 class EventClaimTextTests(TestCase):
