@@ -73,5 +73,23 @@
     "after_state": "Microsoft added a graphical operating environment to its product line.",
     "trigger": "Need for easier personal-computer interaction.",
     "outcome": "Windows began its commercial product lifecycle."
+  },
+  {
+    "company_slug": "disney",
+    "event_type": "DISTRIBUTION_CHANNEL_SHIFT",
+    "action_date": "1923-10-16",
+    "episode_scope": "COMPANY",
+    "episode_start_date": "1923-10-16",
+    "source_url": "https://thewaltdisneycompany.com/news/disney100-anniversary-disney-contract/",
+    "source_title": "Here\u2019s How a Four-Page Contract Started The Walt Disney Company",
+    "source_publisher": "The Walt Disney Company",
+    "evidence_text": "The Walt Disney Company states it officially began on October 16, 1923 when Walt Disney signed a contract to produce and distribute the Alice Comedies.",
+    "decision_theme": "FIRST_DISTRIBUTION_CONTRACT",
+    "decision": "Secure a distribution contract for the Alice Comedies.",
+    "actual_change": "Walt Disney signed the contract to produce and distribute the Alice Comedies.",
+    "before_state": "Walt Disney had moved to Hollywood after earlier studios failed.",
+    "after_state": "The new studio had a distributor and a first production commitment.",
+    "trigger": "A distributor needed new animated content.",
+    "outcome": "The contract established the studio that became The Walt Disney Company."
   }
 ]
