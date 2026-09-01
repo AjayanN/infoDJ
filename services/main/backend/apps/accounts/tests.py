@@ -303,6 +303,31 @@ class FounderDecisionApiTests(TestCase):
         self.assertEqual(passport["Comparable moves"]["count"], 1)
         self.assertEqual(passport["Comparable moves"]["last_observed_on"], "2026-02-18")
         self.assertEqual(passport["Source diversity"]["evidence_strength"], "weak")
+
+    @patch("apps.accounts.api.ingestion_get")
+    def test_founder_decision_uses_historical_events_outside_latest_feed(self, ingestion_get):
+        ingestion_get.side_effect = [
+            ({"companies": [{"slug": "exxonmobil", "sector": "Energy"}]}, ""),
+            ({"latest_events": [], "historical_events": [{
+                "id": 8, "company": "ExxonMobil", "company_slug": "exxonmobil",
+                "event_date": "2014-04-03", "event_type": "PRODUCT_EXPANSION",
+                "actual_change": "Launched a source-backed product.",
+                "source": {"title": "Primary announcement", "url": "https://example.com/exxon"},
+                "quality": {"eligible": True},
+                "lifecycle_timing": {
+                    "eligible": True, "action_date": "2014-04-03", "action_date_precision": "DAY",
+                    "company_age_days": 276, "company_lifecycle_stage": "LAUNCH",
+                },
+            }], "risk_signals": []}, ""),
+        ]
+
+        response = self.client.get("/api/app/founder-decision")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status"], "available")
+        self.assertEqual(response.data["coverage"]["comparable_event_count"], 1)
+        self.assertEqual(response.data["journey"][0]["id"], 8)
+
     @patch("apps.accounts.api.ingestion_get")
     def test_founder_decision_rejects_a_mature_company_move_for_build_stage(self, ingestion_get):
         ingestion_get.side_effect = [

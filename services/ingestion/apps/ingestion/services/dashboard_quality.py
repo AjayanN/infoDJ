@@ -100,8 +100,16 @@ def event_eligibility(event: Any, *, require_specific_action: bool = True) -> El
     evidence_text = clean(getattr(event, "evidence_text", ""))
     confidence = getattr(event, "confidence_score", 0) or 0
     source_count = event_source_count(event)
+    context = getattr(event, "lifecycle_context_json", None) or {}
+    historical_primary_source = (
+        isinstance(context, dict)
+        and context.get("evidence_mode") == "HISTORICAL_PRIMARY_SOURCE"
+        and bool(context.get("source_url"))
+    )
 
-    if getattr(event, "event_date", None):
+    if getattr(event, "event_date", None) or (
+        historical_primary_source and getattr(event, "action_date", None)
+    ):
         score += 0.15
     else:
         reasons.append("missing_event_date")
@@ -132,7 +140,7 @@ def event_eligibility(event: Any, *, require_specific_action: bool = True) -> El
     if has_generic_event_text(actual_change) or has_generic_event_text(source_claim):
         reasons.append("generic_event_text")
 
-    if require_specific_action and not has_specific_action(actual_change):
+    if require_specific_action and not has_specific_action(actual_change) and not historical_primary_source:
         reasons.append("missing_specific_company_action")
 
     eligible = not any(

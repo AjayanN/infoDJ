@@ -3475,6 +3475,13 @@ def dashboard_data(request: HttpRequest) -> JsonResponse:
         .order_by("-event_date", "-created_at")[:500]
     )
     latest_events = eligible_events(latest_event_candidates, 500)
+    historical_event_candidates = list(
+        event_candidates
+        .filter(lifecycle_timing_status="VERIFIED", action_date_precision="DAY")
+        .exclude(actual_change="")
+        .order_by("-action_date", "-created_at")[:500]
+    )
+    historical_events = eligible_events(historical_event_candidates, 500)
     impact_event_candidates = list(
         event_candidates
         .filter(company_id__in=MarketPrice.objects.exclude(company_id__isnull=True).values("company_id"))
@@ -3622,6 +3629,7 @@ def dashboard_data(request: HttpRequest) -> JsonResponse:
         {
             "scope": serialize_dashboard_scope(scoped_company),
             "latest_events": [serialize_business_event(event) for event in latest_events],
+            "historical_events": [serialize_business_event(event) for event in historical_events],
             "latest_turns": [serialize_strategic_turn(turn, source_count=turn_source_counts.get(turn.id, 0)) for turn in latest_turns],
             "patterns": pattern_rows,
             "risk_signals": [serialize_risk_signal(event) for event in risk_events],

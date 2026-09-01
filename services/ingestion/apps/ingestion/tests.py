@@ -56,7 +56,7 @@ from apps.ingestion.models import (
     SourceGap,
     SourceGapResolutionCandidate,
 )
-from apps.ingestion.services.dashboard_quality import lifecycle_timing_eligibility
+from apps.ingestion.services.dashboard_quality import event_eligibility, lifecycle_timing_eligibility
 from apps.ingestion.services.lifecycle_timing import exact_action_date_from_evidence, lifecycle_context_from_financial_facts
 from apps.ingestion.services.capital_allocation import (
     build_capital_allocation_periods,
@@ -3345,6 +3345,27 @@ class LifecycleTimingEligibilityTests(TestCase):
         self.assertFalse(result.eligible)
         self.assertIn("missing_actual_action_date", result.reasons)
         self.assertIn("lifecycle_timing_not_verified", result.reasons)
+
+class HistoricalPrimaryEventEligibilityTests(TestCase):
+    def test_verified_historical_primary_action_uses_exact_action_date(self):
+        event = SimpleNamespace(
+            event_date=None,
+            action_date=date(1977, 4, 16),
+            actual_change="Apple debuted the Apple II at the first West Coast Computer Faire.",
+            source_claim="Apple’s official historical record dates this action to April 16, 1977.",
+            evidence_text="Apple debuted the Apple II at the first West Coast Computer Faire on April 16, 1977.",
+            confidence_score="1.000",
+            source_document_id=1,
+            raw_extraction_json={"provenance": "HISTORICAL_PRIMARY_SOURCE"},
+            lifecycle_context_json={"evidence_mode": "HISTORICAL_PRIMARY_SOURCE", "source_url": "https://example.com/apple-history"},
+        )
+
+        result = event_eligibility(event)
+
+        self.assertTrue(result.eligible)
+        self.assertNotIn("missing_event_date", result.reasons)
+        self.assertNotIn("missing_specific_company_action", result.reasons)
+
 
 class LifecycleTimingBackfillTests(TestCase):
     def test_extracts_only_explicit_action_day_not_publication_day(self):

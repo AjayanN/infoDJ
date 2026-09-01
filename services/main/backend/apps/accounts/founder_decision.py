@@ -40,15 +40,25 @@ def build_founder_decision(context: dict, companies: list[dict], dashboard: dict
     playbook = playbook_for(context.get("sector", ""), context.get("stage", ""))
     sector = context.get("sector", "")
     company_sectors = {str(row.get("slug") or ""): str(row.get("sector") or "") for row in companies}
-    comparable_events = [
-        event
-        for event in dashboard.get("latest_events", [])
-        if company_sectors.get(str(event.get("company_slug") or "")) == sector
-        and event.get("source")
-        and is_stage_comparable(event, str(context.get("stage") or ""))
-        and event.get("quality", {}).get("eligible")
-        and event.get("lifecycle_timing", {}).get("eligible")
+    candidate_events = [
+        *dashboard.get("historical_events", []),
+        *dashboard.get("latest_events", []),
     ]
+    seen_event_ids = set()
+    comparable_events = []
+    for event in candidate_events:
+        event_id = event.get("id")
+        if event_id in seen_event_ids:
+            continue
+        seen_event_ids.add(event_id)
+        if (
+            company_sectors.get(str(event.get("company_slug") or "")) == sector
+            and event.get("source")
+            and is_stage_comparable(event, str(context.get("stage") or ""))
+            and event.get("quality", {}).get("eligible")
+            and event.get("lifecycle_timing", {}).get("eligible")
+        ):
+            comparable_events.append(event)
     risk_events = [
         event
         for event in dashboard.get("risk_signals", [])
