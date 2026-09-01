@@ -12,10 +12,10 @@ This file is the single register for unfinished product, data, and operational w
 
 ## Active
 
-### Historical lifecycle evidence — Information Technology pilot
+### Historical lifecycle evidence — all companies
 
-- **Outcome:** founders validating, building, or launching a technology company receive only historical, stage-matched comparable actions.
-- **Acceptance:** at least 5 companies; at least 2 verified primary-source episodes for each of validate, build, and launch; every surfaced event has an exact action date, company/product lifecycle episode, company age, sector context, and source URL.
+- **Outcome:** founders receive only historical, stage-matched comparable actions across every company in the InfoDJ universe.
+- **Acceptance:** every company has verified primary or authoritative founding evidence; each supported lifecycle stage has at least two exact-date, source-linked historical actions; every surfaced event has a lifecycle episode, company age where exact founding evidence permits it, industry context, and source URL.
 - **Dependency:** historical primary-source research and review.
 
 ### Founder comparison precision
