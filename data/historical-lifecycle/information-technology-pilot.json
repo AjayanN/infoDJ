@@ -99,5 +99,41 @@
     "decision_type": "company formation",
     "target_customer": "electric vehicle customers",
     "business_model": "electric vehicle design, manufacturing, and sales"
+  },
+  {
+    "company_slug": "ford-motor-company",
+    "scope": "COMPANY",
+    "stage": "LAUNCH",
+    "start_date": "1903-06-16",
+    "start_date_precision": "DAY",
+    "evidence_text": "Ford records that Henry Ford and 12 others created Ford Motor Company on June 16, 1903.",
+    "source_url": "https://corporate.ford.com/corporate/corporate/articles/history/henry-ford-biography/",
+    "decision_type": "company formation",
+    "target_customer": "automobile buyers",
+    "business_model": "automobile manufacturing and sales"
+  },
+  {
+    "company_slug": "general-electric",
+    "scope": "COMPANY",
+    "stage": "LAUNCH",
+    "start_date": "1892-04-15",
+    "start_date_precision": "DAY",
+    "evidence_text": "GE records that Edison Electric Company merged with Thomson & Houston to form General Electric on April 15, 1892.",
+    "source_url": "https://www.ge.com/news/reports/a-step-into-the-future-ge-turns-130-but-its-engineers-arent-looking-back",
+    "decision_type": "company merger",
+    "target_customer": "electricity and industrial customers",
+    "business_model": "electrical technology and services"
+  },
+  {
+    "company_slug": "walmart",
+    "scope": "COMPANY",
+    "stage": "LAUNCH",
+    "start_date": "1962-07-02",
+    "start_date_precision": "DAY",
+    "evidence_text": "Walmart records that Sam Walton opened the first Walmart store in Rogers, Arkansas on July 2, 1962.",
+    "source_url": "https://corporate.walmart.com/about/history",
+    "decision_type": "first store launch",
+    "target_customer": "discount retail customers",
+    "business_model": "discount retail"
   }
 ]
