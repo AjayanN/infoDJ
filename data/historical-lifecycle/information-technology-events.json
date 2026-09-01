@@ -1,0 +1,20 @@
+[
+  {
+    "company_slug":"apple",
+    "event_type":"PRODUCT_EXPANSION",
+    "action_date":"1977-04-16",
+    "episode_scope":"COMPANY",
+    "episode_start_date":"1977-04-16",
+    "source_url":"https://computerhistory.org/apple-timeline/",
+    "source_title":"Apple Timeline",
+    "source_publisher":"Computer History Museum",
+    "evidence_text":"The Computer History Museum records that Apple II debuted on April 16, 1977 at the first West Coast Computer Faire and was a hit.",
+    "decision_theme":"FIRST_MASS_MARKET_PRODUCT",
+    "decision":"Introduce a fully assembled personal computer to a new general audience.",
+    "actual_change":"Apple debuted the Apple II at the first West Coast Computer Faire.",
+    "before_state":"Apple was a newly founded personal-computer company.",
+    "after_state":"Apple had introduced its first mass-market product.",
+    "trigger":"Demand for accessible personal computing beyond hobbyists.",
+    "outcome":"The Apple II became Apple’s first mass-market computer."
+  }
+]
