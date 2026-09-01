@@ -211,5 +211,30 @@
     "decision_type": "sound-animation theatrical release",
     "target_customer": "film audiences",
     "business_model": "animated film production and distribution"
+  },
+  {
+    "company_slug": "pfizer",
+    "scope": "COMPANY",
+    "stage": "SCALE",
+    "start_date": "1942-06-22",
+    "start_date_precision": "DAY",
+    "evidence_text": "Pfizer records that 240,000 shares of new common stock were offered to public on June 22, 1942.",
+    "source_url": "https://www.pfizer.com/about/history",
+    "decision_type": "initial public offering",
+    "target_customer": "healthcare customers",
+    "business_model": "pharmaceutical research, manufacturing, and sales"
+  },
+  {
+    "company_slug": "pfizer",
+    "scope": "PRODUCT",
+    "subject_name": "Terramycin",
+    "stage": "LAUNCH",
+    "start_date": "1950-03-15",
+    "start_date_precision": "DAY",
+    "evidence_text": "Pfizer records FDA approval of Terramycin on March 15, 1950.",
+    "source_url": "https://www.pfizer.com/about/history",
+    "decision_type": "first proprietary pharmaceutical product",
+    "target_customer": "patients and physicians",
+    "business_model": "branded pharmaceutical sales"
   }
 ]

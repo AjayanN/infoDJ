@@ -257,5 +257,42 @@
     "after_state": "Mickey\u2019s sound-animation film reached theatrical audiences.",
     "trigger": "Need to differentiate animated entertainment with synchronized sound.",
     "outcome": "Mickey became Disney\u2019s enduring global ambassador."
+  },
+  {
+    "company_slug": "pfizer",
+    "event_type": "FUNDING_EVENT",
+    "action_date": "1942-06-22",
+    "episode_scope": "COMPANY",
+    "episode_start_date": "1942-06-22",
+    "source_url": "https://www.pfizer.com/about/history",
+    "source_title": "Pfizer History",
+    "source_publisher": "Pfizer",
+    "evidence_text": "Pfizer records that 240,000 shares of new common stock were offered to public on June 22, 1942.",
+    "decision_theme": "INITIAL_PUBLIC_OFFERING",
+    "decision": "Offer new common stock to public.",
+    "actual_change": "Pfizer offered 240,000 shares of new common stock publicly.",
+    "before_state": "Pfizer was privately held.",
+    "after_state": "Pfizer had public shareholders.",
+    "trigger": "Need capital for pharmaceutical growth.",
+    "outcome": "Pfizer became publicly held."
+  },
+  {
+    "company_slug": "pfizer",
+    "event_type": "PRODUCT_EXPANSION",
+    "action_date": "1950-03-15",
+    "episode_scope": "PRODUCT",
+    "episode_subject_name": "Terramycin",
+    "episode_start_date": "1950-03-15",
+    "source_url": "https://www.pfizer.com/about/history",
+    "source_title": "Pfizer History",
+    "source_publisher": "Pfizer",
+    "evidence_text": "Pfizer records FDA approval of Terramycin on March 15, 1950.",
+    "decision_theme": "FIRST_PROPRIETARY_PRODUCT",
+    "decision": "Launch Terramycin under Pfizer label after FDA approval.",
+    "actual_change": "Pfizer introduced Terramycin as its first pharmaceutical sold in United States under Pfizer label.",
+    "before_state": "Pfizer had manufacturing and fermentation capabilities.",
+    "after_state": "Pfizer had first proprietary branded pharmaceutical product and sales force.",
+    "trigger": "FDA approval of Terramycin.",
+    "outcome": "Terramycin established Pfizer-branded pharmaceutical selling."
   }
 ]
