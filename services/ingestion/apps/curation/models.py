@@ -234,7 +234,11 @@ class BusinessEvent(models.Model):
             missing.append("company.founding_anchor_status")
         if not getattr(self.company, "founded_date_evidence", "").strip() or not getattr(self.company, "founded_date_source_url", "").strip():
             missing.append("company.founding_anchor_evidence")
-        if not context.get("as_of_date") or not context.get("source_url") or not context.get("metrics"):
+        historical_primary_source = context.get("evidence_mode") == "HISTORICAL_PRIMARY_SOURCE"
+        if historical_primary_source:
+            if not context.get("source_url"):
+                missing.append("historical_primary_source_url")
+        elif not context.get("as_of_date") or not context.get("source_url") or not context.get("metrics"):
             missing.append("contemporaneous_scale_context")
         episode = self.lifecycle_episode
         if not episode:

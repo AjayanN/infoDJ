@@ -3303,6 +3303,14 @@ class LifecycleTimingEligibilityTests(TestCase):
         self.assertTrue(result.eligible)
         self.assertEqual(result.status, "ELIGIBLE")
 
+    def test_historical_primary_source_can_replace_sec_era_scale_context(self):
+        event = self.valid_event()
+        event.lifecycle_context_json = {
+            "evidence_mode": "HISTORICAL_PRIMARY_SOURCE",
+            "source_url": "https://example.com/archival-primary-source",
+        }
+        self.assertTrue(lifecycle_timing_eligibility(event).eligible)
+
     def test_source_publication_date_cannot_substitute_for_actual_action_timing(self):
         event = self.valid_event()
         event.action_date = None

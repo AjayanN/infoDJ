@@ -186,7 +186,10 @@ def lifecycle_timing_eligibility(event: Any) -> EligibilityResult:
         reasons.append("missing_founding_anchor_evidence")
     else:
         score += 0.15
-    if isinstance(context, dict) and context.get("as_of_date") and context.get("source_url") and isinstance(metrics, list) and metrics:
+    historical_primary_source = isinstance(context, dict) and context.get("evidence_mode") == "HISTORICAL_PRIMARY_SOURCE"
+    if historical_primary_source and context.get("source_url"):
+        score += 0.20
+    elif isinstance(context, dict) and context.get("as_of_date") and context.get("source_url") and isinstance(metrics, list) and metrics:
         score += 0.20
     else:
         reasons.append("missing_contemporaneous_scale")

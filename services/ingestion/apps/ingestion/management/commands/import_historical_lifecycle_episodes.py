@@ -57,7 +57,7 @@ class Command(BaseCommand):
                 "source_document": source_document,
                 "verification_status": status,
                 "metadata": {
-                    "sector": company.sector,
+                    "industry": company.industry,
                     "decision_type": str(row.get("decision_type") or "").strip(),
                     "target_customer": str(row.get("target_customer") or "").strip(),
                     "business_model": str(row.get("business_model") or "").strip(),
