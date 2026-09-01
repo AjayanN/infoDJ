@@ -11,6 +11,8 @@ from decimal import Decimal
 import re
 from typing import Any, Iterable
 
+from apps.ingestion.services.lifecycle_timing import exact_action_date_from_evidence
+
 
 @dataclass(frozen=True)
 class EventSignal:
@@ -410,6 +412,7 @@ def extract_business_events_from_sec_filing(
             continue
         source_claim = source_claim_from_evidence(evidence)
         actual_change = actual_change_for(signal, source_claim, company_name=company.name)
+        action_timing = exact_action_date_from_evidence(evidence)
         event, created = business_event_model.objects.get_or_create(
             company=company,
             event_type=signal.event_type,
@@ -420,6 +423,9 @@ def extract_business_events_from_sec_filing(
                 "article_extraction": article_extraction,
                 "decision": signal.decision,
                 "event_date": event_date,
+                "action_date": action_timing[0] if action_timing else None,
+                "action_date_precision": "DAY" if action_timing else "",
+                "action_date_evidence": action_timing[1] if action_timing else "",
                 "lifecycle_stage": signal.lifecycle_stage,
                 "before_state": signal.before_state,
                 "after_state": signal.after_state,

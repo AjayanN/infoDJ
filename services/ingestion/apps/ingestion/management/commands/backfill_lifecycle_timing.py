@@ -24,6 +24,7 @@ class Command(BaseCommand):
         parser.add_argument("--company", action="append", default=[], help="Company slug; repeatable.")
         parser.add_argument("--dry-run", action="store_true")
         parser.add_argument("--limit", type=int, default=0)
+        parser.add_argument("--recover-action-dates-only", action="store_true", help="Persist exact dates from event evidence without changing lifecycle status or gaps.")
 
     def handle(self, *args, **options):
         requested = {slugify(value) for value in options["company"] if value.strip()}
@@ -41,6 +42,8 @@ class Command(BaseCommand):
             parsed = exact_action_date_from_evidence(event.evidence_text or "")
             if parsed and self._store_exact_action_date_if_missing(event, *parsed, options["dry_run"]):
                 counts["action_dates_recovered"] += 1
+            if options["recover_action_dates_only"]:
+                continue
             if not self._has_verified_founding_anchor(event.company):
                 counts["no_founding_anchor"] += 1
                 self._mark_pending(event, "missing_verified_founding_anchor", options["dry_run"])
