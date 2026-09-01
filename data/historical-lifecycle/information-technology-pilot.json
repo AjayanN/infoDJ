@@ -344,5 +344,41 @@
     "decision_type": "bank merger",
     "target_customer": "consumer, commercial, and investment banking customers",
     "business_model": "diversified financial services"
+  },
+  {
+    "company_slug": "caterpillar",
+    "scope": "COMPANY",
+    "stage": "MATURITY",
+    "start_date": "2011-07-08",
+    "start_date_precision": "DAY",
+    "evidence_text": "Caterpillar completed acquisition of Bucyrus on July 8, 2011.",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/18230/000001823011000376/form8k_bucyrusclosing.htm",
+    "decision_type": "mining-equipment acquisition",
+    "target_customer": "mining customers",
+    "business_model": "industrial equipment manufacturing and services"
+  },
+  {
+    "company_slug": "nextera-energy",
+    "scope": "COMPANY",
+    "stage": "MATURITY",
+    "start_date": "2019-01-01",
+    "start_date_precision": "DAY",
+    "evidence_text": "NextEra Energy completed acquisition of Gulf Power on January 1, 2019.",
+    "source_url": "https://www.investor.nexteraenergy.com/news-and-events/news-releases/2019/01-01-2019-062635309",
+    "decision_type": "utility acquisition",
+    "target_customer": "electricity customers",
+    "business_model": "regulated utility and renewable energy"
+  },
+  {
+    "company_slug": "unitedhealth-group",
+    "scope": "COMPANY",
+    "stage": "MATURITY",
+    "start_date": "2019-06-19",
+    "start_date_precision": "DAY",
+    "evidence_text": "UnitedHealth Group subsidiary Optum completed DaVita Medical Group acquisition on June 19, 2019.",
+    "source_url": "https://newsroom.davita.com/press-releases-1046/",
+    "decision_type": "care-delivery acquisition",
+    "target_customer": "patients, providers, and health-plan members",
+    "business_model": "health benefits and care delivery"
   }
 ]
