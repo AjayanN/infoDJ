@@ -163,5 +163,24 @@
     "after_state": "A combined Exxon Mobil Corporation operated as an integrated energy company.",
     "trigger": "Need to strengthen global competitiveness in a more competitive energy industry.",
     "outcome": "Exxon Mobil Corporation was formed."
+  },
+  {
+    "company_slug": "netflix",
+    "event_type": "DISTRIBUTION_CHANNEL_SHIFT",
+    "action_date": "1998-04-14",
+    "episode_scope": "PRODUCT",
+    "episode_subject_name": "Online DVD rental store",
+    "episode_start_date": "1998-04-14",
+    "source_url": "https://about.netflix.com/en/news/first-online-dvd-rental-store-opens",
+    "source_title": "First Online DVD Rental Store Opens",
+    "source_publisher": "Netflix",
+    "evidence_text": "Netflix announced opening world\u2019s first Internet store to offer DVD rentals on April 14, 1998.",
+    "decision_theme": "ONLINE_RENTAL_LAUNCH",
+    "decision": "Open online store for DVD rental and purchase.",
+    "actual_change": "Netflix opened Internet store offering DVD rentals and purchases.",
+    "before_state": "DVD rental depended on physical retail stores.",
+    "after_state": "Customers could rent or buy DVDs online with delivery.",
+    "trigger": "Need for wider DVD selection and online convenience.",
+    "outcome": "Netflix created online DVD-rental retail category."
   }
 ]
