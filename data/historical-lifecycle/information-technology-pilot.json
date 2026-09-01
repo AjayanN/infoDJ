@@ -332,5 +332,17 @@
     "decision_type": "transformational acquisition",
     "target_customer": "global gold and copper customers",
     "business_model": "gold and copper mining"
+  },
+  {
+    "company_slug": "jpmorgan-chase",
+    "scope": "COMPANY",
+    "stage": "MATURITY",
+    "start_date": "2000-12-31",
+    "start_date_precision": "DAY",
+    "evidence_text": "J.P. Morgan & Co. merged into Chase Manhattan Corporation on December 31, 2000, which became J.P. Morgan Chase & Co.",
+    "source_url": "https://www.jpmorganchase.com/content/dam/jpmc/jpmorgan-chase-and-co/investor-relations/documents/2004-Proxy-JointS4.pdf",
+    "decision_type": "bank merger",
+    "target_customer": "consumer, commercial, and investment banking customers",
+    "business_model": "diversified financial services"
   }
 ]

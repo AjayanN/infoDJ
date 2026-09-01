@@ -438,5 +438,23 @@
     "after_state": "Newmont combined Newcrest assets into its operating model.",
     "trigger": "Build leading gold business with copper production.",
     "outcome": "Newmont created world-leading gold company."
+  },
+  {
+    "company_slug": "jpmorgan-chase",
+    "event_type": "BUSINESS_MODEL_PIVOT",
+    "action_date": "2000-12-31",
+    "episode_scope": "COMPANY",
+    "episode_start_date": "2000-12-31",
+    "source_url": "https://www.jpmorganchase.com/content/dam/jpmc/jpmorgan-chase-and-co/investor-relations/documents/2004-Proxy-JointS4.pdf",
+    "source_title": "JPMorgan Chase and Bank One Joint Proxy Statement",
+    "source_publisher": "JPMorgan Chase",
+    "evidence_text": "J.P. Morgan & Co. merged into Chase Manhattan Corporation on December 31, 2000, which became J.P. Morgan Chase & Co.",
+    "decision_theme": "FOUNDATIONAL_BANK_MERGER",
+    "decision": "Merge J.P. Morgan & Co. into Chase Manhattan.",
+    "actual_change": "Chase Manhattan changed name to J.P. Morgan Chase & Co. after merger.",
+    "before_state": "Chase Manhattan and J.P. Morgan operated as separate financial institutions.",
+    "after_state": "Combined JPMorgan Chase operated as diversified financial-services company.",
+    "trigger": "Strategic combination of banking and investment franchises.",
+    "outcome": "JPMorgan Chase corporate identity was formed."
   }
 ]
