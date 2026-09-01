@@ -33,12 +33,14 @@ class Command(BaseCommand):
         elif options["limit"]:
             events = events[: options["limit"]]
 
-        counts = {"scanned": 0, "verified": 0, "pending": 0, "no_founding_anchor": 0, "no_exact_date": 0, "no_scale_context": 0, "no_lifecycle_episode": 0}
+        counts = {"scanned": 0, "verified": 0, "pending": 0, "action_dates_recovered": 0, "no_founding_anchor": 0, "no_exact_date": 0, "no_scale_context": 0, "no_lifecycle_episode": 0}
         for event in events:
             counts["scanned"] += 1
             if options["limit"] and counts["scanned"] > options["limit"]:
                 break
             parsed = exact_action_date_from_evidence(event.evidence_text or "")
+            if parsed and self._store_exact_action_date_if_missing(event, *parsed, options["dry_run"]):
+                counts["action_dates_recovered"] += 1
             if not self._has_verified_founding_anchor(event.company):
                 counts["no_founding_anchor"] += 1
                 self._mark_pending(event, "missing_verified_founding_anchor", options["dry_run"])
@@ -143,6 +145,22 @@ class Command(BaseCommand):
             and company.founded_date_evidence.strip()
             and company.founded_date_source_url.strip()
         )
+
+    @staticmethod
+    def _store_exact_action_date_if_missing(event, action_date, evidence: str, dry_run: bool) -> bool:
+        """Persist only an action day stated in this event's own source evidence.
+
+        This recovery remains PENDING until founding, scale, and lifecycle evidence
+        gates are met; it never turns a dated observation into a comparison.
+        """
+        if event.action_date:
+            return False
+        if not dry_run:
+            event.action_date = action_date
+            event.action_date_precision = "DAY"
+            event.action_date_evidence = evidence
+            event.save(update_fields=["action_date", "action_date_precision", "action_date_evidence", "updated_at"])
+        return True
 
     @staticmethod
     def _mark_pending(event, reason: str, dry_run: bool) -> None:

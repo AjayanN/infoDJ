@@ -3325,6 +3325,24 @@ class LifecycleTimingBackfillTests(TestCase):
         self.assertIsNone(exact_action_date_from_evidence("On March 14, 2019, the company received a notice."))
         self.assertIsNone(exact_action_date_from_evidence("The company announced a platform launch in 2019."))
 
+    def test_backfill_recovers_event_evidence_date_before_full_lifecycle_eligibility(self):
+        from apps.ingestion.management.commands.backfill_lifecycle_timing import Command
+
+        company = Company.objects.create(name="Exact Date Recovery Co")
+        event = BusinessEvent.objects.create(
+            company=company,
+            event_type="PRODUCT_EXPANSION",
+            evidence_text="On April 3, 2014, Exact Date Recovery Co launched its first product.",
+        )
+
+        Command().handle(company=[company.name], dry_run=False, limit=0)
+
+        event.refresh_from_db()
+        self.assertEqual(event.action_date, date(2014, 4, 3))
+        self.assertEqual(event.action_date_precision, "DAY")
+        self.assertEqual(event.action_date_evidence, "On April 3, 2014, Exact Date Recovery Co launched its first product.")
+        self.assertEqual(event.lifecycle_timing_status, "PENDING")
+
     def test_uses_only_financial_fact_known_at_the_action_date(self):
         company = SimpleNamespace(sec_cik="0000320193")
         fact = SimpleNamespace(
