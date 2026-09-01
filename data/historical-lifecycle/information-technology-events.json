@@ -219,5 +219,43 @@
     "after_state": "Amazon had public-market financing and listed common stock.",
     "trigger": "Need capital to support growth of online retail operations.",
     "outcome": "Amazon completed its initial public offering."
+  },
+  {
+    "company_slug": "ford-motor-company",
+    "event_type": "PRODUCT_EXPANSION",
+    "action_date": "1908-10-01",
+    "episode_scope": "PRODUCT",
+    "episode_subject_name": "Ford Model T",
+    "episode_start_date": "1908-10-01",
+    "source_url": "https://corporate.ford.com/articles/history/the-model-t.html",
+    "source_title": "The Ford Model T",
+    "source_publisher": "Ford Motor Company",
+    "evidence_text": "Ford records first Model T shipment to a customer on October 1, 1908.",
+    "decision_theme": "MASS_MARKET_PRODUCT_LAUNCH",
+    "decision": "Ship first Model T to customer.",
+    "actual_change": "Ford shipped Model T to its first customer.",
+    "before_state": "Ford sold earlier automobile models.",
+    "after_state": "Ford had launched a durable, affordable Model T to customers.",
+    "trigger": "Goal to create affordable, simple, durable vehicle.",
+    "outcome": "Model T became Ford\u2019s mass-market automobile."
+  },
+  {
+    "company_slug": "disney",
+    "event_type": "PRODUCT_EXPANSION",
+    "action_date": "1928-11-18",
+    "episode_scope": "PRODUCT",
+    "episode_subject_name": "Steamboat Willie",
+    "episode_start_date": "1928-11-18",
+    "source_url": "https://thewaltdisneycompany.com/news/mickey-mouse-celebrate-birthday-trip-around-world/",
+    "source_title": "Mickey Mouse to Celebrate His Birthday with a Trip Around the World",
+    "source_publisher": "The Walt Disney Company",
+    "evidence_text": "Disney records Steamboat Willie\u2019s theatrical release at Colony Theatre on November 18, 1928.",
+    "decision_theme": "SYNCHRONIZED_SOUND_FILM_RELEASE",
+    "decision": "Release Steamboat Willie theatrically.",
+    "actual_change": "Disney released Steamboat Willie, Mickey\u2019s first theatrical film.",
+    "before_state": "Disney studio produced animated films before Mickey\u2019s first theatrical release.",
+    "after_state": "Mickey\u2019s sound-animation film reached theatrical audiences.",
+    "trigger": "Need to differentiate animated entertainment with synchronized sound.",
+    "outcome": "Mickey became Disney\u2019s enduring global ambassador."
   }
 ]

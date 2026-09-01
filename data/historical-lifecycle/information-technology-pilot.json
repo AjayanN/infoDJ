@@ -185,5 +185,31 @@
     "decision_type": "initial public offering",
     "target_customer": "online retail customers",
     "business_model": "online retail marketplace"
+  },
+  {
+    "company_slug": "ford-motor-company",
+    "scope": "PRODUCT",
+    "subject_name": "Ford Model T",
+    "stage": "LAUNCH",
+    "start_date": "1908-10-01",
+    "start_date_precision": "DAY",
+    "evidence_text": "Ford records first Model T shipment to a customer on October 1, 1908.",
+    "source_url": "https://corporate.ford.com/articles/history/the-model-t.html",
+    "decision_type": "mass-market vehicle launch",
+    "target_customer": "automobile buyers",
+    "business_model": "automobile manufacturing and sales"
+  },
+  {
+    "company_slug": "disney",
+    "scope": "PRODUCT",
+    "subject_name": "Steamboat Willie",
+    "stage": "LAUNCH",
+    "start_date": "1928-11-18",
+    "start_date_precision": "DAY",
+    "evidence_text": "Disney records Steamboat Willie\u2019s theatrical release at Colony Theatre on November 18, 1928.",
+    "source_url": "https://thewaltdisneycompany.com/news/mickey-mouse-celebrate-birthday-trip-around-world/",
+    "decision_type": "sound-animation theatrical release",
+    "target_customer": "film audiences",
+    "business_model": "animated film production and distribution"
   }
 ]
