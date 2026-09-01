@@ -296,5 +296,41 @@
     "decision_type": "independent public-company launch",
     "target_customer": "wireless carriers and broadcasters",
     "business_model": "communications real-estate infrastructure"
+  },
+  {
+    "company_slug": "freeport-mcmoran",
+    "scope": "COMPANY",
+    "stage": "MATURITY",
+    "start_date": "2007-03-19",
+    "start_date_precision": "DAY",
+    "evidence_text": "Freeport-McMoRan completed acquisition of Phelps Dodge on March 19, 2007.",
+    "source_url": "https://investors.fcx.com/investors/news-releases/news-release-details/2007/FCX-Completes-Acquisition-of-Phelps-Dodge-Corp-Creating-Worlds-Largest-Publicly-Traded-Copper-Company/default.aspx",
+    "decision_type": "transformational acquisition",
+    "target_customer": "global copper customers",
+    "business_model": "mining and metals production"
+  },
+  {
+    "company_slug": "prologis",
+    "scope": "COMPANY",
+    "stage": "MATURITY",
+    "start_date": "2011-06-03",
+    "start_date_precision": "DAY",
+    "evidence_text": "AMB Property Corporation and ProLogis completed merger and became Prologis, Inc. on June 3, 2011.",
+    "source_url": "https://ir.prologis.com/press-releases/detail/485/prologis-inc-announces-second-quarter-2011-earnings",
+    "decision_type": "merger of equals",
+    "target_customer": "industrial real-estate customers",
+    "business_model": "industrial real-estate ownership and logistics"
+  },
+  {
+    "company_slug": "newmont",
+    "scope": "COMPANY",
+    "stage": "MATURITY",
+    "start_date": "2023-11-06",
+    "start_date_precision": "DAY",
+    "evidence_text": "Newmont completed acquisition of Newcrest Mining Limited on November 6, 2023.",
+    "source_url": "https://www.newmont.com/investors/news-release/news-details/2023/Newmont-Acquires-Newcrest-Successfully-Creating-Worlds-Leading-Gold-Mining-Business/default.aspx",
+    "decision_type": "transformational acquisition",
+    "target_customer": "global gold and copper customers",
+    "business_model": "gold and copper mining"
   }
 ]
