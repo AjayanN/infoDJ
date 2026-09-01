@@ -42,7 +42,7 @@ class Command(BaseCommand):
             parsed = exact_action_date_from_evidence(event.evidence_text or "")
             if parsed and self._store_exact_action_date_if_missing(event, *parsed, options["dry_run"]):
                 counts["action_dates_recovered"] += 1
-            if options["recover_action_dates_only"]:
+            if options.get("recover_action_dates_only", False):
                 continue
             if not self._has_verified_founding_anchor(event.company):
                 counts["no_founding_anchor"] += 1
