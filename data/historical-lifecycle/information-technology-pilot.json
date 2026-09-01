@@ -135,5 +135,17 @@
     "decision_type": "first store launch",
     "target_customer": "discount retail customers",
     "business_model": "discount retail"
+  },
+  {
+    "company_slug": "exxonmobil",
+    "scope": "COMPANY",
+    "stage": "MATURITY",
+    "start_date": "1999-11-30",
+    "start_date_precision": "DAY",
+    "evidence_text": "ExxonMobil records that Exxon and Mobil joined to form Exxon Mobil Corporation on November 30, 1999.",
+    "source_url": "https://corporate.exxonmobil.com/who-we-are/our-global-organization/our-history",
+    "decision_type": "corporate merger",
+    "target_customer": "global energy customers",
+    "business_model": "integrated energy company"
   }
 ]

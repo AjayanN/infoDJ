@@ -145,5 +145,23 @@
     "after_state": "A new Walmart discount-store format was operating.",
     "trigger": "Low-price retail strategy.",
     "outcome": "Walmart began operating its first store."
+  },
+  {
+    "company_slug": "exxonmobil",
+    "event_type": "BUSINESS_MODEL_PIVOT",
+    "action_date": "1999-11-30",
+    "episode_scope": "COMPANY",
+    "episode_start_date": "1999-11-30",
+    "source_url": "https://corporate.exxonmobil.com/who-we-are/our-global-organization/our-history",
+    "source_title": "Our history",
+    "source_publisher": "ExxonMobil",
+    "evidence_text": "ExxonMobil records that Exxon and Mobil joined to form Exxon Mobil Corporation on November 30, 1999.",
+    "decision_theme": "CORPORATE_MERGER",
+    "decision": "Combine Exxon and Mobil into Exxon Mobil Corporation.",
+    "actual_change": "Exxon and Mobil joined to form Exxon Mobil Corporation.",
+    "before_state": "Exxon and Mobil operated as separate large energy companies.",
+    "after_state": "A combined Exxon Mobil Corporation operated as an integrated energy company.",
+    "trigger": "Need to strengthen global competitiveness in a more competitive energy industry.",
+    "outcome": "Exxon Mobil Corporation was formed."
   }
 ]
