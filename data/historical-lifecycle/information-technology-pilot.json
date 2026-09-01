@@ -260,5 +260,29 @@
     "decision_type": "public-market launch",
     "target_customer": "financial institutions, merchants, and cardholders",
     "business_model": "payments network"
+  },
+  {
+    "company_slug": "apple",
+    "scope": "COMPANY",
+    "stage": "SCALE",
+    "start_date": "1980-12-12",
+    "start_date_precision": "DAY",
+    "evidence_text": "Apple records initial public offering on December 12, 1980.",
+    "source_url": "https://investor.apple.com/investor-relations/faq/default.aspx",
+    "decision_type": "initial public offering",
+    "target_customer": "personal computing users",
+    "business_model": "consumer technology products"
+  },
+  {
+    "company_slug": "microsoft",
+    "scope": "COMPANY",
+    "stage": "SCALE",
+    "start_date": "1986-03-13",
+    "start_date_precision": "DAY",
+    "evidence_text": "Microsoft records initial public offering on March 13, 1986.",
+    "source_url": "https://www.microsoft.com/en-us/investor/faq",
+    "decision_type": "initial public offering",
+    "target_customer": "software customers",
+    "business_model": "software licensing"
   }
 ]

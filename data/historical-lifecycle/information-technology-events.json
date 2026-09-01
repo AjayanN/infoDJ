@@ -330,5 +330,41 @@
     "after_state": "Visa operated as publicly traded company.",
     "trigger": "Global reorganization and public capital strategy.",
     "outcome": "Visa became public company."
+  },
+  {
+    "company_slug": "apple",
+    "event_type": "FUNDING_EVENT",
+    "action_date": "1980-12-12",
+    "episode_scope": "COMPANY",
+    "episode_start_date": "1980-12-12",
+    "source_url": "https://investor.apple.com/investor-relations/faq/default.aspx",
+    "source_title": "Apple Investor Relations FAQ",
+    "source_publisher": "Apple",
+    "evidence_text": "Apple records initial public offering on December 12, 1980.",
+    "decision_theme": "INITIAL_PUBLIC_OFFERING",
+    "decision": "Complete Apple initial public offering.",
+    "actual_change": "Apple went public at $22 per share.",
+    "before_state": "Apple was private personal-computer company.",
+    "after_state": "Apple had public shareholders and growth capital.",
+    "trigger": "Need capital to expand personal-computer business.",
+    "outcome": "Apple completed initial public offering."
+  },
+  {
+    "company_slug": "microsoft",
+    "event_type": "FUNDING_EVENT",
+    "action_date": "1986-03-13",
+    "episode_scope": "COMPANY",
+    "episode_start_date": "1986-03-13",
+    "source_url": "https://www.microsoft.com/en-us/investor/faq",
+    "source_title": "Microsoft Investor Relations FAQ",
+    "source_publisher": "Microsoft",
+    "evidence_text": "Microsoft records initial public offering on March 13, 1986.",
+    "decision_theme": "INITIAL_PUBLIC_OFFERING",
+    "decision": "Complete Microsoft initial public offering.",
+    "actual_change": "Microsoft went public at $21 per share.",
+    "before_state": "Microsoft was private software company.",
+    "after_state": "Microsoft had public shareholders and growth capital.",
+    "trigger": "Need capital to expand software business.",
+    "outcome": "Microsoft completed initial public offering."
   }
 ]
