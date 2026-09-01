@@ -236,5 +236,29 @@
     "decision_type": "first proprietary pharmaceutical product",
     "target_customer": "patients and physicians",
     "business_model": "branded pharmaceutical sales"
+  },
+  {
+    "company_slug": "walmart",
+    "scope": "COMPANY",
+    "stage": "SCALE",
+    "start_date": "1970-10-01",
+    "start_date_precision": "DAY",
+    "evidence_text": "Walmart records offering 300,000 common shares to public on October 1, 1970.",
+    "source_url": "https://stock.walmart.com/stock-data/stock-split-history",
+    "decision_type": "initial public offering",
+    "target_customer": "discount retail customers",
+    "business_model": "discount retail"
+  },
+  {
+    "company_slug": "visa",
+    "scope": "COMPANY",
+    "stage": "SCALE",
+    "start_date": "2008-03-19",
+    "start_date_precision": "DAY",
+    "evidence_text": "Visa records its shares beginning NYSE trading on March 19, 2008 after initial public offering.",
+    "source_url": "https://visa.gcs-web.com/news-releases/news-release-details/visa-inc-prices-initial-public-offering",
+    "decision_type": "public-market launch",
+    "target_customer": "financial institutions, merchants, and cardholders",
+    "business_model": "payments network"
   }
 ]

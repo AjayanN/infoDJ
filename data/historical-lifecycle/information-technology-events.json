@@ -294,5 +294,41 @@
     "after_state": "Pfizer had first proprietary branded pharmaceutical product and sales force.",
     "trigger": "FDA approval of Terramycin.",
     "outcome": "Terramycin established Pfizer-branded pharmaceutical selling."
+  },
+  {
+    "company_slug": "walmart",
+    "event_type": "FUNDING_EVENT",
+    "action_date": "1970-10-01",
+    "episode_scope": "COMPANY",
+    "episode_start_date": "1970-10-01",
+    "source_url": "https://stock.walmart.com/stock-data/stock-split-history",
+    "source_title": "Walmart Stock Split History",
+    "source_publisher": "Walmart",
+    "evidence_text": "Walmart records offering 300,000 common shares to public on October 1, 1970.",
+    "decision_theme": "INITIAL_PUBLIC_OFFERING",
+    "decision": "Offer common shares to public.",
+    "actual_change": "Walmart offered 300,000 shares at $16.50 per share.",
+    "before_state": "Walmart was privately financed discount retailer.",
+    "after_state": "Walmart had public shareholders and growth capital.",
+    "trigger": "Need capital to expand discount-store network.",
+    "outcome": "Walmart became publicly traded."
+  },
+  {
+    "company_slug": "visa",
+    "event_type": "FUNDING_EVENT",
+    "action_date": "2008-03-19",
+    "episode_scope": "COMPANY",
+    "episode_start_date": "2008-03-19",
+    "source_url": "https://visa.gcs-web.com/news-releases/news-release-details/visa-inc-prices-initial-public-offering",
+    "source_title": "Visa Inc. Prices Initial Public Offering",
+    "source_publisher": "Visa",
+    "evidence_text": "Visa records its shares beginning NYSE trading on March 19, 2008 after initial public offering.",
+    "decision_theme": "INITIAL_PUBLIC_OFFERING",
+    "decision": "List Visa shares on New York Stock Exchange.",
+    "actual_change": "Visa shares began NYSE trading under ticker V.",
+    "before_state": "Visa had completed global reorganization.",
+    "after_state": "Visa operated as publicly traded company.",
+    "trigger": "Global reorganization and public capital strategy.",
+    "outcome": "Visa became public company."
   }
 ]
