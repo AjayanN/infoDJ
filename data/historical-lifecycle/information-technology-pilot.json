@@ -284,5 +284,17 @@
     "decision_type": "initial public offering",
     "target_customer": "software customers",
     "business_model": "software licensing"
+  },
+  {
+    "company_slug": "american-tower",
+    "scope": "COMPANY",
+    "stage": "EARLY_GROWTH",
+    "start_date": "1998-06-05",
+    "start_date_precision": "DAY",
+    "evidence_text": "American Tower records Class A common stock commenced NYSE trading on June 5, 1998 after separation from American Radio.",
+    "source_url": "https://americantower.gcs-web.com/static-files/44f10fd3-e8f2-4107-80f9-0d7bba807a66",
+    "decision_type": "independent public-company launch",
+    "target_customer": "wireless carriers and broadcasters",
+    "business_model": "communications real-estate infrastructure"
   }
 ]

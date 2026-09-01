@@ -366,5 +366,23 @@
     "after_state": "Microsoft had public shareholders and growth capital.",
     "trigger": "Need capital to expand software business.",
     "outcome": "Microsoft completed initial public offering."
+  },
+  {
+    "company_slug": "american-tower",
+    "event_type": "FUNDING_EVENT",
+    "action_date": "1998-06-05",
+    "episode_scope": "COMPANY",
+    "episode_start_date": "1998-06-05",
+    "source_url": "https://americantower.gcs-web.com/static-files/44f10fd3-e8f2-4107-80f9-0d7bba807a66",
+    "source_title": "American Tower SEC filing",
+    "source_publisher": "American Tower",
+    "evidence_text": "American Tower records Class A common stock commenced NYSE trading on June 5, 1998 after separation from American Radio.",
+    "decision_theme": "PUBLIC_COMPANY_SEPARATION",
+    "decision": "Begin NYSE trading as independent American Tower.",
+    "actual_change": "American Tower Class A stock commenced NYSE trading after separation from American Radio.",
+    "before_state": "American Tower operated as part of American Radio Systems.",
+    "after_state": "American Tower operated as independent publicly traded company.",
+    "trigger": "Corporate separation after parent merger.",
+    "outcome": "American Tower became independent public communications-infrastructure company."
   }
 ]
