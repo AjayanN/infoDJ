@@ -1,0 +1,142 @@
+[
+  {
+    "company_slug": "amazon",
+    "founded_date": "1994-07-05",
+    "precision": "DAY",
+    "evidence_text": "Amazon\u2019s 1997 SEC S-1 financial statements identify July 5, 1994 as company inception; same filing states Amazon was founded in July 1994.",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/1018724/0000891618-97-001309.txt"
+  },
+  {
+    "company_slug": "american-tower",
+    "founded_date": "1995-01-01",
+    "precision": "YEAR",
+    "evidence_text": "American Tower\u2019s official corporate profile states that it was founded in 1995; no day or month is stated.",
+    "source_url": "https://materials.proxyvote.com/Approved/03027X/20260323/AR_629165/INDEX.HTML?page=18"
+  },
+  {
+    "company_slug": "apple",
+    "founded_date": "1976-04-01",
+    "precision": "DAY",
+    "evidence_text": "Apple states it was founded on April 1, 1976.",
+    "source_url": "https://www.apple.com/newsroom/2026/03/apple-to-celebrate-50-years-of-thinking-different/"
+  },
+  {
+    "company_slug": "caterpillar",
+    "founded_date": "1925-04-15",
+    "precision": "DAY",
+    "evidence_text": "Caterpillar\u2019s official centennial release says the company officially turns 100 on April 15, 2025, establishing April 15, 1925 as its formation date.",
+    "source_url": "https://investors.caterpillar.com/news/news-details/2025/Caterpillar-Kicks-Off-its-Next-100-Years-of-Innovation-and-Industry-Leadership/default.aspx"
+  },
+  {
+    "company_slug": "disney",
+    "founded_date": "1923-10-16",
+    "precision": "DAY",
+    "evidence_text": "The Walt Disney Company officially began on October 16, 1923, when Walt Disney signed the Alice Comedies contract.",
+    "source_url": "https://thewaltdisneycompany.com/news/disney100-anniversary-disney-contract"
+  },
+  {
+    "company_slug": "exxonmobil",
+    "founded_date": "1999-11-30",
+    "precision": "DAY",
+    "evidence_text": "ExxonMobil states Exxon and Mobil joined to form Exxon Mobil Corporation on November 30, 1999.",
+    "source_url": "https://corporate.exxonmobil.com/who-we-are/our-global-organization/our-history"
+  },
+  {
+    "company_slug": "ford-motor-company",
+    "founded_date": "1903-06-16",
+    "precision": "DAY",
+    "evidence_text": "Ford records that Henry Ford and 12 others created Ford Motor Company on June 16, 1903.",
+    "source_url": "https://corporate.ford.com/corporate/corporate/articles/history/henry-ford-biography/"
+  },
+  {
+    "company_slug": "freeport-mcmoran",
+    "founded_date": "1912-01-01",
+    "precision": "YEAR",
+    "evidence_text": "Wikidata P571 inception claim for Q1453620.",
+    "source_url": "https://www.wikidata.org/wiki/Q1453620"
+  },
+  {
+    "company_slug": "general-electric",
+    "founded_date": "1892-04-15",
+    "precision": "DAY",
+    "evidence_text": "GE records that Edison Electric Company merged with Thomson & Houston to form General Electric on April 15, 1892.",
+    "source_url": "https://www.ge.com/news/reports/a-step-into-the-future-ge-turns-130-but-its-engineers-arent-looking-back"
+  },
+  {
+    "company_slug": "jpmorgan-chase",
+    "founded_date": "1799-04-01",
+    "precision": "MONTH",
+    "evidence_text": "JPMorganChase\u2019s 2025 shareholder letter states that it was founded in April 1799; the source does not disclose a founding day.",
+    "source_url": "https://jpmorganchase.com/content/dam/jpmc/jpmorgan-chase-and-co/investor-relations/documents/ceo-letter-to-shareholders-2025.pdf"
+  },
+  {
+    "company_slug": "microsoft",
+    "founded_date": "1975-04-04",
+    "precision": "DAY",
+    "evidence_text": "Microsoft\u2019s official developer blog identifies April 4, 1975 as Microsoft\u2019s founding date.",
+    "source_url": "https://devblogs.microsoft.com/oldnewthing/20160209-00/?p=93002"
+  },
+  {
+    "company_slug": "netflix",
+    "founded_date": "1997-08-29",
+    "precision": "DAY",
+    "evidence_text": "Netflix SEC filing states it was incorporated on August 29, 1997 (inception).",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/1065280/000119312506056663/d10k.htm"
+  },
+  {
+    "company_slug": "newmont",
+    "founded_date": "1916-01-01",
+    "precision": "YEAR",
+    "evidence_text": "Wikidata P571 inception claim for Q1785405.",
+    "source_url": "https://www.wikidata.org/wiki/Q1785405"
+  },
+  {
+    "company_slug": "nextera-energy",
+    "founded_date": "1984-01-01",
+    "precision": "YEAR",
+    "evidence_text": "NextEra Energy\u2019s investor financial policy states that NEE was incorporated in 1984; the source does not disclose an incorporation day.",
+    "source_url": "https://investor.nexteraenergy.com/fixed-income-investors/financial-policy"
+  },
+  {
+    "company_slug": "pfizer",
+    "founded_date": "1849-01-01",
+    "precision": "YEAR",
+    "evidence_text": "Pfizer\u2019s official company history states that Charles Pfizer and Charles Erhart founded Charles Pfizer & Company in 1849; the source does not disclose a founding day.",
+    "source_url": "https://pfizer.com/about/history"
+  },
+  {
+    "company_slug": "prologis",
+    "founded_date": "1983-01-01",
+    "precision": "YEAR",
+    "evidence_text": "Wikidata P571 inception claim for Q16983765.",
+    "source_url": "https://www.wikidata.org/wiki/Q16983765"
+  },
+  {
+    "company_slug": "tesla",
+    "founded_date": "2003-07-01",
+    "precision": "DAY",
+    "evidence_text": "Tesla Investor Relations states Tesla was incorporated on July 1, 2003.",
+    "source_url": "https://ir.tesla.com/node/16"
+  },
+  {
+    "company_slug": "unitedhealth-group",
+    "founded_date": "1977-01-01",
+    "precision": "YEAR",
+    "evidence_text": "Wikidata P571 inception claim for Q2103926.",
+    "source_url": "https://www.wikidata.org/wiki/Q2103926"
+  },
+  {
+    "company_slug": "visa",
+    "founded_date": "1958-01-01",
+    "precision": "YEAR",
+    "evidence_text": "Visa\u2019s official company history identifies 1958 as the beginning of its payments business lineage; the source does not disclose a founding day.",
+    "source_url": "https://corporate.visa.com/en/about-visa.html"
+  },
+  {
+    "company_slug": "walmart",
+    "founded_date": "1962-07-02",
+    "precision": "DAY",
+    "evidence_text": "Walmart\u2019s official history records Sam Walton opened the first Walmart store on July 2, 1962, the operating-life anchor used for this company.",
+    "source_url": "https://corporate.walmart.com/about/history"
+  }
+]

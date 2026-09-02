@@ -3542,3 +3542,29 @@ class LifecycleEpisodeModelGuardTests(TestCase):
         )
         event.save()
         self.assertEqual(event.lifecycle_timing_status, "VERIFIED")
+
+
+
+class FoundingAnchorImportTests(TestCase):
+    def test_imports_verified_source_backed_anchor(self):
+        import json
+        import tempfile
+
+        company = Company.objects.create(name="Anchor Import Co")
+        record = [{
+            "company_slug": company.slug,
+            "founded_date": "2001-02-03",
+            "precision": "DAY",
+            "evidence_text": "The issuer charter records incorporation on February 3, 2001.",
+            "source_url": "https://example.com/charter",
+        }]
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json") as payload:
+            json.dump(record, payload)
+            payload.flush()
+            call_command("import_founding_anchors", input=payload.name)
+
+        company.refresh_from_db()
+        self.assertEqual(company.founded_date, date(2001, 2, 3))
+        self.assertEqual(company.founded_date_precision, "DAY")
+        self.assertEqual(company.founding_anchor_status, "VERIFIED")
+        self.assertEqual(company.founded_date_source_url, "https://example.com/charter")
