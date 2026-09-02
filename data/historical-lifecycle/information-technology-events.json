@@ -636,5 +636,23 @@
     "after_state": "Prologis operated as an integrated industrial real estate company.",
     "trigger": "Need to scale industrial real estate operations through public capital.",
     "outcome": "Prologis entered public markets as an integrated logistics real estate operator."
+  },
+  {
+    "company_slug": "visa",
+    "event_type": "BUSINESS_MODEL_PIVOT",
+    "action_date": "2007-10-01",
+    "episode_scope": "COMPANY",
+    "episode_start_date": "2007-10-01",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/1403161/000119312507212797/d8k.htm",
+    "source_title": "Visa Inc. Form 8-K",
+    "source_publisher": "U.S. Securities and Exchange Commission",
+    "evidence_text": "Visa's SEC filing states that from October 1 through October 3, 2007, Visa Inc. consummated restructuring that made Visa U.S.A., Visa International, Visa Canada and Inovant direct or indirect subsidiaries.",
+    "decision_theme": "GLOBAL_CORPORATE_REORGANIZATION",
+    "decision": "Consolidate regional Visa entities under Visa Inc.",
+    "actual_change": "Visa consummated global restructuring that made Visa U.S.A., Visa International, Visa Canada and Inovant subsidiaries of Visa Inc.",
+    "before_state": "Visa regional entities operated through separate membership structures.",
+    "after_state": "Visa operated through a global corporate holding structure.",
+    "trigger": "Need to align global operations and prepare public-company structure.",
+    "outcome": "Visa Inc. became global parent before its 2008 IPO."
   }
 ]

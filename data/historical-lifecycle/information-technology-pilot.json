@@ -440,5 +440,17 @@
     "decision_type": "public-market scale-up",
     "target_customer": "industrial real estate customers",
     "business_model": "industrial logistics real estate investment trust"
+  },
+  {
+    "company_slug": "visa",
+    "scope": "COMPANY",
+    "stage": "SCALE",
+    "start_date": "2007-10-01",
+    "start_date_precision": "DAY",
+    "evidence_text": "Visa's SEC filing states that from October 1 through October 3, 2007, Visa Inc. consummated restructuring that made Visa U.S.A., Visa International, Visa Canada and Inovant direct or indirect subsidiaries.",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/1403161/000119312507212797/d8k.htm",
+    "decision_type": "global corporate reorganization",
+    "target_customer": "financial institutions, merchants, and cardholders",
+    "business_model": "global payments network"
   }
 ]
