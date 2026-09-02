@@ -564,5 +564,41 @@
     "after_state": "Apple began operating as a personal-computer company.",
     "trigger": "Opportunity to bring personal computing to a broader audience.",
     "outcome": "Apple established its company lifecycle before Apple II launch."
+  },
+  {
+    "company_slug": "netflix",
+    "event_type": "BUSINESS_MODEL_PIVOT",
+    "action_date": "1999-12-16",
+    "episode_scope": "COMPANY",
+    "episode_start_date": "1999-12-16",
+    "source_url": "https://about.netflix.com/en/news/netflix-com-transforms-dvd-business-eliminating-late-fees-and-due-dates-from",
+    "source_title": "Netflix.com Transforms DVD Business Eliminating Late Fees and Due Dates",
+    "source_publisher": "Netflix",
+    "evidence_text": "Netflix announced its Marquee subscription program on December 16, 1999, replacing due dates and late fees with four DVDs per month for a set fee.",
+    "decision_theme": "REPEATABLE_SUBSCRIPTION_WORKFLOW",
+    "decision": "Replace per-rental due dates and late fees with a subscription program.",
+    "actual_change": "Netflix launched Marquee, a monthly subscription with four DVD rentals and no due dates or late fees.",
+    "before_state": "Netflix offered DVD rentals and purchases online.",
+    "after_state": "Netflix offered a repeatable subscription rental workflow.",
+    "trigger": "Customer frustration with due dates and late fees.",
+    "outcome": "Netflix established an early subscription-rental model."
+  },
+  {
+    "company_slug": "tesla",
+    "event_type": "PRODUCT_EXPANSION",
+    "action_date": "2006-07-19",
+    "episode_scope": "COMPANY",
+    "episode_start_date": "2006-07-19",
+    "source_url": "https://ir.tesla.com/press-release/tesla-motors-begins-regular-production-2008-tesla-roadster",
+    "source_title": "Tesla Motors Begins Regular Production of 2008 Tesla Roadster",
+    "source_publisher": "Tesla Investor Relations",
+    "evidence_text": "Tesla's investor-relations release states that its Roadster prototype was first unveiled on July 19, 2006.",
+    "decision_theme": "FIRST_PUBLIC_PRODUCT_PROTOTYPE",
+    "decision": "Publicly unveil a high-performance electric Roadster prototype.",
+    "actual_change": "Tesla unveiled its Roadster prototype.",
+    "before_state": "Tesla was developing an electric sports car.",
+    "after_state": "Tesla had publicly demonstrated its first vehicle concept.",
+    "trigger": "Need to validate demand for a high-performance electric vehicle.",
+    "outcome": "The prototype generated early Roadster reservations."
   }
 ]

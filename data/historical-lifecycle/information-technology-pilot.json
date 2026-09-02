@@ -404,5 +404,29 @@
     "decision_type": "company inception",
     "target_customer": "book buyers using online commerce",
     "business_model": "online bookstore"
+  },
+  {
+    "company_slug": "netflix",
+    "scope": "COMPANY",
+    "stage": "EARLY_GROWTH",
+    "start_date": "1999-12-16",
+    "start_date_precision": "DAY",
+    "evidence_text": "Netflix announced its Marquee subscription program on December 16, 1999, replacing due dates and late fees with four DVDs per month for a set fee.",
+    "source_url": "https://about.netflix.com/en/news/netflix-com-transforms-dvd-business-eliminating-late-fees-and-due-dates-from",
+    "decision_type": "subscription-model validation",
+    "target_customer": "DVD renters frustrated by due dates and late fees",
+    "business_model": "subscription DVD rental"
+  },
+  {
+    "company_slug": "tesla",
+    "scope": "COMPANY",
+    "stage": "LAUNCH",
+    "start_date": "2006-07-19",
+    "start_date_precision": "DAY",
+    "evidence_text": "Tesla's investor-relations release states that its Roadster prototype was first unveiled on July 19, 2006.",
+    "source_url": "https://ir.tesla.com/press-release/tesla-motors-begins-regular-production-2008-tesla-roadster",
+    "decision_type": "first public product prototype",
+    "target_customer": "early adopters seeking high-performance electric vehicles",
+    "business_model": "premium electric vehicles"
   }
 ]
