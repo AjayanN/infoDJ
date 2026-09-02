@@ -3561,7 +3561,13 @@ class FoundingAnchorImportTests(TestCase):
         with tempfile.NamedTemporaryFile(mode="w", suffix=".json") as payload:
             json.dump(record, payload)
             payload.flush()
-            call_command("import_founding_anchors", input=payload.name)
+            from io import StringIO
+            output = StringIO()
+            call_command("import_founding_anchors", input=payload.name, stdout=output)
+            self.assertIn("'created': 1", output.getvalue())
+            output = StringIO()
+            call_command("import_founding_anchors", input=payload.name, stdout=output)
+            self.assertIn("'unchanged': 1", output.getvalue())
 
         company.refresh_from_db()
         self.assertEqual(company.founded_date, date(2001, 2, 3))

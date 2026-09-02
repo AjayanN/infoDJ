@@ -30,7 +30,7 @@ class Command(BaseCommand):
         if not isinstance(records, list):
             raise CommandError("Input must be a JSON array.")
 
-        counts = {"scanned": 0, "created": 0, "updated": 0}
+        counts = {"scanned": 0, "created": 0, "updated": 0, "unchanged": 0}
         for row in records:
             counts["scanned"] += 1
             if not isinstance(row, dict):
@@ -38,11 +38,15 @@ class Command(BaseCommand):
             company = self._company(row)
             anchor = self._anchor(row)
             changed = any(getattr(company, key) != value for key, value in anchor.items())
-            if changed and not options["dry_run"]:
+            if not changed:
+                counts["unchanged"] += 1
+                continue
+            was_unanchored = company.founded_date is None
+            if not options["dry_run"]:
                 for key, value in anchor.items():
                     setattr(company, key, value)
                 company.save(update_fields=[*anchor.keys(), "updated_at"])
-            counts["created" if changed and not company.founded_date else "updated"] += 1
+            counts["created" if was_unanchored else "updated"] += 1
 
         mode = "Dry run" if options["dry_run"] else "Import"
         self.stdout.write(self.style.SUCCESS(f"{mode}: {counts}"))
