@@ -29,4 +29,5 @@ This file is the single register for unfinished product, data, and operational w
 - **Outcome:** source gaps become actionable research work rather than invisible empty states.
 - **Acceptance:** each missing sector/stage/decision combination is recorded with primary-source targets and an owner/status.
 - **Dependency:** lifecycle episode coverage reporting.
+- **Research registry:** `data/historical-lifecycle/SOURCE_REGISTRY.md` lists each company’s founding source, SEC API endpoint, and verified lifecycle links.
 

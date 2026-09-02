@@ -1,6 +1,6 @@
 # Historical Evidence Source Registry
 
-Human-maintained entry point for historical lifecycle research. Exact date is usable for age matching only when founding-anchor precision is DAY.
+Human-maintained entry point for historical lifecycle research. DAY founding anchors yield exact company age. MONTH/YEAR anchors yield a bounded age range; comparisons may use them only when entire range fits selected founder-stage band.
 
 | Company | Founding anchor | SEC submissions API | Verified lifecycle sources |
 | --- | --- | --- | --- |
@@ -30,4 +30,4 @@ Human-maintained entry point for historical lifecycle research. Exact date is us
 - Exact action date needs direct source statement or transparent exact-date derivation.
 - Founding-anchor precision must match source. Never use year/month anchor as exact day.
 - Historical primary source mode requires reviewed lifecycle episode and action.
-- Year/month-only sources are research leads; they cannot produce exact age matching.
+- Year/month-only founding anchors never produce an exact age. They may support a bounded age range only when action date is exact and entire range fits selected stage band.
