@@ -54,6 +54,7 @@ class Command(BaseCommand):
                 "start_date_precision": str(row.get("start_date_precision") or "DAY").strip(),
                 "end_date": end_date,
                 "evidence_text": str(row.get("evidence_text") or "").strip(),
+                "source_url": source_url,
                 "source_document": source_document,
                 "verification_status": status,
                 "metadata": {
@@ -69,7 +70,6 @@ class Command(BaseCommand):
                 "scope": str(row.get("scope") or "COMPANY").strip(),
                 "subject_name": str(row.get("subject_name") or "").strip(),
                 "start_date": start_date,
-                "source_url": source_url,
             }
             episode = LifecycleEpisode(**lookup, **defaults)
             episode.full_clean()

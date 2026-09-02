@@ -50,10 +50,10 @@
   },
   {
     "company_slug": "freeport-mcmoran",
-    "founded_date": "1912-01-01",
-    "precision": "YEAR",
-    "evidence_text": "Wikidata P571 inception claim for Q1453620.",
-    "source_url": "https://www.wikidata.org/wiki/Q1453620"
+    "founded_date": "1987-11-10",
+    "precision": "DAY",
+    "evidence_text": "Freeport-McMoRan Inc.'s SEC-filed amended certificate states its original certificate of incorporation was filed with Delaware on November 10, 1987.",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/831259/000083125916000081/exhibit3106082016.htm"
   },
   {
     "company_slug": "general-electric",
@@ -106,10 +106,10 @@
   },
   {
     "company_slug": "prologis",
-    "founded_date": "1983-01-01",
+    "founded_date": "1997-01-01",
     "precision": "YEAR",
-    "evidence_text": "Wikidata P571 inception claim for Q16983765.",
-    "source_url": "https://www.wikidata.org/wiki/Q16983765"
+    "evidence_text": "Prologis' SEC-filed prospectus states Prologis Inc. began operating as a fully integrated real estate company in 1997.",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/1045609/000110465926090715/tm2621155-6_424b2.htm"
   },
   {
     "company_slug": "tesla",

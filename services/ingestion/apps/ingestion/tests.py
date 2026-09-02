@@ -3574,3 +3574,42 @@ class FoundingAnchorImportTests(TestCase):
         self.assertEqual(company.founded_date_precision, "DAY")
         self.assertEqual(company.founding_anchor_status, "VERIFIED")
         self.assertEqual(company.founded_date_source_url, "https://example.com/charter")
+
+
+class HistoricalLifecycleEpisodeImportTests(TestCase):
+    def test_replaces_same_episode_when_source_is_corrected(self):
+        import json
+        import tempfile
+        from io import StringIO
+
+        company = Company.objects.create(name="Corrected Episode Co")
+        first = [{
+            "company_slug": company.slug,
+            "scope": "COMPANY",
+            "start_date": "2001-02-03",
+            "start_date_precision": "DAY",
+            "stage": "LAUNCH",
+            "decision_type": "initial launch",
+            "source_url": "https://example.com/old-source",
+            "evidence_text": "Original source dates launch to February 3, 2001.",
+        }]
+        corrected = [{**first[0], "source_url": "https://example.com/corrected-source",
+                      "evidence_text": "Corrected primary source dates launch to February 3, 2001."}]
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json") as payload:
+            json.dump(first, payload)
+            payload.flush()
+            call_command("import_historical_lifecycle_episodes", input=payload.name, verify=True)
+            payload.seek(0)
+            payload.truncate()
+            json.dump(corrected, payload)
+            payload.flush()
+            output = StringIO()
+            call_command("import_historical_lifecycle_episodes", input=payload.name, verify=True, stdout=output)
+
+        episodes = LifecycleEpisode.objects.filter(company=company, scope="COMPANY", start_date=date(2001, 2, 3))
+        self.assertEqual(episodes.count(), 1)
+        episode = episodes.get()
+        self.assertEqual(episode.source_url, "https://example.com/corrected-source")
+        self.assertIn("corrected", episode.evidence_text.lower())
+        self.assertIn("'updated': 1", output.getvalue())
