@@ -392,5 +392,17 @@
     "decision_type": "company formation through merger",
     "target_customer": "construction and agricultural equipment customers",
     "business_model": "industrial equipment manufacturing and dealer distribution"
+  },
+  {
+    "company_slug": "amazon",
+    "scope": "COMPANY",
+    "stage": "LAUNCH",
+    "start_date": "1994-07-05",
+    "start_date_precision": "DAY",
+    "evidence_text": "Amazon\u2019s 1997 SEC S-1 financial statements identify July 5, 1994 as company inception; same filing states Amazon was founded in July 1994.",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/1018724/0000891618-97-001309.txt",
+    "decision_type": "company inception",
+    "target_customer": "book buyers using online commerce",
+    "business_model": "online bookstore"
   }
 ]

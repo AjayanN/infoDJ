@@ -528,5 +528,23 @@
     "after_state": "Caterpillar Tractor Co. began operating as combined company.",
     "trigger": "Both predecessor companies needed combined resources and technology after World War I.",
     "outcome": "Caterpillar began its first century as a combined industrial-equipment company."
+  },
+  {
+    "company_slug": "amazon",
+    "event_type": "COMPANY_FORMATION",
+    "action_date": "1994-07-05",
+    "episode_scope": "COMPANY",
+    "episode_start_date": "1994-07-05",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/1018724/0000891618-97-001309.txt",
+    "source_title": "Amazon.com 1997 Form S-1",
+    "source_publisher": "U.S. Securities and Exchange Commission",
+    "evidence_text": "Amazon\u2019s 1997 SEC S-1 financial statements identify July 5, 1994 as company inception; same filing states Amazon was founded in July 1994.",
+    "decision_theme": "COMPANY_INCEPTION",
+    "decision": "Form Amazon.com to build an online bookstore.",
+    "actual_change": "Amazon.com began as an online bookstore on July 5, 1994.",
+    "before_state": "No operating Amazon.com business existed.",
+    "after_state": "Amazon.com began its company lifecycle as an online bookstore.",
+    "trigger": "Opportunity to serve book customers through online commerce.",
+    "outcome": "Amazon.com entered early development before website book sales began in July 1995."
   }
 ]
