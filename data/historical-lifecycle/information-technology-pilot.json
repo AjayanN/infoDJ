@@ -428,5 +428,17 @@
     "decision_type": "first public product prototype",
     "target_customer": "early adopters seeking high-performance electric vehicles",
     "business_model": "premium electric vehicles"
+  },
+  {
+    "company_slug": "prologis",
+    "scope": "COMPANY",
+    "stage": "SCALE",
+    "start_date": "1997-11-26",
+    "start_date_precision": "DAY",
+    "evidence_text": "Prologis states that it commenced operations as a fully integrated real estate company with completion of its initial public offering on November 26, 1997.",
+    "source_url": "https://ir.prologis.com/financials/sec-filings/content/0001193125-13-411392/d616275d424b2.htm",
+    "decision_type": "public-market scale-up",
+    "target_customer": "industrial real estate customers",
+    "business_model": "industrial logistics real estate investment trust"
   }
 ]

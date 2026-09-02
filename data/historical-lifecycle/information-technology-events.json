@@ -600,5 +600,41 @@
     "after_state": "Tesla had publicly demonstrated its first vehicle concept.",
     "trigger": "Need to validate demand for a high-performance electric vehicle.",
     "outcome": "The prototype generated early Roadster reservations."
+  },
+  {
+    "company_slug": "american-tower",
+    "event_type": "FUNDING_EVENT",
+    "action_date": "1998-07-08",
+    "episode_scope": "COMPANY",
+    "episode_start_date": "1998-06-05",
+    "source_url": "https://americantower.gcs-web.com/static-files/f7112ad3-174d-4de1-abc4-43a3c32ee47f",
+    "source_title": "American Tower historical public offering disclosure",
+    "source_publisher": "American Tower SEC filing",
+    "evidence_text": "American Tower's filing states that it completed a public offering of 27,861,987 Class A shares on July 8, 1998.",
+    "decision_theme": "PUBLIC_MARKET_CAPITAL",
+    "decision": "Raise public equity capital after separation into a publicly traded tower company.",
+    "actual_change": "American Tower completed a public offering of 27,861,987 Class A shares at $23.50 per share.",
+    "before_state": "American Tower had separated into a publicly traded tower company.",
+    "after_state": "American Tower had raised public equity to fund growth and obligations.",
+    "trigger": "Capital needs after corporate separation and tower expansion.",
+    "outcome": "American Tower strengthened capital for independent operations."
+  },
+  {
+    "company_slug": "prologis",
+    "event_type": "FUNDING_EVENT",
+    "action_date": "1997-11-26",
+    "episode_scope": "COMPANY",
+    "episode_start_date": "1997-11-26",
+    "source_url": "https://ir.prologis.com/financials/sec-filings/content/0001193125-13-411392/d616275d424b2.htm",
+    "source_title": "Prologis 424B2 filing",
+    "source_publisher": "Prologis SEC filing",
+    "evidence_text": "Prologis states that it commenced operations shortly before completion of its initial public offering on November 26, 1997.",
+    "decision_theme": "PUBLIC_MARKET_SCALE",
+    "decision": "Launch operations as a publicly traded industrial real estate company.",
+    "actual_change": "Prologis commenced operations with completion of its initial public offering.",
+    "before_state": "AMB Property Corporation and its operating partnership were being formed for public-market operations.",
+    "after_state": "Prologis operated as an integrated industrial real estate company.",
+    "trigger": "Need to scale industrial real estate operations through public capital.",
+    "outcome": "Prologis entered public markets as an integrated logistics real estate operator."
   }
 ]
