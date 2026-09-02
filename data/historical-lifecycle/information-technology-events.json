@@ -546,5 +546,23 @@
     "after_state": "Amazon.com began its company lifecycle as an online bookstore.",
     "trigger": "Opportunity to serve book customers through online commerce.",
     "outcome": "Amazon.com entered early development before website book sales began in July 1995."
+  },
+  {
+    "company_slug": "apple",
+    "event_type": "COMPANY_FORMATION",
+    "action_date": "1976-04-01",
+    "episode_scope": "COMPANY",
+    "episode_start_date": "1976-04-01",
+    "source_url": "https://www.apple.com/ca/newsroom/2026/03/apple-to-celebrate-50-years-of-thinking-different/",
+    "source_title": "Apple to celebrate 50 years of thinking different",
+    "source_publisher": "Apple",
+    "evidence_text": "Apple states that it was founded on April 1, 1976.",
+    "decision_theme": "COMPANY_FORMATION",
+    "decision": "Form Apple to develop personal computers.",
+    "actual_change": "Apple formed on April 1, 1976.",
+    "before_state": "Apple had not yet begun company operations.",
+    "after_state": "Apple began operating as a personal-computer company.",
+    "trigger": "Opportunity to bring personal computing to a broader audience.",
+    "outcome": "Apple established its company lifecycle before Apple II launch."
   }
 ]
