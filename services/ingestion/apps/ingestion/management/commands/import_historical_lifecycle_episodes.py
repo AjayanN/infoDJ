@@ -76,8 +76,16 @@ class Command(BaseCommand):
             if options["dry_run"]:
                 counts["verified" if status == LifecycleEpisodeStatus.VERIFIED else "pending"] += 1
                 continue
-            existing = LifecycleEpisode.objects.filter(**lookup).first()
+            matches = LifecycleEpisode.objects.filter(**lookup)
+            existing = matches.filter(source_url=source_url).first() or matches.first()
             if existing:
+                duplicate_ids = matches.exclude(pk=existing.pk).filter(
+                    verification_status=LifecycleEpisodeStatus.VERIFIED
+                ).values_list("pk", flat=True)
+                if duplicate_ids:
+                    LifecycleEpisode.objects.filter(pk__in=duplicate_ids).update(
+                        verification_status=LifecycleEpisodeStatus.REJECTED
+                    )
                 for key, value in defaults.items():
                     setattr(existing, key, value)
                 existing.full_clean()

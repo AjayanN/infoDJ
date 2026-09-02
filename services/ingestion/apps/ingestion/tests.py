@@ -3613,3 +3613,33 @@ class HistoricalLifecycleEpisodeImportTests(TestCase):
         self.assertEqual(episode.source_url, "https://example.com/corrected-source")
         self.assertIn("corrected", episode.evidence_text.lower())
         self.assertIn("'updated': 1", output.getvalue())
+
+
+    def test_quarantines_preexisting_duplicate_without_deletion(self):
+        company = Company.objects.create(name="Duplicate Episode Co")
+        common = {
+            "company": company, "scope": "COMPANY", "stage": "LAUNCH",
+            "start_date": date(2001, 2, 3), "start_date_precision": "DAY",
+            "evidence_text": "Primary source dates launch to February 3, 2001.",
+            "verification_status": "VERIFIED",
+        }
+        LifecycleEpisode.objects.create(**common, source_url="https://example.com/old-source")
+        LifecycleEpisode.objects.create(**common, source_url="https://example.com/corrected-source")
+        record = [{
+            "company_slug": company.slug, "scope": "COMPANY", "start_date": "2001-02-03",
+            "start_date_precision": "DAY", "stage": "LAUNCH", "decision_type": "initial launch",
+            "source_url": "https://example.com/corrected-source",
+            "evidence_text": "Corrected primary source dates launch to February 3, 2001.",
+        }]
+        import json
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json") as payload:
+            json.dump(record, payload)
+            payload.flush()
+            call_command("import_historical_lifecycle_episodes", input=payload.name, verify=True)
+
+        episodes = LifecycleEpisode.objects.filter(company=company, start_date=date(2001, 2, 3))
+        self.assertEqual(episodes.count(), 2)
+        self.assertEqual(episodes.filter(verification_status="VERIFIED").count(), 1)
+        self.assertTrue(episodes.filter(source_url="https://example.com/corrected-source", verification_status="VERIFIED").exists())
+        self.assertTrue(episodes.filter(source_url="https://example.com/old-source", verification_status="REJECTED").exists())
