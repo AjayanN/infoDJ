@@ -452,5 +452,17 @@
     "decision_type": "global corporate reorganization",
     "target_customer": "financial institutions, merchants, and cardholders",
     "business_model": "global payments network"
+  },
+  {
+    "company_slug": "unitedhealth-group",
+    "scope": "COMPANY",
+    "stage": "SCALE",
+    "start_date": "1984-10-17",
+    "start_date_precision": "DAY",
+    "evidence_text": "Healthcare Finance News reports that UnitedHealth Group became publicly traded on Friday, October 17, 1984.",
+    "source_url": "https://www.healthcarefinancenews.com/news/30-years-giant-uhg-marches",
+    "decision_type": "public-market scale-up",
+    "target_customer": "employers and health-plan members",
+    "business_model": "managed health benefits and services"
   }
 ]

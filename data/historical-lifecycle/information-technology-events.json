@@ -654,5 +654,23 @@
     "after_state": "Visa operated through a global corporate holding structure.",
     "trigger": "Need to align global operations and prepare public-company structure.",
     "outcome": "Visa Inc. became global parent before its 2008 IPO."
+  },
+  {
+    "company_slug": "unitedhealth-group",
+    "event_type": "FUNDING_EVENT",
+    "action_date": "1984-10-17",
+    "episode_scope": "COMPANY",
+    "episode_start_date": "1984-10-17",
+    "source_url": "https://www.healthcarefinancenews.com/news/30-years-giant-uhg-marches",
+    "source_title": "30 years a giant, UHG marches on",
+    "source_publisher": "Healthcare Finance News",
+    "evidence_text": "Healthcare Finance News reports that UnitedHealth Group became publicly traded on Friday, October 17, 1984.",
+    "decision_theme": "PUBLIC_MARKET_SCALE",
+    "decision": "Become a publicly traded managed-health company.",
+    "actual_change": "UnitedHealth Group became publicly traded.",
+    "before_state": "United HealthCare operated as a private managed-health organization.",
+    "after_state": "UnitedHealth Group had public-market capital and ownership.",
+    "trigger": "Need capital and operating scale for health-plan growth.",
+    "outcome": "Public listing enabled broader health-services expansion."
   }
 ]
