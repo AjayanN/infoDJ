@@ -46,7 +46,7 @@ from apps.companies.models import (
     ValuationContextSnapshot,
     ValuationEventSnapshot,
 )
-from apps.curation.models import BusinessEvent, LifecycleEpisode, StrategicTurn, StrategicTurnSource
+from apps.curation.models import BusinessEvent, EventType, LifecycleEpisode, StrategicTurn, StrategicTurnSource
 from apps.ingestion.models import (
     ArticleExtraction,
     EvidenceRecord,
@@ -3304,6 +3304,11 @@ class FakeForm4FallbackSession:
 class FakeForm4IndexResponse(FakeProfileResponse):
     def json(self):
         return {"directory": {"item": [{"name": "ownership.xml"}]}}
+
+class EventTypeChoiceTests(TestCase):
+    def test_company_formation_is_available_for_historical_founder_evidence(self):
+        self.assertIn(("COMPANY_FORMATION", "Company formation"), EventType.choices)
+
 
 class LifecycleTimingEligibilityTests(TestCase):
     def valid_event(self):

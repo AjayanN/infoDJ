@@ -3,6 +3,7 @@ from django.db import models
 
 
 class EventType(models.TextChoices):
+    COMPANY_FORMATION = "COMPANY_FORMATION", "Company formation"
     BUSINESS_MODEL_PIVOT = "BUSINESS_MODEL_PIVOT", "Business model pivot"
     PRICING_CHANGE = "PRICING_CHANGE", "Pricing change"
     PRODUCT_EXPANSION = "PRODUCT_EXPANSION", "Product expansion"

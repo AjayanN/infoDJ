@@ -380,5 +380,17 @@
     "decision_type": "care-delivery acquisition",
     "target_customer": "patients, providers, and health-plan members",
     "business_model": "health benefits and care delivery"
+  },
+  {
+    "company_slug": "caterpillar",
+    "scope": "COMPANY",
+    "stage": "LAUNCH",
+    "start_date": "1925-04-15",
+    "start_date_precision": "DAY",
+    "evidence_text": "Caterpillar\u2019s official centennial release says the company officially turns 100 on April 15, 2025, establishing April 15, 1925 as its formation date; it identifies the formation as the Holt Manufacturing Company and C. L. Best Tractor Co. merger.",
+    "source_url": "https://investors.caterpillar.com/news/news-details/2025/Caterpillar-Kicks-Off-its-Next-100-Years-of-Innovation-and-Industry-Leadership/default.aspx",
+    "decision_type": "company formation through merger",
+    "target_customer": "construction and agricultural equipment customers",
+    "business_model": "industrial equipment manufacturing and dealer distribution"
   }
 ]
