@@ -672,5 +672,24 @@
     "after_state": "UnitedHealth Group had public-market capital and ownership.",
     "trigger": "Need capital and operating scale for health-plan growth.",
     "outcome": "Public listing enabled broader health-services expansion."
+  },
+  {
+    "company_slug": "visa",
+    "episode_scope": "PRODUCT",
+    "episode_start_date": "1958-09-18",
+    "action_date": "1958-09-18",
+    "event_type": "PRODUCT_EXPANSION",
+    "decision_theme": "FIRST_CONSUMER_CREDIT_CARD_LAUNCH",
+    "decision": "Launch BankAmericard in Fresno through an initial cardholder and merchant network.",
+    "trigger": "Need to validate a multi-merchant revolving-credit program in one city before wider expansion.",
+    "before_state": "Bank of America had no launched consumer revolving-credit card network.",
+    "actual_change": "Bank of America launched BankAmericard in Fresno and distributed cards to initial local cardholders after recruiting participating merchants.",
+    "after_state": "BankAmericard operated as an initial multi-sided payments network in Fresno.",
+    "outcome": "The launch established payment-network model that became Visa.",
+    "source_publisher": "Fresno City & County Historical Society",
+    "source_title": "Roots of the Valley: Bank of America Launches New Credit Card in Fresno",
+    "source_url": "https://myemail-api.constantcontact.com/Fresno-City---County-Historical-Society-Grapevine-Newsletter.html?aid=69_GtuGTaaQ&soid=1102885321646",
+    "evidence_text": "Fresno City & County Historical Society records Bank of America launched its first credit card in Fresno on September 18, 1958; BankAmericard later became Visa.",
+    "episode_subject_name": "BankAmericard"
   }
 ]

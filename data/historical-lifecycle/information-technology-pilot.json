@@ -464,5 +464,18 @@
     "decision_type": "public-market scale-up",
     "target_customer": "employers and health-plan members",
     "business_model": "managed health benefits and services"
+  },
+  {
+    "company_slug": "visa",
+    "scope": "PRODUCT",
+    "subject_name": "BankAmericard",
+    "start_date": "1958-09-18",
+    "start_date_precision": "DAY",
+    "stage": "LAUNCH",
+    "decision_type": "consumer credit-card program launch",
+    "business_model": "multi-sided payments network",
+    "target_customer": "Fresno cardholders and participating merchants",
+    "source_url": "https://myemail-api.constantcontact.com/Fresno-City---County-Historical-Society-Grapevine-Newsletter.html?aid=69_GtuGTaaQ&soid=1102885321646",
+    "evidence_text": "Fresno City & County Historical Society records that Bank of America launched its first credit card in Fresno on September 18, 1958; its historical newsletter identifies this as the BankAmericard launch, which later became Visa."
   }
 ]
