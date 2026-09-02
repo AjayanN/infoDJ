@@ -329,6 +329,56 @@ class FounderDecisionApiTests(TestCase):
         self.assertEqual(response.data["journey"][0]["id"], 8)
 
     @patch("apps.accounts.api.ingestion_get")
+    def test_founder_decision_accepts_bounded_age_wholly_inside_stage_band(self, ingestion_get):
+        ingestion_get.side_effect = [
+            ({"companies": [{"slug": "netflix", "sector": "Energy"}]}, ""),
+            ({"latest_events": [], "historical_events": [{
+                "id": 10, "company": "Netflix", "company_slug": "netflix",
+                "event_date": "1998-04-14", "event_type": "PRODUCT_EXPANSION",
+                "actual_change": "Launched its first public product.",
+                "source": {"title": "Primary announcement", "url": "https://example.com/netflix"},
+                "quality": {"eligible": True},
+                "lifecycle_timing": {
+                    "eligible": True, "action_date": "1998-04-14", "action_date_precision": "DAY",
+                    "company_age_days": None, "company_age_days_range": {"minimum": 98, "maximum": 462},
+                    "company_age_precision": "BOUNDED", "company_lifecycle_stage": "LAUNCH",
+                },
+            }], "risk_signals": []}, ""),
+        ]
+
+        response = self.client.get("/api/app/founder-decision")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status"], "available")
+        self.assertEqual(response.data["journey"][0]["id"], 10)
+
+    @patch("apps.accounts.api.ingestion_get")
+    def test_founder_decision_rejects_bounded_age_crossing_stage_band(self, ingestion_get):
+        profile = self.user.profile
+        profile.founder_stage = "validate"
+        profile.save(update_fields=["founder_stage"])
+        ingestion_get.side_effect = [
+            ({"companies": [{"slug": "netflix", "sector": "Energy"}]}, ""),
+            ({"latest_events": [], "historical_events": [{
+                "id": 11, "company": "Netflix", "company_slug": "netflix",
+                "event_date": "1998-04-14", "event_type": "PRODUCT_EXPANSION",
+                "actual_change": "Launched its first public product.",
+                "source": {"title": "Primary announcement", "url": "https://example.com/netflix"},
+                "quality": {"eligible": True},
+                "lifecycle_timing": {
+                    "eligible": True, "action_date": "1998-04-14", "action_date_precision": "DAY",
+                    "company_age_days": None, "company_age_days_range": {"minimum": 700, "maximum": 800},
+                    "company_age_precision": "BOUNDED", "company_lifecycle_stage": "LAUNCH",
+                },
+            }], "risk_signals": []}, ""),
+        ]
+
+        response = self.client.get("/api/app/founder-decision")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status"], "insufficient_evidence")
+
+    @patch("apps.accounts.api.ingestion_get")
     def test_founder_decision_rejects_a_mature_company_move_for_build_stage(self, ingestion_get):
         ingestion_get.side_effect = [
             ({"companies": [{"slug": "microsoft", "sector": "Energy"}]}, ""),

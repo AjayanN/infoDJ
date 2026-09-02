@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+import calendar
 from datetime import date, timedelta
 
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector, TrigramSimilarity
@@ -5889,11 +5890,29 @@ def serialize_business_event(event: BusinessEvent) -> dict[str, object]:
     lifecycle_timing = lifecycle_timing_eligibility(event)
     founded_date = event.company.founded_date
     episode = event.lifecycle_episode
-    company_age_days = (
-        (event.action_date - founded_date).days
-        if event.action_date and founded_date and event.company.founded_date_precision == "DAY"
-        else None
-    )
+    company_age_days = None
+    company_age_days_range = None
+    company_age_precision = None
+    if event.action_date and founded_date:
+        precision = event.company.founded_date_precision
+        if precision == "DAY":
+            company_age_days = (event.action_date - founded_date).days
+            company_age_days_range = {"minimum": company_age_days, "maximum": company_age_days}
+            company_age_precision = "EXACT"
+        elif precision == "MONTH":
+            month_end = founded_date.replace(day=calendar.monthrange(founded_date.year, founded_date.month)[1])
+            company_age_days_range = {
+                "minimum": (event.action_date - month_end).days,
+                "maximum": (event.action_date - founded_date).days,
+            }
+            company_age_precision = "BOUNDED"
+        elif precision == "YEAR":
+            year_end = founded_date.replace(month=12, day=31)
+            company_age_days_range = {
+                "minimum": (event.action_date - year_end).days,
+                "maximum": (event.action_date - founded_date).days,
+            }
+            company_age_precision = "BOUNDED"
     return {
         "id": event.id,
         "company": event.company.name,
@@ -5914,6 +5933,8 @@ def serialize_business_event(event: BusinessEvent) -> dict[str, object]:
             "company_lifecycle_stage_evidence": episode.evidence_text if episode else None,
             "company_lifecycle_stage_source_url": episode.source_url if episode else None,
             "company_age_days": company_age_days,
+            "company_age_days_range": company_age_days_range,
+            "company_age_precision": company_age_precision,
             "context": event.lifecycle_context_json or {},
             "eligible": lifecycle_timing.eligible,
             "status": lifecycle_timing.status,

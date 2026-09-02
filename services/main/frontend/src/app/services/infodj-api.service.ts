@@ -33,7 +33,7 @@ export type FounderDecisionEvidence = {
   event_type: string;
   actual_change: string;
   confidence_score: number | null;
-  lifecycle_timing: { action_date: string; action_date_precision: 'DAY' | 'MONTH' | 'QUARTER' | 'YEAR'; action_date_evidence: string; founding_anchor: { date: string; precision: 'DAY' | 'MONTH' | 'YEAR'; evidence: string; source_url: string; status: 'VERIFIED' }; company_lifecycle_stage: string | null; company_age_days: number | null; context: { as_of_date?: string | null; source_url?: string; metrics?: { label: string; value: string }[]; evidence_mode?: string } };
+  lifecycle_timing: { action_date: string; action_date_precision: 'DAY' | 'MONTH' | 'QUARTER' | 'YEAR'; action_date_evidence: string; founding_anchor: { date: string; precision: 'DAY' | 'MONTH' | 'YEAR'; evidence: string; source_url: string; status: 'VERIFIED' }; company_lifecycle_stage: string | null; company_age_days: number | null; company_age_days_range?: { minimum: number; maximum: number } | null; company_age_precision?: 'EXACT' | 'BOUNDED' | null; context: { as_of_date?: string | null; source_url?: string; metrics?: { label: string; value: string }[]; evidence_mode?: string } };
   claim_type: 'reported_fact';
   source: { title: string; url: string; published_date: string | null };
 };

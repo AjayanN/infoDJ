@@ -29,10 +29,18 @@ def is_stage_comparable(event: dict, founder_stage: str) -> bool:
     allowed_stages, min_age_days, max_age_days = FOUNDER_STAGE_COMPARISON_RULES.get(founder_stage, (set(), 0, -1))
     timing = event.get("lifecycle_timing") or {}
     lifecycle_stage = str(timing.get("company_lifecycle_stage") or "")
-    company_age_days = timing.get("company_age_days")
-    if lifecycle_stage not in allowed_stages or not isinstance(company_age_days, int):
+    if lifecycle_stage not in allowed_stages:
         return False
-    return company_age_days >= min_age_days and (max_age_days is None or company_age_days <= max_age_days)
+    company_age_days = timing.get("company_age_days")
+    if isinstance(company_age_days, int):
+        return company_age_days >= min_age_days and (max_age_days is None or company_age_days <= max_age_days)
+
+    age_range = timing.get("company_age_days_range") or {}
+    minimum = age_range.get("minimum")
+    maximum = age_range.get("maximum")
+    if not isinstance(minimum, int) or not isinstance(maximum, int):
+        return False
+    return minimum >= min_age_days and (max_age_days is None or maximum <= max_age_days)
 
 
 
@@ -102,7 +110,7 @@ def build_founder_decision(context: dict, companies: list[dict], dashboard: dict
         "context": context,
         "playbook": playbook,
         "directions": directions,
-        "journey": [serialize_event(event) for event in sorted(comparable_events, key=lambda row: str(row.get("event_date") or ""))],
+        "journey": [serialize_event(event) for event in sorted(comparable_events, key=lambda row: str((row.get("lifecycle_timing") or {}).get("action_date") or row.get("event_date") or ""))],
         "risk_radar": [
             {
                 "label": label.replace("_", " ").title(),
@@ -115,7 +123,7 @@ def build_founder_decision(context: dict, companies: list[dict], dashboard: dict
             "comparable_event_count": len(comparable_events),
             "risk_event_count": len(risk_events),
             "sector_company_count": sum(1 for row in companies if row.get("sector") == sector),
-            "evidence_policy": "Founder comparisons require a source-linked, exact action date, a verified founding anchor, contemporaneous scale, and source-backed lifecycle stage at a matching company age.",
+            "evidence_policy": "Founder comparisons require a source-linked exact action date, verified founding anchor, source-backed lifecycle stage, and an exact age or bounded age range wholly inside the selected stage band.",
         },
         "coverage_passport": coverage_passport,
         "source_gaps": (
