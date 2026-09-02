@@ -37,7 +37,6 @@ This file is the single register for unfinished product, data, and operational w
 | --- | --- | --- |
 | ExxonMobil / Energy | First post-merger operating product, customer, or capital move with a day-level action date | Company archive; CIK 0000034088 SEC filings |
 | Visa / Financials | Early BankAmericard/Visa product or network action with a day-level date | Corporate archive; CIK 0001403161 SEC filings |
-| UnitedHealth / Health Care | First operating product, customer, or public-market action with a day-level date | Company archive; CIK 0000731766 SEC filings |
 | Pfizer / Health Care | Early product/customer validation event before long-term maturity | Pfizer history archive; CIK 0000078003 SEC filings |
 | Freeport-McMoRan / Materials | 1981 formation/first operating move with a day-level date | Investor archive; CIK 0000831259 SEC filings |
 | Newmont / Materials | 1921–1925 formation/public-share action with a day-level date | Newmont archive; CIK 0001164727 SEC filings |
