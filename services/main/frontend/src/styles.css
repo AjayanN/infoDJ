@@ -7315,3 +7315,17 @@ th {
 @media (prefers-reduced-motion: reduce) {
   .entry-login-scene .auth-card { animation: none; }
 }
+
+
+.historical-action-panel { margin-block: 1.5rem; min-width: 0; }
+.historical-action { border: 1px solid #c6d9d7; border-radius: 12px; padding: 1rem; margin-block: .75rem; overflow-wrap: anywhere; background: #fff; color: #163744; }
+.historical-action summary { cursor: pointer; line-height: 1.5; }
+.historical-action summary > * { margin-inline-end: .75rem; }
+.historical-action summary span { font-size: .85rem; }
+.historical-action a { color: #17675d; text-decoration: underline; }
+.product-milestone-list { padding-inline-start: 1.5rem; }
+.product-milestone-list li { margin-block: 1rem; padding-inline-start: .25rem; }
+.product-milestone-list li > * { display: block; margin-block: .25rem; }
+@media (max-width: 640px) {
+  .historical-action summary > * { display: block; margin-inline-end: 0; }
+}

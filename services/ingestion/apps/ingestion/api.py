@@ -226,6 +226,20 @@ def company_profile(request: HttpRequest, slug: str) -> JsonResponse:
         .select_related("source_document")
         .order_by("-event_date", "-created_at")[:6]
     )
+    historical_candidates = (
+        BusinessEvent.objects.filter(
+            company=company, review_status="APPROVED",
+            action_date__lte=as_of or date.today(), action_date_precision="DAY",
+            lifecycle_timing_status="VERIFIED", lifecycle_episode__verification_status="VERIFIED",
+            lifecycle_context_json__evidence_mode="HISTORICAL_PRIMARY_SOURCE",
+        )
+        .select_related("company", "source_document", "lifecycle_episode")
+        .order_by("action_date", "id")
+    )
+    historical_events = [
+        event for event in historical_candidates
+        if event_eligibility(event).eligible and lifecycle_timing_eligibility(event).eligible
+    ]
     turns = list(
         StrategicTurn.objects.filter(company=company)
         .exclude(summary="")
@@ -293,6 +307,7 @@ def company_profile(request: HttpRequest, slug: str) -> JsonResponse:
                 for key, value in section_values.items()
             },
             "highlights": {
+                "historical_events": [serialize_business_event(event) for event in historical_events],
                 "latest_events": [serialize_business_event(event) for event in events],
                 "latest_turns": [serialize_strategic_turn(turn, source_count=turn_source_counts.get(turn.id, 0)) for turn in turns],
                 "financial_facts": [serialize_financial_fact(fact) for fact in facts],

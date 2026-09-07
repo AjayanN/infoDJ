@@ -1094,6 +1094,27 @@
 
                 <section class="research-briefing" aria-labelledby="briefing-heading">
                   <header><p class="section-kicker">Executive brief</p><h2 id="briefing-heading">What to know now</h2><span>Source-backed company context. Not investment advice.</span></header>
+                  <section class="historical-action-panel" *ngIf="companyView.highlights.historical_events?.length" aria-labelledby="historical-actions-heading">
+                    <h3 id="historical-actions-heading">What happened, and when</h3>
+                    <p>Reviewed company and product actions, ordered by when they happened.</p>
+                    <details class="historical-action" *ngFor="let event of companyView.highlights.historical_events">
+                      <summary>
+                        <time [attr.datetime]="event.lifecycle_timing.action_date">{{ event.lifecycle_timing.action_date | date:'mediumDate' }}</time>
+                        <strong>{{ event.lifecycle_timing.subject_name || companyView.company.name }}</strong>
+                        <span>{{ promiseLabel(event.lifecycle_timing.scope) }} · {{ promiseLabel(event.lifecycle_timing.stage || '') }}</span>
+                      </summary>
+                      <p>{{ event.actual_change }}</p>
+                      <a *ngIf="event.source" [href]="event.source.url" target="_blank" rel="noopener noreferrer">Source for this action</a>
+                      <ol class="product-milestone-list" *ngIf="event.lifecycle_timing.product_milestones?.length" aria-label="Product milestones">
+                        <li *ngFor="let milestone of event.lifecycle_timing.product_milestones">
+                          <strong>{{ promiseLabel(milestone.milestone) }}</strong>
+                          <time [attr.datetime]="milestone.action_date">{{ milestone.action_date | date:'mediumDate' }}</time>
+                          <span>{{ milestone.days_before_action === 0 ? 'On this action date' : (milestone.days_before_action | number) + ' days before this action' }}</span>
+                          <a [href]="milestone.source_url" target="_blank" rel="noopener noreferrer">Milestone source</a>
+                        </li>
+                      </ol>
+                    </details>
+                  </section>
                   <section class="company-constellation" aria-label="Company visual map">
                     <div class="constellation-orbit orbit-one" aria-hidden="true"></div>
                     <div class="constellation-orbit orbit-two" aria-hidden="true"></div>

@@ -466,6 +466,24 @@ export type CompanyProfileSource = {
   snapshot_dates?: string[];
 };
 
+export type HistoricalCompanyEvent = {
+  id: number;
+  actual_change: string;
+  source: { title: string; url: string } | null;
+  lifecycle_timing: {
+    action_date: string;
+    scope: 'COMPANY' | 'PRODUCT' | 'BUSINESS_LINE';
+    subject_name: string | null;
+    stage: string | null;
+    product_milestones?: {
+      milestone: string;
+      action_date: string;
+      source_url: string;
+      days_before_action: number;
+    }[];
+  };
+};
+
 export type CompanyProfileResponse = {
   status: 'available' | 'partial' | 'unavailable';
   company: DashboardCompany & {
@@ -492,6 +510,7 @@ export type CompanyProfileResponse = {
   }[];
   sections: Record<string, CompanyProfileSection>;
   highlights: {
+    historical_events?: HistoricalCompanyEvent[];
     latest_events: DashboardEvent[];
     latest_turns: DashboardTurn[];
     financial_facts: FinancialFactSummary[];

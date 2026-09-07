@@ -3732,3 +3732,39 @@ class ProductMilestoneImportTests(TestCase):
                 call_command("import_historical_lifecycle_episodes", input=str(episodes),
                              milestones=str(milestones), verify=True)
         self.assertFalse(LifecycleEpisode.objects.filter(company=company).exists())
+
+
+class CompanyHistoricalTimelineTests(TestCase):
+    def test_profile_history_uses_reviewed_action_dates_and_as_of_cutoff(self):
+        company = Company.objects.create(
+            name="Historical Profile Co", founded_date=date(2000, 1, 1),
+            founded_date_precision="DAY", founded_date_evidence="Official formation.",
+            founded_date_source_url="https://example.com/founding", founding_anchor_status="VERIFIED",
+        )
+        source = SourceDocument.objects.create(
+            company=company, source_api="HISTORICAL_PRIMARY_SOURCE", url="https://example.com/history",
+            title="Product history", publisher="Historical Profile Co",
+        )
+        episode = LifecycleEpisode.objects.create(
+            company=company, scope="PRODUCT", subject_name="Example", stage="LAUNCH",
+            start_date=date(2001, 2, 3), start_date_precision="DAY", verification_status="VERIFIED",
+            source_url=source.url, evidence_text="Example launched on February 3, 2001.",
+        )
+        for day, review in [(date(2001, 2, 3), "APPROVED"), (date(2002, 2, 3), "APPROVED"), (date(2001, 3, 3), "REJECTED")]:
+            BusinessEvent.objects.create(
+                company=company, source_document=source, event_type="PRODUCT_EXPANSION",
+                action_date=day, action_date_precision="DAY", action_date_evidence=f"Example launched on {day.isoformat()}.",
+                actual_change="The company launched its Example product.",
+                source_claim="Example product launch.", evidence_text=f"Example launched on {day.isoformat()}.",
+                confidence_score="1.000", review_status=review, lifecycle_episode=episode,
+                lifecycle_timing_status="VERIFIED",
+                lifecycle_context_json={"evidence_mode": "HISTORICAL_PRIMARY_SOURCE", "source_url": source.url},
+                raw_extraction_json={"provenance": "HISTORICAL_PRIMARY_SOURCE"},
+            )
+        response = self.client.get(f"/companies/{company.slug}/profile?as_of=2001-12-31")
+        self.assertEqual(response.status_code, 200)
+        events = response.json()["highlights"]["historical_events"]
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]["lifecycle_timing"]["action_date"], "2001-02-03")
+        self.assertEqual(events[0]["lifecycle_timing"]["subject_name"], "Example")
+        self.assertIsNone(events[0]["event_date"])
