@@ -1,5 +1,13 @@
 # InfoDJ Active Backlog
 
+### Evidence conflicts and decision relevance
+
+- **Outcome:** disputed dates and formation-only records cannot silently qualify as customer-validation evidence.
+- **Acceptance:** persist conflicting source claims; exclude unresolved conflicts from exact-date recommendations across reimports; classify actions against the requested decision, not stage/age alone.
+- **Known cases:** Ford first-sale date (July 15 versus July 23, 1903); GE founding merger currently classified as launch.
+- **Review:** data/historical-lifecycle/REVIEW-2026-09-07.md.
+- **Owner/status:** InfoDJ historical evidence goal / open.
+
 This file is the single register for unfinished product, data, and operational work.
 
 ## Rules

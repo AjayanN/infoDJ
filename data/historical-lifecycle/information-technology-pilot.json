@@ -1,5 +1,18 @@
 [
   {
+    "company_slug": "netflix",
+    "scope": "COMPANY",
+    "stage": "LAUNCH",
+    "start_date": "1998-04-14",
+    "start_date_precision": "DAY",
+    "end_date": "1998-04-14",
+    "evidence_text": "Netflix's April 14, 1998 release announces its online DVD rental store opening that day and identifies the company as founded in 1997. COMPANY LAUNCH is a reviewed interpretation of this early operating launch, not evidence of repeat usage or product-market fit.",
+    "source_url": "https://about.netflix.com/en/news/first-online-dvd-rental-store-opens",
+    "decision_type": "first operating workflow launch",
+    "target_customer": "United States DVD player and DVD-ROM owners seeking rental selection",
+    "business_model": "per-title online DVD rental and purchase with postal fulfillment"
+  },
+  {
     "company_slug": "apple",
     "scope": "COMPANY",
     "stage": "LAUNCH",
