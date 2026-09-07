@@ -85,10 +85,10 @@
   },
   {
     "company_slug": "newmont",
-    "founded_date": "1916-01-01",
+    "founded_date": "1921-01-01",
     "precision": "YEAR",
-    "evidence_text": "Wikidata P571 inception claim for Q1785405.",
-    "source_url": "https://www.wikidata.org/wiki/Q1785405"
+    "evidence_text": "Newmont's official history states the company was reincorporated as Newmont Corporation in 1921 and its corporate overview identifies it as founded in 1921.",
+    "source_url": "https://newmont.com/about-us/default.aspx?LanguageId=1"
   },
   {
     "company_slug": "nextera-energy",
@@ -121,9 +121,9 @@
   {
     "company_slug": "unitedhealth-group",
     "founded_date": "1977-01-01",
-    "precision": "YEAR",
-    "evidence_text": "Wikidata P571 inception claim for Q2103926.",
-    "source_url": "https://www.wikidata.org/wiki/Q2103926"
+    "precision": "MONTH",
+    "evidence_text": "UnitedHealth Group's Form 10-K states it was incorporated in January 1977 in Minnesota.",
+    "source_url": "https://www.unitedhealthgroup.com/content/dam/UHG/PDF/investors/2018/UNH-Q4-2018-Form-10-K.pdf"
   },
   {
     "company_slug": "visa",
