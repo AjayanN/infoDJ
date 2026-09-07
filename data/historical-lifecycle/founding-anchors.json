@@ -106,10 +106,10 @@
   },
   {
     "company_slug": "prologis",
-    "founded_date": "1997-01-01",
+    "founded_date": "1983-01-01",
     "precision": "YEAR",
-    "evidence_text": "Prologis' SEC-filed prospectus states Prologis Inc. began operating as a fully integrated real estate company in 1997.",
-    "source_url": "https://www.sec.gov/Archives/edgar/data/1045609/000110465926090715/tm2621155-6_424b2.htm"
+    "evidence_text": "Prologis co-founder Hamid Moghadam states that he, Doug Abbey and T. Robert Burke founded AMB in 1983. The same history distinguishes the 1997 IPO and the 2011 merger. This anchor follows the AMB operating lineage; 1997 is not the inception of that business.",
+    "source_url": "https://www.prologis.com/insights-news/blog/celebrating-40-years-excellence-logistics-real-estate"
   },
   {
     "company_slug": "tesla",

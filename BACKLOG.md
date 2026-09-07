@@ -41,3 +41,10 @@ This file is the single register for unfinished product, data, and operational w
 | Newmont / Materials | 1921–1925 formation/public-share action with a day-level date | Newmont archive; CIK 0001164727 SEC filings |
 | NextEra Energy / Utilities | 1984 holding-company or 1997 clean-energy-unit action with a day-level date | Investor archive; CIK 0000753308 SEC filings |
 
+
+### Lifecycle scope and operating lineage
+
+- **Outcome:** distinguish company, product, and business-line stages; legal incorporation, IPOs, mergers and operating inception cannot silently substitute for one another.
+- **Acceptance:** preserve sourced lineage and anchor type; compute product age from a sourced product inception; expose scope and subject in the API and UI; test mature-company product validation separately from startup validation.
+- **Current defect:** the API labels every episode stage as company_lifecycle_stage and matches it using company age, including PRODUCT episodes. Do not treat this as completed coverage.
+- **Owner/status:** InfoDJ historical evidence goal / open.
