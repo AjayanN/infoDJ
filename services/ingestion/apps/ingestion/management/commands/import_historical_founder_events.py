@@ -6,6 +6,9 @@ import json
 from datetime import date
 from pathlib import Path
 
+from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator
+from django.db import transaction
 from django.core.management.base import BaseCommand, CommandError
 from django.utils.text import slugify
 
@@ -21,6 +24,7 @@ class Command(BaseCommand):
         parser.add_argument("--input", required=True, help="JSON array of historical action records.")
         parser.add_argument("--dry-run", action="store_true")
 
+    @transaction.atomic
     def handle(self, *args, **options):
         path = Path(options["input"])
         if not path.is_file():
@@ -75,13 +79,17 @@ class Command(BaseCommand):
             "source_document": source_document,
         }
         existing = BusinessEvent.objects.filter(**lookup).first()
+        conflicts = self._date_conflicts(
+            row.get("date_conflicts", []), (existing.lifecycle_context_json or {}).get("date_conflicts", []) if existing else []
+        )
         event = existing or BusinessEvent(**lookup)
         event.action_date_precision = "DAY"
         event.action_date_evidence = evidence
         event.lifecycle_episode = episode
         event.lifecycle_stage = episode.stage
-        event.lifecycle_timing_status = LifecycleTimingStatus.VERIFIED
+        event.lifecycle_timing_status = LifecycleTimingStatus.PENDING if conflicts else LifecycleTimingStatus.VERIFIED
         event.lifecycle_context_json = {
+            "date_conflicts": conflicts,
             "evidence_mode": "HISTORICAL_PRIMARY_SOURCE",
             "source_url": source_url,
             "source_title": self._required(row, "source_title"),
@@ -104,13 +112,38 @@ class Command(BaseCommand):
         event.trigger = str(row.get("trigger") or "")
         event.outcome = str(row.get("outcome") or "")
         event.confidence_score = "1.000"
-        event.review_status = ReviewStatus.APPROVED
+        event.review_status = ReviewStatus.NEEDS_REVIEW if conflicts else ReviewStatus.APPROVED
         event.raw_extraction_json = {
+            "date_conflicts": conflicts,
             "provenance": "HISTORICAL_PRIMARY_SOURCE",
             "action_date_source": "explicit_primary_or_authoritative_source",
             "source_url": source_url,
         }
         return event, existing is None
+
+    @staticmethod
+    def _date_conflicts(incoming, existing):
+        """Keep review holds until a separate, explicit resolution is reviewed."""
+        claims = []
+        validator = URLValidator(schemes=["http", "https"])
+        for group in (existing, incoming):
+            if not isinstance(group, list):
+                raise CommandError("date_conflicts must be a list of sourced date claims.")
+            for claim in group:
+                if not isinstance(claim, dict):
+                    raise CommandError("Each date conflict must be an object.")
+                try:
+                    action_date = date.fromisoformat(str(claim.get("action_date", "")))
+                    validator(claim.get("source_url", ""))
+                except (ValueError, TypeError, ValidationError) as error:
+                    raise CommandError("Date conflicts require an ISO date and HTTP(S) source URL.") from error
+                if action_date.isoformat() != claim.get("action_date") or not str(claim.get("evidence_text") or "").strip():
+                    raise CommandError("Date conflicts require canonical dates and source evidence.")
+                if claim not in claims:
+                    claims.append(claim)
+        if claims and len({claim["action_date"] for claim in claims}) < 2:
+            raise CommandError("A date conflict requires at least two different sourced dates.")
+        return claims
 
     @staticmethod
     def _mutable_fields():

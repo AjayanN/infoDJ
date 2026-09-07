@@ -1,5 +1,7 @@
 # Historical Evidence Source Registry
 
+Review status overrides the historical links below: Ford's first-sale date is disputed (July 15 versus July 23, 1903) and excluded from exact-date recommendations. GE's 1892 merger is reviewed as consolidation at SCALE, not startup validation. Details: [2026-09-07 review](REVIEW-2026-09-07.md).
+
 Human-maintained entry point for historical lifecycle research. DAY founding anchors yield exact company age. MONTH/YEAR anchors yield a bounded age range; comparisons may use them only when entire range fits selected founder-stage band.
 
 | Company | Founding anchor | SEC submissions API | Verified lifecycle sources |

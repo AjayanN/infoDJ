@@ -101,6 +101,8 @@ def event_eligibility(event: Any, *, require_specific_action: bool = True) -> El
     confidence = getattr(event, "confidence_score", 0) or 0
     source_count = event_source_count(event)
     context = getattr(event, "lifecycle_context_json", None) or {}
+    if isinstance(context, dict) and context.get("date_conflicts"):
+        reasons.append("conflicting_action_dates")
     historical_primary_source = (
         isinstance(context, dict)
         and context.get("evidence_mode") == "HISTORICAL_PRIMARY_SOURCE"
@@ -146,6 +148,7 @@ def event_eligibility(event: Any, *, require_specific_action: bool = True) -> El
     eligible = not any(
         reason
         in {
+            "conflicting_action_dates",
             "missing_event_date",
             "missing_source_document",
             "missing_actual_change",
@@ -171,6 +174,8 @@ def lifecycle_timing_eligibility(event: Any) -> EligibilityResult:
     context = getattr(event, "lifecycle_context_json", None) or {}
     company = getattr(event, "company", None)
     metrics = context.get("metrics") if isinstance(context, dict) else None
+    if isinstance(context, dict) and context.get("date_conflicts"):
+        reasons.append("conflicting_action_dates")
 
     if getattr(event, "lifecycle_timing_status", "") == "VERIFIED": score += 0.20
     else: reasons.append("lifecycle_timing_not_verified")

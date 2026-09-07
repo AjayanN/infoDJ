@@ -102,6 +102,18 @@
     "source_title": "Life of Henry Ford",
     "source_publisher": "Ford Motor Company",
     "evidence_text": "Ford records that the first car built by Ford Motor Company was sold on July 15, 1903.",
+    "date_conflicts": [
+      {
+        "action_date": "1903-07-15",
+        "source_url": "https://corporate.ford.com/corporate/corporate/articles/history/henry-ford-biography/",
+        "evidence_text": "Ford's biography dates the first car sale to July 15, 1903."
+      },
+      {
+        "action_date": "1903-07-23",
+        "source_url": "https://corporate.thehenryford.org/collections-and-research/digital-resources/popular-topics/ford-company-chronology",
+        "evidence_text": "The Henry Ford chronology dates the company's first Model A sale to July 23, 1903."
+      }
+    ],
     "decision_theme": "FIRST_CUSTOMER_SALE",
     "decision": "Sell the first car built by the company.",
     "actual_change": "Ford Motor Company sold its first car.",

@@ -3,8 +3,8 @@
 ### Evidence conflicts and decision relevance
 
 - **Outcome:** disputed dates and formation-only records cannot silently qualify as customer-validation evidence.
-- **Acceptance:** persist conflicting source claims; exclude unresolved conflicts from exact-date recommendations across reimports; classify actions against the requested decision, not stage/age alone.
-- **Known cases:** Ford first-sale date (July 15 versus July 23, 1903); GE founding merger currently classified as launch.
+- **Remaining acceptance:** provide an explicit reviewed conflict-resolution workflow; classify actions against the requested decision, not stage/age alone.
+- **Open research:** reconcile Ford first-sale records (July 15 versus July 23, 1903) using the underlying transaction evidence.
 - **Review:** data/historical-lifecycle/REVIEW-2026-09-07.md.
 - **Owner/status:** InfoDJ historical evidence goal / open.
 

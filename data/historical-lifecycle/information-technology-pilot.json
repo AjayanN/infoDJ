@@ -128,10 +128,11 @@
   {
     "company_slug": "general-electric",
     "scope": "COMPANY",
-    "stage": "LAUNCH",
+    "stage": "SCALE",
     "start_date": "1892-04-15",
     "start_date_precision": "DAY",
-    "evidence_text": "GE records that Edison Electric Company merged with Thomson & Houston to form General Electric on April 15, 1892.",
+    "end_date": "1892-04-15",
+    "evidence_text": "GE dates the merger of Edison Electric Company and Thomson & Houston to April 15, 1892 and describes Edison's operating electricity network from 1882. SCALE is a reviewed interpretation of consolidation of existing operating businesses, not startup launch or customer validation. GE's homecoming history separately describes Thomson-Houston's electrification of Boston's West End Railway: https://www.ge.com/news/reports/how-ges-move-to-boston-is-really-a-homecoming",
     "source_url": "https://www.ge.com/news/reports/a-step-into-the-future-ge-turns-130-but-its-engineers-arent-looking-back",
     "decision_type": "company merger",
     "target_customer": "electricity and industrial customers",
