@@ -31,3 +31,13 @@ Human-maintained entry point for historical lifecycle research. DAY founding anc
 - Founding-anchor precision must match source. Never use year/month anchor as exact day.
 - Historical primary source mode requires reviewed lifecycle episode and action.
 - Year/month-only founding anchors never produce an exact age. They may support a bounded age range only when action date is exact and entire range fits selected stage band.
+
+
+## Product milestone research
+
+The product-milestones.json manifest retains reviewed milestone dates separately from company founding dates. These records are not yet consumed by the recommendation API. Public announcement, unveiling, retail release and production start are different milestones; none is automatically a product development inception date.
+
+| Company / product | Verified milestone dates | Source |
+| --- | --- | --- |
+| Microsoft / Windows | Public announcement: 1983-11-10; retail release: 1985-11-20 | [Microsoft Windows history](https://news.microsoft.com/de-de/features/windows-geschichte/) |
+| Tesla / Roadster | Prototype unveiling: 2006-07-19; regular production: 2008-03-17 | [Tesla production release](https://ir.tesla.com/press-release/tesla-motors-begins-regular-production-2008-tesla-roadster) |

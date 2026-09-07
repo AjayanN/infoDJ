@@ -1,0 +1,50 @@
+[
+  {
+    "company_slug": "microsoft",
+    "subject_name": "Windows",
+    "scope": "PRODUCT",
+    "milestone": "PUBLIC_ANNOUNCEMENT",
+    "action_date": "1983-11-10",
+    "date_precision": "DAY",
+    "source_url": "https://news.microsoft.com/de-de/features/windows-geschichte/",
+    "evidence": "Microsoft's Windows history dates Bill Gates' New York announcement to November 10, 1983.",
+    "review_status": "VERIFIED",
+    "establishes_product_inception": false
+  },
+  {
+    "company_slug": "microsoft",
+    "subject_name": "Windows",
+    "scope": "PRODUCT",
+    "milestone": "RETAIL_RELEASE",
+    "action_date": "1985-11-20",
+    "date_precision": "DAY",
+    "source_url": "https://news.microsoft.com/de-de/features/windows-geschichte/",
+    "evidence": "The same Microsoft history dates retail shipment to November 20, 1985, after the earlier announcement.",
+    "review_status": "VERIFIED",
+    "establishes_product_inception": false
+  },
+  {
+    "company_slug": "tesla",
+    "subject_name": "Tesla Roadster",
+    "scope": "PRODUCT",
+    "milestone": "PROTOTYPE_UNVEILING",
+    "action_date": "2006-07-19",
+    "date_precision": "DAY",
+    "source_url": "https://ir.tesla.com/press-release/tesla-motors-begins-regular-production-2008-tesla-roadster",
+    "evidence": "Tesla's production announcement dates the prototype unveiling to July 19, 2006.",
+    "review_status": "VERIFIED",
+    "establishes_product_inception": false
+  },
+  {
+    "company_slug": "tesla",
+    "subject_name": "Tesla Roadster",
+    "scope": "PRODUCT",
+    "milestone": "REGULAR_PRODUCTION_START",
+    "action_date": "2008-03-17",
+    "date_precision": "DAY",
+    "source_url": "https://ir.tesla.com/press-release/tesla-motors-begins-regular-production-2008-tesla-roadster",
+    "evidence": "The release body states regular production commenced on March 17, 2008. The page header displays March 16; use the explicit action date in the body.",
+    "review_status": "VERIFIED",
+    "establishes_product_inception": false
+  }
+]
