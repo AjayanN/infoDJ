@@ -3665,3 +3665,70 @@ class LifecycleScopeSerializationTests(TestCase):
         self.assertEqual(timing["stage"], "LAUNCH")
         self.assertIsNone(timing["company_lifecycle_stage"])
         self.assertIsNone(timing["company_lifecycle_stage_evidence"])
+
+
+class ProductMilestoneImportTests(TestCase):
+    def test_import_preserves_milestones_and_api_excludes_future_knowledge(self):
+        import json
+        import tempfile
+        from apps.ingestion.api import serialize_business_event
+
+        company = Company.objects.create(name="Milestone Co")
+        rows = [{
+            "company_slug": company.slug, "scope": "PRODUCT", "subject_name": "Example",
+            "stage": "LAUNCH", "start_date": "2001-02-03", "start_date_precision": "DAY",
+            "evidence_text": "Example shipped on February 3, 2001.",
+            "source_url": "https://example.com/release",
+        }]
+        milestones = [{
+            "company_slug": company.slug, "scope": "PRODUCT", "subject_name": "Example",
+            "milestone": kind, "action_date": day, "date_precision": "DAY",
+            "source_url": "https://example.com/history", "evidence": "Reviewed milestone date.",
+            "review_status": "VERIFIED", "establishes_product_inception": False,
+        } for kind, day in [
+            ("PUBLIC_ANNOUNCEMENT", "2000-02-03"),
+            ("RETAIL_RELEASE", "2001-02-03"),
+            ("REGULAR_PRODUCTION_START", "2002-02-03"),
+        ]]
+        with tempfile.TemporaryDirectory() as directory:
+            from pathlib import Path
+            episodes_file = Path(directory) / "episodes.json"
+            milestones_file = Path(directory) / "milestones.json"
+            episodes_file.write_text(json.dumps(rows))
+            milestones_file.write_text(json.dumps(milestones))
+            call_command("import_historical_lifecycle_episodes", input=str(episodes_file),
+                         milestones=str(milestones_file), verify=True)
+            call_command("import_historical_lifecycle_episodes", input=str(episodes_file), verify=True)
+        episode = LifecycleEpisode.objects.get(company=company)
+        self.assertEqual(len(episode.metadata["product_milestones"]), 3)
+        event = BusinessEvent.objects.create(company=company, event_type="PRODUCT_EXPANSION",
+                                             action_date=date(2001, 2, 3), lifecycle_episode=episode)
+        timing = serialize_business_event(event)["lifecycle_timing"]
+        self.assertEqual([m["action_date"] for m in timing["product_milestones"]], ["2000-02-03", "2001-02-03"])
+        self.assertEqual(timing["product_milestones"][0]["days_before_action"], 366)
+        self.assertIsNone(timing["company_lifecycle_stage"])
+
+    def test_rejects_unreviewed_milestone_before_writing_episode(self):
+        import json
+        import tempfile
+        from pathlib import Path
+        company = Company.objects.create(name="Unreviewed Milestone Co")
+        with tempfile.TemporaryDirectory() as directory:
+            episodes = Path(directory) / "episodes.json"
+            milestones = Path(directory) / "milestones.json"
+            episodes.write_text(json.dumps([{
+                "company_slug": company.slug, "scope": "PRODUCT", "subject_name": "Example",
+                "stage": "LAUNCH", "start_date": "2001-02-03",
+                "evidence_text": "Dated launch.", "source_url": "https://example.com/release",
+            }]))
+            milestones.write_text(json.dumps([{
+                "company_slug": company.slug, "scope": "PRODUCT", "subject_name": "Example",
+                "milestone": "PUBLIC_ANNOUNCEMENT", "action_date": "2000-02-03",
+                "date_precision": "DAY", "source_url": "https://example.com/history",
+                "evidence": "Candidate.", "review_status": "PENDING",
+                "establishes_product_inception": False,
+            }]))
+            with self.assertRaises(CommandError):
+                call_command("import_historical_lifecycle_episodes", input=str(episodes),
+                             milestones=str(milestones), verify=True)
+        self.assertFalse(LifecycleEpisode.objects.filter(company=company).exists())

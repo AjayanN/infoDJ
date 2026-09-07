@@ -5883,6 +5883,28 @@ def business_model_peer_compatibility(current_types: set[str], peer_types: set[s
     }
 
 
+def product_milestones_at_action(episode, action_date):
+    """Return reviewed product milestones known to have occurred by this action."""
+    if not episode or episode.scope not in {"PRODUCT", "BUSINESS_LINE"} or not action_date:
+        return []
+    milestones = (episode.metadata or {}).get("product_milestones", [])
+    result = []
+    for row in milestones if isinstance(milestones, list) else []:
+        if not isinstance(row, dict) or row.get("review_status") != "VERIFIED":
+            continue
+        if row.get("scope") != episode.scope or row.get("subject_name") != episode.subject_name:
+            continue
+        if row.get("company_slug") != episode.company.slug or row.get("date_precision") != "DAY":
+            continue
+        try:
+            milestone_date = date.fromisoformat(row.get("action_date", ""))
+        except (ValueError, TypeError):
+            continue
+        if milestone_date <= action_date:
+            result.append({**row, "days_before_action": (action_date - milestone_date).days})
+    return sorted(result, key=lambda row: (row["action_date"], row["milestone"]))
+
+
 def serialize_business_event(event: BusinessEvent) -> dict[str, object]:
     raw = event.raw_extraction_json or {}
     source_count = event_source_count(event)
@@ -5929,6 +5951,7 @@ def serialize_business_event(event: BusinessEvent) -> dict[str, object]:
                 "source_url": event.company.founded_date_source_url,
                 "status": event.company.founding_anchor_status,
             },
+            "product_milestones": product_milestones_at_action(episode, event.action_date),
             "scope": episode.scope if episode else None,
             "subject_name": episode.subject_name if episode else None,
             "stage": episode.stage if episode else None,

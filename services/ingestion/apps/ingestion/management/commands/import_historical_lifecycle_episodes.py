@@ -8,6 +8,9 @@ from pathlib import Path
 
 from django.core.management.base import BaseCommand, CommandError
 from django.utils.text import slugify
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
+from django.db import transaction
 
 from apps.companies.models import Company
 from apps.curation.models import LifecycleEpisode, LifecycleEpisodeStatus
@@ -24,7 +27,9 @@ class Command(BaseCommand):
         parser.add_argument("--input", required=True, help="JSON array of historical lifecycle episode records.")
         parser.add_argument("--verify", action="store_true", help="Mark imported records VERIFIED after model validation.")
         parser.add_argument("--dry-run", action="store_true")
+        parser.add_argument("--milestones", help="Reviewed product milestone manifest.")
 
+    @transaction.atomic
     def handle(self, *args, **options):
         path = Path(options["input"])
         if not path.is_file():
@@ -35,6 +40,12 @@ class Command(BaseCommand):
             raise CommandError(f"Input must be a JSON array: {error}") from error
         if not isinstance(records, list):
             raise CommandError("Input must be a JSON array.")
+
+        milestones = self._milestones(options.get("milestones"))
+        subjects = {(r.get("company_slug"), r.get("scope"), r.get("subject_name"))
+                    for r in records if isinstance(r, dict)}
+        if set(milestones) - subjects:
+            raise CommandError("Milestones contain a subject absent from the episode manifest.")
 
         counts = {"scanned": 0, "created": 0, "updated": 0, "pending": 0, "verified": 0}
         for row in records:
@@ -71,6 +82,9 @@ class Command(BaseCommand):
                 "subject_name": str(row.get("subject_name") or "").strip(),
                 "start_date": start_date,
             }
+            milestone_key = (company.slug, lookup["scope"], lookup["subject_name"])
+            if milestone_key in milestones:
+                defaults["metadata"]["product_milestones"] = milestones[milestone_key]
             episode = LifecycleEpisode(**lookup, **defaults)
             episode.full_clean()
             if options["dry_run"]:
@@ -79,6 +93,7 @@ class Command(BaseCommand):
             matches = LifecycleEpisode.objects.filter(**lookup)
             existing = matches.filter(source_url=source_url).first() or matches.first()
             if existing:
+                defaults["metadata"] = {**(existing.metadata or {}), **defaults["metadata"]}
                 duplicate_ids = matches.exclude(pk=existing.pk).filter(
                     verification_status=LifecycleEpisodeStatus.VERIFIED
                 ).values_list("pk", flat=True)
@@ -119,3 +134,46 @@ class Command(BaseCommand):
         except (TypeError, ValueError) as error:
             raise CommandError(f"{key} must be YYYY-MM-DD.") from error
 
+
+
+    @staticmethod
+    def _milestones(input_path):
+        if not input_path:
+            return {}
+        try:
+            rows = json.loads(Path(input_path).read_text(encoding="utf-8"))
+        except (OSError, ValueError) as error:
+            raise CommandError("Cannot read product milestone manifest.") from error
+        if not isinstance(rows, list):
+            raise CommandError("Product milestones must be a JSON array.")
+        grouped = {}
+        seen = set()
+        kinds = {"PUBLIC_ANNOUNCEMENT", "PROTOTYPE_UNVEILING", "RETAIL_RELEASE", "REGULAR_PRODUCTION_START"}
+        for row in rows:
+            if not isinstance(row, dict):
+                raise CommandError("Each product milestone must be an object.")
+            if row.get("scope") not in {"PRODUCT", "BUSINESS_LINE"} or row.get("review_status") != "VERIFIED":
+                raise CommandError("Product milestones require a product/business-line scope and reviewed evidence.")
+            if row.get("date_precision") != "DAY" or row.get("establishes_product_inception") is not False:
+                raise CommandError("Milestones require an exact day and must not claim product inception.")
+            if row.get("milestone") not in kinds:
+                raise CommandError("Unsupported product milestone type.")
+            for field in ("company_slug", "subject_name", "evidence", "source_url", "action_date"):
+                if not isinstance(row.get(field), str) or not row[field].strip():
+                    raise CommandError(f"Product milestone requires {field}.")
+            try:
+                parsed = date.fromisoformat(row["action_date"])
+                if parsed.isoformat() != row["action_date"]:
+                    raise ValueError("Noncanonical date")
+                URLValidator(schemes=["https", "http"])(row["source_url"])
+            except (ValueError, ValidationError) as error:
+                raise CommandError("Invalid product milestone date or source URL.") from error
+            key = (row["company_slug"], row["scope"], row["subject_name"])
+            identity = (*key, row["milestone"], row["action_date"])
+            if identity in seen:
+                raise CommandError("Duplicate product milestone identity.")
+            seen.add(identity)
+            grouped.setdefault(key, []).append(row)
+        for rows in grouped.values():
+            rows.sort(key=lambda row: (row["action_date"], row["milestone"]))
+        return grouped
