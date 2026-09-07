@@ -3643,3 +3643,25 @@ class HistoricalLifecycleEpisodeImportTests(TestCase):
         self.assertEqual(episodes.filter(verification_status="VERIFIED").count(), 1)
         self.assertTrue(episodes.filter(source_url="https://example.com/corrected-source", verification_status="VERIFIED").exists())
         self.assertTrue(episodes.filter(source_url="https://example.com/old-source", verification_status="REJECTED").exists())
+
+
+class LifecycleScopeSerializationTests(TestCase):
+    def test_product_episode_is_not_serialized_as_company_stage(self):
+        from apps.ingestion.api import serialize_business_event
+        company = Company.objects.create(name="Scope Serialization Co")
+        episode = LifecycleEpisode.objects.create(
+            company=company, scope="PRODUCT", subject_name="First offering",
+            stage="LAUNCH", start_date=date(2001, 2, 3), start_date_precision="DAY",
+            evidence_text="The first offering launched on February 3, 2001.",
+            source_url="https://example.com/launch", verification_status="VERIFIED",
+        )
+        event = BusinessEvent.objects.create(
+            company=company, event_type="PRODUCT_EXPANSION",
+            action_date=date(2001, 2, 3), lifecycle_episode=episode,
+        )
+        timing = serialize_business_event(event)["lifecycle_timing"]
+        self.assertEqual(timing["scope"], "PRODUCT")
+        self.assertEqual(timing["subject_name"], "First offering")
+        self.assertEqual(timing["stage"], "LAUNCH")
+        self.assertIsNone(timing["company_lifecycle_stage"])
+        self.assertIsNone(timing["company_lifecycle_stage_evidence"])

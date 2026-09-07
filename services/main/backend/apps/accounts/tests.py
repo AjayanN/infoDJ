@@ -626,3 +626,24 @@ class SubscriptionApiTests(TestCase):
         change = SubscriptionChangeLog.objects.filter(reason="razorpay_payment_verified").get()
         self.assertEqual(change.old_tier, SubscriptionTier.FREE)
         self.assertEqual(change.new_tier, SubscriptionTier.PRO)
+
+
+class FounderLifecycleScopeTests(TestCase):
+    def test_product_stage_cannot_be_used_as_company_stage(self):
+        from apps.accounts.founder_decision import is_stage_comparable
+        for scope in ("PRODUCT", "BUSINESS_LINE"):
+            with self.subTest(scope=scope):
+                event = {"lifecycle_timing": {
+                    "scope": scope, "subject_name": "New offering",
+                    "stage": "LAUNCH", "company_lifecycle_stage": "LAUNCH",
+                    "company_age_days": 200,
+                }}
+                self.assertFalse(is_stage_comparable(event, "build"))
+
+    def test_company_episode_preserves_stage_and_age_matching(self):
+        from apps.accounts.founder_decision import is_stage_comparable
+        event = {"lifecycle_timing": {
+            "scope": "COMPANY", "stage": "LAUNCH",
+            "company_lifecycle_stage": "LAUNCH", "company_age_days": 200,
+        }}
+        self.assertTrue(is_stage_comparable(event, "build"))

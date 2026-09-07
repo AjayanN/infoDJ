@@ -46,5 +46,5 @@ This file is the single register for unfinished product, data, and operational w
 
 - **Outcome:** distinguish company, product, and business-line stages; legal incorporation, IPOs, mergers and operating inception cannot silently substitute for one another.
 - **Acceptance:** preserve sourced lineage and anchor type; compute product age from a sourced product inception; expose scope and subject in the API and UI; test mature-company product validation separately from startup validation.
-- **Current defect:** the API labels every episode stage as company_lifecycle_stage and matches it using company age, including PRODUCT episodes. Do not treat this as completed coverage.
+- **Remaining work:** capture sourced product/business-line inception and founder comparison scope in onboarding; match using the selected subject's age and show the subject in the UI. Company-stage evidence must be reviewed separately for a product action that also establishes a company's early operating stage.
 - **Owner/status:** InfoDJ historical evidence goal / open.

@@ -28,6 +28,9 @@ FOUNDER_STAGE_COMPARISON_RULES = {
 def is_stage_comparable(event: dict, founder_stage: str) -> bool:
     allowed_stages, min_age_days, max_age_days = FOUNDER_STAGE_COMPARISON_RULES.get(founder_stage, (set(), 0, -1))
     timing = event.get("lifecycle_timing") or {}
+    # Company onboarding has no sourced product-age context yet.
+    if timing.get("scope", "COMPANY") != "COMPANY":
+        return False
     lifecycle_stage = str(timing.get("company_lifecycle_stage") or "")
     if lifecycle_stage not in allowed_stages:
         return False

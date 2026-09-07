@@ -85,9 +85,14 @@ class Command(BaseCommand):
             "evidence_mode": "HISTORICAL_PRIMARY_SOURCE",
             "source_url": source_url,
             "source_title": self._required(row, "source_title"),
-            "company_lifecycle_stage": episode.stage,
-            "company_lifecycle_stage_evidence": episode.evidence_text,
-            "company_lifecycle_stage_source_url": episode.source_url,
+            "scope": episode.scope,
+            "subject_name": episode.subject_name,
+            "stage": episode.stage,
+            "stage_evidence": episode.evidence_text,
+            "stage_source_url": episode.source_url,
+            "company_lifecycle_stage": episode.stage if episode.scope == "COMPANY" else None,
+            "company_lifecycle_stage_evidence": episode.evidence_text if episode.scope == "COMPANY" else None,
+            "company_lifecycle_stage_source_url": episode.source_url if episode.scope == "COMPANY" else None,
         }
         event.decision_theme = str(row.get("decision_theme") or "HISTORICAL_LIFECYCLE")
         event.decision = self._required(row, "decision")
