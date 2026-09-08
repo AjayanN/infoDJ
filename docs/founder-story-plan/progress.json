@@ -14,12 +14,15 @@
     },
     {
       "id": "P01",
-      "status": "in_progress",
-      "commits": ["446fcf4e438e7b133e253347d7237be8d028e5f7"],
+      "status": "complete",
+      "commits": ["446fcf4e438e7b133e253347d7237be8d028e5f7", "ed96e1f", "bf2d808"],
       "test_runs": [
         {"command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py migrate --noinput", "exit_code": 0, "verified_at": "2026-09-08T16:02:16Z"},
         {"command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py test --keepdb apps.history.tests", "exit_code": 0, "output": "7 tests", "verified_at": "2026-09-08T16:06:02Z"},
-        {"command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py check", "exit_code": 0, "verified_at": "2026-09-08T16:08:23Z"}
+        {"command": "DATABASE_URL=.../infodj_p00_restore_verified manage.py migrate --noinput; audit_history_coverage", "exit_code": 0, "output": "20 companies", "verified_at": "2026-09-08T16:12:56Z"},
+        {"command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py test --keepdb apps.history.tests", "exit_code": 0, "output": "9 tests", "verified_at": "2026-09-08T16:15:31Z"},
+        {"command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py makemigrations --check --dry-run", "exit_code": 0, "output": "No changes detected", "verified_at": "2026-09-08T16:15:34Z"},
+        {"command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py check", "exit_code": 0, "verified_at": "2026-09-08T16:15:34Z"}
       ],
       "artifacts": [
         "services/ingestion/apps/ingestion/migrations/0009_evidencespan_extractionrun_sourcerevision_and_more.py",
@@ -27,8 +30,8 @@
         "services/ingestion/apps/curation/migrations/0008_history_subject_bridge.py",
         "services/ingestion/apps/companies/migrations/0027_priceobservation_historical_claim_and_more.py"
       ],
-      "blockers": ["Project-wide makemigrations --check still proposes unrelated pre-existing ingestion index/job-type drift, curation index/choice drift, and companies acquisition review-status drift; these were deliberately excluded from P01 additive migrations."],
-      "limitations": ["P01's required clean makemigrations completion evidence is not yet proven; do not treat P01 or downstream tasks as complete."]
+      "blockers": [],
+      "limitations": ["P01 proves schema and compatibility prerequisites only; it does not prove historical coverage, connector access, or acceptance gates."]
     },
     {
       "id": "P02",
