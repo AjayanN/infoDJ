@@ -5,11 +5,12 @@
   "task_evidence": [
     {
       "id": "P00",
-      "status": "not_started",
-      "commits": [],
-      "test_runs": [],
-      "artifacts": [],
-      "blockers": []
+      "status": "complete",
+      "commits": ["2db583badc77f6236e13dcdbc027d0ac8e63acbe"],
+      "test_runs": [{"command": "P00 audit regression: docker compose run --rm --no-deps ingestion .venv/bin/python manage.py test --keepdb apps.ingestion.tests.test_audit_history_coverage", "exit_code": 0, "verified_at": "2026-09-08T01:51:42Z"}, {"command": "P00 restore: pg_restore into infodj_p00_restore_verified; SELECT count(*) FROM infodj.companies_company", "exit_code": 0, "output": "20", "verified_at": "2026-09-08T02:05:57Z"}],
+      "artifacts": ["data/history-evaluation/coverage-before.json", "data/history-evaluation/cases.json", "data/history-evaluation/backup-20260908T020316Z.dump sha256:6ba0defe3cfaf818f9324730f14d7ec43c7b37469e21e1826eee130772b73579", "PostgreSQL: infodj_p00_restore_verified (20 companies_company rows)"],
+      "blockers": [],
+      "limitations": ["Coverage counts are not proof of historical facts or complete historical coverage.", "Earlier empty database infodj_p00_restore_20260908T020557Z was retained and excluded from successful evidence."]
     },
     {
       "id": "P01",
