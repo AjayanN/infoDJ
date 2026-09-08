@@ -1,0 +1,1228 @@
+{
+  "companies": [
+    {
+      "company_id": 1,
+      "company_name": "Apple",
+      "company_slug": "apple",
+      "conflicts": {
+        "events_needing_review": 11,
+        "evidence_records_needing_review": 1255
+      },
+      "counts": {
+        "business_events": 15,
+        "evidence_records": 1255,
+        "failed_extractions": 155,
+        "lifecycle_episodes": 4,
+        "price_observations": 12,
+        "product_offerings": 320,
+        "regulatory_matters": 5,
+        "source_documents": 605,
+        "successful_text_extractions": 263
+      },
+      "date_precision": {
+        "business_events": {
+          "": 11,
+          "DAY": 4
+        },
+        "lifecycle_episodes": {
+          "DAY": 4
+        }
+      },
+      "founding_anchor": {
+        "date": "1976-04-01",
+        "has_evidence": true,
+        "precision": "DAY",
+        "status": "VERIFIED"
+      },
+      "identifiers": {
+        "sec_cik": "0000320193",
+        "wikidata_id": "Q312"
+      },
+      "is_active": true,
+      "provenance_loss": {
+        "episodes_without_source_document": 0,
+        "events_without_source_document": 0,
+        "prices_without_source_document": 0,
+        "regulatory_matters_without_source_document": 0,
+        "sources_without_successful_text": 342
+      },
+      "review_states": {
+        "business_events": {
+          "APPROVED": 4,
+          "NEEDS_REVIEW": 11
+        },
+        "evidence_records": {
+          "NEEDS_REVIEW": 1255
+        },
+        "lifecycle_episodes": {
+          "VERIFIED": 4
+        }
+      }
+    },
+    {
+      "company_id": 2,
+      "company_name": "Microsoft",
+      "company_slug": "microsoft",
+      "conflicts": {
+        "events_needing_review": 2,
+        "evidence_records_needing_review": 702
+      },
+      "counts": {
+        "business_events": 7,
+        "evidence_records": 702,
+        "failed_extractions": 13,
+        "lifecycle_episodes": 4,
+        "price_observations": 0,
+        "product_offerings": 352,
+        "regulatory_matters": 4,
+        "source_documents": 419,
+        "successful_text_extractions": 268
+      },
+      "date_precision": {
+        "business_events": {
+          "": 2,
+          "DAY": 5
+        },
+        "lifecycle_episodes": {
+          "DAY": 4
+        }
+      },
+      "founding_anchor": {
+        "date": "1975-04-04",
+        "has_evidence": true,
+        "precision": "DAY",
+        "status": "VERIFIED"
+      },
+      "identifiers": {
+        "sec_cik": "0000789019",
+        "wikidata_id": "Q2283"
+      },
+      "is_active": true,
+      "provenance_loss": {
+        "episodes_without_source_document": 0,
+        "events_without_source_document": 0,
+        "prices_without_source_document": 0,
+        "regulatory_matters_without_source_document": 0,
+        "sources_without_successful_text": 151
+      },
+      "review_states": {
+        "business_events": {
+          "APPROVED": 5,
+          "NEEDS_REVIEW": 2
+        },
+        "evidence_records": {
+          "NEEDS_REVIEW": 702
+        },
+        "lifecycle_episodes": {
+          "VERIFIED": 4
+        }
+      }
+    },
+    {
+      "company_id": 3,
+      "company_name": "JPMorgan Chase",
+      "company_slug": "jpmorgan-chase",
+      "conflicts": {
+        "events_needing_review": 13,
+        "evidence_records_needing_review": 1306
+      },
+      "counts": {
+        "business_events": 15,
+        "evidence_records": 1306,
+        "failed_extractions": 1,
+        "lifecycle_episodes": 1,
+        "price_observations": 0,
+        "product_offerings": 201,
+        "regulatory_matters": 4,
+        "source_documents": 382,
+        "successful_text_extractions": 255
+      },
+      "date_precision": {
+        "business_events": {
+          "": 13,
+          "DAY": 2
+        },
+        "lifecycle_episodes": {
+          "DAY": 1
+        }
+      },
+      "founding_anchor": {
+        "date": "1799-04-01",
+        "has_evidence": true,
+        "precision": "MONTH",
+        "status": "VERIFIED"
+      },
+      "identifiers": {
+        "sec_cik": "0000019617",
+        "wikidata_id": "Q192314"
+      },
+      "is_active": true,
+      "provenance_loss": {
+        "episodes_without_source_document": 0,
+        "events_without_source_document": 0,
+        "prices_without_source_document": 0,
+        "regulatory_matters_without_source_document": 0,
+        "sources_without_successful_text": 127
+      },
+      "review_states": {
+        "business_events": {
+          "APPROVED": 2,
+          "NEEDS_REVIEW": 13
+        },
+        "evidence_records": {
+          "NEEDS_REVIEW": 1306
+        },
+        "lifecycle_episodes": {
+          "VERIFIED": 1
+        }
+      }
+    },
+    {
+      "company_id": 4,
+      "company_name": "Visa",
+      "company_slug": "visa",
+      "conflicts": {
+        "events_needing_review": 11,
+        "evidence_records_needing_review": 1320
+      },
+      "counts": {
+        "business_events": 14,
+        "evidence_records": 1320,
+        "failed_extractions": 0,
+        "lifecycle_episodes": 3,
+        "price_observations": 0,
+        "product_offerings": 198,
+        "regulatory_matters": 5,
+        "source_documents": 401,
+        "successful_text_extractions": 260
+      },
+      "date_precision": {
+        "business_events": {
+          "": 9,
+          "DAY": 5
+        },
+        "lifecycle_episodes": {
+          "DAY": 3
+        }
+      },
+      "founding_anchor": {
+        "date": "1958-01-01",
+        "has_evidence": true,
+        "precision": "YEAR",
+        "status": "VERIFIED"
+      },
+      "identifiers": {
+        "sec_cik": "0001403161",
+        "wikidata_id": "Q328840"
+      },
+      "is_active": true,
+      "provenance_loss": {
+        "episodes_without_source_document": 0,
+        "events_without_source_document": 0,
+        "prices_without_source_document": 0,
+        "regulatory_matters_without_source_document": 0,
+        "sources_without_successful_text": 141
+      },
+      "review_states": {
+        "business_events": {
+          "APPROVED": 3,
+          "NEEDS_REVIEW": 11
+        },
+        "evidence_records": {
+          "NEEDS_REVIEW": 1320
+        },
+        "lifecycle_episodes": {
+          "VERIFIED": 3
+        }
+      }
+    },
+    {
+      "company_id": 5,
+      "company_name": "UnitedHealth Group",
+      "company_slug": "unitedhealth-group",
+      "conflicts": {
+        "events_needing_review": 9,
+        "evidence_records_needing_review": 1175
+      },
+      "counts": {
+        "business_events": 12,
+        "evidence_records": 1175,
+        "failed_extractions": 1,
+        "lifecycle_episodes": 2,
+        "price_observations": 0,
+        "product_offerings": 198,
+        "regulatory_matters": 4,
+        "source_documents": 399,
+        "successful_text_extractions": 260
+      },
+      "date_precision": {
+        "business_events": {
+          "": 9,
+          "DAY": 3
+        },
+        "lifecycle_episodes": {
+          "DAY": 2
+        }
+      },
+      "founding_anchor": {
+        "date": "1977-01-01",
+        "has_evidence": true,
+        "precision": "MONTH",
+        "status": "VERIFIED"
+      },
+      "identifiers": {
+        "sec_cik": "0000731766",
+        "wikidata_id": "Q2103926"
+      },
+      "is_active": true,
+      "provenance_loss": {
+        "episodes_without_source_document": 0,
+        "events_without_source_document": 0,
+        "prices_without_source_document": 0,
+        "regulatory_matters_without_source_document": 0,
+        "sources_without_successful_text": 139
+      },
+      "review_states": {
+        "business_events": {
+          "APPROVED": 3,
+          "NEEDS_REVIEW": 9
+        },
+        "evidence_records": {
+          "NEEDS_REVIEW": 1175
+        },
+        "lifecycle_episodes": {
+          "VERIFIED": 2
+        }
+      }
+    },
+    {
+      "company_id": 6,
+      "company_name": "Pfizer",
+      "company_slug": "pfizer",
+      "conflicts": {
+        "events_needing_review": 13,
+        "evidence_records_needing_review": 1368
+      },
+      "counts": {
+        "business_events": 16,
+        "evidence_records": 1368,
+        "failed_extractions": 0,
+        "lifecycle_episodes": 2,
+        "price_observations": 0,
+        "product_offerings": 225,
+        "regulatory_matters": 4,
+        "source_documents": 407,
+        "successful_text_extractions": 269
+      },
+      "date_precision": {
+        "business_events": {
+          "": 13,
+          "DAY": 3
+        },
+        "lifecycle_episodes": {
+          "DAY": 2
+        }
+      },
+      "founding_anchor": {
+        "date": "1849-01-01",
+        "has_evidence": true,
+        "precision": "YEAR",
+        "status": "VERIFIED"
+      },
+      "identifiers": {
+        "sec_cik": "0000078003",
+        "wikidata_id": "Q206921"
+      },
+      "is_active": true,
+      "provenance_loss": {
+        "episodes_without_source_document": 0,
+        "events_without_source_document": 0,
+        "prices_without_source_document": 0,
+        "regulatory_matters_without_source_document": 0,
+        "sources_without_successful_text": 138
+      },
+      "review_states": {
+        "business_events": {
+          "APPROVED": 3,
+          "NEEDS_REVIEW": 13
+        },
+        "evidence_records": {
+          "NEEDS_REVIEW": 1368
+        },
+        "lifecycle_episodes": {
+          "VERIFIED": 2
+        }
+      }
+    },
+    {
+      "company_id": 7,
+      "company_name": "Amazon",
+      "company_slug": "amazon",
+      "conflicts": {
+        "events_needing_review": 11,
+        "evidence_records_needing_review": 1203
+      },
+      "counts": {
+        "business_events": 13,
+        "evidence_records": 1203,
+        "failed_extractions": 0,
+        "lifecycle_episodes": 2,
+        "price_observations": 0,
+        "product_offerings": 264,
+        "regulatory_matters": 2,
+        "source_documents": 431,
+        "successful_text_extractions": 289
+      },
+      "date_precision": {
+        "business_events": {
+          "": 10,
+          "DAY": 3
+        },
+        "lifecycle_episodes": {
+          "DAY": 2
+        }
+      },
+      "founding_anchor": {
+        "date": "1994-07-05",
+        "has_evidence": true,
+        "precision": "DAY",
+        "status": "VERIFIED"
+      },
+      "identifiers": {
+        "sec_cik": "0001018724",
+        "wikidata_id": "Q3884"
+      },
+      "is_active": true,
+      "provenance_loss": {
+        "episodes_without_source_document": 0,
+        "events_without_source_document": 0,
+        "prices_without_source_document": 0,
+        "regulatory_matters_without_source_document": 0,
+        "sources_without_successful_text": 142
+      },
+      "review_states": {
+        "business_events": {
+          "APPROVED": 2,
+          "NEEDS_REVIEW": 11
+        },
+        "evidence_records": {
+          "NEEDS_REVIEW": 1203
+        },
+        "lifecycle_episodes": {
+          "VERIFIED": 2
+        }
+      }
+    },
+    {
+      "company_id": 8,
+      "company_name": "Walmart",
+      "company_slug": "walmart",
+      "conflicts": {
+        "events_needing_review": 9,
+        "evidence_records_needing_review": 1254
+      },
+      "counts": {
+        "business_events": 12,
+        "evidence_records": 1254,
+        "failed_extractions": 0,
+        "lifecycle_episodes": 2,
+        "price_observations": 0,
+        "product_offerings": 220,
+        "regulatory_matters": 5,
+        "source_documents": 408,
+        "successful_text_extractions": 211
+      },
+      "date_precision": {
+        "business_events": {
+          "": 9,
+          "DAY": 3
+        },
+        "lifecycle_episodes": {
+          "DAY": 2
+        }
+      },
+      "founding_anchor": {
+        "date": "1962-07-02",
+        "has_evidence": true,
+        "precision": "DAY",
+        "status": "VERIFIED"
+      },
+      "identifiers": {
+        "sec_cik": "0000104169",
+        "wikidata_id": "Q483551"
+      },
+      "is_active": true,
+      "provenance_loss": {
+        "episodes_without_source_document": 0,
+        "events_without_source_document": 0,
+        "prices_without_source_document": 0,
+        "regulatory_matters_without_source_document": 0,
+        "sources_without_successful_text": 197
+      },
+      "review_states": {
+        "business_events": {
+          "APPROVED": 3,
+          "NEEDS_REVIEW": 9
+        },
+        "evidence_records": {
+          "NEEDS_REVIEW": 1254
+        },
+        "lifecycle_episodes": {
+          "VERIFIED": 2
+        }
+      }
+    },
+    {
+      "company_id": 9,
+      "company_name": "ExxonMobil",
+      "company_slug": "exxonmobil",
+      "conflicts": {
+        "events_needing_review": 8,
+        "evidence_records_needing_review": 1323
+      },
+      "counts": {
+        "business_events": 13,
+        "evidence_records": 1323,
+        "failed_extractions": 1,
+        "lifecycle_episodes": 1,
+        "price_observations": 0,
+        "product_offerings": 265,
+        "regulatory_matters": 6,
+        "source_documents": 411,
+        "successful_text_extractions": 135
+      },
+      "date_precision": {
+        "business_events": {
+          "": 11,
+          "DAY": 2
+        },
+        "lifecycle_episodes": {
+          "DAY": 1
+        }
+      },
+      "founding_anchor": {
+        "date": "1999-11-30",
+        "has_evidence": true,
+        "precision": "DAY",
+        "status": "VERIFIED"
+      },
+      "identifiers": {
+        "sec_cik": "0000034088",
+        "wikidata_id": "Q156238"
+      },
+      "is_active": true,
+      "provenance_loss": {
+        "episodes_without_source_document": 0,
+        "events_without_source_document": 0,
+        "prices_without_source_document": 0,
+        "regulatory_matters_without_source_document": 0,
+        "sources_without_successful_text": 276
+      },
+      "review_states": {
+        "business_events": {
+          "APPROVED": 5,
+          "NEEDS_REVIEW": 8
+        },
+        "evidence_records": {
+          "NEEDS_REVIEW": 1323
+        },
+        "lifecycle_episodes": {
+          "VERIFIED": 1
+        }
+      }
+    },
+    {
+      "company_id": 10,
+      "company_name": "NextEra Energy",
+      "company_slug": "nextera-energy",
+      "conflicts": {
+        "events_needing_review": 9,
+        "evidence_records_needing_review": 1003
+      },
+      "counts": {
+        "business_events": 11,
+        "evidence_records": 1003,
+        "failed_extractions": 0,
+        "lifecycle_episodes": 1,
+        "price_observations": 0,
+        "product_offerings": 198,
+        "regulatory_matters": 6,
+        "source_documents": 394,
+        "successful_text_extractions": 131
+      },
+      "date_precision": {
+        "business_events": {
+          "": 8,
+          "DAY": 3
+        },
+        "lifecycle_episodes": {
+          "DAY": 1
+        }
+      },
+      "founding_anchor": {
+        "date": "1984-01-01",
+        "has_evidence": true,
+        "precision": "YEAR",
+        "status": "VERIFIED"
+      },
+      "identifiers": {
+        "sec_cik": "0000753308",
+        "wikidata_id": "Q967868"
+      },
+      "is_active": true,
+      "provenance_loss": {
+        "episodes_without_source_document": 0,
+        "events_without_source_document": 0,
+        "prices_without_source_document": 0,
+        "regulatory_matters_without_source_document": 0,
+        "sources_without_successful_text": 263
+      },
+      "review_states": {
+        "business_events": {
+          "APPROVED": 2,
+          "NEEDS_REVIEW": 9
+        },
+        "evidence_records": {
+          "NEEDS_REVIEW": 1003
+        },
+        "lifecycle_episodes": {
+          "VERIFIED": 1
+        }
+      }
+    },
+    {
+      "company_id": 11,
+      "company_name": "Ford Motor Company",
+      "company_slug": "ford-motor-company",
+      "conflicts": {
+        "events_needing_review": 12,
+        "evidence_records_needing_review": 1254
+      },
+      "counts": {
+        "business_events": 14,
+        "evidence_records": 1254,
+        "failed_extractions": 1,
+        "lifecycle_episodes": 2,
+        "price_observations": 0,
+        "product_offerings": 186,
+        "regulatory_matters": 4,
+        "source_documents": 382,
+        "successful_text_extractions": 136
+      },
+      "date_precision": {
+        "business_events": {
+          "": 11,
+          "DAY": 3
+        },
+        "lifecycle_episodes": {
+          "DAY": 2
+        }
+      },
+      "founding_anchor": {
+        "date": "1903-06-16",
+        "has_evidence": true,
+        "precision": "DAY",
+        "status": "VERIFIED"
+      },
+      "identifiers": {
+        "sec_cik": "0000037996",
+        "wikidata_id": "Q44294"
+      },
+      "is_active": true,
+      "provenance_loss": {
+        "episodes_without_source_document": 0,
+        "events_without_source_document": 0,
+        "prices_without_source_document": 0,
+        "regulatory_matters_without_source_document": 0,
+        "sources_without_successful_text": 246
+      },
+      "review_states": {
+        "business_events": {
+          "APPROVED": 2,
+          "NEEDS_REVIEW": 12
+        },
+        "evidence_records": {
+          "NEEDS_REVIEW": 1254
+        },
+        "lifecycle_episodes": {
+          "VERIFIED": 2
+        }
+      }
+    },
+    {
+      "company_id": 12,
+      "company_name": "Tesla",
+      "company_slug": "tesla",
+      "conflicts": {
+        "events_needing_review": 12,
+        "evidence_records_needing_review": 1273
+      },
+      "counts": {
+        "business_events": 15,
+        "evidence_records": 1273,
+        "failed_extractions": 1,
+        "lifecycle_episodes": 3,
+        "price_observations": 0,
+        "product_offerings": 322,
+        "regulatory_matters": 5,
+        "source_documents": 403,
+        "successful_text_extractions": 126
+      },
+      "date_precision": {
+        "business_events": {
+          "": 12,
+          "DAY": 3
+        },
+        "lifecycle_episodes": {
+          "DAY": 3
+        }
+      },
+      "founding_anchor": {
+        "date": "2003-07-01",
+        "has_evidence": true,
+        "precision": "DAY",
+        "status": "VERIFIED"
+      },
+      "identifiers": {
+        "sec_cik": "0001318605",
+        "wikidata_id": "Q478214"
+      },
+      "is_active": true,
+      "provenance_loss": {
+        "episodes_without_source_document": 0,
+        "events_without_source_document": 0,
+        "prices_without_source_document": 0,
+        "regulatory_matters_without_source_document": 0,
+        "sources_without_successful_text": 277
+      },
+      "review_states": {
+        "business_events": {
+          "APPROVED": 3,
+          "NEEDS_REVIEW": 12
+        },
+        "evidence_records": {
+          "NEEDS_REVIEW": 1273
+        },
+        "lifecycle_episodes": {
+          "VERIFIED": 3
+        }
+      }
+    },
+    {
+      "company_id": 13,
+      "company_name": "Caterpillar",
+      "company_slug": "caterpillar",
+      "conflicts": {
+        "events_needing_review": 10,
+        "evidence_records_needing_review": 1031
+      },
+      "counts": {
+        "business_events": 13,
+        "evidence_records": 1031,
+        "failed_extractions": 2,
+        "lifecycle_episodes": 2,
+        "price_observations": 0,
+        "product_offerings": 184,
+        "regulatory_matters": 4,
+        "source_documents": 386,
+        "successful_text_extractions": 133
+      },
+      "date_precision": {
+        "business_events": {
+          "": 10,
+          "DAY": 3
+        },
+        "lifecycle_episodes": {
+          "DAY": 2
+        }
+      },
+      "founding_anchor": {
+        "date": "1925-04-15",
+        "has_evidence": true,
+        "precision": "DAY",
+        "status": "VERIFIED"
+      },
+      "identifiers": {
+        "sec_cik": "0000018230",
+        "wikidata_id": "Q459965"
+      },
+      "is_active": true,
+      "provenance_loss": {
+        "episodes_without_source_document": 0,
+        "events_without_source_document": 0,
+        "prices_without_source_document": 0,
+        "regulatory_matters_without_source_document": 0,
+        "sources_without_successful_text": 253
+      },
+      "review_states": {
+        "business_events": {
+          "APPROVED": 3,
+          "NEEDS_REVIEW": 10
+        },
+        "evidence_records": {
+          "NEEDS_REVIEW": 1031
+        },
+        "lifecycle_episodes": {
+          "VERIFIED": 2
+        }
+      }
+    },
+    {
+      "company_id": 14,
+      "company_name": "General Electric",
+      "company_slug": "general-electric",
+      "conflicts": {
+        "events_needing_review": 12,
+        "evidence_records_needing_review": 1338
+      },
+      "counts": {
+        "business_events": 14,
+        "evidence_records": 1338,
+        "failed_extractions": 1,
+        "lifecycle_episodes": 1,
+        "price_observations": 0,
+        "product_offerings": 115,
+        "regulatory_matters": 4,
+        "source_documents": 376,
+        "successful_text_extractions": 127
+      },
+      "date_precision": {
+        "business_events": {
+          "": 12,
+          "DAY": 2
+        },
+        "lifecycle_episodes": {
+          "DAY": 1
+        }
+      },
+      "founding_anchor": {
+        "date": "1892-04-15",
+        "has_evidence": true,
+        "precision": "DAY",
+        "status": "VERIFIED"
+      },
+      "identifiers": {
+        "sec_cik": "0000040545",
+        "wikidata_id": "Q54173"
+      },
+      "is_active": true,
+      "provenance_loss": {
+        "episodes_without_source_document": 0,
+        "events_without_source_document": 0,
+        "prices_without_source_document": 0,
+        "regulatory_matters_without_source_document": 0,
+        "sources_without_successful_text": 249
+      },
+      "review_states": {
+        "business_events": {
+          "APPROVED": 2,
+          "NEEDS_REVIEW": 12
+        },
+        "evidence_records": {
+          "NEEDS_REVIEW": 1338
+        },
+        "lifecycle_episodes": {
+          "VERIFIED": 1
+        }
+      }
+    },
+    {
+      "company_id": 15,
+      "company_name": "Disney",
+      "company_slug": "disney",
+      "conflicts": {
+        "events_needing_review": 16,
+        "evidence_records_needing_review": 1601
+      },
+      "counts": {
+        "business_events": 19,
+        "evidence_records": 1601,
+        "failed_extractions": 0,
+        "lifecycle_episodes": 2,
+        "price_observations": 0,
+        "product_offerings": 322,
+        "regulatory_matters": 4,
+        "source_documents": 268,
+        "successful_text_extractions": 132
+      },
+      "date_precision": {
+        "business_events": {
+          "": 15,
+          "DAY": 4
+        },
+        "lifecycle_episodes": {
+          "DAY": 2
+        }
+      },
+      "founding_anchor": {
+        "date": "1923-10-16",
+        "has_evidence": true,
+        "precision": "DAY",
+        "status": "VERIFIED"
+      },
+      "identifiers": {
+        "sec_cik": "0001744489",
+        "wikidata_id": "Q28651459"
+      },
+      "is_active": true,
+      "provenance_loss": {
+        "episodes_without_source_document": 0,
+        "events_without_source_document": 0,
+        "prices_without_source_document": 0,
+        "regulatory_matters_without_source_document": 0,
+        "sources_without_successful_text": 136
+      },
+      "review_states": {
+        "business_events": {
+          "APPROVED": 3,
+          "NEEDS_REVIEW": 16
+        },
+        "evidence_records": {
+          "NEEDS_REVIEW": 1601
+        },
+        "lifecycle_episodes": {
+          "VERIFIED": 2
+        }
+      }
+    },
+    {
+      "company_id": 16,
+      "company_name": "Netflix",
+      "company_slug": "netflix",
+      "conflicts": {
+        "events_needing_review": 13,
+        "evidence_records_needing_review": 1461
+      },
+      "counts": {
+        "business_events": 16,
+        "evidence_records": 1461,
+        "failed_extractions": 0,
+        "lifecycle_episodes": 3,
+        "price_observations": 0,
+        "product_offerings": 118,
+        "regulatory_matters": 4,
+        "source_documents": 401,
+        "successful_text_extractions": 129
+      },
+      "date_precision": {
+        "business_events": {
+          "": 13,
+          "DAY": 3
+        },
+        "lifecycle_episodes": {
+          "DAY": 3
+        }
+      },
+      "founding_anchor": {
+        "date": "1997-08-29",
+        "has_evidence": true,
+        "precision": "DAY",
+        "status": "VERIFIED"
+      },
+      "identifiers": {
+        "sec_cik": "0001065280",
+        "wikidata_id": "Q907311"
+      },
+      "is_active": true,
+      "provenance_loss": {
+        "episodes_without_source_document": 0,
+        "events_without_source_document": 0,
+        "prices_without_source_document": 0,
+        "regulatory_matters_without_source_document": 0,
+        "sources_without_successful_text": 272
+      },
+      "review_states": {
+        "business_events": {
+          "APPROVED": 3,
+          "NEEDS_REVIEW": 13
+        },
+        "evidence_records": {
+          "NEEDS_REVIEW": 1461
+        },
+        "lifecycle_episodes": {
+          "VERIFIED": 3
+        }
+      }
+    },
+    {
+      "company_id": 17,
+      "company_name": "Prologis",
+      "company_slug": "prologis",
+      "conflicts": {
+        "events_needing_review": 6,
+        "evidence_records_needing_review": 795
+      },
+      "counts": {
+        "business_events": 10,
+        "evidence_records": 796,
+        "failed_extractions": 3,
+        "lifecycle_episodes": 3,
+        "price_observations": 0,
+        "product_offerings": 116,
+        "regulatory_matters": 2,
+        "source_documents": 396,
+        "successful_text_extractions": 21
+      },
+      "date_precision": {
+        "business_events": {
+          "": 6,
+          "DAY": 4
+        },
+        "lifecycle_episodes": {
+          "DAY": 3
+        }
+      },
+      "founding_anchor": {
+        "date": "1983-01-01",
+        "has_evidence": true,
+        "precision": "YEAR",
+        "status": "VERIFIED"
+      },
+      "identifiers": {
+        "sec_cik": "0001045609",
+        "wikidata_id": "Q16983765"
+      },
+      "is_active": true,
+      "provenance_loss": {
+        "episodes_without_source_document": 1,
+        "events_without_source_document": 0,
+        "prices_without_source_document": 0,
+        "regulatory_matters_without_source_document": 0,
+        "sources_without_successful_text": 375
+      },
+      "review_states": {
+        "business_events": {
+          "APPROVED": 3,
+          "NEEDS_REVIEW": 6,
+          "REJECTED": 1
+        },
+        "evidence_records": {
+          "NEEDS_REVIEW": 795,
+          "REJECTED": 1
+        },
+        "lifecycle_episodes": {
+          "REJECTED": 1,
+          "VERIFIED": 2
+        }
+      }
+    },
+    {
+      "company_id": 18,
+      "company_name": "American Tower",
+      "company_slug": "american-tower",
+      "conflicts": {
+        "events_needing_review": 9,
+        "evidence_records_needing_review": 989
+      },
+      "counts": {
+        "business_events": 12,
+        "evidence_records": 989,
+        "failed_extractions": 0,
+        "lifecycle_episodes": 1,
+        "price_observations": 0,
+        "product_offerings": 115,
+        "regulatory_matters": 3,
+        "source_documents": 385,
+        "successful_text_extractions": 19
+      },
+      "date_precision": {
+        "business_events": {
+          "": 9,
+          "DAY": 3
+        },
+        "lifecycle_episodes": {
+          "DAY": 1
+        }
+      },
+      "founding_anchor": {
+        "date": "1995-01-01",
+        "has_evidence": true,
+        "precision": "YEAR",
+        "status": "VERIFIED"
+      },
+      "identifiers": {
+        "sec_cik": "0001053507",
+        "wikidata_id": "Q4745263"
+      },
+      "is_active": true,
+      "provenance_loss": {
+        "episodes_without_source_document": 0,
+        "events_without_source_document": 0,
+        "prices_without_source_document": 0,
+        "regulatory_matters_without_source_document": 0,
+        "sources_without_successful_text": 366
+      },
+      "review_states": {
+        "business_events": {
+          "APPROVED": 3,
+          "NEEDS_REVIEW": 9
+        },
+        "evidence_records": {
+          "NEEDS_REVIEW": 989
+        },
+        "lifecycle_episodes": {
+          "VERIFIED": 1
+        }
+      }
+    },
+    {
+      "company_id": 19,
+      "company_name": "Freeport-McMoRan",
+      "company_slug": "freeport-mcmoran",
+      "conflicts": {
+        "events_needing_review": 9,
+        "evidence_records_needing_review": 1018
+      },
+      "counts": {
+        "business_events": 11,
+        "evidence_records": 1018,
+        "failed_extractions": 0,
+        "lifecycle_episodes": 1,
+        "price_observations": 0,
+        "product_offerings": 92,
+        "regulatory_matters": 3,
+        "source_documents": 378,
+        "successful_text_extractions": 24
+      },
+      "date_precision": {
+        "business_events": {
+          "": 9,
+          "DAY": 2
+        },
+        "lifecycle_episodes": {
+          "DAY": 1
+        }
+      },
+      "founding_anchor": {
+        "date": "1987-11-10",
+        "has_evidence": true,
+        "precision": "DAY",
+        "status": "VERIFIED"
+      },
+      "identifiers": {
+        "sec_cik": "0000831259",
+        "wikidata_id": "Q1453620"
+      },
+      "is_active": true,
+      "provenance_loss": {
+        "episodes_without_source_document": 0,
+        "events_without_source_document": 0,
+        "prices_without_source_document": 0,
+        "regulatory_matters_without_source_document": 0,
+        "sources_without_successful_text": 354
+      },
+      "review_states": {
+        "business_events": {
+          "APPROVED": 2,
+          "NEEDS_REVIEW": 9
+        },
+        "evidence_records": {
+          "NEEDS_REVIEW": 1018
+        },
+        "lifecycle_episodes": {
+          "VERIFIED": 1
+        }
+      }
+    },
+    {
+      "company_id": 20,
+      "company_name": "Newmont",
+      "company_slug": "newmont",
+      "conflicts": {
+        "events_needing_review": 14,
+        "evidence_records_needing_review": 1275
+      },
+      "counts": {
+        "business_events": 16,
+        "evidence_records": 1275,
+        "failed_extractions": 0,
+        "lifecycle_episodes": 1,
+        "price_observations": 0,
+        "product_offerings": 139,
+        "regulatory_matters": 11,
+        "source_documents": 391,
+        "successful_text_extractions": 28
+      },
+      "date_precision": {
+        "business_events": {
+          "": 14,
+          "DAY": 2
+        },
+        "lifecycle_episodes": {
+          "DAY": 1
+        }
+      },
+      "founding_anchor": {
+        "date": "1921-01-01",
+        "has_evidence": true,
+        "precision": "YEAR",
+        "status": "VERIFIED"
+      },
+      "identifiers": {
+        "sec_cik": "0001164727",
+        "wikidata_id": "Q1785405"
+      },
+      "is_active": true,
+      "provenance_loss": {
+        "episodes_without_source_document": 0,
+        "events_without_source_document": 0,
+        "prices_without_source_document": 0,
+        "regulatory_matters_without_source_document": 0,
+        "sources_without_successful_text": 363
+      },
+      "review_states": {
+        "business_events": {
+          "APPROVED": 2,
+          "NEEDS_REVIEW": 14
+        },
+        "evidence_records": {
+          "NEEDS_REVIEW": 1275
+        },
+        "lifecycle_episodes": {
+          "VERIFIED": 1
+        }
+      }
+    }
+  ],
+  "company_count": 20,
+  "company_ids": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+  ],
+  "generated_at": "2026-09-08T01:51:45.201441+00:00",
+  "global_counts": {
+    "article_extractions": 3395,
+    "companies": 20,
+    "evidence_records": 23945,
+    "lifecycle_episodes": 41,
+    "price_observations": 12,
+    "product_offerings": 4150,
+    "regulatory_matters": 89,
+    "source_documents": 8023
+  },
+  "limitations": [
+    "Counts and review states are coverage signals, not proof of historical facts.",
+    "A missing count means not researched or unavailable in this database; it does not prove no historical activity.",
+    "Legacy evidence models do not retain immutable source revisions or multi-source claim conflicts; those are reported as provenance limitations until the history pipeline is implemented."
+  ],
+  "read_only": true,
+  "report_version": "1.0"
+}

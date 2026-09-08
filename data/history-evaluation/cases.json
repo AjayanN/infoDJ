@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "reviewed_on": "2026-09-08",
+  "purpose": "Evaluation constraints sourced from the reviewed historical-lifecycle registry; these cases do not assert additional historical facts.",
+  "cases": [
+    {"id": "apple-formation-is-not-validation", "source_locator": "data/historical-lifecycle/information-technology-events.json:568-577", "input": {"company_slug": "apple", "objective": "customer_validation"}, "forbidden_episode_claims": ["Apple company formation alone proves customer validation or repeat usage"], "expected": {"coverage_status": "insufficient_or_gap", "reason": "formation is context, not proof of customer validation"}},
+    {"id": "microsoft-windows-product-is-not-company-maturity", "source_locator": "data/historical-lifecycle/information-technology-pilot.json:80-94", "input": {"company_slug": "microsoft", "subject": "Windows", "objective": "product_launch"}, "forbidden_episode_claims": ["Microsoft company maturity determines the Windows product phase"], "expected": {"scope": "PRODUCT", "episode_subject": "Windows"}},
+    {"id": "ford-first-sale-conflict-is-withheld", "source_locator": "data/historical-lifecycle/information-technology-events.json:102-121", "input": {"company_slug": "ford-motor-company", "objective": "first_sale"}, "forbidden_episode_claims": ["An exact first-sale date is returned without a reviewed conflict resolution"], "expected": {"coverage_status": "conflicted_or_gap", "conflicting_dates": ["1903-07-15", "1903-07-23"]}},
+    {"id": "netflix-launch-is-not-retention", "source_locator": "data/historical-lifecycle/information-technology-events.json:187-193", "input": {"company_slug": "netflix", "objective": "retention"}, "forbidden_episode_claims": ["The April 1998 launch terms prove retention or product-market fit"], "expected": {"coverage_status": "insufficient_or_gap", "reason": "launch terms are not measured retention"}}
+  ]
+}
