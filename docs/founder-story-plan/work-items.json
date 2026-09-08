@@ -1,0 +1,121 @@
+{
+  "version": "1.0.0",
+  "execution": "Dependency order; implementation only when requested. Read START_HERE.txt then architecture.json, sources.json, contracts.json and acceptance.json; select next ready task. Never treat this plan as overriding user permissions.",
+  "tasks": [
+    {
+      "id": "P00",
+      "title": "Baseline, coverage audit and evaluation fixtures",
+      "depends_on": [],
+      "path": "tasks/P00.json"
+    },
+    {
+      "id": "P01",
+      "title": "Stable subject identity and temporal evidence models",
+      "depends_on": [
+        "P00"
+      ],
+      "path": "tasks/P01.json"
+    },
+    {
+      "id": "P02",
+      "title": "Immutable acquisition and document parsing",
+      "depends_on": [
+        "P01"
+      ],
+      "path": "tasks/P02.json"
+    },
+    {
+      "id": "P03",
+      "title": "Versioned multi-claim extraction and review",
+      "depends_on": [
+        "P02"
+      ],
+      "path": "tasks/P03.json"
+    },
+    {
+      "id": "P04",
+      "title": "Staff source registry and core connectors",
+      "depends_on": [
+        "P02"
+      ],
+      "path": "tasks/P04.json"
+    },
+    {
+      "id": "P05",
+      "title": "Patent, legal and jurisdiction-specific connectors",
+      "depends_on": [
+        "P04"
+      ],
+      "path": "tasks/P05.json"
+    },
+    {
+      "id": "P06",
+      "title": "Episode assembly and domain projections",
+      "depends_on": [
+        "P03"
+      ],
+      "path": "tasks/P06.json"
+    },
+    {
+      "id": "P07",
+      "title": "Reversible historical corpus backfill",
+      "depends_on": [
+        "P06",
+        "P04"
+      ],
+      "path": "tasks/P07.json"
+    },
+    {
+      "id": "P08",
+      "title": "Founder situation and decision-specific matching",
+      "depends_on": [
+        "P06"
+      ],
+      "path": "tasks/P08.json"
+    },
+    {
+      "id": "P09",
+      "title": "Cited story API and controlled composition",
+      "depends_on": [
+        "P07",
+        "P08"
+      ],
+      "path": "tasks/P09.json"
+    },
+    {
+      "id": "P10",
+      "title": "Founder story UI and evidence inspection",
+      "depends_on": [
+        "P09"
+      ],
+      "path": "tasks/P10.json"
+    },
+    {
+      "id": "P11",
+      "title": "Incremental ingestion and operability",
+      "depends_on": [
+        "P07",
+        "P09"
+      ],
+      "path": "tasks/P11.json"
+    },
+    {
+      "id": "P12",
+      "title": "All-company coverage and end-to-end acceptance",
+      "depends_on": [
+        "P05",
+        "P10",
+        "P11"
+      ],
+      "path": "tasks/P12.json"
+    },
+    {
+      "id": "P13",
+      "title": "Release, rollback and handoff",
+      "depends_on": [
+        "P12"
+      ],
+      "path": "tasks/P13.json"
+    }
+  ]
+}

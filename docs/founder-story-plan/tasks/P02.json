@@ -1,0 +1,55 @@
+{
+  "id": "P02",
+  "title": "Immutable acquisition and document parsing",
+  "status": "not_started",
+  "depends_on": [
+    "P01"
+  ],
+  "files": [
+    {
+      "path": "services/ingestion/apps/ingestion/services/article_extractor.py",
+      "operation": "modify_existing",
+      "change": "Preserve successful legacy extraction; route by media type and capture revisions before parsing."
+    },
+    {
+      "path": "services/ingestion/apps/ingestion/services/source_acquisition.py",
+      "operation": "create_proposed",
+      "change": "Bounded fetch, content addressing, SSRF/redirect protection, rights and private-scope enforcement."
+    },
+    {
+      "path": "services/ingestion/apps/ingestion/services/document_parser.py",
+      "operation": "create_proposed",
+      "change": "HTML/text/PDF/table parser with stable page/span locators; explicit OCR path for scanned pages."
+    },
+    {
+      "path": "services/ingestion/requirements.txt",
+      "operation": "modify_existing",
+      "change": "Pin compatible PDF and schema-validation dependencies after fixtures; OCR subprocess installation only if selected and tested."
+    },
+    {
+      "path": "infra/docker-compose.yml",
+      "operation": "modify_existing",
+      "change": "Persistent revision/blob volume and bounded resource settings; preserve all existing volumes."
+    },
+    {
+      "path": "services/ingestion/Dockerfile",
+      "operation": "modify_existing",
+      "change": "Only required parsing runtime dependencies, no browser automation stack by default."
+    }
+  ],
+  "steps": [
+    "Keep original authorized bytes plus immutable parsed text; preserve filename/media type and all document dates separately.",
+    "Use a filesystem-backed BlobStore interface on VPS initially; future object storage adapter without DB identity changes.",
+    "Detect scanned PDF; OCR confidence and page coordinates required. OCR uncertainty blocks exact claim verification.",
+    "Uploaded documents go through authenticated intake and same pipeline, not an alternate unvalidated import path."
+  ],
+  "tests": [
+    "Changed content at same URL creates revision; identical content replay deduplicates.",
+    "Network/OCR/parser failure does not blank last good text.",
+    "SSRF redirects, private IPs, oversized documents, compression bombs and tenant-crossing citations rejected."
+  ],
+  "completion_evidence": [
+    "HTML/PDF/scanned/table fixture report",
+    "revision persistence survives container recreation"
+  ]
+}

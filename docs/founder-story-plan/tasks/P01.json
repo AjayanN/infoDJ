@@ -1,0 +1,60 @@
+{
+  "id": "P01",
+  "title": "Stable subject identity and temporal evidence models",
+  "status": "not_started",
+  "depends_on": [
+    "P00"
+  ],
+  "files": [
+    {
+      "path": "services/ingestion/apps/history/__init__.py",
+      "operation": "create_proposed",
+      "change": "New bounded historical evidence domain."
+    },
+    {
+      "path": "services/ingestion/apps/history/apps.py",
+      "operation": "create_proposed",
+      "change": "Django app registration."
+    },
+    {
+      "path": "services/ingestion/apps/history/models.py",
+      "operation": "create_proposed",
+      "change": "ResearchSubject, identifiers/aliases/dated relations, HistoricalClaim, ClaimEvidence, ClaimReview, ClaimRelation, EpisodeClaim, EpisodeStory and registry models from architecture.json."
+    },
+    {
+      "path": "services/ingestion/apps/ingestion/models.py",
+      "operation": "modify_existing",
+      "change": "SourceRevision, EvidenceSpan, ExtractionRun; preserve SourceDocument and ArticleExtraction legacy access."
+    },
+    {
+      "path": "services/ingestion/apps/curation/models.py",
+      "operation": "modify_existing",
+      "change": "Nullable stable subject FK and temporal precision bridge on LifecycleEpisode; maintain save-time verification gates."
+    },
+    {
+      "path": "services/ingestion/apps/companies/models.py",
+      "operation": "modify_existing",
+      "change": "Nullable subject/claim links on existing projections; extend pricing uncertainty without rewriting old values."
+    },
+    {
+      "path": "services/ingestion/config/settings.py",
+      "operation": "modify_existing",
+      "change": "Register history; storage settings and feature flag default off."
+    }
+  ],
+  "steps": [
+    "Implement explicit enums and constraints, currency/units and source-relative date resolution; UNKNOWN dates remain null.",
+    "Use FK relationships, M:N citations and stable identity; avoid generic untyped entity soup. Keep JSONB values schema-validated.",
+    "Generate actual migration numbers from current graph, not guessed names. Break circular app dependencies with initial subject table and subsequent nullable links.",
+    "Add only additive migrations; no bulk network work inside migrations. Define indexes for subject/track/review/date and revision hashes."
+  ],
+  "tests": [
+    "Unique identifiers, cross-company product lineage and ambiguous alias cases.",
+    "DAY/MONTH/YEAR/RANGE uncertainty; no invented founding/inception anchors.",
+    "Claim revision lineage, multi-source conflict preservation and database constraints."
+  ],
+  "completion_evidence": [
+    "makemigrations --check clean after generated migrations",
+    "migration test on baseline backup with old readers still functioning"
+  ]
+}

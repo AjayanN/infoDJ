@@ -1,0 +1,56 @@
+{
+  "id": "P09",
+  "title": "Cited story API and controlled composition",
+  "status": "not_started",
+  "depends_on": [
+    "P07",
+    "P08"
+  ],
+  "files": [
+    {
+      "path": "services/ingestion/apps/history/services/story_builder.py",
+      "operation": "create_proposed",
+      "change": "Deterministic evidence bundle; optional bounded narrative paraphrase over reviewed inputs only."
+    },
+    {
+      "path": "services/ingestion/apps/history/api.py",
+      "operation": "create_proposed",
+      "change": "Versioned paginated subjects/episodes/story/evidence/coverage endpoints."
+    },
+    {
+      "path": "services/ingestion/apps/history/urls.py",
+      "operation": "create_proposed",
+      "change": "Internal URL registration."
+    },
+    {
+      "path": "services/ingestion/config/urls.py",
+      "operation": "modify_existing",
+      "change": "Include history routes."
+    },
+    {
+      "path": "services/main/backend/apps/accounts/api.py",
+      "operation": "modify_existing",
+      "change": "Authenticated public proxy; tenant-aware story and citation access."
+    },
+    {
+      "path": "services/main/backend/apps/accounts/urls.py",
+      "operation": "modify_existing",
+      "change": "New app routes; preserve existing founder-decision endpoint."
+    }
+  ],
+  "steps": [
+    "Every factual sentence carries claim IDs; quote locators resolve. Reject invented names/dates/numbers and causal statements.",
+    "Story cache keyed by subject/episode/input review revision/recipe and access scope; invalidate when claims change.",
+    "Expose factual history and founder experiment separately. No guaranteed outcomes or legal advice.",
+    "Use pagination and bounded payloads; avoid adding more logic to giant ingestion/api.py."
+  ],
+  "tests": [
+    "Sentence-level citation completeness and tenant-crossing denial.",
+    "Claim rejection invalidates prior story and removes it from new responses.",
+    "No-citation narrative fails closed; valid partial story retains useful reviewed facts."
+  ],
+  "completion_evidence": [
+    "OpenAPI/JSON response contracts and sample payloads",
+    "API integration tests with auth and resource budgets"
+  ]
+}

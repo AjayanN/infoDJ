@@ -1,0 +1,50 @@
+{
+  "id": "P06",
+  "title": "Episode assembly and domain projections",
+  "status": "not_started",
+  "depends_on": [
+    "P03"
+  ],
+  "files": [
+    {
+      "path": "services/ingestion/apps/history/services/episode_builder.py",
+      "operation": "create_proposed",
+      "change": "Group reviewed claims by stable product/phase, preserving chronological and causal distinctions."
+    },
+    {
+      "path": "services/ingestion/apps/history/services/projections.py",
+      "operation": "create_proposed",
+      "change": "Single owner for projecting claims into existing product/price/regulatory/leadership tables."
+    },
+    {
+      "path": "services/ingestion/apps/ingestion/services/product_pricing_history.py",
+      "operation": "modify_existing",
+      "change": "Read reviewed claims; preserve version/region/billing/tax/promotional semantics."
+    },
+    {
+      "path": "services/ingestion/apps/ingestion/services/evidence_ledger.py",
+      "operation": "modify_existing",
+      "change": "Explicit action/period dates, stable claim links and intentional review-state mapping."
+    },
+    {
+      "path": "services/ingestion/apps/ingestion/services/dashboard_quality.py",
+      "operation": "modify_existing",
+      "change": "Central eligibility compatibility bridge; keep date_conflicts holds."
+    }
+  ],
+  "steps": [
+    "Build a deterministic episode skeleton first; attach situation/actions/results/gaps with claim IDs.",
+    "Use inclusive date intervals for uncertain facts, not false ordering. Don't assume every domain track applies.",
+    "Prices across time require comparable units/terms; no undocumented inflation or currency conversion.",
+    "Replace per-feature duplicate writing paths with shared projection function, not an all-at-once refactor."
+  ],
+  "tests": [
+    "Apple incorporation cannot become product-validation chapter.",
+    "One source with multiple topics populates tracks without duplicate events.",
+    "Projection replay idempotent; price conflicts coexist at claim layer; old Company360 remains readable."
+  ],
+  "completion_evidence": [
+    "episode fixture snapshots",
+    "legacy-vs-new projection comparison with documented differences"
+  ]
+}

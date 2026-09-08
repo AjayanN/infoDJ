@@ -1,0 +1,56 @@
+{
+  "id": "P03",
+  "title": "Versioned multi-claim extraction and review",
+  "status": "not_started",
+  "depends_on": [
+    "P02"
+  ],
+  "files": [
+    {
+      "path": "services/ingestion/apps/history/schemas/claim-v1.schema.json",
+      "operation": "create_proposed",
+      "change": "Production extraction contract derived from contracts.json; strict structured types and provenance."
+    },
+    {
+      "path": "services/ingestion/apps/history/services/claim_extractor.py",
+      "operation": "create_proposed",
+      "change": "Bounded candidate extraction; optional configured LLM structured-output adapter, no automatic trusted status."
+    },
+    {
+      "path": "services/ingestion/apps/history/services/claim_validation.py",
+      "operation": "create_proposed",
+      "change": "Validate dates, quotes/locators, entity scope, units, source rights and schema."
+    },
+    {
+      "path": "services/ingestion/apps/history/services/claim_review.py",
+      "operation": "create_proposed",
+      "change": "Explicit publish/reject/dispute/resolve operations with append-only audit."
+    },
+    {
+      "path": "services/ingestion/apps/ingestion/services/lifecycle_timing.py",
+      "operation": "modify_existing",
+      "change": "Separate event-kind dates and product/company anchors; reuse tested parsing only."
+    },
+    {
+      "path": "services/ingestion/apps/ingestion/services/event_extractor.py",
+      "operation": "modify_existing",
+      "change": "Feed shared candidate pipeline; prevent legacy writer bypass."
+    }
+  ],
+  "steps": [
+    "Extract all relevant atomic facts from each document with track tags; never force one strategic event per article.",
+    "Save parser/model/prompt/schema versions, per-run budget and raw candidate response under controlled access.",
+    "Resolve relative dates against evidenced document date only; retain original temporal phrase. Multiple incompatible claims form conflicts.",
+    "Store source-attributed intent, reported result and analyst hypothesis as different types. Exact excerpt match plus evidence review required; schema-valid output alone is insufficient.",
+    "Run deterministic extraction for structured sources; LLM for narrative candidates only. Provider/model configured, not hard-coded or purchased."
+  ],
+  "tests": [
+    "A multi-topic release yields independently cited pricing, availability and distribution claims.",
+    "Reject fabricated quotations, wrong page, ambiguous dates, unsupported product assignment and prompt-injection instructions.",
+    "Replay with older/newer extractor does not erase review holds; explicit resolution retains alternatives."
+  ],
+  "completion_evidence": [
+    "all P00 evidence spans resolve",
+    "zero uncited published factual claims in golden fixtures"
+  ]
+}

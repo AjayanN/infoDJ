@@ -1,0 +1,56 @@
+{
+  "id": "P05",
+  "title": "Patent, legal and jurisdiction-specific connectors",
+  "status": "not_started",
+  "depends_on": [
+    "P04"
+  ],
+  "files": [
+    {
+      "path": "services/ingestion/apps/history/connectors/uspto.py",
+      "operation": "create_proposed",
+      "change": "ODP adapter after official schema and credential preflight."
+    },
+    {
+      "path": "services/ingestion/apps/history/connectors/epo.py",
+      "operation": "create_proposed",
+      "change": "OPS XML/OAuth adapter with patent-family deduplication."
+    },
+    {
+      "path": "services/ingestion/apps/history/connectors/courtlistener.py",
+      "operation": "create_proposed",
+      "change": "Read-only v4 opinions/dockets and available documents."
+    },
+    {
+      "path": "services/ingestion/apps/history/connectors/companies_house.py",
+      "operation": "create_proposed",
+      "change": "Conditional UK identity and filings."
+    },
+    {
+      "path": "services/ingestion/apps/history/connectors/openfda.py",
+      "operation": "create_proposed",
+      "change": "Conditional product-specific regulatory dataset adapter."
+    },
+    {
+      "path": "services/ingestion/apps/ingestion/services/regulatory_litigation.py",
+      "operation": "modify_existing",
+      "change": "Project reviewed legal/approval claims with jurisdiction/event kind; no inference of total compliance."
+    }
+  ],
+  "steps": [
+    "Treat API catalog in sources.json as researched choices, not tested credentials. Pin provider schema via checked-in sanitized fixtures and document actual entitlement.",
+    "Operator supplies keys and approves terms; lack of one connector blocks that provider only. Do not call paid PACER retrieval.",
+    "Patent assignee match is candidate identity; require direct evidence before linking to product. Keep application/publication/grant/priority distinct.",
+    "No API offers complete early hiring or marketing history; source these from authorized archives/interviews with explicit limitations.",
+    "Non-US/UK companies use official registry adapters only after jurisdiction-specific research; do not fabricate global coverage."
+  ],
+  "tests": [
+    "Patent family/application duplicate tests and ownership-change tests.",
+    "Court filing vs ruling vs resolution; approval vs adverse event; officer vs employee distinction.",
+    "Missing credentials surface specific dependency and upload/source alternative."
+  ],
+  "completion_evidence": [
+    "connector-specific contract and quota tests",
+    "coverage/access matrix; unimplemented/disabled providers explicitly marked"
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "id": "P12",
+  "title": "All-company coverage and end-to-end acceptance",
+  "status": "not_started",
+  "depends_on": [
+    "P05",
+    "P10",
+    "P11"
+  ],
+  "files": [
+    {
+      "path": "data/history-evaluation/coverage.json",
+      "operation": "create_proposed",
+      "change": "Per-company/product/phase/track evidence and missing-source dependencies; generated from DB."
+    },
+    {
+      "path": "data/history-evaluation/results.json",
+      "operation": "create_proposed",
+      "change": "Benchmark/run IDs, failures and exact artifacts; never manual green booleans."
+    },
+    {
+      "path": "BACKLOG.md",
+      "operation": "modify_existing",
+      "change": "Keep only truly unfinished items and unresolved dependencies."
+    }
+  ],
+  "steps": [
+    "Initial pilots are calibration, not scope reduction. Research all current companies; enumerate all user-requested tracks for chosen supported episodes.",
+    "Ready story requires dated, cited situation/action/outcome-or-explicit-unknown; target at least6 reviewed actions across3 relevant tracks for initial pilots, but never invent actions to meet quota. Incomplete story stays partial.",
+    "For each requested founder scenario, provide reviewed relevant case or precise missing coverage; do not call goal complete while critical supported scenarios remain empty.",
+    "A newly added private company must traverse identity/source/extraction/review/story with no code edits.",
+    "Record inaccessible/private/licensing-dependent history distinctly from extraction defects; resolve or explicitly obtain user acceptance of limitation before full-goal completion."
+  ],
+  "tests": [
+    "All P00 positive and negative cases; manual factual review of stories and references.",
+    "Same input/corpus gives stable selection; corpus update changes only affected stories.",
+    "Reject fake exact dates, uncited claims, unsupported causal links and one-case pattern labels."
+  ],
+  "completion_evidence": [
+    "company-by-company coverage audit",
+    "source-reviewed benchmark results",
+    "authenticated public visual verification"
+  ]
+}

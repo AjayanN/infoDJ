@@ -1,0 +1,38 @@
+{
+  "id": "P00",
+  "title": "Baseline, coverage audit and evaluation fixtures",
+  "status": "not_started",
+  "depends_on": [],
+  "files": [
+    {
+      "path": "services/ingestion/apps/ingestion/management/commands/audit_history_coverage.py",
+      "operation": "create_proposed",
+      "change": "Read-only report by subject/episode/track/date precision/review state; include provenance loss and conflict counts."
+    },
+    {
+      "path": "data/history-evaluation/cases.json",
+      "operation": "create_proposed",
+      "change": "Reviewed golden questions, expected/forbidden episodes, citation expectations and source locators; no invented facts."
+    },
+    {
+      "path": "BACKLOG.md",
+      "operation": "modify_existing",
+      "change": "Add this plan and actual unfinished acceptance work; remove completed entries only after proof."
+    }
+  ],
+  "steps": [
+    "Revalidate baseline commit, branch, dirty status, service health and migration graph. Respect VPS-only user override of root AGENTS.md WSL instruction.",
+    "Inventory all existing Company rows, products, source documents, extracted text, prices and regulatory records. Audit quality rather than equate nonzero table counts with coverage.",
+    "Create source-backed cases for early device, early rental workflow, and mature-company new-product launch; candidate research targets Apple I/II, Netflix initial rental/subscription and Microsoft Windows, not assumed-complete stories.",
+    "Capture rollback baseline: DB backup plus restore rehearsal in isolated database, persistent blob inventory and prior image digests. Do not expose secrets."
+  ],
+  "tests": [
+    "Audit is read-only and covers every configured company including private companies without CIK.",
+    "Golden cases include Apple formation-only rejection, Microsoft mature partnership rejection, Ford dispute and Netflix no-retention-proof."
+  ],
+  "completion_evidence": [
+    "coverage-before.json with company IDs/counts",
+    "golden cases with reviewed source passages",
+    "backup restore evidence, not merely backup exit code"
+  ]
+}

@@ -1,0 +1,210 @@
+{
+  "version": "1.0.0",
+  "researched_on": "2026-09-08",
+  "note": "Official docs checked where listed; no accounts, keys, paid requests or live credentialed connector tests performed during planning.",
+  "connectors": [
+    {
+      "id": "sec",
+      "priority": "core",
+      "docs": [
+        "https://www.sec.gov/search-filings/edgar-application-programming-interfaces",
+        "https://www.sec.gov/about/webmaster-frequently-asked-questions"
+      ],
+      "base": "https://data.sec.gov",
+      "routes": [
+        "/submissions/CIK{cik10}.json",
+        "/api/xbrl/companyfacts/CIK{cik10}.json"
+      ],
+      "purpose": "Filings, historical exhibits, operating context and financial period facts; follow older submissions files and accession document indexes.",
+      "access": "Public read API; identify operator with a real contact User-Agent. Global limiter below documented 10 requests/second maximum.",
+      "limits": "Not a complete pre-IPO archive. Filed date is not action date; financial period end is not filed date. Companyfacts does not replace reading exhibits.",
+      "reuse": [
+        "sec_edgar_client.py",
+        "sec_companyfacts_client.py",
+        "sec_profile_builder.py"
+      ],
+      "verified": "official docs reviewed 2026-09-08; credentialed execution not tested"
+    },
+    {
+      "id": "official_web",
+      "priority": "core",
+      "docs": [],
+      "base": null,
+      "routes": [
+        "Company-specific newsrooms, history pages, catalogs, pricing pages, RSS/sitemaps, official investor archives"
+      ],
+      "purpose": "Product features, pricing, marketing messages, hiring announcements, launch terms and first-party retrospective accounts.",
+      "access": "Per-domain allowlist, robots/terms review, conditional requests, bounded fetches; no assumed universal API.",
+      "limits": "Official does not mean independently verified. Publicity is not retention evidence; claims of success must remain attributed.",
+      "reuse": [
+        "article_extractor.py",
+        "official_product_price.py",
+        "source_router.py"
+      ],
+      "verified": "connector design; domain-specific validation required"
+    },
+    {
+      "id": "uploads",
+      "priority": "core",
+      "docs": [],
+      "base": null,
+      "routes": [
+        "Authenticated PDF/HTML/text/image upload and source registration"
+      ],
+      "purpose": "Historic catalogs, scans, company-provided records and authorized licensed documents.",
+      "access": "Tenant isolation, provenance/rights declaration, size/type limits, malware screening and sandboxed parsing.",
+      "limits": "Uploader assertions not automatic verification. Private documents never enter other tenants' stories.",
+      "reuse": [
+        "ArticleExtraction",
+        "SourceDocument"
+      ],
+      "verified": "new implementation required"
+    },
+    {
+      "id": "uspto",
+      "priority": "phase_2_us_ip",
+      "docs": [
+        "https://data.uspto.gov/apis",
+        "https://www.uspto.gov/about-us/news-updates/uspto-open-data-portal-require-registration-access-beginning-june-18-2026",
+        "https://www.uspto.gov/patents/search/patent-public-search"
+      ],
+      "base": "https://api.uspto.gov",
+      "routes": [
+        "Select current Patent File Wrapper and bulk-data endpoints from official catalog/OpenAPI during connector implementation; do not guess route or pin legacy beta API."
+      ],
+      "purpose": "Applications, publications, grants and prosecution records; map identifiers, assignees and explicit product references.",
+      "access": "USPTO.gov registration and API key; user completes account/identity steps. Catalog page did not expose schema in this research tool.",
+      "limits": "Do not assume full 19th/20th-century coverage or infer product linkage from assignee alone. Filing, priority, publication and grant are distinct.",
+      "reuse": [],
+      "verified": "registration policy verified; exact credentialed contract remains a preflight gate"
+    },
+    {
+      "id": "epo_ops",
+      "priority": "phase_2_international_ip",
+      "docs": [
+        "https://www.epo.org/en/searching-for-patents/data/web-services/ops"
+      ],
+      "base": "https://ops.epo.org",
+      "routes": [
+        "Import current official OPS OpenAPI; bibliographic, family and legal-event resources"
+      ],
+      "purpose": "International patent family, bibliographic and legal-event cross-checks.",
+      "access": "Registration and OAuth credentials. Official free tier lists up to 4 GB/week; quota and license recheck before enabling.",
+      "limits": "Coverage varies by authority. Legal event does not prove current enforceability; do not offer legal conclusions.",
+      "reuse": [],
+      "verified": "official capability/access docs reviewed; live credentials not tested"
+    },
+    {
+      "id": "courtlistener",
+      "priority": "phase_2_us_litigation",
+      "docs": [
+        "https://www.courtlistener.com/help/api/rest/"
+      ],
+      "base": "https://www.courtlistener.com/api/rest/v4/",
+      "routes": [
+        "search/",
+        "clusters/",
+        "opinions/",
+        "dockets/"
+      ],
+      "purpose": "Court opinions, dockets and available RECAP documents linked to relevant products and parties.",
+      "access": "Token authentication for production. Current docs default 5/minute, 50/hour, 125/day; use account limits and usage API. No automatic paid PACER requests.",
+      "limits": "Incomplete jurisdictions/dockets and missing documents. Case filed, ruling and resolution dates differ; absence is not compliance.",
+      "reuse": [
+        "regulatory_litigation.py"
+      ],
+      "verified": "official v4.7 docs reviewed; permissioned endpoints require preflight"
+    },
+    {
+      "id": "wayback_cdx",
+      "priority": "phase_1_archive",
+      "docs": [
+        "https://github.com/internetarchive/wayback/tree/master/wayback-cdx-server"
+      ],
+      "base": "https://web.archive.org",
+      "routes": [
+        "/cdx/search/cdx?url={encoded_url}&output=json"
+      ],
+      "purpose": "Discover dated snapshots of historical official pricing, marketing and product pages.",
+      "access": "Low request rate, cache, backoff, availability check and rights assessment. No SLA assumed.",
+      "limits": "Capture date proves observation, not launch/effective date. Many pages/assets unavailable; archive timestamp alone never exactifies a business event.",
+      "reuse": [
+        "article_extractor.py"
+      ],
+      "verified": "official repository documentation reviewed; live archive availability not tested"
+    },
+    {
+      "id": "companies_house",
+      "priority": "conditional_uk_companies",
+      "docs": [
+        "https://developer.company-information.service.gov.uk/overview",
+        "https://developer.company-information.service.gov.uk/how-to-create-an-application"
+      ],
+      "base": "https://api.company-information.service.gov.uk",
+      "routes": [
+        "/company/{company_number}",
+        "/company/{company_number}/filing-history",
+        "/company/{company_number}/officers"
+      ],
+      "purpose": "UK legal identity, filings and officer history for newly added companies.",
+      "access": "User-provided API key; read-only client; confirm API spec/rate limits before enabling.",
+      "limits": "Legal incorporation is not product inception or operational maturity. Registered officers are not an employee census.",
+      "reuse": [],
+      "verified": "official overview/account docs reviewed"
+    },
+    {
+      "id": "openfda",
+      "priority": "conditional_healthcare",
+      "docs": [
+        "https://open.fda.gov/apis/",
+        "https://open.fda.gov/apis/authentication/"
+      ],
+      "base": "https://api.fda.gov",
+      "routes": [
+        "Choose dataset-specific drug/device approval, clearance, labeling and recall resources from current catalog; don't use adverse-event API as an approval database."
+      ],
+      "purpose": "US healthcare product regulatory milestones with authoritative identifiers.",
+      "access": "Plan for user API key. Authentication page lists keyed and unkeyed quotas; verify actual account contract. Redact api_key from URL logs.",
+      "limits": "Dataset/period coverage differs. Regulatory approval is not product-market fit or a complete compliance assessment.",
+      "reuse": [
+        "regulatory_litigation.py"
+      ],
+      "verified": "official overview/auth docs reviewed; dataset selection pending"
+    },
+    {
+      "id": "wikidata",
+      "priority": "discovery_only",
+      "docs": [
+        "https://www.wikidata.org/wiki/Wikidata:Data_access"
+      ],
+      "base": "https://www.wikidata.org/w/api.php",
+      "routes": [
+        "Wikibase entity/search actions; bounded queries"
+      ],
+      "purpose": "Identifiers, aliases, predecessor discovery and source leads.",
+      "access": "CC0 structured data; courtesy limiter and descriptive User-Agent.",
+      "limits": "Community data is not primary proof of dates, employment, product ownership or stage.",
+      "reuse": [
+        "wikidata_client.py",
+        "wikipedia_client.py"
+      ],
+      "verified": "official access docs reviewed"
+    },
+    {
+      "id": "forums_news",
+      "priority": "discovery_only",
+      "docs": [],
+      "base": null,
+      "routes": [
+        "Existing gdelt_client; explicitly authorized search/forum APIs only"
+      ],
+      "purpose": "Find leads, counterexamples and original documents.",
+      "access": "Provider terms, API approval and quotas required; no paid service or scrape bypass authorized by this plan.",
+      "limits": "Search snippets are not evidence. Preserve author/date and trace source. No LinkedIn scraping, employee inference or unrestricted Reddit crawling.",
+      "reuse": [
+        "gdelt_client.py"
+      ],
+      "verified": "existing discovery clients inspected by inventory; new provider access not verified"
+    }
+  ]
+}

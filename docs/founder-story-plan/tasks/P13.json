@@ -1,0 +1,36 @@
+{
+  "id": "P13",
+  "title": "Release, rollback and handoff",
+  "status": "not_started",
+  "depends_on": [
+    "P12"
+  ],
+  "files": [
+    {
+      "path": "infra/README.md",
+      "operation": "modify_existing",
+      "change": "Operational runbook, rollback and bounded backfill commands; no secrets."
+    },
+    {
+      "path": "docs/history-release.txt",
+      "operation": "create_proposed",
+      "change": "Release manifest, schema versions, image digests, tests, limitations and restore instructions."
+    }
+  ],
+  "steps": [
+    "Feature branch from current authorized state; don't overwrite existing branch work. Additive migrations with restore rehearsal, then deploy canary flag and compatible readers.",
+    "Run ingestion and main backend focused suites; frontend npm test and production build via Docker. Build only changed services.",
+    "Deploy with docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml up -d --no-deps <changed services>; no down -v, prune or --remove-orphans.",
+    "Public health https://ajayan.tech/infodj/ plus authenticated workflow check; record previous image digests and keep additive schema on app rollback.",
+    "Confirm remote target and current user authorization before external push/main update/PR. No model may claim a PR or push without a verified URL/SHA."
+  ],
+  "tests": [
+    "Rollback to compatible previous app image while retaining new evidence; no reverse destructive migration.",
+    "Restore backup in isolated environment; missing provider credentials reported accurately."
+  ],
+  "completion_evidence": [
+    "release SHA and actual PR URL if authorized",
+    "public health/auth screenshots",
+    "all acceptance IDs proven or clearly unresolved; do not mark full goal complete otherwise"
+  ]
+}

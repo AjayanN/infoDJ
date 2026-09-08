@@ -1,0 +1,52 @@
+{
+  "id": "P08",
+  "title": "Founder situation and decision-specific matching",
+  "status": "not_started",
+  "depends_on": [
+    "P06"
+  ],
+  "files": [
+    {
+      "path": "services/main/backend/apps/accounts/models.py",
+      "operation": "modify_existing",
+      "change": "Reuse customer/model/objective/constraints; add nullable product phase, company-vs-product scope, anchor type, team/capital bands without invented defaults."
+    },
+    {
+      "path": "services/main/backend/apps/accounts/api.py",
+      "operation": "modify_existing",
+      "change": "Validate/serialize structured founder context; keep old clients supported."
+    },
+    {
+      "path": "services/main/backend/apps/accounts/founder_playbooks.py",
+      "operation": "modify_existing",
+      "change": "Decision taxonomy and sector-specific follow-up questions; avoid generic question as the action."
+    },
+    {
+      "path": "services/main/backend/apps/accounts/founder_decision.py",
+      "operation": "modify_existing",
+      "change": "Replace event-level age-only selection and modulo distribution with episode relevance and explicit rationale."
+    },
+    {
+      "path": "services/main/backend/apps/accounts/history_matching.py",
+      "operation": "create_proposed",
+      "change": "Deterministic gates/ranking and unknown/difference explanations."
+    }
+  ],
+  "steps": [
+    "Ask progressively, not a long form; unknowns explicit. Product age uses named sourced anchor or a transparent interval, never parent founding by default.",
+    "Require decision-relevant claim types; no IPO-as-demand proof or product launch-as-retention proof.",
+    "Return case_study, supported_pattern, partial and insufficient semantics with known differences. A case can be useful without claiming a pattern.",
+    "Don't equate two company IDs with a repeated pattern; verify shared action/context and independent source families.",
+    "Historical relevance not penalized just for age; freshness tracked for live regulatory conditions separately."
+  ],
+  "tests": [
+    "Changing objective changes ranked episodes or explains gap.",
+    "Same sector but different customer/business model loses rank or fails applicable gates.",
+    "Mature-company early product can match new product context but not masquerade as a new company.",
+    "Zero/one/multiple cases render honestly; no empty directions caused by arbitrary list slicing."
+  ],
+  "completion_evidence": [
+    "golden matching benchmark including negative cases",
+    "backward-compatible context API tests"
+  ]
+}

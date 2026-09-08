@@ -1,0 +1,360 @@
+{
+  "version": "1.0.0",
+  "status": "proposed_contracts_not_live_endpoints",
+  "temporal_rules": [
+    "DAY => equal min/max; MONTH/YEAR/QUARTER => calendar bounds and original expression; RANGE => both ordered bounds; UNKNOWN => null bounds.",
+    "Uncertain bounds cannot be displayed as exact dates. known_by/captured_at is not occurred_at.",
+    "Price observed_date and effective interval distinct; never carry a observed price backwards without evidence.",
+    "Company registration, operating inception, prototype, first sale and first repeat use are separately typed anchors."
+  ],
+  "candidate_json_schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "HistoryCandidateV1",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "schema_version",
+      "subject_id",
+      "track",
+      "statement",
+      "claim_kind",
+      "event_kind",
+      "time",
+      "value",
+      "evidence_span_ids"
+    ],
+    "properties": {
+      "schema_version": {
+        "const": "1.0"
+      },
+      "subject_id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "track": {
+        "enum": [
+          "product",
+          "customers",
+          "pricing",
+          "team",
+          "marketing_distribution",
+          "intellectual_property",
+          "legal_regulatory",
+          "operations_finance"
+        ]
+      },
+      "statement": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4000
+      },
+      "claim_kind": {
+        "enum": [
+          "documented_action",
+          "source_reported_intent",
+          "source_reported_outcome",
+          "measurement",
+          "source_attributed_claim"
+        ]
+      },
+      "event_kind": {
+        "type": "string",
+        "minLength": 1
+      },
+      "time": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "precision",
+          "date_min",
+          "date_max",
+          "original_expression"
+        ],
+        "properties": {
+          "precision": {
+            "enum": [
+              "DAY",
+              "MONTH",
+              "QUARTER",
+              "YEAR",
+              "RANGE",
+              "UNKNOWN"
+            ]
+          },
+          "date_min": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "date_max": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "original_expression": {
+            "type": "string"
+          }
+        }
+      },
+      "value": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "text"
+            ],
+            "properties": {
+              "kind": {
+                "const": "text"
+              },
+              "text": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "amount",
+              "currency",
+              "unit",
+              "geography",
+              "terms"
+            ],
+            "properties": {
+              "kind": {
+                "const": "money"
+              },
+              "amount": {
+                "type": "string",
+                "pattern": "^-?[0-9]+(\\.[0-9]+)?$"
+              },
+              "currency": {
+                "type": "string",
+                "pattern": "^[A-Z]{3}$"
+              },
+              "unit": {
+                "type": "string"
+              },
+              "geography": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "terms": {
+                "type": "object",
+                "properties": {
+                  "billing_period": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "tax_included": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "shipping_included": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "promotional": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "amount",
+              "unit",
+              "population_scope"
+            ],
+            "properties": {
+              "kind": {
+                "const": "quantity"
+              },
+              "amount": {
+                "type": "string",
+                "pattern": "^-?[0-9]+(\\.[0-9]+)?$"
+              },
+              "unit": {
+                "type": "string"
+              },
+              "population_scope": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "evidence_span_ids": {
+        "type": "array",
+        "minItems": 1,
+        "uniqueItems": true,
+        "items": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  },
+  "semantic_validation": [
+    "JSON Schema is necessary, not sufficient: validate date bound consistency, units, subject association, exact source span existence, quote entailment, rights and authorizations.",
+    "Review state cannot be supplied by extractor. API/import service controls it.",
+    "Patent and regulatory event_kind use registered enum values; unknown kind stays candidate pending schema review.",
+    "LLM-generated source IDs must belong to provided input revision spans; reject fabricated or unrelated IDs."
+  ],
+  "endpoints": [
+    {
+      "method": "GET",
+      "path": "/history/v1/subjects",
+      "owner": "ingestion history API",
+      "contract": "Cursor-paginated authorized subjects; filter company/product/type. Stable UUIDs."
+    },
+    {
+      "method": "GET",
+      "path": "/history/v1/subjects/{id}/episodes",
+      "owner": "ingestion history API",
+      "contract": "Phase/date precision/coverage with cited episode identity; no full blob inline."
+    },
+    {
+      "method": "GET",
+      "path": "/history/v1/episodes/{id}/story",
+      "owner": "ingestion history API",
+      "contract": "Structured chapters, claim refs, sources, tracks, explicit gaps and recipe/input hash."
+    },
+    {
+      "method": "GET",
+      "path": "/history/v1/claims/{id}/evidence",
+      "owner": "ingestion history API",
+      "contract": "Authorized revision metadata, excerpt and locator; signed/authorized file route if permitted."
+    },
+    {
+      "method": "GET",
+      "path": "/history/v1/coverage",
+      "owner": "staff or scoped client",
+      "contract": "Company/subject/episode/track status and counts; distinguish researched_missing vs not_researched."
+    },
+    {
+      "method": "POST",
+      "path": "/api/app/history/documents",
+      "owner": "main backend authenticated intake",
+      "contract": "Authorized source registration/upload with rights/scope;202 job ID. No public arbitrary URL fetch."
+    },
+    {
+      "method": "POST",
+      "path": "/api/app/founder-stories",
+      "owner": "main backend",
+      "contract": "Validated founder context -> ranked episode references, matched_on/differs_on/unknowns, decision types; no unbounded background work."
+    },
+    {
+      "method": "GET",
+      "path": "/api/app/history/stories/{episode_id}",
+      "owner": "main backend proxy",
+      "contract": "Tenant-aware public-app view of internal story; compatible public URL routing."
+    }
+  ],
+  "story_shape": {
+    "api_version": "1",
+    "episode_id": "<UUID>",
+    "subject": {
+      "id": "<UUID>",
+      "name": "<verified product>",
+      "scope": "PRODUCT",
+      "company_name": "<owner at episode time>"
+    },
+    "status": "partial",
+    "comparison_kind": "case_study",
+    "match": {
+      "matched_on": [
+        "<supported overlap>"
+      ],
+      "differs_on": [
+        "<material difference>"
+      ],
+      "unknown_dimensions": [
+        "<unanswered input>"
+      ]
+    },
+    "chapters": [
+      {
+        "key": "actions",
+        "items": [
+          {
+            "text": "<fact derived from reviewed claims>",
+            "claim_ids": [
+              "<UUID>"
+            ],
+            "causal_claim": false
+          }
+        ]
+      }
+    ],
+    "tracks": [
+      {
+        "key": "pricing",
+        "coverage": "reviewed",
+        "claim_ids": [
+          "<UUID>"
+        ]
+      },
+      {
+        "key": "team",
+        "coverage": "not_researched",
+        "claim_ids": []
+      }
+    ],
+    "experiment": {
+      "claim_type": "founder_hypothesis",
+      "action": "<specific test>",
+      "assumptions": [
+        "<assumption>"
+      ],
+      "success_measure": "<user-context metric, not historical fact>",
+      "supporting_claim_ids": [
+        "<UUID>"
+      ]
+    },
+    "gaps": [
+      {
+        "track": "team",
+        "status": "not_researched",
+        "reason": "<specific missing evidence>",
+        "next_source": "<authorized research target>"
+      }
+    ],
+    "recipe_version": "1",
+    "input_evidence_hash": "<sha256>"
+  },
+  "compatibility": [
+    "New v1 story endpoints coexist with current founder-decision and Company360.",
+    "Do not change legacy evidence_status union without coordinated backend/frontend contract tests.",
+    "Use explicit case_study vs supported_pattern; never label single fact observed_pattern.",
+    "Persisted schema migration versions, extraction schema versions and public API versions are separate."
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "id": "P11",
+  "title": "Incremental ingestion and operability",
+  "status": "not_started",
+  "depends_on": [
+    "P07",
+    "P09"
+  ],
+  "files": [
+    {
+      "path": "services/ingestion/apps/ingestion/management/commands/run_ingestion_api_with_scheduler.py",
+      "operation": "modify_existing",
+      "change": "Separate health serving from bounded historical work; preserve established daily schedule initially."
+    },
+    {
+      "path": "services/ingestion/apps/ingestion/management/commands/scheduled_daily_update.py",
+      "operation": "modify_existing",
+      "change": "Subject registry enumeration, resumable per-provider checkpoints and stale-source checks."
+    },
+    {
+      "path": "services/ingestion/apps/ingestion/management/commands/refresh_history.py",
+      "operation": "create_proposed",
+      "change": "Explicit bounded refresh/backfill modes with --company and --dry-run."
+    },
+    {
+      "path": "infra/docker-compose.vps.yml",
+      "operation": "modify_existing",
+      "change": "Resource constraints verified against VPS capacity; add worker only if load evidence requires it."
+    },
+    {
+      "path": "services/ingestion/config/settings.py",
+      "operation": "modify_existing",
+      "change": "Budgets, storage, timeouts, provider enable flags; secret refs via env."
+    }
+  ],
+  "steps": [
+    "Daily discovery for active sources; configurable slower archival scans; re-extract only changed bytes or explicit schema/model upgrade.",
+    "One scheduler lease per job; retry with jitter; quarantine repeated failures, never infinite retry loops.",
+    "Default worker concurrency1, bounded memory/PDF pages, model-token budget per run; configure actual budgets after P00 measurements.",
+    "Metrics expose backlog, coverage, failures and budget exhaustion. API availability must not depend on running research jobs."
+  ],
+  "tests": [
+    "Process kill/resume, API 429/outage, credential expiry, storage-full and duplicate-scheduler scenarios.",
+    "New company picked up without editing source code; unchanged documents not recharged for LLM extraction.",
+    "Health remains available during bounded backfill."
+  ],
+  "completion_evidence": [
+    "fault injection report",
+    "load test and measured safe deployment limits"
+  ]
+}

@@ -20,6 +20,13 @@ This file is the single register for unfinished product, data, and operational w
 
 ## Active
 
+### Product-episode founder stories and reusable historical ingestion
+
+- **Outcome:** founders learn connected product-building histories across product, customers, pricing, team, marketing, IP, legal and operations, matched to their situation and immediate decision.
+- **Plan:** docs/founder-story-plan/START_HERE.txt; machine-readable architecture, source catalog, contracts, 14 task files and 16 acceptance gates.
+- **Acceptance:** all acceptance.json gates have source, runtime and visual evidence; old and newly added companies use the same pipeline; no pilot-only completion or fabricated history.
+- **Status:** comprehensive planning completed; implementation tasks have not started. Existing historical evidence work is the baseline, not proof these new gates pass.
+
 ### Historical lifecycle evidence — all companies
 
 - **Outcome:** founders receive only historical, stage-matched comparable actions across every company in the InfoDJ universe.

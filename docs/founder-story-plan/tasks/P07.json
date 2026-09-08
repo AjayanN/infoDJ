@@ -1,0 +1,46 @@
+{
+  "id": "P07",
+  "title": "Reversible historical corpus backfill",
+  "status": "not_started",
+  "depends_on": [
+    "P06",
+    "P04"
+  ],
+  "files": [
+    {
+      "path": "services/ingestion/apps/ingestion/management/commands/backfill_history_claims.py",
+      "operation": "create_proposed",
+      "change": "Resumable --company/--batch-size/--dry-run/--checkpoint importer, no network migration."
+    },
+    {
+      "path": "services/ingestion/apps/ingestion/management/commands/import_historical_founder_events.py",
+      "operation": "modify_existing",
+      "change": "Bridge legacy imports into claims; preserve Ford sticky conflicts and explicit review."
+    },
+    {
+      "path": "services/ingestion/apps/ingestion/management/commands/import_historical_lifecycle_episodes.py",
+      "operation": "modify_existing",
+      "change": "Resolve stable subjects and preserve milestone metadata."
+    },
+    {
+      "path": "services/ingestion/apps/ingestion/management/commands/import_founding_anchors.py",
+      "operation": "modify_existing",
+      "change": "Anchor type and precision provenance, no legal/operating conflation."
+    }
+  ],
+  "steps": [
+    "Record original IDs and source values in mapping report; retain original tables and blobs.",
+    "Import legacy review status as evidence to revalidate, not automatic proof of a complete story.",
+    "Re-extract original documents where available; legacy snippets without full source remain limited candidates.",
+    "Backfill all existing companies in bounded batches; add an unseen company fixture to prove generic path."
+  ],
+  "tests": [
+    "Interrupt/resume equals uninterrupted result; replay stable IDs/counts.",
+    "Old API continues before/after backfill; no data deletion; Ford hold preserved.",
+    "Missing source is recorded, not silently approved."
+  ],
+  "completion_evidence": [
+    "coverage-after.json compared with P00",
+    "mapping IDs/counts and restore rehearsal"
+  ]
+}

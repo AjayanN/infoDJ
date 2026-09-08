@@ -1,0 +1,60 @@
+{
+  "id": "P04",
+  "title": "Staff source registry and core connectors",
+  "status": "not_started",
+  "depends_on": [
+    "P02"
+  ],
+  "files": [
+    {
+      "path": "services/ingestion/apps/history/admin.py",
+      "operation": "create_proposed",
+      "change": "Staff CRUD source/subject mappings, credential references, coverage and review queues."
+    },
+    {
+      "path": "services/ingestion/apps/history/connectors/base.py",
+      "operation": "create_proposed",
+      "change": "Small discover/fetch/normalize interface with provider metadata and checkpoints."
+    },
+    {
+      "path": "services/ingestion/apps/ingestion/services/sec_edgar_client.py",
+      "operation": "modify_existing",
+      "change": "Reuse submissions/full-history/exhibit retrieval; honor issuer identity and global limits."
+    },
+    {
+      "path": "services/ingestion/apps/ingestion/services/sec_companyfacts_client.py",
+      "operation": "modify_existing",
+      "change": "Keep concept/period/accession context; no action date from filed date."
+    },
+    {
+      "path": "services/ingestion/apps/ingestion/services/source_router.py",
+      "operation": "modify_existing",
+      "change": "Dynamic clock, unknown-date handling, pre-public and product-specific routes."
+    },
+    {
+      "path": "services/ingestion/apps/history/connectors/official_web.py",
+      "operation": "create_proposed",
+      "change": "Approved-domain newsroom/catalog/RSS connector."
+    },
+    {
+      "path": "services/ingestion/apps/history/connectors/wayback.py",
+      "operation": "create_proposed",
+      "change": "CDX discovery; capture metadata separate from effective date."
+    }
+  ],
+  "steps": [
+    "Import existing SOURCE_REGISTRY.md links into staff-editable SubjectSource records through reviewed importer; retain readable JSON export.",
+    "Keep SEC/official-web/user-upload as initial guaranteed paths; archive outages yield gaps, not failed public pages.",
+    "Every connector declares coverage, quotas, license/access, secret references and retrieval provenance.",
+    "No secret values in repository, admin exports, URLs or logs."
+  ],
+  "tests": [
+    "CIK with unknown IPO still schedules pre-public research; advancing year changes routes without code edits.",
+    "Pagination, 429/Retry-After, 304, credential failure and cursor restart fixtures.",
+    "Registry can onboard an unseen private company without code changes."
+  ],
+  "completion_evidence": [
+    "core connector fixture tests",
+    "one approved low-volume live smoke per enabled provider"
+  ]
+}

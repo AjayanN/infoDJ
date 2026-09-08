@@ -1,0 +1,119 @@
+{
+  "version": "1.0.0",
+  "status": "planning_complete_implementation_not_started",
+  "implementation_baseline": "8b284fa4a40af2c217e7405af78cbbd47f142351",
+  "task_evidence": [
+    {
+      "id": "P00",
+      "status": "not_started",
+      "commits": [],
+      "test_runs": [],
+      "artifacts": [],
+      "blockers": []
+    },
+    {
+      "id": "P01",
+      "status": "not_started",
+      "commits": [],
+      "test_runs": [],
+      "artifacts": [],
+      "blockers": []
+    },
+    {
+      "id": "P02",
+      "status": "not_started",
+      "commits": [],
+      "test_runs": [],
+      "artifacts": [],
+      "blockers": []
+    },
+    {
+      "id": "P03",
+      "status": "not_started",
+      "commits": [],
+      "test_runs": [],
+      "artifacts": [],
+      "blockers": []
+    },
+    {
+      "id": "P04",
+      "status": "not_started",
+      "commits": [],
+      "test_runs": [],
+      "artifacts": [],
+      "blockers": []
+    },
+    {
+      "id": "P05",
+      "status": "not_started",
+      "commits": [],
+      "test_runs": [],
+      "artifacts": [],
+      "blockers": []
+    },
+    {
+      "id": "P06",
+      "status": "not_started",
+      "commits": [],
+      "test_runs": [],
+      "artifacts": [],
+      "blockers": []
+    },
+    {
+      "id": "P07",
+      "status": "not_started",
+      "commits": [],
+      "test_runs": [],
+      "artifacts": [],
+      "blockers": []
+    },
+    {
+      "id": "P08",
+      "status": "not_started",
+      "commits": [],
+      "test_runs": [],
+      "artifacts": [],
+      "blockers": []
+    },
+    {
+      "id": "P09",
+      "status": "not_started",
+      "commits": [],
+      "test_runs": [],
+      "artifacts": [],
+      "blockers": []
+    },
+    {
+      "id": "P10",
+      "status": "not_started",
+      "commits": [],
+      "test_runs": [],
+      "artifacts": [],
+      "blockers": []
+    },
+    {
+      "id": "P11",
+      "status": "not_started",
+      "commits": [],
+      "test_runs": [],
+      "artifacts": [],
+      "blockers": []
+    },
+    {
+      "id": "P12",
+      "status": "not_started",
+      "commits": [],
+      "test_runs": [],
+      "artifacts": [],
+      "blockers": []
+    },
+    {
+      "id": "P13",
+      "status": "not_started",
+      "commits": [],
+      "test_runs": [],
+      "artifacts": [],
+      "blockers": []
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "id": "P10",
+  "title": "Founder story UI and evidence inspection",
+  "status": "not_started",
+  "depends_on": [
+    "P09"
+  ],
+  "files": [
+    {
+      "path": "services/main/frontend/src/app/founder-story/founder-story.component.ts",
+      "operation": "create_proposed",
+      "change": "Focused story component with typed view model."
+    },
+    {
+      "path": "services/main/frontend/src/app/founder-story/founder-story.component.html",
+      "operation": "create_proposed",
+      "change": "Situation, action timeline, outcomes, matches/differences and experiment."
+    },
+    {
+      "path": "services/main/frontend/src/app/founder-story/founder-story.component.css",
+      "operation": "create_proposed",
+      "change": "Responsive readable chapters and expandable tracks; no scroll-overlap animation."
+    },
+    {
+      "path": "services/main/frontend/src/main.ts",
+      "operation": "modify_existing",
+      "change": "Integrate component and progressive context; preserve auth/navigation."
+    },
+    {
+      "path": "services/main/frontend/src/app.component.html",
+      "operation": "modify_existing",
+      "change": "Replace generic focus narrative section with story component, not login redesign."
+    },
+    {
+      "path": "services/main/frontend/src/app/services/infodj-api.service.ts",
+      "operation": "modify_existing",
+      "change": "Typed v1 endpoints, partial/case/pattern states and provenance."
+    },
+    {
+      "path": "services/main/frontend/src/styles.css",
+      "operation": "modify_existing",
+      "change": "Only necessary shared styles."
+    }
+  ],
+  "steps": [
+    "Source drawer shows original document, page/passage, date semantics and review state.",
+    "Tracks include pricing/team/marketing/IP/legal even when research is incomplete; no fake complete timeline.",
+    "Label contemporary context vs historical choices. A founder gets a concrete experiment with assumptions and success measure.",
+    "Separate requested future CSS login restoration from this goal; do not redesign login during story implementation."
+  ],
+  "tests": [
+    "Real rendered tests at 360/390px mobile and 1366px desktop, keyboard and reduced motion.",
+    "Authenticated screenshot review of 0/1/multiple cases, long text, missing dates and disputed evidence.",
+    "Verify public deployment, not localhost-only behavior; do not bypass auth for screenshot."
+  ],
+  "completion_evidence": [
+    "mobile/desktop screenshots with test account approved by user",
+    "18 baseline frontend tests plus new interaction/rendering tests"
+  ]
+}

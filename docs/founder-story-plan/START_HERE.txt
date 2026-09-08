@@ -1,0 +1,96 @@
+InfoDJ product-episode intelligence: implementation handoff
+Plan version 1.0.0 | Prepared 2026-09-08 | PLANNING ONLY
+
+Read order
+1. This file.
+2. architecture.json and contracts.json.
+3. sources.json and acceptance.json.
+4. work-items.json, then only the next dependency-ready tasks/Pxx.json.
+5. progress.json for verified execution evidence. All tasks initially NOT STARTED.
+
+Goal
+Replace generic company-date recommendations with source-backed product-building stories:
+situation, customer problem, product decisions, pricing, team, marketing/distribution,
+patents, legal/regulatory actions, operations/finance, outcomes and founder experiments.
+Cover existing and newly added companies through the same ingestion architecture.
+No product can know every private historical action; explicitly distinguish missing
+research, inaccessible evidence, not applicable and verified absence.
+
+Repository baseline
+VPS /opt/infodj, branch feat/historical-lifecycle-pipeline,
+commit 8b284fa4a40af2c217e7405af78cbbd47f142351. Revalidate before edits.
+SSH as infodj, never root, never WSL. The root AGENTS.md WSL instruction is overridden
+by the user's explicit VPS-only instruction.
+Windows connection:
+ssh -i "C:\Users\famei\.ssh\infodj_hostinger" -o BatchMode=yes infodj@2.25.110.56
+Public app: https://ajayan.tech/infodj/
+Compose: docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml
+
+Architecture decisions
+Keep PostgreSQL16. Add a bounded history Django app; reuse companies/curation/ingestion
+and their product, pricing, regulatory and leadership tables. Do not replace the DB,
+create one table per company, or let an LLM change schemas at ingestion time.
+Use immutable source revisions and atomic, cited, reviewed claims. Domain tables and
+story narratives are projections. Preserve all original evidence and review decisions.
+Use stable product identity, dated ownership and distinct company/product phases.
+A founding date is context, never proof of customer validation.
+Use deterministic validation, extraction for structured data, and optional configured
+LLM extraction for narrative candidates. LLM output cannot publish or verify itself.
+Do not choose a new paid LLM/API provider or create credentials without authorization.
+
+Source strategy
+Start with existing documents, official web, SEC and authorized uploads. Add archive
+discovery and IP/legal connectors as coverage needs and credentials permit.
+sources.json records official docs reviewed, limitations and unverified live access.
+No universal API supplies complete historical pricing, hiring or marketing actions.
+Private/old histories need catalogs, scanned documents and attributed interviews.
+Forums/Wikidata/news are discovery leads unless underlying authoritative evidence
+is reviewed. Do not convert a search result snippet into a verified fact.
+API terms and quotas change: revalidate official specs before implementation.
+Some providers need user registration/API keys. Report the exact missing dependency;
+continue independent tasks. Never substitute fixture responses for live evidence.
+
+Implementation discipline
+The task files identify inspected existing paths and explicitly proposed new paths.
+Migration filenames must be generated from the live graph; never assume next number.
+Pilot stories calibrate extraction and matching; pilots are NOT the final scope.
+Each task requires tests and actual completion evidence. Update progress.json with
+commands, commit, outputs/artifacts and limitations. Do not tick tasks from intent.
+Keep BACKLOG.md as the user's active-only list. This plan is a versioned specification,
+not a completed-task archive or permission to erase existing history.
+No external push/main update/PR claims without verified authorization and remote.
+No deletion/pruning of data, files, images, containers or volumes without approval.
+No login redesign here; restoration of CSS founder/boardroom visuals is separate work.
+No automatic recurring automation created by this planning bundle.
+
+Expected founder experience
+A useful result explains why the episode matches the user's product/customer/decision,
+what the company actually did, when and under which constraints, and what happened.
+Facts, source-attributed intent, observed results and proposed experiments remain distinct.
+Stories show differences and evidence gaps rather than force a famous-company analogy.
+Single cases remain useful case studies; a repeated pattern needs shared evidence across
+independent comparable cases. Patents are not market fit; launch is not retention.
+Old evidence is not stale merely because it is historical. Today's legal applicability
+requires separate contemporary review; do not treat history as legal advice.
+
+Rollout
+Audit/backup/restore rehearsal; additive migrations; immutable ingestion; reviewed claims;
+connectors and bounded backfill; objective-aware episode matching; cited APIs/UI;
+incremental updates; all-company coverage gates; canary and authenticated public checks.
+Existing readers stay supported until replacement passes. Roll back application images
+using retained compatible schema/data, not destructive reverse migrations.
+The build, API, DB and source reviews must prove the same commit and data revision.
+A HTTP200 or a source-string frontend test does not prove a usable story.
+
+Model handoff prompt
+"Read /opt/infodj/docs/founder-story-plan/START_HERE.txt over SSH as infodj, then follow
+its read order. Implement the full plan task-by-task, revalidating current repo state.
+Use dependency order, tests first where relevant, and record actual evidence in
+progress.json. Preserve data and existing behavior. Do not stop at pilot coverage or
+claim completion while acceptance.json gates are unproven. Do not fabricate historical
+facts, dates, citations, API capabilities or successful deployment. Surface exact missing
+credentials/rights only when needed; continue independent authorized work."
+
+This is a detailed, testable specification, not a guarantee any model will implement it
+perfectly. JSON makes dependencies and evidence machine-checkable; readable text retains
+rationale. Both must be followed.

@@ -1,0 +1,291 @@
+{
+  "version": "1.0.0",
+  "status": "planned_not_implemented",
+  "baseline": "8b284fa4a40af2c217e7405af78cbbd47f142351",
+  "date": "2026-09-08",
+  "principle": "One evidence architecture for old and newly onboarded companies. Never create tables per company or let an LLM execute DDL. PostgreSQL remains authoritative; schema evolves through reviewed migrations.",
+  "pipeline": [
+    "Register subject and sources",
+    "Acquire immutable source revision",
+    "Parse bounded text/tables/OCR with location anchors",
+    "Extract schema-validated candidate claims",
+    "Resolve entities and temporal semantics",
+    "Review evidence and conflicts",
+    "Project reviewed facts into domain tables",
+    "Assemble product episodes",
+    "Match founder situation and decision",
+    "Render cited story and explicitly labeled experiment",
+    "Incremental refresh invalidates affected stories without erasing history"
+  ],
+  "baseline_findings": [
+    {
+      "file": "services/ingestion/apps/ingestion/models.py",
+      "finding": "SourceDocument has one company FK and URL-hash identity. ArticleExtraction is OneToOne and mutable. EvidenceRecord exists but is an aggregate ledger, not a multi-source claim system."
+    },
+    {
+      "file": "services/ingestion/apps/ingestion/services/article_extractor.py",
+      "finding": "HTML-only path; failure overwrites previous clean_text with empty content. Preserve last successful revision and record failed attempt separately."
+    },
+    {
+      "file": "services/ingestion/apps/ingestion/services/evidence_ledger.py",
+      "finding": "Projects BusinessEvent.event_date and FinancialFact.filed; must use explicit temporal semantics. APPROVED event status currently falls back to NEEDS_REVIEW in ledger mapping; map statuses intentionally, not implicitly."
+    },
+    {
+      "file": "services/ingestion/apps/ingestion/services/source_router.py",
+      "finding": "CURRENT_YEAR=2026; unknown founding falls back to current_year-10; ticker/CIK without listing date can skip pre-public research. Remove invented periods and separate legal/company/product routes."
+    },
+    {
+      "file": "services/ingestion/apps/companies/models.py",
+      "finding": "ProductOffering belongs to a snapshot; no stable product identity across snapshots. PriceObservation already models amount/currency/region/terms but needs independent date precision and immutable evidence linkage."
+    },
+    {
+      "file": "services/main/backend/apps/accounts/founder_decision.py",
+      "finding": "Stage/sector/age gate ignores objective; evidence distributed by list index; one record becomes observed_pattern; old historical dates may be treated as stale; generic reasoning does not explain specific choices."
+    },
+    {
+      "file": "infra/docker-compose.yml",
+      "finding": "Scheduler runs inside ingestion API command; Celery config/dependency exists but no apps tasks.py found. Preserve existing scheduler first; do not invent an active worker deployment."
+    }
+  ],
+  "tables": [
+    {
+      "name": "history.ResearchSubject",
+      "ownership": "new history app",
+      "fields": [
+        "id UUID",
+        "kind COMPANY|PRODUCT|BUSINESS_LINE",
+        "company FK nullable for product lineage",
+        "parent_subject FK nullable",
+        "canonical_name",
+        "created_at"
+      ],
+      "invariants": [
+        "Company subject maps existing Company 1:1; product stable across versions/snapshots.",
+        "Ownership transfer belongs in dated relation, never rewrite historical owner.",
+        "Never equate legal entity, predecessor lineage and product."
+      ]
+    },
+    {
+      "name": "history.SubjectIdentifier / SubjectAlias / SubjectRelation",
+      "fields": [
+        "subject",
+        "namespace and external_id",
+        "alias and language",
+        "relation predecessor|owned_by|version_of",
+        "valid_from/to plus precision",
+        "supporting_claim FK nullable pending review"
+      ],
+      "invariants": [
+        "Unique namespace+external_id where authoritative; alias alone never merge.",
+        "Relations time-scoped; product attribution requires evidence."
+      ]
+    },
+    {
+      "name": "ingestion.SourceRevision",
+      "fields": [
+        "source_document FK",
+        "content_sha256",
+        "retrieved_at",
+        "published_at nullable",
+        "archive_captured_at nullable",
+        "media_type",
+        "storage_key",
+        "rights/access_scope",
+        "etag/last_modified",
+        "parser_version"
+      ],
+      "invariants": [
+        "Unique source+content hash; immutable bytes/parsed representation.",
+        "Blob storage outside public webroot on persistent VPS volume, interface permits later object storage.",
+        "SourceDocument.company preserved for legacy; history.SourceSubjectLink supports multiple subjects."
+      ]
+    },
+    {
+      "name": "ingestion.ExtractionRun / EvidenceSpan",
+      "fields": [
+        "revision FK",
+        "schema/model/prompt/parser versions",
+        "run_fingerprint",
+        "status/cost/error",
+        "span page/section/char offsets/table cell",
+        "exact excerpt/hash",
+        "OCR confidence"
+      ],
+      "invariants": [
+        "Run failure cannot erase successful extraction.",
+        "Citation resolves to exact revision and location; translated paraphrase retained separately.",
+        "Model output is untrusted candidate data."
+      ]
+    },
+    {
+      "name": "history.HistoricalClaim",
+      "fields": [
+        "UUID",
+        "subject FK",
+        "track",
+        "claim_type",
+        "value JSONB validated by versioned type schema",
+        "event_kind",
+        "date_min/date_max nullable",
+        "date_precision DAY|MONTH|QUARTER|YEAR|RANGE|UNKNOWN",
+        "observed_at",
+        "recorded_at",
+        "schema_version",
+        "supersedes FK",
+        "review state"
+      ],
+      "invariants": [
+        "Append revision on semantic change; do not overwrite reviewed claims.",
+        "Date bounds represent uncertainty, not fake Jan 1 events.",
+        "Money uses decimal strings/currency/units; headcount has as_of and workforce scope.",
+        "ClaimEvidence M:N EvidenceSpan stores supports|contradicts and independent source family."
+      ]
+    },
+    {
+      "name": "history.ClaimReview / ClaimRelation",
+      "fields": [
+        "claim FK",
+        "reviewer identity/type",
+        "decision/reason/timestamp",
+        "conflict_group",
+        "relation before|after|responds_to|reported_outcome_of",
+        "supporting evidence"
+      ],
+      "invariants": [
+        "Review journal append-only; re-extraction never clears a hold.",
+        "Chronological order does not establish causation.",
+        "Explicit resolution records rationale, chosen interpretation and alternatives."
+      ]
+    },
+    {
+      "name": "curation.LifecycleEpisode + history.EpisodeClaim",
+      "fields": [
+        "add nullable subject FK to existing episode",
+        "stage rationale and evidence",
+        "track and ordering on claim membership",
+        "phase start/end with precision"
+      ],
+      "invariants": [
+        "Reuse existing company/product episodes; retain legacy subject_name during transition.",
+        "Do not set arbitrary episode end from next publication.",
+        "IDEA, PROTOTYPE, FIRST_CUSTOMERS, REPEAT_USAGE, SCALE are product phases; map legacy enum explicitly rather than silently redefine."
+      ]
+    },
+    {
+      "name": "existing domain tables",
+      "fields": [
+        "optional stable subject and claim FK on ProductOffering/ProductChange/PriceObservation and relevant regulatory/leadership records"
+      ],
+      "invariants": [
+        "Existing tables are compatible projections; claim layer owns historical evidence.",
+        "No duplicate competing price/regulatory truth.",
+        "Review PriceObservation uniqueness so same-day conflicting sources coexist as claims rather than overwrite."
+      ]
+    },
+    {
+      "name": "history.EpisodeStory",
+      "fields": [
+        "episode FK",
+        "recipe version",
+        "input claim IDs/hash",
+        "structured chapters with sentence-level claim IDs",
+        "status and generated_at",
+        "access scope"
+      ],
+      "invariants": [
+        "Rebuildable projection, not evidence.",
+        "Only reviewed claims can support facts; gaps and proposed experiments separate.",
+        "Changes in review/ownership/claims invalidate affected cache."
+      ]
+    },
+    {
+      "name": "history.SourceConnectorConfig / SubjectSource / ConnectorCursor",
+      "fields": [
+        "connector key and schema version",
+        "subject",
+        "endpoint/domain reference",
+        "secret env reference only",
+        "enabled/owner",
+        "coverage period/tracks",
+        "rate/cost budget",
+        "cursor/checkpoint",
+        "last success/error"
+      ],
+      "invariants": [
+        "Staff-editable registry for all companies; source URL allowlist validation.",
+        "Missing credentials block that connector, not public app.",
+        "New company discovery dynamically enumerates DB subjects; no hard-coded20."
+      ]
+    }
+  ],
+  "matching": {
+    "hard_gates": [
+      "authorized evidence scope",
+      "reviewed undisputed claim and cited source",
+      "subject scope appropriate for selected situation",
+      "phase and decision relevance",
+      "applicable geography/regulatory domain when necessary"
+    ],
+    "dimensions": [
+      "customer problem/segment",
+      "business model",
+      "product phase",
+      "immediate decision",
+      "team/capital constraints",
+      "time since explicitly selected anchor",
+      "sector as contextual feature, not sufficient match"
+    ],
+    "rules": [
+      "Unspecified inputs stay unknown; ask targeted follow-up instead of filling from company age.",
+      "Display matched_on, differs_on, missing_dimensions and named evidence for every match.",
+      "Use bounded age overlap transparently; no arbitrary stage age cutoff as primary relevance signal.",
+      "Product launches do not prove retention; patents do not prove novelty/market need; funding does not prove customer demand.",
+      "One reviewed case can be shown as a case; pattern requires independently reviewed comparable cases AND shared claim type, not source count or company count alone.",
+      "Counterexamples and failed/abandoned products explicitly researched to limit survivor bias."
+    ]
+  },
+  "story_contract": {
+    "chapters": [
+      "Situation",
+      "Problem and constraints",
+      "Actions across tracks",
+      "Observed outcomes and setbacks",
+      "What matches / differs for you",
+      "Proposed next experiment",
+      "Evidence and gaps"
+    ],
+    "tracks": [
+      "product",
+      "customers",
+      "pricing",
+      "team",
+      "marketing_distribution",
+      "intellectual_property",
+      "legal_regulatory",
+      "operations_finance"
+    ],
+    "statuses": [
+      "ready",
+      "partial",
+      "insufficient",
+      "conflicted"
+    ],
+    "limitations": "Never promise all actions of every company are publicly knowable. Each requested track gets evidence or an explicit coverage status; not found is not no activity."
+  },
+  "security": [
+    "SSRF protection on uploads/URLs and redirects: block loopback/private/link-local/cloud metadata, DNS rebinding and non-HTTP(S); authorized internal service calls use separate code path.",
+    "Sandbox parsers/OCR; cap bytes/pages/decompression ratio/time; don't execute embedded scripts/macros.",
+    "Treat source text and retrieved prompts as data, never tool instructions.",
+    "Separate public corpus from private founder uploads and personal profile data; enforce object-level authorization on search, citations and cached stories.",
+    "Store secret references only; redact headers/query keys; honor rights, provider retention and deletion obligations via explicit reviewed procedure.",
+    "No autonomous subscriptions, account creation, paid PACER retrieval, root access, schema deletion or external push."
+  ],
+  "scale": [
+    "PostgreSQL16 relational constraints plus JSONB for validated track-specific values; full-text/trigram first.",
+    "No vector DB, graph DB, Kafka or microservices required for first release. Add embeddings only after benchmark shows retrieval gap; provenance stays relational.",
+    "Bounded scheduler batches with DB lease/checkpoint and per-provider limiter; start concurrency1 on small VPS.",
+    "Measure queue age, source failures, extracted/verified claims, conflict count, coverage, latency, storage and model cost.",
+    "Incremental conditional GET and content hashes; re-extract only changed source or explicitly newer extraction version.",
+    "New claim types register a versioned schema and tests; unknown types remain pending, never create columns dynamically."
+  ]
+}

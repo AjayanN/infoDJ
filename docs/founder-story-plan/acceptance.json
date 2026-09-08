@@ -1,0 +1,119 @@
+{
+  "version": "1.0.0",
+  "completion_rule": "Every requirement needs actual run output, source review or rendered artifact. A schema, green test fixture or nonempty table alone does not prove historical coverage.",
+  "gates": [
+    {
+      "id": "A01",
+      "requirement": "Every existing company audited and new-company onboarding generic",
+      "proof": "DB count/IDs equal coverage report; unseen private-company fixture traverses pipeline without code edits."
+    },
+    {
+      "id": "A02",
+      "requirement": "Original documents and evidence preserved",
+      "proof": "Same-URL changed bytes produce separate revisions; failed retry preserves last success; restore rehearsal passes."
+    },
+    {
+      "id": "A03",
+      "requirement": "Action date semantics correct",
+      "proof": "DAY/month/year/unknown/relative/announcement/approval/filing/archive-capture fixture suite; all source passages inspected."
+    },
+    {
+      "id": "A04",
+      "requirement": "Product/company histories distinct",
+      "proof": "Apple founding-only negative; Windows parent maturity vs product phase; predecessor merger does not reset operating stage."
+    },
+    {
+      "id": "A05",
+      "requirement": "Founder objective influences recommendation",
+      "proof": "Same founder changes build/pricing/retention objective; outputs differ appropriately or explain true coverage gap."
+    },
+    {
+      "id": "A06",
+      "requirement": "Complete useful episodes rather than date cards",
+      "proof": "Reviewed actions, pricing/team/marketing/IP/legal tracks where relevant, outcomes or explicit gaps; not merely six repeated snippets."
+    },
+    {
+      "id": "A07",
+      "requirement": "No unsupported factual narrative",
+      "proof": "Every factual sentence cites reviewed claim IDs, source revisions and locators; no fabricated numerical/date/name claims."
+    },
+    {
+      "id": "A08",
+      "requirement": "Conflict and review decisions survive ingestion",
+      "proof": "Ford competing dates preserved after all import/extraction paths, withheld until explicit reviewed resolution; reviewer journal intact."
+    },
+    {
+      "id": "A09",
+      "requirement": "Relevant comparisons, no fabricated pattern",
+      "proof": "Negative cases for IPO->demand, launch->retention and mismatched business model; one case labeled case study; patterned claims supported independently."
+    },
+    {
+      "id": "A10",
+      "requirement": "Safe pricing/hiring/IP/legal detail",
+      "proof": "Price/version/currency/period terms, headcount scope/date, patent date kinds/assignee ownership and legal event distinctions tested."
+    },
+    {
+      "id": "A11",
+      "requirement": "APIs honest about access and coverage",
+      "proof": "Each enabled provider has contract fixture, quota test, licensed use record and bounded live smoke; missing key explicitly blocked, never silently mocked live."
+    },
+    {
+      "id": "A12",
+      "requirement": "Old and new data interoperable",
+      "proof": "Additive migration replay, stable IDs, dual-read comparison and app rollback with no destructive reverse migration."
+    },
+    {
+      "id": "A13",
+      "requirement": "Private data and untrusted documents safe",
+      "proof": "Tenant isolation on retrieval/cache/citation, upload/SSRF/parser/prompt-injection adversarial tests."
+    },
+    {
+      "id": "A14",
+      "requirement": "Operationally sustainable",
+      "proof": "Measured bounded batch memory, latency, disk/cost budget, outage/backoff/checkpoint tests; public health during refresh."
+    },
+    {
+      "id": "A15",
+      "requirement": "Founder UI verified publicly",
+      "proof": "Authenticated mobile and desktop screenshots with evidence drawer and zero/partial/ready cases; public URL200 alone insufficient."
+    },
+    {
+      "id": "A16",
+      "requirement": "Full scope accounted for",
+      "proof": "All companies and requested tracks enumerated. No silent pilot-only completion; unresolved core gaps remain backlog and goal active."
+    }
+  ],
+  "proposed_test_files": [
+    "services/ingestion/apps/history/tests/test_subject_identity.py",
+    "services/ingestion/apps/history/tests/test_temporal_claims.py",
+    "services/ingestion/apps/history/tests/test_source_revisions.py",
+    "services/ingestion/apps/history/tests/test_claim_review.py",
+    "services/ingestion/apps/history/tests/test_connectors.py",
+    "services/ingestion/apps/history/tests/test_episode_builder.py",
+    "services/ingestion/apps/history/tests/test_backfill.py",
+    "services/ingestion/apps/history/tests/test_story_api.py",
+    "services/main/backend/apps/accounts/test_history_matching.py",
+    "services/main/backend/apps/accounts/test_history_authorization.py",
+    "services/main/frontend/tests/founder-story.test.ts",
+    "services/main/frontend/tests/e2e/founder-story.spec.ts"
+  ],
+  "test_policy": "Add regression before behavior change. Keep existing focused lifecycle/import/date-conflict/API tests. Add a real DOM/browser E2E runner for rendered interactions; existing source-string tests cannot prove layout. Use only permitted browser tools when agent verifies UI.",
+  "commands": {
+    "ingestion": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml exec -T ingestion .venv/bin/python manage.py test apps.history apps.ingestion.test_historical_date_conflicts",
+    "backend": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml exec -T main-backend python manage.py test apps.accounts",
+    "frontend": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml build main-frontend",
+    "migration_check": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml exec -T ingestion .venv/bin/python manage.py makemigrations --check --dry-run",
+    "note": "Commands for proposed modules become runnable after implementation. Build/test new code before copying to or restarting live runtime; a green test against old container code is not proof. Prefer isolated Compose project/test DB with bounded resources and approved preservation."
+  },
+  "evidence_record": {
+    "task_id": "Pxx",
+    "gate_id": "Axx",
+    "commit": "actual SHA",
+    "command": "exact command",
+    "exit_code": 0,
+    "artifact_paths": [],
+    "reviewer": "identity",
+    "verified_at": "actual UTC timestamp",
+    "limitations": []
+  }
+}
