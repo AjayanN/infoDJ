@@ -82,12 +82,22 @@ class LifecycleEpisode(models.Model):
         on_delete=models.SET_NULL,
         related_name="lifecycle_episodes",
     )
+    subject = models.ForeignKey(
+        "history.ResearchSubject",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="lifecycle_episodes",
+    )
     scope = models.CharField(max_length=32, choices=LifecycleEpisodeScope.choices, default=LifecycleEpisodeScope.COMPANY)
     subject_name = models.CharField(max_length=255, blank=True)
     stage = models.CharField(max_length=32, choices=LifecycleStage.choices, db_index=True)
     start_date = models.DateField(db_index=True)
     start_date_precision = models.CharField(max_length=16, choices=ActionDatePrecision.choices)
     end_date = models.DateField(null=True, blank=True)
+    end_date_precision = models.CharField(max_length=16, choices=ActionDatePrecision.choices, blank=True)
+    stage_rationale = models.TextField(blank=True)
+    stage_evidence = models.TextField(blank=True)
     evidence_text = models.TextField()
     source_url = models.URLField(max_length=2048)
     verification_status = models.CharField(

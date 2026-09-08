@@ -878,6 +878,9 @@ class ProductCatalogSnapshot(models.Model):
 
 class ProductOffering(models.Model):
     snapshot = models.ForeignKey(ProductCatalogSnapshot, on_delete=models.CASCADE, related_name="offerings")
+    subject = models.ForeignKey(
+        "history.ResearchSubject", null=True, blank=True, on_delete=models.SET_NULL, related_name="product_offerings"
+    )
     parent = models.ForeignKey("self", null=True, blank=True, on_delete=models.SET_NULL, related_name="children")
     offering_type = models.CharField(max_length=16, choices=ProductOfferingType.choices, db_index=True)
     name = models.CharField(max_length=255)
@@ -897,6 +900,12 @@ class ProductOffering(models.Model):
 
 class ProductChange(models.Model):
     snapshot = models.ForeignKey(ProductCatalogSnapshot, on_delete=models.CASCADE, related_name="changes")
+    subject = models.ForeignKey(
+        "history.ResearchSubject", null=True, blank=True, on_delete=models.SET_NULL, related_name="product_changes"
+    )
+    historical_claim = models.ForeignKey(
+        "history.HistoricalClaim", null=True, blank=True, on_delete=models.SET_NULL, related_name="product_change_projections"
+    )
     offering = models.ForeignKey(ProductOffering, null=True, blank=True, on_delete=models.SET_NULL, related_name="changes")
     change_type = models.CharField(max_length=32, choices=ProductChangeType.choices, db_index=True)
     title = models.CharField(max_length=512)
@@ -930,6 +939,12 @@ class ProductChange(models.Model):
 
 class PriceObservation(models.Model):
     offering = models.ForeignKey(ProductOffering, on_delete=models.CASCADE, related_name="price_observations")
+    subject = models.ForeignKey(
+        "history.ResearchSubject", null=True, blank=True, on_delete=models.SET_NULL, related_name="price_observations"
+    )
+    historical_claim = models.ForeignKey(
+        "history.HistoricalClaim", null=True, blank=True, on_delete=models.SET_NULL, related_name="price_observation_projections"
+    )
     observed_date = models.DateField(db_index=True)
     effective_date = models.DateField(null=True, blank=True, db_index=True)
     amount = models.DecimalField(max_digits=18, decimal_places=6)
