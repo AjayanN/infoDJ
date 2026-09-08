@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "apps.companies.apps.CompaniesConfig",
     "apps.ingestion.apps.IngestionConfig",
     "apps.curation.apps.CurationConfig",
+    "apps.history.apps.HistoryConfig",
 ]
 
 MIDDLEWARE = [

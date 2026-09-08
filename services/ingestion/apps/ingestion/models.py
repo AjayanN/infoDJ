@@ -393,3 +393,17 @@ class FinancialFact(models.Model):
 
     def __str__(self) -> str:
         return f"{self.company} {self.concept} {self.fy or ''}{self.fp}"
+
+class SourceRevision(models.Model):
+    source_document=models.ForeignKey(SourceDocument,on_delete=models.PROTECT,related_name="revisions")
+    content_sha256=models.CharField(max_length=64); retrieved_at=models.DateTimeField(); published_at=models.DateTimeField(null=True,blank=True)
+    archive_captured_at=models.DateTimeField(null=True,blank=True); media_type=models.CharField(max_length=128); storage_key=models.CharField(max_length=1024)
+    rights_scope=models.CharField(max_length=64,default="internal"); etag=models.CharField(max_length=255,blank=True); last_modified=models.CharField(max_length=255,blank=True); parser_version=models.CharField(max_length=64)
+    class Meta: constraints=[models.UniqueConstraint(fields=["source_document","content_sha256"],name="ingestion_source_revision_hash")]
+class ExtractionRun(models.Model):
+    revision=models.ForeignKey(SourceRevision,on_delete=models.PROTECT,related_name="extraction_runs"); run_fingerprint=models.CharField(max_length=128,unique=True)
+    schema_version=models.CharField(max_length=32); parser_version=models.CharField(max_length=64); status=models.CharField(max_length=16); error=models.TextField(blank=True); created_at=models.DateTimeField(auto_now_add=True)
+class EvidenceSpan(models.Model):
+    revision=models.ForeignKey(SourceRevision,on_delete=models.PROTECT,related_name="evidence_spans"); extraction_run=models.ForeignKey(ExtractionRun,null=True,blank=True,on_delete=models.SET_NULL)
+    locator=models.CharField(max_length=512); excerpt=models.TextField(); excerpt_sha256=models.CharField(max_length=64); page=models.PositiveIntegerField(null=True,blank=True); char_start=models.PositiveIntegerField(null=True,blank=True); char_end=models.PositiveIntegerField(null=True,blank=True)
+    class Meta: constraints=[models.UniqueConstraint(fields=["revision","locator","excerpt_sha256"],name="ingestion_evidence_span_unique")]
