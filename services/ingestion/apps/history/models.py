@@ -1,4 +1,5 @@
 import uuid
+from urllib.parse import urlparse
 
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -44,6 +45,10 @@ class ResearchSubject(models.Model):
         if (self.kind == SubjectKind.COMPANY) != bool(self.company_id):
             raise ValidationError("Only company subjects map directly to Company.")
 
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
 
 class SubjectIdentifier(models.Model):
     subject = models.ForeignKey(ResearchSubject, on_delete=models.CASCADE, related_name="identifiers")
@@ -75,6 +80,10 @@ class SubjectRelation(models.Model):
         if self.valid_from and self.valid_to and self.valid_from > self.valid_to:
             raise ValidationError("Subject relation date bounds are reversed.")
 
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
 
 class HistoricalClaim(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -104,6 +113,14 @@ class HistoricalClaim(models.Model):
             raise ValidationError("DAY requires equal bounds.")
         if self.value and not isinstance(self.value, dict):
             raise ValidationError("Claim values must be JSON objects.")
+        if self.value.get("money") and not {"amount", "currency", "unit"}.issubset(self.value["money"]):
+            raise ValidationError("Money claim values require amount, currency, and unit.")
+        if self.value.get("headcount") and not {"as_of", "workforce_scope"}.issubset(self.value["headcount"]):
+            raise ValidationError("Headcount claim values require as_of and workforce_scope.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
 
 class ClaimEvidence(models.Model):
@@ -164,7 +181,7 @@ class SourceConnectorConfig(models.Model):
     secret_env_reference = models.CharField(max_length=128, blank=True)
     enabled = models.BooleanField(default=False)
     owner = models.CharField(max_length=255, blank=True)
-    coverage_tracks = models.JSONField(default=list)
+    coverage_tracks = models.JSONField(default=list, blank=True)
     coverage_start = models.DateField(null=True, blank=True)
     coverage_end = models.DateField(null=True, blank=True)
     requests_per_minute = models.PositiveIntegerField(null=True, blank=True)
@@ -172,13 +189,23 @@ class SourceConnectorConfig(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def clean(self):
+        host = (urlparse(self.endpoint).hostname or "").lower()
+        allowed = self.allowed_domain.lower().lstrip(".")
+        if not host or not allowed or (host != allowed and not host.endswith("." + allowed)):
+            raise ValidationError({"endpoint": "Connector endpoint must be inside its allowed_domain."})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
 
 class SubjectSource(models.Model):
     subject = models.ForeignKey(ResearchSubject, on_delete=models.CASCADE, related_name="source_registrations")
     connector = models.ForeignKey(SourceConnectorConfig, on_delete=models.PROTECT, related_name="subject_registrations")
     external_reference = models.CharField(max_length=512)
     enabled = models.BooleanField(default=True)
-    coverage_tracks = models.JSONField(default=list)
+    coverage_tracks = models.JSONField(default=list, blank=True)
     class Meta:
         constraints = [models.UniqueConstraint(fields=["subject", "connector", "external_reference"], name="history_subject_source_unique")]
 

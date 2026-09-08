@@ -33,3 +33,10 @@ class SubjectIdentityTests(TestCase):
         SubjectAlias.objects.create(subject=first, alias="Common", language="en")
         SubjectAlias.objects.create(subject=second, alias="Common", language="en")
         self.assertEqual(SubjectAlias.objects.filter(alias="Common").count(), 2)
+
+    def test_relation_rejects_reversed_dates_on_save(self):
+        first = ResearchSubject.objects.create(kind=SubjectKind.PRODUCT, canonical_name="First")
+        second = ResearchSubject.objects.create(kind=SubjectKind.PRODUCT, canonical_name="Second")
+        relation = SubjectRelation(subject=first, related_subject=second, relation_type="owned_by", valid_from="2021-01-01", valid_to="2020-01-01")
+        with self.assertRaises(ValidationError):
+            relation.save()
