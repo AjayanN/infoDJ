@@ -3,6 +3,8 @@ from apps.companies.models import Company
 from apps.history.models import HistoricalClaim, ResearchSubject, ReviewState, SubjectKind
 from apps.history.services.episode_builder import build_episode_skeletons
 from apps.history.services.projections import projection_rows
+from apps.ingestion.services.dashboard_quality import historical_claim_eligibility
+from types import SimpleNamespace
 
 class EpisodeProjectionTests(TestCase):
     def setUp(self):
@@ -27,3 +29,9 @@ class EpisodeProjectionTests(TestCase):
     def test_conflicted_price_is_not_projected(self):
         claim=self.claim(track="pricing", value={"kind":"money","amount":"20","currency":"USD","unit":"month"}, review_state=ReviewState.CONFLICTED)
         self.assertEqual(projection_rows([claim]),[])
+    def test_dashboard_claim_bridge_keeps_conflicts_held(self):
+        links = SimpleNamespace(filter=lambda **kwargs: SimpleNamespace(exists=lambda: True))
+        claim = SimpleNamespace(review_state="CONFLICTED", evidence_links=links, date_precision="DAY", date_min=None, date_max=None)
+        result = historical_claim_eligibility(claim)
+        self.assertFalse(result.eligible)
+        self.assertIn("date_conflicts", result.reasons)

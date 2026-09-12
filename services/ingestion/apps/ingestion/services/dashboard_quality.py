@@ -361,3 +361,14 @@ def is_specific_turn_text(title: str, summary: str, decision: str, outcome: str)
     if summary and summary == decision:
         return False
     return has_specific_action(" ".join([summary, decision, outcome]))
+
+
+def historical_claim_eligibility(claim: Any) -> EligibilityResult:
+    """Compatibility admission: reviewed, cited claims only; conflicts stay held."""
+    reasons=[]
+    if getattr(claim, "review_state", "") != "REVIEWED": reasons.append("claim_not_reviewed")
+    links = getattr(claim, "evidence_links", None)
+    if links is None or not links.filter(role="SUPPORTS").exists(): reasons.append("missing_supporting_evidence")
+    if getattr(claim, "date_precision", "") == "UNKNOWN" and (getattr(claim, "date_min", None) or getattr(claim, "date_max", None)): reasons.append("invalid_unknown_date")
+    if getattr(claim, "review_state", "") == "CONFLICTED": reasons.append("date_conflicts")
+    return EligibilityResult(not reasons, "ELIGIBLE" if not reasons else "INELIGIBLE", 1.0 if not reasons else 0.0, tuple(reasons))

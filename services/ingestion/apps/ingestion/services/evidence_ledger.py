@@ -90,3 +90,19 @@ def _upsert(*, fingerprint, company, source_document, record_type, event_date, t
             "metadata": metadata,
         },
     )
+
+
+def rebuild_reviewed_history_claim_ledger(*, company_slug: str = "") -> int:
+    """Project reviewed claims into the existing ledger with stable claim fingerprints."""
+    from apps.history.models import HistoricalClaim, ReviewState
+    query = HistoricalClaim.objects.filter(review_state=ReviewState.REVIEWED).select_related("subject__company").prefetch_related("evidence_links__evidence_span__revision__source_document")
+    if company_slug: query = query.filter(subject__company__slug=company_slug)
+    count = 0
+    for claim in query:
+        company = claim.subject.company
+        if company is None: continue
+        link = next((x for x in claim.evidence_links.all() if x.role == "SUPPORTS"), None)
+        source = link.evidence_span.revision.source_document if link else None
+        _upsert(fingerprint=f"history-claim:{claim.id}", company=company, source_document=source, record_type=EvidenceRecordType.BUSINESS_EVENT, event_date=claim.date_min, title=f"{company.name}: {claim.event_kind}", summary=claim.statement, source_excerpt=link.evidence_span.excerpt if link else "", tags=[claim.track, claim.event_kind], confidence_score="1.000", review_status="REVIEWED", metadata={"historical_claim_id": str(claim.id), "claim_date_max": claim.date_max.isoformat() if claim.date_max else None, "date_precision": claim.date_precision, "review_state": claim.review_state})
+        count += 1
+    return count
