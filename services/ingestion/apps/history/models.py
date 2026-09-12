@@ -100,6 +100,7 @@ class HistoricalClaim(models.Model):
     observed_at = models.DateTimeField(null=True, blank=True)
     recorded_at = models.DateTimeField(auto_now_add=True)
     schema_version = models.CharField(max_length=16, default="1.0")
+    extraction_run = models.ForeignKey("ingestion.ExtractionRun", null=True, blank=True, on_delete=models.PROTECT, related_name="historical_claims")
     supersedes = models.ForeignKey("self", null=True, blank=True, on_delete=models.PROTECT, related_name="revisions")
     review_state = models.CharField(max_length=16, choices=ReviewState.choices, default=ReviewState.PENDING, db_index=True)
     class Meta:
@@ -139,6 +140,7 @@ class ClaimReview(models.Model):
     reviewer_type = models.CharField(max_length=64, default="staff")
     rationale = models.TextField()
     conflict_group = models.CharField(max_length=128, blank=True)
+    resolution_options = models.JSONField(default=list, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
 

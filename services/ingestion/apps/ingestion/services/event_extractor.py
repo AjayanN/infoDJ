@@ -14,6 +14,16 @@ from typing import Any, Iterable
 from apps.ingestion.services.lifecycle_timing import exact_action_date_from_evidence
 
 
+def claim_candidates_from_evidence_spans(*, subject: Any, revision: Any) -> list[dict[str, Any]]:
+    """Bridge legacy event workflows to the P03 atomic-claim candidate pipeline.
+
+    It emits pending evidence-bound candidates only; it does not publish events or
+    alter existing BusinessEvent review decisions.
+    """
+    from apps.history.services.claim_extractor import extract_atomic_candidates
+    return extract_atomic_candidates(subject=subject, revision=revision, evidence_spans=revision.evidence_spans.all())
+
+
 @dataclass(frozen=True)
 class EventSignal:
     decision_theme: str

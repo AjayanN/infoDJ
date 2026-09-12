@@ -49,6 +49,21 @@ def exact_action_date_from_evidence(text: str) -> tuple[date, str] | None:
     return None
 
 
+def evidenced_relative_date(expression: str, *, document_date: date | None) -> tuple[date | None, date | None, str]:
+    """Resolve only simple relative expressions against an evidenced document date.
+
+    The original phrase is always retained.  Without a document date, no date is
+    invented; callers must leave the candidate time UNKNOWN.
+    """
+    phrase = (expression or "").strip()
+    if not document_date or not phrase:
+        return None, None, phrase
+    normalized = phrase.lower()
+    if normalized in {"today", "on that day"}:
+        return document_date, document_date, phrase
+    return None, None, phrase
+
+
 def lifecycle_context_from_financial_facts(
     *,
     company: Any,

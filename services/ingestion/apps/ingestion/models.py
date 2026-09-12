@@ -405,7 +405,9 @@ class SourceRevision(models.Model):
     class Meta: constraints=[models.UniqueConstraint(fields=["source_document","content_sha256"],name="ingestion_source_revision_hash")]
 class ExtractionRun(models.Model):
     revision=models.ForeignKey(SourceRevision,on_delete=models.PROTECT,related_name="extraction_runs"); run_fingerprint=models.CharField(max_length=128,unique=True)
-    schema_version=models.CharField(max_length=32); parser_version=models.CharField(max_length=64); status=models.CharField(max_length=16); error=models.TextField(blank=True); created_at=models.DateTimeField(auto_now_add=True)
+    schema_version=models.CharField(max_length=32); parser_version=models.CharField(max_length=64); extractor_version=models.CharField(max_length=64, blank=True); prompt_version=models.CharField(max_length=64, blank=True)
+    provider=models.CharField(max_length=64, blank=True); budget_cents=models.PositiveIntegerField(default=0); raw_candidate_response=models.JSONField(default=dict, blank=True)
+    status=models.CharField(max_length=16); error=models.TextField(blank=True); created_at=models.DateTimeField(auto_now_add=True)
 class EvidenceSpan(models.Model):
     revision=models.ForeignKey(SourceRevision,on_delete=models.PROTECT,related_name="evidence_spans"); extraction_run=models.ForeignKey(ExtractionRun,null=True,blank=True,on_delete=models.SET_NULL)
     locator=models.CharField(max_length=512); excerpt=models.TextField(); excerpt_sha256=models.CharField(max_length=64); page=models.PositiveIntegerField(null=True,blank=True); char_start=models.PositiveIntegerField(null=True,blank=True); char_end=models.PositiveIntegerField(null=True,blank=True)
