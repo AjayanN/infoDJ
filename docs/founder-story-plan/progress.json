@@ -284,7 +284,9 @@
       "commits": [
         "3b8cc3e",
         "07e4d96",
-        "141dc08"
+        "141dc08",
+        "5791b79",
+        "2d5b9a1"
       ],
       "test_runs": [
         {
@@ -292,6 +294,12 @@
           "exit_code": 0,
           "output": "2 golden matching tests; system check clean",
           "verified_at": "2026-09-12T06:53:17Z"
+        },
+        {
+          "command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps main-backend python manage.py test --keepdb apps.accounts.test_history_matching apps.accounts.test_founder_context_api",
+          "exit_code": 0,
+          "output": "3 tests; legacy profile compatibility, objective/business-model/scope gates, zero/one case semantics",
+          "verified_at": "2026-09-12T06:59:26Z"
         }
       ],
       "artifacts": [
@@ -301,7 +309,7 @@
       ],
       "blockers": [],
       "limitations": [
-        "P08 is incomplete: founder playbook integration and complete zero/one/multiple API semantics require further work."
+        "P08 remains in progress: production reviewed historical claims are zero, so live matching acceptance cannot be proven."
       ]
     },
     {
