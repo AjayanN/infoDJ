@@ -233,11 +233,28 @@
     },
     {
       "id": "P06",
-      "status": "not_started",
-      "commits": [],
-      "test_runs": [],
-      "artifacts": [],
-      "blockers": []
+      "status": "in_progress",
+      "commits": [
+        "6a49f02"
+      ],
+      "test_runs": [
+        {
+          "command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py test --keepdb apps.history.tests.test_episode_projections; check",
+          "exit_code": 0,
+          "output": "3 tests; System check identified no issues",
+          "verified_at": "2026-09-12T06:47:33Z"
+        }
+      ],
+      "artifacts": [
+        "services/ingestion/apps/history/services/episode_builder.py",
+        "services/ingestion/apps/history/services/projections.py",
+        "services/ingestion/apps/history/tests/test_episode_projections.py"
+      ],
+      "blockers": [],
+      "limitations": [
+        "P06 is incomplete: documented legacy-versus-new projection comparison remains required.",
+        "The new shared projection layer is review-gated and does not replace legacy Company 360 writes."
+      ]
     },
     {
       "id": "P07",
