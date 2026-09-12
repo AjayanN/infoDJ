@@ -261,6 +261,11 @@ def founder_context(request):
             "founder_target_customer": ("target_customer", "founder_target_customer"),
             "founder_revenue_model": ("revenue_model", "founder_revenue_model"),
             "founder_constraints": ("constraints", "founder_constraints"),
+            "founder_context_scope": ("scope", "founder_context_scope"),
+            "founder_product_phase": ("product_phase", "founder_product_phase"),
+            "founder_product_anchor_type": ("product_anchor_type", "founder_product_anchor_type"),
+            "founder_team_band": ("team_band", "founder_team_band"),
+            "founder_capital_band": ("capital_band", "founder_capital_band"),
         }
         updates = {}
         for profile_field, request_fields in context_fields.items():
@@ -550,6 +555,11 @@ def serialize_founder_context(profile: UserProfile) -> dict:
         "target_customer": profile.founder_target_customer,
         "revenue_model": profile.founder_revenue_model,
         "constraints": profile.founder_constraints,
+        "scope": profile.founder_context_scope,
+        "product_phase": profile.founder_product_phase,
+        "product_anchor_type": profile.founder_product_anchor_type,
+        "team_band": profile.founder_team_band,
+        "capital_band": profile.founder_capital_band,
     }
 
 
