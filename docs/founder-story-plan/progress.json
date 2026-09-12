@@ -6,23 +6,77 @@
     {
       "id": "P00",
       "status": "complete",
-      "commits": ["2db583badc77f6236e13dcdbc027d0ac8e63acbe"],
-      "test_runs": [{"command": "P00 audit regression: docker compose run --rm --no-deps ingestion .venv/bin/python manage.py test --keepdb apps.ingestion.tests.test_audit_history_coverage", "exit_code": 0, "verified_at": "2026-09-08T01:51:42Z"}, {"command": "P00 restore: pg_restore into infodj_p00_restore_verified; SELECT count(*) FROM infodj.companies_company", "exit_code": 0, "output": "20", "verified_at": "2026-09-08T02:05:57Z"}],
-      "artifacts": ["data/history-evaluation/coverage-before.json", "data/history-evaluation/cases.json", "data/history-evaluation/backup-20260908T020316Z.dump sha256:6ba0defe3cfaf818f9324730f14d7ec43c7b37469e21e1826eee130772b73579", "PostgreSQL: infodj_p00_restore_verified (20 companies_company rows)"],
+      "commits": [
+        "2db583badc77f6236e13dcdbc027d0ac8e63acbe"
+      ],
+      "test_runs": [
+        {
+          "command": "P00 audit regression: docker compose run --rm --no-deps ingestion .venv/bin/python manage.py test --keepdb apps.ingestion.tests.test_audit_history_coverage",
+          "exit_code": 0,
+          "verified_at": "2026-09-08T01:51:42Z"
+        },
+        {
+          "command": "P00 restore: pg_restore into infodj_p00_restore_verified; SELECT count(*) FROM infodj.companies_company",
+          "exit_code": 0,
+          "output": "20",
+          "verified_at": "2026-09-08T02:05:57Z"
+        }
+      ],
+      "artifacts": [
+        "data/history-evaluation/coverage-before.json",
+        "data/history-evaluation/cases.json",
+        "data/history-evaluation/backup-20260908T020316Z.dump sha256:6ba0defe3cfaf818f9324730f14d7ec43c7b37469e21e1826eee130772b73579",
+        "PostgreSQL: infodj_p00_restore_verified (20 companies_company rows)"
+      ],
       "blockers": [],
-      "limitations": ["Coverage counts are not proof of historical facts or complete historical coverage.", "Earlier empty database infodj_p00_restore_20260908T020557Z was retained and excluded from successful evidence."]
+      "limitations": [
+        "Coverage counts are not proof of historical facts or complete historical coverage.",
+        "Earlier empty database infodj_p00_restore_20260908T020557Z was retained and excluded from successful evidence."
+      ]
     },
     {
       "id": "P01",
       "status": "complete",
-      "commits": ["446fcf4e438e7b133e253347d7237be8d028e5f7", "ed96e1f", "bf2d808"],
+      "commits": [
+        "446fcf4e438e7b133e253347d7237be8d028e5f7",
+        "ed96e1f",
+        "bf2d808"
+      ],
       "test_runs": [
-        {"command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py migrate --noinput", "exit_code": 0, "verified_at": "2026-09-08T16:02:16Z"},
-        {"command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py test --keepdb apps.history.tests", "exit_code": 0, "output": "7 tests", "verified_at": "2026-09-08T16:06:02Z"},
-        {"command": "DATABASE_URL=.../infodj_p00_restore_verified manage.py migrate --noinput; audit_history_coverage", "exit_code": 0, "output": "20 companies", "verified_at": "2026-09-08T16:12:56Z"},
-        {"command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py test --keepdb apps.history.tests", "exit_code": 0, "output": "9 tests", "verified_at": "2026-09-08T16:15:31Z"},
-        {"command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py makemigrations --check --dry-run", "exit_code": 0, "output": "No changes detected", "verified_at": "2026-09-08T16:15:34Z"},
-        {"command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py check", "exit_code": 0, "verified_at": "2026-09-08T16:15:34Z"}
+        {
+          "command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py migrate --noinput",
+          "exit_code": 0,
+          "verified_at": "2026-09-08T16:02:16Z"
+        },
+        {
+          "command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py test --keepdb apps.history.tests",
+          "exit_code": 0,
+          "output": "7 tests",
+          "verified_at": "2026-09-08T16:06:02Z"
+        },
+        {
+          "command": "DATABASE_URL=.../infodj_p00_restore_verified manage.py migrate --noinput; audit_history_coverage",
+          "exit_code": 0,
+          "output": "20 companies",
+          "verified_at": "2026-09-08T16:12:56Z"
+        },
+        {
+          "command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py test --keepdb apps.history.tests",
+          "exit_code": 0,
+          "output": "9 tests",
+          "verified_at": "2026-09-08T16:15:31Z"
+        },
+        {
+          "command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py makemigrations --check --dry-run",
+          "exit_code": 0,
+          "output": "No changes detected",
+          "verified_at": "2026-09-08T16:15:34Z"
+        },
+        {
+          "command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py check",
+          "exit_code": 0,
+          "verified_at": "2026-09-08T16:15:34Z"
+        }
       ],
       "artifacts": [
         "services/ingestion/apps/ingestion/migrations/0009_evidencespan_extractionrun_sourcerevision_and_more.py",
@@ -31,43 +85,128 @@
         "services/ingestion/apps/companies/migrations/0027_priceobservation_historical_claim_and_more.py"
       ],
       "blockers": [],
-      "limitations": ["P01 proves schema and compatibility prerequisites only; it does not prove historical coverage, connector access, or acceptance gates."]
+      "limitations": [
+        "P01 proves schema and compatibility prerequisites only; it does not prove historical coverage, connector access, or acceptance gates."
+      ]
     },
     {
       "id": "P02",
       "status": "complete",
-      "commits": ["0aba30bfc812c8a71084cc5fc7f3795216d702e9", "ea6a900aeadcaa51cf63da6650a91f758aacad64"],
-      "test_runs": [
-        {"command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py migrate --noinput", "exit_code": 0, "verified_at": "2026-09-12T05:58:00Z"},
-        {"command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py test --keepdb apps.ingestion.tests.test_source_acquisition apps.ingestion.tests.test_document_parser", "exit_code": 0, "output": "6 tests", "verified_at": "2026-09-12T05:59:07Z"},
-        {"command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml config", "exit_code": 0, "output": "ingestion_revision_blobs mounted at /var/lib/infodj/revisions"}
-        ,{"command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py test --keepdb apps.ingestion.tests.test_source_acquisition apps.ingestion.tests.test_document_parser apps.ingestion.tests.test_history_upload", "exit_code": 0, "output": "7 tests", "verified_at": "2026-09-12T06:16:48Z"}
-        ,{"command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps main-backend python manage.py test --keepdb apps.accounts.test_history_upload", "exit_code": 0, "output": "2 tests", "verified_at": "2026-09-12T06:16:48Z"}
+      "commits": [
+        "0aba30bfc812c8a71084cc5fc7f3795216d702e9",
+        "ea6a900aeadcaa51cf63da6650a91f758aacad64"
       ],
-      "artifacts": ["services/ingestion/apps/ingestion/services/source_acquisition.py", "services/ingestion/apps/ingestion/services/document_parser.py", "services/ingestion/apps/ingestion/migrations/0011_sourcerevision_content_length_and_more.py", "services/ingestion/apps/ingestion/migrations/0012_sourcedocument_access_scope_and_more.py", "services/main/backend/apps/accounts/migrations/0005_historydocumentupload.py", "data/history-evaluation/p02-parser-fixtures.json"],
+      "test_runs": [
+        {
+          "command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py migrate --noinput",
+          "exit_code": 0,
+          "verified_at": "2026-09-12T05:58:00Z"
+        },
+        {
+          "command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py test --keepdb apps.ingestion.tests.test_source_acquisition apps.ingestion.tests.test_document_parser",
+          "exit_code": 0,
+          "output": "6 tests",
+          "verified_at": "2026-09-12T05:59:07Z"
+        },
+        {
+          "command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml config",
+          "exit_code": 0,
+          "output": "ingestion_revision_blobs mounted at /var/lib/infodj/revisions"
+        },
+        {
+          "command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py test --keepdb apps.ingestion.tests.test_source_acquisition apps.ingestion.tests.test_document_parser apps.ingestion.tests.test_history_upload",
+          "exit_code": 0,
+          "output": "7 tests",
+          "verified_at": "2026-09-12T06:16:48Z"
+        },
+        {
+          "command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps main-backend python manage.py test --keepdb apps.accounts.test_history_upload",
+          "exit_code": 0,
+          "output": "2 tests",
+          "verified_at": "2026-09-12T06:16:48Z"
+        }
+      ],
+      "artifacts": [
+        "services/ingestion/apps/ingestion/services/source_acquisition.py",
+        "services/ingestion/apps/ingestion/services/document_parser.py",
+        "services/ingestion/apps/ingestion/migrations/0011_sourcerevision_content_length_and_more.py",
+        "services/ingestion/apps/ingestion/migrations/0012_sourcedocument_access_scope_and_more.py",
+        "services/main/backend/apps/accounts/migrations/0005_historydocumentupload.py",
+        "data/history-evaluation/p02-parser-fixtures.json"
+      ],
       "blockers": [],
-      "limitations": ["The scanned-PDF path explicitly blocks exact verification pending OCR; no OCR engine has been installed or claimed.", "P02 verifies code paths and isolated container tests; public deployment and full A13 adversarial acceptance remain later gates."]
+      "limitations": [
+        "The scanned-PDF path explicitly blocks exact verification pending OCR; no OCR engine has been installed or claimed.",
+        "P02 verifies code paths and isolated container tests; public deployment and full A13 adversarial acceptance remain later gates."
+      ]
     },
     {
       "id": "P03",
       "status": "complete",
-      "commits": ["c6db1f8", "cc0e0d6"],
-      "test_runs": [
-        {"command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py test --keepdb apps.history.tests.test_claim_pipeline", "exit_code": 0, "output": "3 tests: atomic multi-track extraction; fabricated/wrong-span/ambiguous-date/unsupported-subject/prompt-injection rejection; replay and explicit review/supersession", "verified_at": "2026-09-12T06:30:12Z"},
-        {"command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py migrate ingestion --noinput; migrate history --noinput; check", "exit_code": 0, "output": "ingestion.0004 and history.0004 applied; System check identified no issues", "verified_at": "2026-09-12T06:30:37Z"},
-        {"command": "manage.py shell evidence integrity query", "exit_code": 0, "output": "evidence_spans=0; orphan_span_revisions=0; reviewed_claims_without_evidence=0; published_factual_claims_without_evidence=0", "verified_at": "2026-09-12T06:31:34Z"}
+      "commits": [
+        "c6db1f8",
+        "cc0e0d6"
       ],
-      "artifacts": ["services/ingestion/apps/history/schemas/claim-v1.schema.json", "services/ingestion/apps/history/services/claim_extractor.py", "services/ingestion/apps/history/services/claim_validation.py", "services/ingestion/apps/history/services/claim_review.py", "services/ingestion/apps/history/tests/test_claim_pipeline.py", "services/ingestion/apps/ingestion/migrations/0004_claim_extraction_audit_fields.py", "services/ingestion/apps/history/migrations/0004_historicalclaim_extraction_run_and_more.py"],
+      "test_runs": [
+        {
+          "command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py test --keepdb apps.history.tests.test_claim_pipeline",
+          "exit_code": 0,
+          "output": "3 tests: atomic multi-track extraction; fabricated/wrong-span/ambiguous-date/unsupported-subject/prompt-injection rejection; replay and explicit review/supersession",
+          "verified_at": "2026-09-12T06:30:12Z"
+        },
+        {
+          "command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py migrate ingestion --noinput; migrate history --noinput; check",
+          "exit_code": 0,
+          "output": "ingestion.0004 and history.0004 applied; System check identified no issues",
+          "verified_at": "2026-09-12T06:30:37Z"
+        },
+        {
+          "command": "manage.py shell evidence integrity query",
+          "exit_code": 0,
+          "output": "evidence_spans=0; orphan_span_revisions=0; reviewed_claims_without_evidence=0; published_factual_claims_without_evidence=0",
+          "verified_at": "2026-09-12T06:31:34Z"
+        }
+      ],
+      "artifacts": [
+        "services/ingestion/apps/history/schemas/claim-v1.schema.json",
+        "services/ingestion/apps/history/services/claim_extractor.py",
+        "services/ingestion/apps/history/services/claim_validation.py",
+        "services/ingestion/apps/history/services/claim_review.py",
+        "services/ingestion/apps/history/tests/test_claim_pipeline.py",
+        "services/ingestion/apps/ingestion/migrations/0004_claim_extraction_audit_fields.py",
+        "services/ingestion/apps/history/migrations/0004_historicalclaim_extraction_run_and_more.py"
+      ],
       "blockers": [],
-      "limitations": ["The deterministic extractor does not call an LLM; no model-provider credential was required or used.", "The production database has no evidence spans or historical claims yet, so the zero-uncited result is an empty-data integrity check, not historical-coverage proof.", "A configured narrative extractor and real-source extraction coverage remain later work."]
+      "limitations": [
+        "The deterministic extractor does not call an LLM; no model-provider credential was required or used.",
+        "The production database has no evidence spans or historical claims yet, so the zero-uncited result is an empty-data integrity check, not historical-coverage proof.",
+        "A configured narrative extractor and real-source extraction coverage remain later work."
+      ]
     },
     {
       "id": "P04",
-      "status": "not_started",
-      "commits": [],
-      "test_runs": [],
-      "artifacts": [],
-      "blockers": []
+      "status": "in_progress",
+      "commits": [
+        "b1de700"
+      ],
+      "test_runs": [
+        {
+          "command": "python3 -m py_compile services/ingestion/apps/history/connectors/*.py services/ingestion/apps/history/services/source_registry.py services/ingestion/apps/ingestion/services/source_router.py",
+          "exit_code": 0,
+          "verified_at": "2026-09-12T06:37:00Z"
+        }
+      ],
+      "artifacts": [
+        "services/ingestion/apps/history/connectors/base.py",
+        "services/ingestion/apps/history/connectors/official_web.py",
+        "services/ingestion/apps/history/connectors/wayback.py",
+        "services/ingestion/apps/history/services/source_registry.py"
+      ],
+      "blockers": [],
+      "limitations": [
+        "P04 is incomplete: fixture tests, Django staff admin, cursor/retry coverage, and enabled-provider low-volume smoke evidence are still pending.",
+        "No connector secret values were read, logged, or committed."
+      ]
     },
     {
       "id": "P05",
