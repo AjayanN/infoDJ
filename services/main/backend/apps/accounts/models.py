@@ -37,6 +37,11 @@ class UserProfile(models.Model):
     founder_target_customer = models.CharField(max_length=255, blank=True)
     founder_revenue_model = models.CharField(max_length=128, blank=True)
     founder_constraints = models.TextField(blank=True)
+    founder_context_scope = models.CharField(max_length=32, blank=True)
+    founder_product_phase = models.CharField(max_length=64, blank=True)
+    founder_product_anchor_type = models.CharField(max_length=64, blank=True)
+    founder_team_band = models.CharField(max_length=64, blank=True)
+    founder_capital_band = models.CharField(max_length=64, blank=True)
     avatar = models.FileField(upload_to="avatars/%Y/%m/", blank=True)
     subscription_tier = models.CharField(
         max_length=32,
