@@ -1,0 +1,13 @@
+{
+  "verified_at": "2026-09-12T06:48:55Z",
+  "scope": "production read-only comparison",
+  "legacy": {"product_changes": 1541, "lifecycle_episodes": 41},
+  "reviewed_history": {"claims": 0, "pricing_claims": 0},
+  "documented_differences": [
+    "Legacy Company 360 product changes remain the active populated projection source.",
+    "The new history projection is intentionally empty because no reviewed HistoricalClaim rows exist yet.",
+    "No legacy row was deleted, rewritten, or inferred into a reviewed historical claim.",
+    "Until reviewed claims are backfilled, P06's bridge exposes no historical pricing rows and legacy readers remain authoritative."
+  ],
+  "conclusion": "Compatibility preserved; this is not coverage equivalence."
+}
