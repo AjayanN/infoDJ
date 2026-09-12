@@ -187,13 +187,20 @@
       "id": "P04",
       "status": "in_progress",
       "commits": [
-        "b1de700"
+        "b1de700",
+        "4c04bd3"
       ],
       "test_runs": [
         {
           "command": "python3 -m py_compile services/ingestion/apps/history/connectors/*.py services/ingestion/apps/history/services/source_registry.py services/ingestion/apps/ingestion/services/source_router.py",
           "exit_code": 0,
           "verified_at": "2026-09-12T06:37:00Z"
+        },
+        {
+          "command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py test --keepdb apps.history.tests.test_connectors; check",
+          "exit_code": 0,
+          "output": "4 tests; System check identified no issues",
+          "verified_at": "2026-09-12T06:40:24Z"
         }
       ],
       "artifacts": [
@@ -204,7 +211,8 @@
       ],
       "blockers": [],
       "limitations": [
-        "P04 is incomplete: fixture tests, Django staff admin, cursor/retry coverage, and enabled-provider low-volume smoke evidence are still pending.",
+        "P04 is incomplete: SEC retry/pagination fixtures and source-registry importer database fixtures are still pending.",
+        "Production SourceConnectorConfig count is 0; no provider is enabled or authorized for the required low-volume live smoke.",
         "No connector secret values were read, logged, or committed."
       ]
     },
