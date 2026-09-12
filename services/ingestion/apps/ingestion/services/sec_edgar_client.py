@@ -94,10 +94,14 @@ class SecEdgarClient:
         session: requests.Session | None = None,
         timeout: float = 20.0,
         request_delay: float = 0.25,
+        max_retries: int = 2,
+        sleep_fn: Any = sleep,
     ) -> None:
         self.session = session or requests.Session()
         self.timeout = timeout
         self.request_delay = request_delay
+        self.max_retries = max_retries
+        self.sleep_fn = sleep_fn
         self.session.headers["User-Agent"] = DEFAULT_USER_AGENT
         self.session.headers["Accept-Encoding"] = "gzip, deflate"
 
@@ -170,10 +174,22 @@ class SecEdgarClient:
         return filings[:limit]
 
     def _get_json(self, url: str) -> Any:
-        sleep(self.request_delay)
-        response = self.session.get(url, timeout=self.timeout)
-        response.raise_for_status()
-        return response.json()
+        for attempt in range(self.max_retries + 1):
+            self.sleep_fn(self.request_delay)
+            response = self.session.get(url, timeout=self.timeout)
+            if response.status_code == 304:
+                return {"not_modified": True}
+            if response.status_code != 429:
+                response.raise_for_status()
+                return response.json()
+            if attempt == self.max_retries:
+                response.raise_for_status()
+            try:
+                wait = max(0.0, float(response.headers.get("Retry-After", "")))
+            except ValueError:
+                wait = self.request_delay
+            self.sleep_fn(wait)
+        raise RuntimeError("unreachable")
 
 
 def discover_sec_filings_for_company(
