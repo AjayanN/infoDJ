@@ -188,7 +188,8 @@
       "status": "in_progress",
       "commits": [
         "b1de700",
-        "4c04bd3"
+        "4c04bd3",
+        "59dfd03"
       ],
       "test_runs": [
         {
@@ -201,6 +202,12 @@
           "exit_code": 0,
           "output": "4 tests; System check identified no issues",
           "verified_at": "2026-09-12T06:40:24Z"
+        },
+        {
+          "command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py test --keepdb apps.history.tests.test_connectors",
+          "exit_code": 0,
+          "output": "5 tests including SEC 429/Retry-After and 304 fixture",
+          "verified_at": "2026-09-12T06:43:04Z"
         }
       ],
       "artifacts": [
@@ -211,8 +218,8 @@
       ],
       "blockers": [],
       "limitations": [
-        "P04 is incomplete: SEC retry/pagination fixtures and source-registry importer database fixtures are still pending.",
-        "Production SourceConnectorConfig count is 0; no provider is enabled or authorized for the required low-volume live smoke.",
+        "P04 completion remains blocked on an enabled, reviewed SourceConnectorConfig: production count is 0, so the required low-volume enabled-provider smoke cannot run.",
+        "Source-registry importer database fixture remains pending.",
         "No connector secret values were read, logged, or committed."
       ]
     },
