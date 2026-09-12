@@ -179,3 +179,11 @@ def catalog_summary(company: Company, products: list, brands: list) -> str:
     product_text = ", ".join(str(item) for item in products[:5]) if products else "reviewed products are unavailable"
     brand_text = ", ".join(str(item) for item in brands[:3]) if brands else "reviewed brands unavailable"
     return f"{company.name}'s reviewed product catalog covers {product_text}. Brand or family context: {brand_text}."
+
+
+def reviewed_claim_pricing_rows(company: Company) -> list[dict]:
+    """Expose reviewed historical price terms without replacing legacy catalog reads."""
+    from apps.history.models import HistoricalClaim, ReviewState
+    from apps.history.services.projections import projection_rows
+    claims = HistoricalClaim.objects.filter(subject__company=company, track="pricing", review_state=ReviewState.REVIEWED).order_by("date_min", "recorded_at")
+    return [row for row in projection_rows(claims) if row["projection"] == "price"]
