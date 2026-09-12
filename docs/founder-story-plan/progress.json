@@ -35,16 +35,18 @@
     },
     {
       "id": "P02",
-      "status": "in_progress",
-      "commits": ["0aba30bfc812c8a71084cc5fc7f3795216d702e9"],
+      "status": "complete",
+      "commits": ["0aba30bfc812c8a71084cc5fc7f3795216d702e9", "ea6a900aeadcaa51cf63da6650a91f758aacad64"],
       "test_runs": [
         {"command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py migrate --noinput", "exit_code": 0, "verified_at": "2026-09-12T05:58:00Z"},
         {"command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py test --keepdb apps.ingestion.tests.test_source_acquisition apps.ingestion.tests.test_document_parser", "exit_code": 0, "output": "6 tests", "verified_at": "2026-09-12T05:59:07Z"},
         {"command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml config", "exit_code": 0, "output": "ingestion_revision_blobs mounted at /var/lib/infodj/revisions"}
+        ,{"command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py test --keepdb apps.ingestion.tests.test_source_acquisition apps.ingestion.tests.test_document_parser apps.ingestion.tests.test_history_upload", "exit_code": 0, "output": "7 tests", "verified_at": "2026-09-12T06:16:48Z"}
+        ,{"command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps main-backend python manage.py test --keepdb apps.accounts.test_history_upload", "exit_code": 0, "output": "2 tests", "verified_at": "2026-09-12T06:16:48Z"}
       ],
-      "artifacts": ["services/ingestion/apps/ingestion/services/source_acquisition.py", "services/ingestion/apps/ingestion/services/document_parser.py", "services/ingestion/apps/ingestion/migrations/0011_sourcerevision_content_length_and_more.py"],
-      "blockers": ["Authenticated uploaded-document intake has not yet been located or implemented; P02 remains incomplete."],
-      "limitations": ["The scanned-PDF path explicitly blocks exact verification pending OCR; no OCR engine has been installed or claimed."]
+      "artifacts": ["services/ingestion/apps/ingestion/services/source_acquisition.py", "services/ingestion/apps/ingestion/services/document_parser.py", "services/ingestion/apps/ingestion/migrations/0011_sourcerevision_content_length_and_more.py", "services/ingestion/apps/ingestion/migrations/0012_sourcedocument_access_scope_and_more.py", "services/main/backend/apps/accounts/migrations/0005_historydocumentupload.py", "data/history-evaluation/p02-parser-fixtures.json"],
+      "blockers": [],
+      "limitations": ["The scanned-PDF path explicitly blocks exact verification pending OCR; no OCR engine has been installed or claimed.", "P02 verifies code paths and isolated container tests; public deployment and full A13 adversarial acceptance remain later gates."]
     },
     {
       "id": "P03",
