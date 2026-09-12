@@ -235,7 +235,8 @@
       "id": "P06",
       "status": "in_progress",
       "commits": [
-        "6a49f02"
+        "6a49f02",
+        "fcbcd0e"
       ],
       "test_runs": [
         {
@@ -243,17 +244,24 @@
           "exit_code": 0,
           "output": "3 tests; System check identified no issues",
           "verified_at": "2026-09-12T06:47:33Z"
+        },
+        {
+          "command": "production read-only projection comparison",
+          "exit_code": 0,
+          "output": "legacy_product_changes=1541; lifecycle_episodes=41; reviewed_history_claims=0; reviewed_history_pricing_claims=0",
+          "verified_at": "2026-09-12T06:48:55Z"
         }
       ],
       "artifacts": [
         "services/ingestion/apps/history/services/episode_builder.py",
         "services/ingestion/apps/history/services/projections.py",
-        "services/ingestion/apps/history/tests/test_episode_projections.py"
+        "services/ingestion/apps/history/tests/test_episode_projections.py",
+        "data/history-evaluation/p06-projection-comparison.json"
       ],
       "blockers": [],
       "limitations": [
-        "P06 is incomplete: documented legacy-versus-new projection comparison remains required.",
-        "The new shared projection layer is review-gated and does not replace legacy Company 360 writes."
+        "P06 remains incomplete: evidence_ledger and dashboard_quality compatibility bridges are not yet updated.",
+        "The documented comparison proves compatibility and an empty reviewed-history projection; it does not prove historical coverage equivalence."
       ]
     },
     {
