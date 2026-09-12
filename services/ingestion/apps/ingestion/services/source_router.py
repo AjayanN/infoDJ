@@ -7,7 +7,7 @@ from datetime import date
 from typing import Any
 
 
-CURRENT_YEAR = 2026
+CURRENT_YEAR = date.today().year
 
 
 @dataclass(frozen=True)
