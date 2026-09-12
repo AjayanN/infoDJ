@@ -398,6 +398,7 @@ class SourceRevision(models.Model):
     source_document=models.ForeignKey(SourceDocument,on_delete=models.PROTECT,related_name="revisions")
     content_sha256=models.CharField(max_length=64); retrieved_at=models.DateTimeField(); published_at=models.DateTimeField(null=True,blank=True)
     archive_captured_at=models.DateTimeField(null=True,blank=True); media_type=models.CharField(max_length=128); storage_key=models.CharField(max_length=1024)
+    parsed_storage_key=models.CharField(max_length=1024,blank=True); original_filename=models.CharField(max_length=512,blank=True); content_length=models.BigIntegerField(default=0)
     rights_scope=models.CharField(max_length=64,default="internal"); etag=models.CharField(max_length=255,blank=True); last_modified=models.CharField(max_length=255,blank=True); parser_version=models.CharField(max_length=64)
     class Meta: constraints=[models.UniqueConstraint(fields=["source_document","content_sha256"],name="ingestion_source_revision_hash")]
 class ExtractionRun(models.Model):

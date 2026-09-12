@@ -18,6 +18,8 @@ services:
       - ./env/ingestion.env
     ports:
       - "8001:8001"
+    volumes:
+      - ingestion_revision_blobs:/var/lib/infodj/revisions
     depends_on:
       postgres:
         condition: service_healthy
@@ -31,6 +33,8 @@ services:
       sh -c ".venv/bin/python manage.py migrate --noinput && exec .venv/bin/python manage.py daily_company_update --limit 20 --skip-gdelt --include-company-profiles"
     env_file:
       - ./env/ingestion.env
+    volumes:
+      - ingestion_revision_blobs:/var/lib/infodj/revisions
     profiles:
       - jobs
     depends_on:
@@ -122,3 +126,4 @@ volumes:
   loki_data:
   grafana_data:
   main_media:
+  ingestion_revision_blobs:
