@@ -280,11 +280,29 @@
     },
     {
       "id": "P08",
-      "status": "not_started",
-      "commits": [],
-      "test_runs": [],
-      "artifacts": [],
-      "blockers": []
+      "status": "in_progress",
+      "commits": [
+        "3b8cc3e",
+        "07e4d96",
+        "141dc08"
+      ],
+      "test_runs": [
+        {
+          "command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps main-backend python manage.py test --keepdb apps.accounts.test_history_matching",
+          "exit_code": 0,
+          "output": "2 golden matching tests; system check clean",
+          "verified_at": "2026-09-12T06:53:17Z"
+        }
+      ],
+      "artifacts": [
+        "services/main/backend/apps/accounts/history_matching.py",
+        "services/main/backend/apps/accounts/test_history_matching.py",
+        "services/main/backend/apps/accounts/migrations/0006_userprofile_founder_context_matching.py"
+      ],
+      "blockers": [],
+      "limitations": [
+        "P08 is incomplete: founder playbook integration and complete zero/one/multiple API semantics require further work."
+      ]
     },
     {
       "id": "P09",
