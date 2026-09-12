@@ -50,11 +50,16 @@
     },
     {
       "id": "P03",
-      "status": "not_started",
-      "commits": [],
-      "test_runs": [],
-      "artifacts": [],
-      "blockers": []
+      "status": "complete",
+      "commits": ["c6db1f8", "cc0e0d6"],
+      "test_runs": [
+        {"command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py test --keepdb apps.history.tests.test_claim_pipeline", "exit_code": 0, "output": "3 tests: atomic multi-track extraction; fabricated/wrong-span/ambiguous-date/unsupported-subject/prompt-injection rejection; replay and explicit review/supersession", "verified_at": "2026-09-12T06:30:12Z"},
+        {"command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py migrate ingestion --noinput; migrate history --noinput; check", "exit_code": 0, "output": "ingestion.0004 and history.0004 applied; System check identified no issues", "verified_at": "2026-09-12T06:30:37Z"},
+        {"command": "manage.py shell evidence integrity query", "exit_code": 0, "output": "evidence_spans=0; orphan_span_revisions=0; reviewed_claims_without_evidence=0; published_factual_claims_without_evidence=0", "verified_at": "2026-09-12T06:31:34Z"}
+      ],
+      "artifacts": ["services/ingestion/apps/history/schemas/claim-v1.schema.json", "services/ingestion/apps/history/services/claim_extractor.py", "services/ingestion/apps/history/services/claim_validation.py", "services/ingestion/apps/history/services/claim_review.py", "services/ingestion/apps/history/tests/test_claim_pipeline.py", "services/ingestion/apps/ingestion/migrations/0004_claim_extraction_audit_fields.py", "services/ingestion/apps/history/migrations/0004_historicalclaim_extraction_run_and_more.py"],
+      "blockers": [],
+      "limitations": ["The deterministic extractor does not call an LLM; no model-provider credential was required or used.", "The production database has no evidence spans or historical claims yet, so the zero-uncited result is an empty-data integrity check, not historical-coverage proof.", "A configured narrative extractor and real-source extraction coverage remain later work."]
     },
     {
       "id": "P04",
