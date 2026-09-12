@@ -233,10 +233,11 @@
     },
     {
       "id": "P06",
-      "status": "in_progress",
+      "status": "complete",
       "commits": [
         "6a49f02",
-        "fcbcd0e"
+        "fcbcd0e",
+        "1651724"
       ],
       "test_runs": [
         {
@@ -250,6 +251,12 @@
           "exit_code": 0,
           "output": "legacy_product_changes=1541; lifecycle_episodes=41; reviewed_history_claims=0; reviewed_history_pricing_claims=0",
           "verified_at": "2026-09-12T06:48:55Z"
+        },
+        {
+          "command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps ingestion .venv/bin/python manage.py test --keepdb apps.history.tests.test_episode_projections",
+          "exit_code": 0,
+          "output": "4 tests including dashboard conflict hold",
+          "verified_at": "2026-09-12T06:50:48Z"
         }
       ],
       "artifacts": [
@@ -260,8 +267,7 @@
       ],
       "blockers": [],
       "limitations": [
-        "P06 remains incomplete: evidence_ledger and dashboard_quality compatibility bridges are not yet updated.",
-        "The documented comparison proves compatibility and an empty reviewed-history projection; it does not prove historical coverage equivalence."
+        "Production reviewed-history claims remain empty; P06 proves deterministic and compatibility behavior, not coverage or historical facts."
       ]
     },
     {
