@@ -4,6 +4,7 @@ from collections import Counter
 from datetime import date, timedelta
 
 from apps.accounts.founder_playbooks import playbook_for
+from apps.accounts.history_matching import rank_history_cases
 
 
 DIRECTION_SPECS = (
@@ -79,6 +80,7 @@ def build_founder_decision(context: dict, companies: list[dict], dashboard: dict
     ]
     comparable_events = comparable_events[:12]
     risk_events = risk_events[:12]
+    matching = rank_history_cases(context, [{**event, "claim_type": event.get("claim_type", "documented_action"), "scope": (event.get("lifecycle_timing") or {}).get("scope", "COMPANY").lower(), "source_families": [str((event.get("source") or {}).get("url") or "")] if (event.get("source") or {}).get("url") else []} for event in comparable_events])
     status = "available" if comparable_events else "insufficient_evidence"
 
     directions = []
@@ -111,6 +113,7 @@ def build_founder_decision(context: dict, companies: list[dict], dashboard: dict
     return {
         "status": status,
         "context": context,
+        "matching": matching,
         "playbook": playbook,
         "directions": directions,
         "journey": [serialize_event(event) for event in sorted(comparable_events, key=lambda row: str((row.get("lifecycle_timing") or {}).get("action_date") or row.get("event_date") or ""))],
