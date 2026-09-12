@@ -39,4 +39,5 @@ urlpatterns = [
     path("jobs/<int:job_id>", api.job_detail, name="ingestion-job-detail"),
     path("jobs/daily-update", api.run_daily_update, name="ingestion-daily-update"),
     path("companies/<slug:slug>/refresh", api.refresh_company, name="ingestion-company-refresh"),
+    path("internal/history/documents", api.internal_history_document_upload, name="internal-history-document-upload"),
 ]

@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+from hashlib import sha256
 from pathlib import Path
 from secrets import compare_digest, token_urlsafe
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urljoin
+
+import requests
 
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
@@ -24,6 +27,7 @@ from apps.accounts.founder_decision import build_founder_decision
 from apps.accounts.founder_playbooks import FOUNDER_OBJECTIVES, FOUNDER_STAGES, playbook_for
 from apps.search.api import ingestion_get
 from apps.accounts.models import (
+    HistoryDocumentUpload,
     SubscriptionChangeLog,
     SubscriptionStatus,
     SubscriptionTier,
@@ -585,3 +589,44 @@ def log_subscription_change(
         provider_payment_id=provider_payment_id,
         metadata=metadata or {},
     )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def history_document_upload(request):
+    """Authenticated upload proxy; files never cause public arbitrary URL fetches."""
+    uploaded = request.FILES.get("file")
+    company_slug = (request.data.get("company_slug") or "").strip()
+    rights_scope = (request.data.get("rights_scope") or "").strip()
+    access_scope = (request.data.get("access_scope") or "private").strip()
+    if not uploaded or not company_slug or not rights_scope:
+        return Response({"error": "file, company_slug, and rights_scope are required"}, status=400)
+    if access_scope not in {"private", "public"}:
+        return Response({"error": "access_scope must be private or public"}, status=400)
+    if uploaded.size > 20 * 1024 * 1024:
+        return Response({"error": "uploaded document exceeds 20 MiB"}, status=413)
+    media_type = (uploaded.content_type or "application/octet-stream").split(";", 1)[0].lower()
+    if media_type not in {"application/pdf", "text/plain", "text/html", "application/xhtml+xml"}:
+        return Response({"error": "unsupported uploaded document type"}, status=415)
+    content = uploaded.read()
+    upload = HistoryDocumentUpload.objects.create(owner=request.user, company_slug=company_slug, rights_scope=rights_scope, access_scope=access_scope, filename=uploaded.name[:512], content_sha256=sha256(content).hexdigest(), status="FORWARDING")
+    token = settings.INGESTION_INTERNAL_WRITE_TOKEN
+    if not token:
+        upload.status = "BLOCKED"
+        upload.error = "INGESTION_INTERNAL_WRITE_TOKEN is not configured"
+        upload.save(update_fields=["status", "error", "updated_at"])
+        return Response({"error": "history document intake is not configured", "upload_id": upload.id}, status=503)
+    endpoint = urljoin(settings.INGESTION_API_URL.rstrip("/") + "/", "internal/history/documents")
+    try:
+        response = requests.post(endpoint, data={"company_slug": company_slug, "rights_scope": rights_scope, "access_scope": access_scope, "tenant_key": f"user:{request.user.pk}"}, files={"file": (uploaded.name, content, media_type)}, headers={"X-InfoDJ-Internal-Token": token}, timeout=30)
+        payload = response.json()
+    except (requests.RequestException, ValueError) as exc:
+        upload.status = "FAILED"
+        upload.error = str(exc)
+        upload.save(update_fields=["status", "error", "updated_at"])
+        return Response({"error": "history intake unavailable", "upload_id": upload.id}, status=503)
+    upload.ingestion_job_id = payload.get("job_id")
+    upload.status = "ACCEPTED" if response.status_code == 202 else "FAILED"
+    upload.error = "" if response.status_code == 202 else str(payload)
+    upload.save(update_fields=["ingestion_job_id", "status", "error", "updated_at"])
+    return Response({"upload_id": upload.id, "job_id": upload.ingestion_job_id, "status": upload.status}, status=response.status_code)

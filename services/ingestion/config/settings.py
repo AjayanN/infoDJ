@@ -23,6 +23,7 @@ def env_list(name, default=None):
     return [item.strip() for item in value.split(",") if item.strip()]
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-local-placeholder-change-me")
+INGESTION_INTERNAL_WRITE_TOKEN = os.getenv("INGESTION_INTERNAL_WRITE_TOKEN", "")
 DEBUG = env_bool("DJANGO_DEBUG", default=True)
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", ["localhost", "127.0.0.1"])
 

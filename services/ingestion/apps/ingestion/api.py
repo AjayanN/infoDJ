@@ -2,13 +2,17 @@ from __future__ import annotations
 
 from collections import defaultdict
 import calendar
+from hashlib import sha256
+from secrets import compare_digest
 from datetime import date, timedelta
 
+from django.conf import settings
 from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector, TrigramSimilarity
 from django.core.management import call_command
 from django.db import connection
 from django.db.models import Avg, Count, Max, Q
 from django.http import Http404, HttpRequest, JsonResponse
+from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
 from apps.companies.models import (
@@ -87,7 +91,9 @@ from apps.companies.models import (
     ValuationPeerComparison,
 )
 from apps.curation.models import BusinessEvent, StrategicTurn, StrategicTurnSource
-from apps.ingestion.models import FinancialFact, IngestionJob, MarketPrice, SourceDocument, SourceGap, SourceGapResolutionCandidate
+from apps.ingestion.models import ArticleExtraction, EvidenceSpan, FinancialFact, IngestionJob, MarketPrice, SourceDocument, SourceGap, SourceGapResolutionCandidate
+from apps.ingestion.services.document_parser import parse_document, parsed_bytes, span_hash
+from apps.ingestion.services.source_acquisition import FilesystemBlobStore
 from apps.ingestion.services.company_profile_quality import (
     PROFILE_SNAPSHOT_LIMIT,
     profile_snapshot_has_content,
@@ -3835,6 +3841,66 @@ def refresh_company(_request: HttpRequest, slug: str) -> JsonResponse:
         reuse_extractions=True,
     )
     return JsonResponse({"status": "completed", "company": serialize_company(company)})
+
+
+@require_POST
+def internal_history_document_upload(request: HttpRequest) -> JsonResponse:
+    """Token-protected writer used only by the authenticated main-backend proxy."""
+    expected = getattr(settings, "INGESTION_INTERNAL_WRITE_TOKEN", "")
+    supplied = request.headers.get("X-InfoDJ-Internal-Token", "")
+    if not expected or not compare_digest(expected, supplied):
+        return JsonResponse({"error": "internal writer authentication failed"}, status=403)
+    uploaded = request.FILES.get("file")
+    company_slug = (request.POST.get("company_slug") or "").strip()
+    rights_scope = (request.POST.get("rights_scope") or "").strip()
+    access_scope = (request.POST.get("access_scope") or "private").strip()
+    tenant_key = (request.POST.get("tenant_key") or "").strip()
+    if not uploaded or not company_slug or not rights_scope or not tenant_key:
+        return JsonResponse({"error": "file, company_slug, rights_scope, and tenant_key are required"}, status=400)
+    if access_scope not in {"private", "public"}:
+        return JsonResponse({"error": "access_scope must be private or public"}, status=400)
+    if uploaded.size > 20 * 1024 * 1024:
+        return JsonResponse({"error": "uploaded document exceeds 20 MiB"}, status=413)
+    media_type = (uploaded.content_type or "application/octet-stream").split(";", 1)[0].lower()
+    if media_type not in {"application/pdf", "text/plain", "text/html", "application/xhtml+xml"}:
+        return JsonResponse({"error": "unsupported uploaded document type"}, status=415)
+    company = Company.objects.filter(slug=company_slug).first()
+    if not company:
+        return JsonResponse({"error": "company not found"}, status=404)
+    content = uploaded.read()
+    digest = sha256(content).hexdigest()
+    job = IngestionJob.objects.create(job_type="ARTICLE_EXTRACTION", company=company, source="PRIVATE_UPLOAD", status="RUNNING")
+    source, _created = SourceDocument.objects.get_or_create(
+        company=company, source_api="PRIVATE_UPLOAD", url=f"https://uploads.infodj.internal/{tenant_key}/{digest}",
+        defaults={"title": uploaded.name[:1024], "status": "EXTRACTION_PENDING", "access_scope": access_scope, "tenant_key": tenant_key},
+    )
+    try:
+        store = FilesystemBlobStore()
+        revision, _new = source.revisions.get_or_create(
+            content_sha256=digest,
+            defaults={"retrieved_at": timezone.now(), "media_type": media_type, "storage_key": store.put_bytes(content, prefix="original"), "original_filename": uploaded.name[:512], "content_length": len(content), "rights_scope": rights_scope, "parser_version": "p02-upload"},
+        )
+        parsed = parse_document(content, media_type)
+        revision.parsed_storage_key = store.put_bytes(parsed_bytes(parsed), prefix="parsed", suffix=".txt")
+        revision.parser_version = parsed.parser_name
+        revision.save(update_fields=["parsed_storage_key", "parser_version"])
+        for locator, excerpt in parsed.spans:
+            if excerpt:
+                EvidenceSpan.objects.get_or_create(revision=revision, locator=locator, excerpt_sha256=span_hash(excerpt), defaults={"excerpt": excerpt})
+        ArticleExtraction.objects.update_or_create(source_document=source, defaults={"clean_text": parsed.text, "word_count": len(parsed.text.split()), "extractor_name": parsed.parser_name, "extraction_status": "SUCCEEDED", "extraction_error": ""})
+        source.status = "EXTRACTED"
+        source.save(update_fields=["status", "updated_at"])
+        job.status = "SUCCEEDED"
+        job.articles_extracted = 1
+        job.finished_at = timezone.now()
+        job.save(update_fields=["status", "articles_extracted", "finished_at", "updated_at"])
+    except Exception as exc:
+        job.status = "FAILED"
+        job.error_message = str(exc)
+        job.finished_at = timezone.now()
+        job.save(update_fields=["status", "error_message", "finished_at", "updated_at"])
+        return JsonResponse({"job_id": job.id, "status": "failed"}, status=422)
+    return JsonResponse({"job_id": job.id, "status": "accepted"}, status=202)
 
 
 def get_company(slug: str) -> Company:

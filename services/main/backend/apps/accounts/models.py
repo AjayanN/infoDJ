@@ -91,3 +91,22 @@ class SubscriptionChangeLog(models.Model):
 
     def __str__(self) -> str:
         return f"{self.user}: {self.old_tier} -> {self.new_tier}"
+
+
+class HistoryDocumentUpload(models.Model):
+    """Tenant-owned audit record for a private or public history-document intake."""
+
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="history_document_uploads")
+    company_slug = models.SlugField(max_length=255)
+    rights_scope = models.CharField(max_length=64)
+    access_scope = models.CharField(max_length=32, default="private")
+    filename = models.CharField(max_length=512)
+    content_sha256 = models.CharField(max_length=64, db_index=True)
+    ingestion_job_id = models.BigIntegerField(null=True, blank=True)
+    status = models.CharField(max_length=32, default="PENDING", db_index=True)
+    error = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["owner", "status", "created_at"])]

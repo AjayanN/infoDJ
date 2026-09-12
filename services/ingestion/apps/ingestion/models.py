@@ -61,6 +61,8 @@ class SourceDocument(models.Model):
     published_date = models.DateTimeField(null=True, blank=True)
     snippet = models.TextField(blank=True)
     language = models.CharField(max_length=32, blank=True)
+    access_scope = models.CharField(max_length=32, default="public", db_index=True)
+    tenant_key = models.CharField(max_length=128, blank=True, db_index=True)
     url_hash = models.CharField(max_length=64, unique=True)
     title_hash = models.CharField(max_length=64, blank=True, db_index=True)
     status = models.CharField(

@@ -31,6 +31,7 @@ class DocumentParserTests(TestCase):
         html = parse_document(b"<html><body><h1>Title</h1><table><tr><td>Value</td></tr></table></body></html>", "text/html")
         plain = parse_document(b"hello\nworld", "text/plain")
         self.assertIn("Title", html.text)
+        self.assertIn("Value", html.text)
         self.assertEqual(plain.spans[0][0], "char:0")
         with self.assertRaises(ValueError):
             parse_document(b"bytes", "application/zip")

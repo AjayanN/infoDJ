@@ -21,4 +21,5 @@ urlpatterns = [
     path("subscription/checkout", api.subscription_checkout, name="subscription-checkout"),
     path("subscription/verify-payment", api.subscription_verify_payment, name="subscription-verify-payment"),
     path("subscription/history", api.subscription_history, name="subscription-history"),
+    path("history/documents", api.history_document_upload, name="history-document-upload"),
 ]

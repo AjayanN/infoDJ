@@ -1,0 +1,11 @@
+{
+  "task_id": "P02",
+  "fixtures": [
+    {"kind": "html_table", "assertion": "HTML text retains table value and stable char locator"},
+    {"kind": "plain_text", "assertion": "Plain text has a stable char:0 locator"},
+    {"kind": "text_pdf", "assertion": "Text PDF has stable page:1 locator"},
+    {"kind": "scanned_pdf", "assertion": "No extractable text is blocked pending OCR rather than verified"},
+    {"kind": "blob_recreation", "assertion": "Original and parsed bytes are readable through a recreated filesystem blob-store instance"}
+  ],
+  "verification": "apps.ingestion.tests.test_source_acquisition and apps.ingestion.tests.test_document_parser"
+}
