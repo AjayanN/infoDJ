@@ -59,7 +59,8 @@ import {
   Subscription,
   FounderContext,
   FounderPlaybook,
-  FounderDecisionResponse
+  FounderDecisionResponse,
+  FounderStoryBracket
 } from './app/services/infodj-api.service';
 import { founderStageCheckpoint, founderStageLabel, founderStageProgress, type FounderStage } from './app/founder-stage.utils';
 import {
@@ -199,6 +200,7 @@ class AppComponent implements AfterViewChecked {
   founderContext = signal<FounderContext | null>(null);
   founderPlaybook = signal<FounderPlaybook | null>(null);
   founderDecision = signal<FounderDecisionResponse | null>(null);
+  founderStoryBrackets = signal<FounderStoryBracket[]>([]);
   founderDecisionLoading = signal(false);
   founderContextSaving = signal(false);
   founderSetupStep = signal(0);
@@ -784,6 +786,22 @@ class AppComponent implements AfterViewChecked {
 
   toggleResearchMenu(): void {
     this.researchMenuOpen.update((isOpen) => !isOpen);
+  }
+
+  onFounderSectorChange(sector: string): void {
+    this.founderSector = sector;
+    this.loadFounderStoryBrackets(sector);
+  }
+
+  private loadFounderStoryBrackets(sector: string): void {
+    if (!this.token() || !sector) {
+      this.founderStoryBrackets.set([]);
+      return;
+    }
+    this.api.founderStoryBrackets(this.token(), sector).subscribe({
+      next: (response) => this.founderStoryBrackets.set(response.brackets),
+      error: () => this.founderStoryBrackets.set([])
+    });
   }
 
   chooseFounderStage(stage: FounderStage): void {

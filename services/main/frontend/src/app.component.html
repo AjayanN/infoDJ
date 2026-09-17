@@ -341,11 +341,22 @@
               </section>
               <section class="founder-wizard-question" *ngIf="founderSetupStep() === 1" aria-live="polite">
                 <span>Choose your field</span><h3>What world are you building in?</h3><p>We’ll use this to compare you with relevant companies and evidence.</p>
-                <label class="sr-only" for="founder-sector">Field</label><select id="founder-sector" name="founder_setup_sector" [(ngModel)]="founderSector"><option value="">Choose a field</option><option value="Information Technology">Technology</option><option value="Communication Services">Communication</option><option value="Energy">Energy</option><option value="Financials">Financial services</option><option value="Health Care">Health care</option><option value="Consumer Discretionary">Consumer</option><option value="Industrials">Industrials</option><option value="Materials">Materials</option><option value="Real Estate">Real estate</option><option value="Utilities">Utilities</option></select>
+                <label class="sr-only" for="founder-sector">Field</label><select id="founder-sector" name="founder_setup_sector" [(ngModel)]="founderSector" (ngModelChange)="onFounderSectorChange($event)"><option value="">Choose a field</option><option value="Information Technology">Technology</option><option value="Communication Services">Communication</option><option value="Energy">Energy</option><option value="Financials">Financial services</option><option value="Health Care">Health care</option><option value="Consumer Discretionary">Consumer</option><option value="Industrials">Industrials</option><option value="Materials">Materials</option><option value="Real Estate">Real estate</option><option value="Utilities">Utilities</option></select>
               </section>
               <section class="founder-wizard-question" *ngIf="founderSetupStep() === 2" aria-live="polite">
                 <span>Describe the work</span><h3>What are you building?</h3><p>Use a few simple words. This helps make the follow-up questions specific.</p>
                 <label class="sr-only" for="founder-business-type">Business type</label><input id="founder-business-type" name="founder_setup_business_type" [(ngModel)]="founderBusinessType" placeholder="e.g. software for industrial operators" />
+                <aside class="founder-story-brackets" *ngIf="founderStoryBrackets().length" aria-label="Source-linked company case brackets">
+                  <span>Source-linked case brackets</span>
+                  <article *ngFor="let bracket of founderStoryBrackets()">
+                    <strong>{{ bracket.company }} · {{ bracket.event_date | date:'mediumDate' }}</strong>
+                    <p>{{ bracket.documented_action }}</p>
+                    <small *ngIf="bracket.documented_problem">Documented context: {{ bracket.documented_problem }}</small>
+                    <em>{{ bracket.question }}</em>
+                    <a *ngIf="bracket.source.url" [href]="bracket.source.url" target="_blank" rel="noopener">{{ bracket.source.title || 'Open source' }}</a>
+                  </article>
+                  <small>These are cited cases, not a prediction or a substitute for your own evidence.</small>
+                </aside>
               </section>
               <section class="founder-wizard-question" *ngIf="founderSetupStep() === 3" aria-live="polite">
                 <span>Set the stage</span><h3>Where are you right now?</h3><p>There is no perfect label—choose the decision that feels most immediate.</p>

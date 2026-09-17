@@ -24,6 +24,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 
 from apps.accounts.founder_decision import build_founder_decision
+from apps.accounts.founder_story_brackets import build_story_brackets
 from apps.accounts.founder_playbooks import FOUNDER_OBJECTIVES, FOUNDER_STAGES, playbook_for
 from apps.search.api import ingestion_get
 from apps.accounts.models import (
@@ -244,6 +245,25 @@ def founder_decision(request):
             status=503,
         )
     return Response(build_founder_decision(context, companies_payload.get("companies", []), dashboard_payload or {}))
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def founder_story_brackets(request):
+    profile = ensure_profile(request.user)
+    sector = (request.query_params.get("sector") or profile.founder_sector).strip()
+    companies_payload, companies_error = ingestion_get("companies")
+    dashboard_payload, dashboard_error = ingestion_get("dashboard-data", {"limit": 50})
+    if companies_error or dashboard_error:
+        return Response({
+            "status": "unavailable", "sector": sector, "brackets": [],
+            "source_gaps": [{
+                "key": "founder_story_brackets_ingestion",
+                "reason": companies_error or dashboard_error,
+                "next_action": "Restore the ingestion API before showing source-linked company cases.",
+            }],
+        }, status=503)
+    return Response(build_story_brackets(companies_payload.get("companies", []), dashboard_payload or {}, sector))
 
 
 @api_view(["GET", "PATCH"])

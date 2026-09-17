@@ -38,6 +38,28 @@ export type FounderDecisionEvidence = {
   source: { title: string; url: string; published_date: string | null };
 };
 
+export type FounderStoryBracket = {
+  company: string;
+  company_slug: string;
+  event_date: string | null;
+  event_type: string;
+  documented_action: string;
+  situation: string;
+  documented_problem: string;
+  documented_outcome: string;
+  question: string;
+  claim_type: 'reported_fact';
+  source: { title: string | null; url: string | null };
+  evidence_note: string;
+};
+
+export type FounderStoryBracketsResponse = {
+  status: 'available' | 'insufficient_evidence' | 'unavailable';
+  sector: string;
+  brackets: FounderStoryBracket[];
+  source_gaps: { key: string; reason: string; next_action: string }[];
+};
+
 export type FounderDecisionPath = {
   key: string;
   title: string;
@@ -1811,6 +1833,15 @@ export class InfoDjApiService {
     return this.http.get<FounderDecisionResponse>(
       `${this.apiBaseUrl}/founder-decision`,
       { headers: this.authHeaders(token) }
+    );
+  }
+
+  founderStoryBrackets(token: string, sector = '') {
+    const params: Record<string, string> = {};
+    if (sector) params['sector'] = sector;
+    return this.http.get<FounderStoryBracketsResponse>(
+      `${this.apiBaseUrl}/founder-story-brackets`,
+      { headers: this.authHeaders(token), params }
     );
   }
 

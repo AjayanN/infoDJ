@@ -7329,3 +7329,9 @@ th {
 @media (max-width: 640px) {
   .historical-action summary > * { display: block; margin-inline-end: 0; }
 }
+
+/* Founder onboarding: source-linked cases are context, never a recommendation. */
+.founder-story-brackets { display:grid; gap:10px; margin-top:16px; padding:14px; border:1px solid #5d8fa8; border-radius:10px; background:rgba(8,42,64,.66); color:#eaf7ff; }
+.founder-story-brackets > span { color:#85e0cc; font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+.founder-story-brackets article { display:grid; gap:5px; padding:10px; border-left:3px solid #75d8c1; background:rgba(255,255,255,.05); }
+.founder-story-brackets p { margin:0; } .founder-story-brackets small { color:#bed4e2; } .founder-story-brackets em { color:#fff4ca; font-style:normal; } .founder-story-brackets a { color:#91d9ff; font-size:12px; }

@@ -13,6 +13,7 @@ urlpatterns = [
     path("auth/google/url", api.google_auth_url, name="auth-google-url"),
     path("auth/google/callback", api.google_callback, name="auth-google-callback"),
     path("founder-decision", api.founder_decision, name="founder-decision"),
+    path("founder-story-brackets", api.founder_story_brackets, name="founder-story-brackets"),
     path("founder-context", api.founder_context, name="founder-context"),
     path("founder-playbook", api.founder_playbook, name="founder-playbook"),
     path("profile/avatar", api.profile_avatar, name="profile-avatar"),
