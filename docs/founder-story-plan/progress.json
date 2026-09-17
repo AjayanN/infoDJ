@@ -319,6 +319,12 @@
           "exit_code": 0,
           "output": "20 configured companies each have >=1 eligible reviewed historical event; 39 records total; Ford conflict hold remains excluded",
           "verified_at": "2026-09-17T13:29:00Z"
+        },
+        {
+          "command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml up -d --no-deps main-backend main-frontend ingestion; live health/dashboard/route/bundle checks",
+          "exit_code": 0,
+          "output": "ingestion health ok; dashboard historical_events=55 across 20 companies; founder-story-brackets route returned expected unauthenticated 401; deployed frontend bundle contains route",
+          "verified_at": "2026-09-17T13:35:00Z"
         }
       ],
       "artifacts": [
