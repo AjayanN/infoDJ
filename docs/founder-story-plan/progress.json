@@ -325,6 +325,12 @@
           "exit_code": 0,
           "output": "ingestion health ok; dashboard historical_events=55 across 20 companies; founder-story-brackets route returned expected unauthenticated 401; deployed frontend bundle contains route",
           "verified_at": "2026-09-17T13:35:00Z"
+        },
+        {
+          "command": "story bracket all-company field-cap verification",
+          "exit_code": 0,
+          "output": "default bracket limit raised from 3 to 50; focused test passed",
+          "verified_at": "2026-09-17T13:37:00Z"
         }
       ],
       "artifacts": [

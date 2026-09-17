@@ -6,7 +6,7 @@ places a reviewed company action beside the next question a founder must answer.
 from __future__ import annotations
 
 
-def build_story_brackets(companies: list[dict], dashboard: dict, sector: str, *, limit: int = 3) -> dict:
+def build_story_brackets(companies: list[dict], dashboard: dict, sector: str, *, limit: int = 50) -> dict:
     sectors = {str(row.get("slug") or ""): str(row.get("sector") or "") for row in companies}
     events = [*dashboard.get("historical_events", []), *dashboard.get("latest_events", [])]
     seen, selected = set(), []
