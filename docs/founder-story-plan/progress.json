@@ -286,7 +286,8 @@
         "07e4d96",
         "141dc08",
         "5791b79",
-        "2d5b9a1"
+        "2d5b9a1",
+        "c770a8f"
       ],
       "test_runs": [
         {
@@ -300,16 +301,41 @@
           "exit_code": 0,
           "output": "3 tests; legacy profile compatibility, objective/business-model/scope gates, zero/one case semantics",
           "verified_at": "2026-09-12T06:59:26Z"
+        },
+        {
+          "command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml run --rm --no-deps main-backend python manage.py test --keepdb apps.accounts.test_founder_story_brackets apps.accounts.test_founder_context_api",
+          "exit_code": 0,
+          "output": "3 tests; story brackets preserve documented fact, cited source, founder question, and conflict exclusion",
+          "verified_at": "2026-09-17T13:25:00Z"
+        },
+        {
+          "command": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.vps.yml build main-frontend",
+          "exit_code": 0,
+          "output": "Angular production build completed; source-linked case bracket onboarding UI compiled",
+          "verified_at": "2026-09-17T13:33:00Z"
+        },
+        {
+          "command": "production read-only historical-event coverage query",
+          "exit_code": 0,
+          "output": "20 configured companies each have >=1 eligible reviewed historical event; 39 records total; Ford conflict hold remains excluded",
+          "verified_at": "2026-09-17T13:29:00Z"
         }
       ],
       "artifacts": [
         "services/main/backend/apps/accounts/history_matching.py",
         "services/main/backend/apps/accounts/test_history_matching.py",
-        "services/main/backend/apps/accounts/migrations/0006_userprofile_founder_context_matching.py"
+        "services/main/backend/apps/accounts/migrations/0006_userprofile_founder_context_matching.py",
+        "services/main/backend/apps/accounts/founder_story_brackets.py",
+        "services/main/backend/apps/accounts/test_founder_story_brackets.py",
+        "services/main/backend/apps/accounts/api.py",
+        "services/main/frontend/src/app.component.html",
+        "services/main/frontend/src/main.ts",
+        "services/main/frontend/src/app/services/infodj-api.service.ts"
       ],
       "blockers": [],
       "limitations": [
-        "P08 remains in progress: production reviewed historical claims are zero, so live matching acceptance cannot be proven."
+        "P08 remains in progress: production reviewed historical claims are zero, so live matching acceptance cannot be proven.",
+        "Story brackets use existing reviewed BusinessEvent records; immutable SourceRevision/EvidenceSpan-backed HistoricalClaim ingestion remains unpopulated (0 claims) and is not represented as complete."
       ]
     },
     {
